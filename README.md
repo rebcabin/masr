@@ -1,6 +1,9 @@
 # masr
 Meta ASR: replacement for aging ASDL
 
+Pronounced like "MASER," Microwave Amplification of Stimulated Emission of
+Radiation. Yes, it's a physics pun. We like physics puns.
+
 # Run
 
 - Install leiningen (look it up on the web, there is only one)
