@@ -1,0 +1,1688 @@
+#+TODO: TODO BACKLOGGED(!) SCHEDULED(!) STARTED(!) SUSPENDED(!) BLOCKED(!) DELEGATED(!) ABANDONED(!) DONE
+
+# FOR DOCUMENTATION OF THESE OPTIONS, see 12.2, Export Settings of the Org Info Manual
+
+#+OPTIONS: ':t                # export smart quotes
+#+OPTIONS: *:t                # export emphasized text
+#+OPTIONS: -:t                # conversion of special strings
+#+OPTIONS: ::t                # fixed-width sections
+#+OPTIONS: <:t                # time/date active/inactive stamps
+#+OPTIONS: \n:nil             # preserve line breaks
+#+OPTIONS: ^:nil              # TeX-like syntax for sub- and super-scripts
+#+OPTIONS: arch:headline      # archived trees
+#+OPTIONS: author:t           # toggle inclusion of author name on export
+#+OPTIONS: broken-links:mark  # ?
+#+OPTIONS: c:nil              # clock keywords
+#+OPTIONS: creator:nil        # other value is 'comment'
+
+# Exporting of drawers
+
+#+OPTIONS: d:t
+
+# Exporting of drawers to LaTeX is NOT WORKING as of 25 March 2020. The
+# workaround is to wrap the drawers in #+begin_example and #+end_example.
+
+# #+OPTIONS: d:("LOGBOOK")      # drawers to include or exclude
+
+#+OPTIONS: date:t             # ?
+#+OPTIONS: e:t                # entities
+#+OPTIONS: email:nil          # do or don't export my email
+#+OPTIONS: f:t                # footnotes
+#+OPTIONS: H:3                # number of headline levels to export
+#+OPTIONS: inline:t           # export inline tasks?
+#+OPTIONS: num:t              # section numbers
+#+OPTIONS: p:nil              # toggle export of planning information
+#+OPTIONS: pri:nil            # priority cookies
+#+OPTIONS: prop:("ATTACH_DIR" "Attachments")           # include property drawers? or list to include?
+#+OPTIONS: stat:t             # statistics cookies?
+#+OPTIONS: tags:t             # org-export-with-tags? (what's a "tag"?)
+#+OPTIONS: tasks:t            # include TODO items ("tasks" some complexity here)
+#+OPTIONS: tex:t              # exports inline LaTeX
+#+OPTIONS: timestamp:t        # creation timestamp in the exported file?
+#+OPTIONS: toc:2              # set level limit in TOC or nil to exclude
+#+OPTIONS: todo:t             # inclusion of actual TODO keyword
+#+OPTIONS: |:t                # include tables
+
+#+CREATOR: Emacs 26.2 of 2019-04-12, org version: 9.2.2
+
+#+LaTeX_HEADER: \usepackage{bm}
+#+LaTeX_HEADER: \usepackage[T1]{fontenc}
+#+LaTeX_HEADER: \usepackage{cmll}
+#+LaTeX_HEADER: \usepackage{amsmath}
+#+LaTeX_HEADER: \usepackage{amsthm}
+#+LaTeX_HEADER: \usepackage{amssymb}
+#+LaTeX_HEADER: \usepackage{interval}  % must install texlive-full
+#+LaTeX_HEADER: \usepackage{mathtools}
+#+LaTeX_HEADER: \usepackage{interval}  % must install texlive-full
+#+LaTeX_HEADER: \usepackage[shortcuts]{extdash}
+#+LaTeX_HEADER: \usepackage{tikz}
+#+LaTeX_HEADER: \usepackage[utf8]{inputenc}
+
+# #+LaTeX_HEADER: \usepackage[top=0.90in,bottom=0.55in,left=1.25in,right=1.25in,includefoot]{geometry}
+
+#+LaTeX_HEADER: \usepackage[top=1.25in,bottom=1.25in,left=1.75in,right=1.75in,includefoot]{geometry}
+
+#+LaTeX_HEADER: \usepackage{palatino}
+
+#+LaTeX_HEADER: \usepackage{siunitx}
+#+LaTeX_HEADER: \usepackage{braket}
+#+LaTeX_HEADER: \usepackage[euler-digits,euler-hat-accent]{eulervm}
+#+LATEX_HEADER: \usepackage{fancyhdr}
+#+LATEX_HEADER: \pagestyle{fancyplain}
+#+LATEX_HEADER: \lhead{}
+#+LATEX_HEADER: \chead{\textbf{(c) Brian Beckman, 2023; Creative Commons Attribution-ShareAlike CC-BY-SA}}
+#+LATEX_HEADER: \rhead{}
+#+LATEX_HEADER: \lfoot{(c) Brian Beckman, 2023; CC-BY-SA}
+#+LATEX_HEADER: \cfoot{\thepage}
+#+LATEX_HEADER: \rfoot{}
+#+LATEX_HEADER: \usepackage{lineno}
+#+LATEX_HEADER: \usepackage{minted}
+#+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \usepackage{tipa}
+
+# #+LATEX_HEADER: \linenumbers
+
+#+LATEX_HEADER: \usepackage{parskip}
+#+LATEX_HEADER: \setlength{\parindent}{15pt}
+#+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \usepackage{xcolor}
+#+LATEX_HEADER: \usepackage{textcomp}
+#+LATEX_HEADER: \usepackage[atend]{bookmark}
+#+LATEX_HEADER: \usepackage{mdframed}
+#+LATEX_HEADER: \usepackage[utf8]{inputenc} % usually not needed (loaded by default)
+#+LATEX_HEADER: \usepackage[T1]{fontenc}
+
+#+LATEX_HEADER_EXTRA: \BeforeBeginEnvironment{minted}{\begin{mdframed}}
+#+LATEX_HEADER_EXTRA: \AfterEndEnvironment{minted}{\end{mdframed}}
+#+LATEX_HEADER_EXTRA: \bookmarksetup{open, openlevel=2, numbered}
+#+LATEX_HEADER_EXTRA: \DeclareUnicodeCharacter{03BB}{$\lambda$}
+# The following doesn't work: just search replace literal ESC=27=1B with ^[ !
+# #+LATEX_HEADER_EXTRA: \DeclareUnicodeCharacter{001B}{xx}
+
+#                                                    _
+#  _ _  _____ __ __  __ ___ _ __  _ __  __ _ _ _  __| |___
+# | ' \/ -_) V  V / / _/ _ \ '  \| '  \/ _` | ' \/ _` (_-<
+# |_||_\___|\_/\_/  \__\___/_|_|_|_|_|_\__,_|_||_\__,_/__/
+
+#+LaTeX_HEADER: \newcommand\definedas{\stackrel{\text{\tiny def}}{=}}
+#+LaTeX_HEADER: \newcommand\belex{BELEX}
+#+LaTeX_HEADER: \newcommand\bleir{BLEIR}
+#+LaTeX_HEADER: \newcommand\llb{low-level \belex}
+#+LaTeX_HEADER: \newcommand\hlb{high-level \belex}
+#+LaTeX_HEADER: \newcommand{\Coloneqq}{\mathrel{\vcenter{\hbox{$:\,:\,=$}}{}}}
+
+#+SELECT_TAGS: export
+#+STARTUP: indent
+
+#+LaTeX_CLASS_OPTIONS: [10pt,oneside,x11names]
+
+#+LATEX: \setlength\parindent{0pt}
+
+# #+STARTUP: latexpreview inlineimages showall
+# #+STARTUP: showall
+
+#+TITLE:  MASR --- Meta Abstract Semantics Representation
+#+AUTHOR: Brian Beckman
+#+DATE:   6 Apr 2023
+
+#+BEGIN_SRC elisp :exports none
+  (setq org-babel-python-command "python3")
+  (setq org-image-actual-width nil)
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-src-fontify-natively t)
+  (add-to-list 'org-latex-packages-alist '("" "listingsutf8"))
+  (setq org-export-latex-listings 'minted)
+  (setq org-latex-listings 'minted
+        org-latex-packages-alist '(("" "minted"))
+        org-latex-pdf-process
+        '("pdflatex --synctex=1 -shell-escape -interaction nonstopmode -output-directory %o %f"
+          "pdflatex --synctex=1 -shell-escape -interaction nonstopmode -output-directory %o %f"
+          "pdflatex --synctex=1 -shell-escape -interaction nonstopmode -output-directory %o %f"))
+  (org-babel-do-load-languages 'org-babel-load-languages
+   '((ditaa . t) (latex . t)))
+  (princ (concat (format "Emacs version: %s\n" (emacs-version))
+                 (format "org version: %s\n" (org-version))))
+#+END_SRC
+
+#+RESULTS:
+: Emacs version: GNU Emacs 28.2 (build 1, aarch64-apple-darwin21.1.0, NS appkit-2113.00 Version 12.0.1 (Build 21A559))
+:  of 2022-09-12
+: org version: 9.5.5
+
+* Abstract (TL;DR)
+
+** ASR
+
+The Abstract Semantics Representation (ASR) of
+LCompilers.[fn:lcompilers: https://github.com/lcompilers/libasr]
+is a syntax-free, machine-agnostic intermediate language (IL) for
+multiple compilers. Current compilers targeting ASR include
+LFortran[fn:: https://lfortran.org/] and LPython.[fn::
+https://lpython.org/] The advantage of removing all vestiges of
+original language syntax from the IL is flexibility: it's easier
+to write new front-ends and optimizing back ends. This is in sharp
+contrast to standard practice of decorating abstract syntax trees
+(ASTs) with semantic information and then carrying those into the
+back ends. That makes back ends less reusable because most
+languages have syntactic peculiarities that must be reflected in
+their ASTs. ASR has no known downsides: it's fast, compact (in
+binary) and a full-featured programming language in its own right.
+
+** Issues and Mitigations
+
+*** ASDL is Moribund
+
+ASR is currently specified in ASDL[fn::
+https://en.wikipedia.org/wiki/Abstract-Type_and_Scheme-Definition_Language],
+a moribund meta language published in 1987. To build an LCompiler,
+we read the ASDL grammar for ASR and generate fast processors in
+C++. Compiler front ends call these processors to manipulate ASR
+trees. Ultimately, ASR is fed to the compiler back ends, e.g.,
+LLVM, x86, C, etc.
+
+So far as we know, our ASDL tools are the only extant ones in the
+World. There is no ecosystem for it. We need to replace ASDL with
+something more modern with a robust, lively ecosystem.
+
+*** ASR Processors are Hard to Prototype and Verify / Validate
+
+ASR-to-ASR transformation is where the magic of LCompilers
+happens. Optimization, static type-checking, partial evaluation,
+abstract execution, and rewriting are examples of such
+transformations.
+
+Though ASR has an output representation in S-expressions, all work
+with it is currently done in C++ with opaque binary
+representations. As usual with such, it's difficult
+(time-consuming and error-prone) to prototype, verify, validate,
+visualize, modify, and debug.
+
+The mitigation is to perform these development activities with
+languages friendly to S-expressions and with rich toolkits for
+visualization and transformations. We've chosen Clojure, and have
+a prototype for validation and test-generation in Clojure.[fn::
+https://github.com/rebcabin/asr-tester]
+
+*** Volatility
+
+ASR changes nearly daily, for good reasons. However, existing ASR
+processors in Clojure must chase the ASDL specification, and that
+chasing consumes almost all development time in Clojure.
+
+We propose to replace the ground-level specification in ASDL with
+a ground-level specification in Clojure, directly. Initially, we
+can generate the needed C++ processors from Clojure, then rewrite
+them in C++ when ASDL stabilizes. I call this new ASR
+specification MASR, for Meta-ASR. It's pronounced "Maser,"
+building on Physics puns that abound in our work.
+
+Clojure for MASR has many advantages over the current approach:
+
+- Metavariables, attributes, and types are explicit via clojure
+  hash-maps[fn:: https://clojuredocs.org/clojure.core/hash-map]
+  and records[fn::
+  https://clojuredocs.org/clojure.core/defrecord].
+
+*** Type Systems
+
+Clojure has a powerful specification subsystem, clojure.spec.[fn::
+https://clojuredocs.org/clojure.spec.alpha] This should suffice
+for both ordinary, everyday type-checking as well as advanced
+research into dependent types, concurrency types,[fn::
+https://rholang.io/] rewriting, and proofs.
+
+
+* COMMENT Abstract (TL;DR)
+
+- This paper is a stepping-stone in self-education. Perhaps you
+  will join me for a while on the road.
+
+- In here, The Kitten Calculus, section 2.11 of /Communicating
+  Concurrent Kittens/,[fn:drowning:
+  https://github.com/rebcabin/concurrent-kittens/blob/main/intrinsic-function/kittens-in-boats.pdf]
+  is motivated as a type system for proving concurrency properties
+  of real programs via the Curry-Howard
+  Correspondence.[fn:curry-howard:
+  https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence]
+
+- The performance and extensibility of The Kitten Calculus is
+  informally analyzed. A roadmap for improvements is proposed.
+
+- A sequence of modular /kitten type systems/, which can be
+  applied to most existing programming languages without extending
+  them, is proposed, specifically for the Abstract Semantics
+  Representation (ASR) of LCompilers.[fn:lcompilers:
+  https://github.com/lcompilers/libasr]
+
+- An implementation sketch is exhibited. The sketch is not
+  proposed as a foundation, but rather an étude with some formal
+  (machine-checked) aspects. The purpose of the sketch is to guide
+  us in a different direction by exposing limitations in the
+  current direction.
+
+* COMMENT Introduction
+
+In /Communicating Concurrent Kittens/,[fn:drowning]
+we showed how
+
+#+caption: Whispering Kittens
+#+label: lst:whispering-boat
+#+begin_src clojure :eval never
+  (channel x
+    (par (say x z 0)
+         (par (hear x y
+                (say y x
+                  (hear x y 0)))
+              (hear z v
+               (say v v 0)))))
+#+end_src
+
+reduces to $0$, all the kittens napping.
+
+#+begin_quote
+/Why is this interesting?/
+#+end_quote
+
+Interpret Listing \ref{lst:whispering-boat} as a /type
+declaration/. Any program that satisfies that type declaration
+will halt!
+# One also says /any program that inhabits the type/,
+# thinking of the type as a collection of /witnesses/, exhibits, or
+# instances.
+
+#+begin_quote
+/You can't solve The Halting Problem!/
+#+end_quote
+
+Not in general, no. But in specific cases, yes. I can prove that
+
+#+LaTeX_HEADER: \newcommand{\iiiproposition}{\forall\,x, y\in{\mathbb{N}}, x + y\in{\mathbb{N}}}
+
+\[\iiiproposition\]
+
+halts. That is, one can sum any two integers and get an integer.
+All integers are finite and can be summed in a finite number of
+steps, with no chance of a spin, deadlock, race, or other
+divergent behavior. Interpret that mathematical proposition as a
+type. In Python, with PEP 483,[fn:: https://peps.python.org/pep-0483/]
+one writes
+
+\vskip 0.26cm
+#+begin_src python exports code
+  def add(x: int, y: int) -> int:
+      return x + y
+  from typing import Callable
+  integer_add: Callable[[int, int], int] = add
+#+end_src
+
+#+RESULTS:
+: None
+
+or, in more ordinary mathematical notation,
+
+#+LaTeX_HEADER: \newcommand{\iiitype}{\mathrm{int} \rightarrow \mathrm{int} \rightarrow \mathrm{int}}
+
+\[\mathrm{integer\_add}: \iiitype\]
+
+There is not enough information in this type to say anything about
+halting. A program satisfying this type might loop forever, say,
+presumably via a bug.
+
+To do better, perhaps encode the proposition $\iiiproposition$
+in the lambda calculus, show inductively that it halts in a finite
+number of steps, then exhibit a real program that satisfies the
+type. That is the approach taken in /The Little
+Typer/,[fn:the-little-typer: Daniel P. Friedman; David Thrane
+Christiansen; Duane Bibby; Robert Harper; Conor McBride, "The
+Little Typer," in The Little Typer , MIT Press, 2018, pp.1-6.]
+though not for concurrency.
+
+Going deeper, perhaps encode the proposition $iiiproposition$ in
+the concurrent kitten calculus, show it reduces to $0$ in a finite
+number of steps, then exhibit a real program satisfying the type.
+We'd gain assurance that the real program cannot deadlock, race,
+or starve. The sequential version would emerge as a special case.
+
+#+begin_quote
+/Why is this a big deal?/
+#+end_quote
+
+Have you ever experienced a spinning wheel in a browser or online
+app? Have you ever experienced an app that unexpectedly returns
+different answers every time you run it?
+
+These are signs of bugs, sequential or concurrent. Sequential bugs
+are relatively easy to categorize, though halting is not possible
+to prove in general. Concurrency bugs have a large taxonomy,[fn::
+https://ucare.cs.uchicago.edu/pdf/asplos16-TaxDC.pdf][fn::
+https://jisajournal.springeropen.com/articles/10.1186/s13174-017-0055-][fn::
+https://www.cs.purdue.edu/homes/pfonseca/papers/dsn2010-concurrencybugs.pdf][fn::
+https://en.wikipedia.org/wiki/Online_transaction_processing][fn::
+https://www.alibris.com/search/books/subject/Transaction-systems-Computer-systems]
+and more cases of failure-to-halt are detectable by type-checking.
+
+# All sequential
+# programs are trivially concurrent, so it suffices to categorize
+# c
+
+# , and there are very, very many
+# possible concurrency bugs.[fn::
+# https://ucare.cs.uchicago.edu/pdf/asplos16-TaxDC.pdf][fn::
+# https://jisajournal.springeropen.com/articles/10.1186/s13174-017-0055-][fn::
+# https://www.cs.purdue.edu/homes/pfonseca/papers/dsn2010-concurrencybugs.pdf]
+# Witness the large number of thick books on concurrency in Java,
+# C++, Python, every programming language under the sun.[fn::
+# https://www.goodreads.com/shelf/show/concurrency] And we haven't
+# yet mentioned transaction systems.[fn::
+# https://en.wikipedia.org/wiki/Online_transaction_processing][fn::
+# https://www.alibris.com/search/books/subject/Transaction-systems-Computer-systems]
+
+Programmers handle concurrency by manual labor, following
+"programming patterns."[fn::
+https://en.wikipedia.org/wiki/Concurrency_pattern] Then
+programmers test their concurrent programs by running randomized
+data and delays through them. And still, real programs hang,
+crash, or otherwise diverge.
+
+Why? Manual labor, fuzz testing, and stress testing is nowhere
+near good enough to prevent or detect all concurrency bugs. Even
+formal methods, while good enough to check designs[fn::
+https://lamport.azurewebsites.net/tla/amazon-excerpt.html] leave a
+gap between design and coding.
+
+#+begin_quote
+/Programmers make concurrency mistakes. \newline Finite testing isn't
+good enough./
+#+end_quote
+
+Much better is a proof, infinitely better, in fact. Exhibiting a
+program that satisfies a type check amounts to a proof that the
+propositions expressed in the type are true.[fn:curry-howard]
+
+Our job, then, is to craft type systems that assert good
+concurrent behavior, that assert halting when it is possible to do
+so; then to craft efficient type-checking systems that can be
+applied at either compile time and run time.
+
+There has been beautiful work on robust multithread concurrency by
+type-checking.[fn::
+https://www.microsoft.com/en-us/research/publication/beautiful-concurrency/]
+There are new programming languages with efficient, distributed,
+type-checked, transactional concurrency.[fn:: https://rholang.io/]
+You can skip all the rest of my papers on this topic and jump
+straight to the end by following those links.
+
+# For my own reasons,[fn:: I'm afraid of the deep, cold,
+# shark-infested Sea of Forgotten Precedence.]
+
+** Kitten Types
+
+Rather than adopting a new programming language, I want a
+modularized /kitten-type-system/, with distributed, concurrent,
+parallel type-checking power. I wish to enhance --- not to
+extend![fn:: not change the existing languages, but add to them
+within their existing enhancement frameworks, say with
+user-defined types.] --- exiting programming languages. In
+particular, I wish to empower the Abstract Semantics
+Representation (ASR) of LCompilers[fn:lcompilers] with /kitten
+types/. The LCompilers already have ultra-fast front ends for
+LFortran and LPython,[fn:: LPython is a strict subset of ordinary
+Python --- no extensions. LFortran is on the threshold of full
+Fortran, but will never be s superset.]
+
+At the level of enhancing ASR, syntax is an impediment. We need
+kittens in boats,[fn:drowning] i.e., S-expressions.[fn::
+https://en.wikipedia.org/wiki/S-expression]
+
+# I'd rather avoid new
+# syntax; I'd rather save the drowning kittens.[fn:drowning] I'd
+# like to express type claims and witnesses with kittens in boats, in the
+# style of /The Little Typer/.[fn:the-little-typer]
+
+It will take time to get there. For now, let's exhibit a program
+that satisfies Listing \ref{lst:whispering-boat}, the witness and
+its type-check rolled into one. That program will simply reduce
+that expression to $0$, with all the kittens napping. It won't do
+so /efficiently/, and we'll explain why. We'll get efficient and
+actually distributed and concurrent, step-by-step, grounded in
+first principles.
+
+\clearpage
+* COMMENT The Punch Line, First
+
+Starting with Part 3 of /Concurrent Kittens/, consider our three
+little kittens, expressed as Clojure /hash-maps/:[fn::
+https://clojuredocs.org/clojure.core/hash-map]
+
+\vskip 0.26cm
+#+begin_src clojure :eval never :exports code
+(def kit-1
+  (say. 'x 'z (nap.)))
+kit-1
+;; => {:say-chan x, :msg z, :K {}}
+#+end_src
+
+\vskip 0.26cm
+#+begin_src clojure :eval never :exports code
+  (def kit-2
+    (hear. 'x 'y
+           (say. 'y 'x
+                 (hear. 'x 'y (nap.)))))
+  kit-2
+  ;; => {:hear-chan x,
+  ;;     :msg y,
+  ;;     :K {:say-chan y, :msg x,
+  ;;         :K {:hear-chan x, :msg y, :K {}}}}
+#+end_src
+
+\vskip 0.26cm
+#+begin_src clojure :eval never :exports code
+  (def kit-3
+    (hear. 'z 'v
+           (say. 'v 'v (nap.))))
+  kit-3
+  ;; => {:hear-chan z, :msg v,
+  ;;     :K {:say-chan v, :msg v, :K {}}}
+#+end_src
+
+and the whispering boat containing nested little =par= boats, each
+with a pair, named =:K= and =:L=, of kittens-or-boats:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never :exports code
+  (def whisper-boat
+    (channel. 'x
+              (par. kit-1
+                    (par. kit-2 kit-3))))
+  whisper-boat
+  ;; => {:whisper-chan x,
+  ;;     :K
+  ;;     {:K {:say-chan x, :msg z, :K {}},
+  ;;      :L {:K {:hear-chan x, :msg y,
+  ;;              :K {:say-chan y, :msg x,
+  ;;                  :K {:hear-chan x, :msg y, :K {}}}},
+  ;;          :L {:hear-chan z, :msg v,
+  ;;              :K {:say-chan v, :msg v, :K {}}}}}}
+#+end_src
+
+** Flattening =par=
+
+First, we'll want to flatten the nest of =par='s. The whispering
+boat is currently a little boat containing =kit-1= and another
+little boat that contains =kit-2= and =kit-3=. There's no good
+reason to retain that structure, as =par= is commutative and
+associative. All the kittens in any nest of =par='s might as well
+be in one, long boat. Such makes the rest of the code much easier.
+
+Introduce a new type, =pars=, to hold a flattened nest of =par='s
+in an attributes called =:kits=.
+
+# Model both =par= and =pars= with Clojure
+# =defrecords=.[fn::
+# https://clojuredocs.org/clojure.core/defrecord][fn:: =defrecords=
+# are dynamically generated Java types. Clojure also has =deftype= for
+# aggregating interfaces, but we don't use it here.]
+# =Pars= will take a vector, named =kits=, of any number of kittens.
+# Listing \ref{lst:pars} exhibits the =pars= type with the names of
+# the six protocols that every kitten must implement. The full
+# source is found at the location in the footnote.[fn::
+# https://github.com/rebcabin/concurrent-kittens/blob/main/intrinsic-function/src/intrinsic_function/core.clj#L107]
+
+# #+label: lst:pars
+# #+caption: The =pars= Type, Showing the Names of Protocols
+# #+begin_src clojure :eval never :exports code
+#   (defrecord pars    [kits]
+#     Names     ,,,
+#     Rename    ,,,
+#     Subst     ,,,
+#     Flatten   ,,,
+#     Children  ,,,
+#     Path      ,,,
+# #+end_src
+
+# To flatten, take any =par= and replace it, recursively, with a
+# =pars=. See the source code at the location in the
+# footnote.[fn::
+# https://github.com/rebcabin/concurrent-kittens/blob/main/intrinsic-function/src/intrinsic_function/core.clj#L152]
+# or the abbreviated machinery in Listing \ref{lst:par}.
+
+# #+label: lst:par
+# #+caption: The =par= Type, Showing only the Flatten Protocol
+# #+begin_src clojure :eval never :exports code
+#   (defrecord par     [K L]
+#     ,,,
+#     ;; To flatten a par:
+#     ;; 1. Flatten each of its children, K & L, removing
+#     ;;    every par.
+#     ;; 2. Each child is either a pars or not.
+#     ;;    Iff a pars, its :kits are non-nil.
+#     ;; 3. Iff both children are pars, concat
+#     ;;    their :kits into a new pars [sic].
+#     ;; 4. Iff one is a pars and the other not,
+#     ;;    concat the non-pars with the :kits of the pars.
+#     ;; 5. Else, :kits are a vector of the two non-pars.
+#
+#     Flatten ; the flatten protocol has one method
+#     (flatten-pars [this]
+#       (let [kf  (flatten-pars K) ; recurses depth-first
+#             kfk (:kits kf)       ; pars have :kits,
+#             lf  (flatten-pars L) ;  nothing else does
+#             lfk (:kits lf)       ; nil if no kits
+#             new-kits
+#             (cond
+#               (and (nil? kfk) (nil? lfk)) [kf lf]
+#               (nil? kfk)  (vec (concat [kf] lfk))
+#               (nil? lfk)  (vec (concat kfk [lf]))
+#               :else       (vec (concat kfk lfk)))]
+#         (pars. new-kits)))
+#     ,,,
+#   )
+# #+end_src
+
+With this, we now have a simpler whispering-boat to look at:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never :exports code
+  (def whisper-boat-2
+    (channel. 'x
+              (pars. [kit-1 kit-2 kit-3])))
+  whisper-boat-2
+  ;; => {:whisper-chan x,
+  ;;     :K
+  ;;     {:kits
+  ;;      [{:say-chan x, :msg z, :K {}}
+  ;;       {:hear-chan x,
+  ;;        :msg y,
+  ;;        :K {:say-chan y, :msg x,
+  ;;            :K {:hear-chan x, :msg y, :K {}}}}
+  ;;       {:hear-chan z, :msg v,
+  ;;        :K {:say-chan v, :msg v, :K {}}}]}}
+#+end_src
+
+We also have a =Flatten= protocol, implemented by every kitten
+type, and tested at the location indicated in this footnote.[fn::
+https://github.com/rebcabin/concurrent-kittens/blob/main/intrinsic-function/test/intrinsic_function/core_test.clj#L275]
+The implementation of =Flatten= for the =par= type is implemented
+at the location in this footnote.[fn::
+https://github.com/rebcabin/concurrent-kittens/blob/main/intrinsic-function/src/intrinsic_function/core.clj#L152]
+
+Here is the reduction --- the punch line --- at work, in three
+iterations of =match-subst-gobble= (location in this foontote[fn::
+https://github.com/rebcabin/concurrent-kittens/blob/main/intrinsic-function/src/intrinsic_function/core.clj#L507]):
+
+\newpage
+First, the top-level hear-say pair of kittens, communicating on
+channel =x=, switch to channel =z=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never :exports code
+  (match-subst-gobble
+   whisper-boat-2)
+  ;; => {:whisper-chan x,
+  ;;     :K
+  ;;     {:kits
+  ;;      [{}
+  ;;       {:say-chan z, :msg x,
+  ;;        :K {:hear-chan x, :msg z, :K {}}}
+  ;;       {:hear-chan z, :msg v,
+  ;;        :K {:say-chan v, :msg v, :K {}}}]}}
+#+end_src
+
+Next, the hear-say pair communicating on channel =z= switch to
+channel =x=. It matters not whether this =x= is the same as the
+old channel =x=. In fact, it's undetectable. Notice that this step
+effects the substitution of =x= for =v=, the /free variable/ in
+the hear-channel of =kit-3=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never :exports code
+(match-subst-gobble
+ (match-subst-gobble
+  whisper-boat-2))
+;; => {:whisper-chan x,
+;;     :K
+;;     {:kits
+;;      [{}
+;;       {:hear-chan x, :msg z, :K {}}
+;;       {:say-chan x, :msg x, :K {}}]}}
+#+end_src
+
+Finally, the remaining hear-say pair communicate =x= on =x=. After
+that step, there is nothing more to do and all the kittens are
+safely napping:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never :exports code
+(match-subst-gobble
+ (match-subst-gobble
+  (match-subst-gobble
+   whisper-boat-2)))
+;; => {:whisper-chan x, :K {:kits [{} {} {}]}}
+#+end_src
+
+We don't bother collapsing the napping kittens into one, big
+napping kitten and removing the now-useless whispering boat, but
+it would be straightforward to do so.
+
+We can write a tail-recursive Clojure loop[fn::
+https://clojuredocs.org/clojure.core/loop] that can reduce any
+whisper boat to a boat full of napping kittens. In particular, it
+can reduce =whisper-boat-2=:
+
+\newpage
+\vskip 0.26cm
+#+begin_src clojure :eval never :exports code
+(loop [boat whisper-boat-2]
+  (if (every? #(= (nap.) %) (:kits (:K boat)))
+    boat
+    (recur (match-subst-gobble boat))))
+;; => {:whisper-chan x, :K {:kits [{} {} {}]}}
+#+end_src
+
+* COMMENT How Does it Work?
+
+** Find and Match Hear-Say Pairs
+
+#+begin_quote
+/Find a hear-say pair with matching channels in the highest-level
+=pars= in a flattened kitten-boat./
+#+end_quote
+
+Listing \ref{lst:find} shows a recursive routine for finding the
+top-level =pars= and for recording the path to it. The path is a
+reminder to implement a future Huet zipper,[fn::
+https://clojuredocs.org/clojure.zip].
+
+This function has two overloads, differing in arity --- the number
+of arguments. This is Clojure's way of supplying default
+arguments.
+
+#+label: lst:find
+#+caption: Finding the Top =pars= in a Flattened Kitten:
+#+begin_src clojure :eval never :exports code
+(defn find-top-pars
+
+  ([flat-kit, path-so-far] ; arity-1 overload
+   (if (instance? pars flat-kit)
+     {:path path-so-far,
+      :top-pars flat-kit}
+     (let [cs (children flat-kit)
+           ps (map #(find-top-pars % path-so-far) cs)]
+       (if (empty? cs)
+         ()
+         (let [fp (first ps)]
+           (if (and fp (not (empty? fp)))
+             {:path (conj path-so-far (path-key flat-kit))
+              :top-pars (:top-pars fp)}
+             () ))))))
+
+  ([flat-kit] ; arity-0 overload
+   {:pre [(s/assert ::flat-kit flat-kit)]}
+   (find-top-pars flat-kit [])))
+#+end_src
+
+Notice that the arity-0 overload includes a precondition[fn::
+https://en.wikipedia.org/wiki/Precondition] that /type-checks/ its
+argument as flat. =Find-top-pars= should be called only through
+the arity-0 overload, and only with a kitten in which all =par='s
+have been flattened into =pars='s. The precondition will throw an
+error if =find-top-pars= is called with any =par= in it,
+recursively. Here is the recursive Clojure.spec[fn::
+https://clojuredocs.org/clojure.spec.alpha] that implements the check:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never :exports code
+(s/def ::flat-kit
+  (s/and #(not (instance? par %))
+         #(every? (fn [child]
+                    (s/valid? ::flat-kit child))
+                  (children %))))
+#+end_src
+
+Clojure specs are at least as strong as type checks.[fn::
+https://www.reddit.com/r/Clojure/comments/54r5dn/spec_vs_types_questions_possibly_dumb_or_off_base/]
+I am not prepared to support this claim, but merely opine it for
+now.
+
+Listing \ref{lst:find-test} shows a REPL-test[fn::
+https://medium.com/codex/test-driven-vs-repl-driven-development-809d3c7a681]
+of =find-top-pars=, and more comprehensive unit tests are found at
+the location in this footnote.[fn:: https://github.com/rebcabin/concurrent-kittens/blob/main/intrinsic-function/test/intrinsic_function/core_test.clj#L92]
+
+#+label: lst:find-test
+#+caption: REPL-test of Finding the Top =pars= in a Flattened Kitten:
+#+begin_src clojure :eval never :exports code
+  (find-top-pars whisper-boat-2)
+  ;; => {:path [[:channel :K]],
+  ;;     :top-pars
+  ;;     {:kits
+  ;;      [{:say-chan x, :msg z, :K {}}
+  ;;       {:hear-chan x, :msg y,
+  ;;        :K {:say-chan y, :msg x,
+  ;;            :K {:hear-chan x, :msg y, :K {}}}}
+  ;;       {:hear-chan z, :msg v,
+  ;;        :K {:say-chan v, :msg v, :K {}}}]}}
+#+end_src
+
+Next, in Listing \ref{lst:find-hearsay}, we find all the =hear='s and
+=say='s in the top =pars= in a flattened kitten, and bodge it into
+the /path/ structure via Clojure's =assoc=:[fn:: https://clojuredocs.org/clojure.core/assoc]
+
+#+label: lst:find-hearsay
+#+caption: Finding the Top =hear='s and =say='s in a Flattened Kitten:
+#+begin_src clojure :eval never :exports code
+(defn find-top-says-and-hears
+  [flat-kit]
+  (let [fop   (find-top-pars flat-kit)
+        ps    (:kits (:top-pars fop))
+        says  (filter (partial instance? say)  ps)
+        hears (filter (partial instance? hear) ps)]
+    (if (not (empty? fop))
+      (assoc fop :says says, :hears hears)
+      ())))
+#+end_src
+
+Listing \ref{lst:find-hearsay-test} exhibits a REPL-test of
+Listing \ref{lst:find-hearsay}. We don't have a separate unit test
+for it because it's so easy to see how it works.
+
+#+label: lst:find-hearsay-test
+#+caption: Finding the Top =pars= in a flattened kitten:
+#+begin_src clojure :eval never :exports code
+  (find-top-says-and-hears whisper-boat-2)
+  ;; => {:path [[:channel :K]],
+  ;;     :top-pars
+  ;;     {:kits
+  ;;      [{:say-chan x, :msg z, :K {}}
+  ;;       {:hear-chan x, :msg y,
+  ;;        :K {:say-chan y, :msg x,
+  ;;            :K {:hear-chan x, :msg y, :K {}}}}
+  ;;       {:hear-chan z, :msg v,
+  ;;        :K {:say-chan v, :msg v, :K {}}}]},
+  ;;     :says ({:say-chan x, :msg z, :K {}}),
+  ;;     :hears
+  ;;     ({:hear-chan x, :msg y,
+  ;;       :K {:say-chan y, :msg x,
+  ;;           :K {:hear-chan x, :msg y, :K {}}}}
+  ;;      {:hear-chan z, :msg v,
+  ;;       :K {:say-chan v, :msg v, :K {}}})}
+#+end_src
+
+Finally, Listing \ref{lst:match-hearsay} shows finding a matching
+pair, by channel, in the top =pars= of a flattened boat, then
+bodging into the result. Spoiler: this routine is quadratically
+/slow/ because it examines the Cartesian product of all =hear='s
+and =say='s.
+
+#+label: lst:match-hearsay
+#+caption: Matching a =hear= with a =say= by Channel
+#+begin_src clojure :eval never :exports code
+(defn non-deterministic-say-hear-match
+  [flat-kit]
+  {:pre [(s/assert ::flat-kit flat-kit)]}
+  (let [tsh (find-top-says-and-hears flat-kit)]
+    (if (and (not (empty? tsh))
+             (not (empty? (:says tsh)))
+             (not (empty? (:hears tsh))))
+      (let [match-say (first (:says tsh)) ; could be any
+            match-hear (first (filter
+                               #(= (:say-chan match-say)
+                                   (:hear-chan %))
+                               (:hears tsh)))]
+        (assoc tsh :match-say match-say, :match-hear match-hear))
+      tsh)))
+#+end_src
+
+#+label: lst:match-hearsay-test
+#+caption: REPL-test of Matching a =hear= with a =say=
+#+begin_src clojure :eval never :exports code
+  (non-deterministic-say-hear-match
+   whisper-boat-2)
+  ;; => {:path [[:channel :K]],
+  ;;     :top-pars
+  ;;     {:kits
+  ;;      [{:say-chan x, :msg z, :K {}}
+  ;;       {:hear-chan x, :msg y,
+  ;;        :K {:say-chan y, :msg x,
+  ;;            :K {:hear-chan x, :msg y, :K {}}}}
+  ;;       {:hear-chan z, :msg v,
+  ;;        :K {:say-chan v, :msg v, :K {}}}]},
+  ;;     :says ({:say-chan x, :msg z, :K {}}),
+  ;;     :hears
+  ;;     ({:hear-chan x, :msg y,
+  ;;       :K {:say-chan y, :msg x,
+  ;;           :K {:hear-chan x, :msg y, :K {}}}}
+  ;;      {:hear-chan z, :msg v,
+  ;;       :K {:say-chan v, :msg v, :K {}}}),
+  ;;     :match-say {:say-chan x, :msg z, :K {}},
+  ;;     :match-hear
+  ;;     {:hear-chan x, :msg y,
+  ;;      :K {:say-chan y, :msg x,
+  ;;          :K {:hear-chan x, :msg y, :K {}}}}}
+#+end_src
+
+** Subst
+
+** Gobble
+
+** Match-Subst-Gobble
+
+* COMMENT How Slow is it?
+* COMMENT Is it General?
+<<generality>>
+
+* COMMENT $\Pi$ Communicating Concurrent Kittens
+
+From the wiki page:[fn:PI]
+
+#+LaTeX_HEADER: \newcommand\napping    [0]{0}
+#+LaTeX_HEADER: \newcommand\chatting   [3]{\bar{#1}\langle{#2}\rangle{}.\,#3}
+#+LaTeX_HEADER: \newcommand\listening  [3]{#1(#2).\,#3}
+#+LaTeX_HEADER: \newcommand\two        [2]{#1\mathrel{\vert}{#2}}
+#+LaTeX_HEADER: \newcommand\whispering [2]{(\nu\,#1)\,{#2}}
+#+LaTeX_HEADER: \newcommand\mama       [1]{!\,{#1}}
+
+#+begin_export latex
+\begin{equation}
+\begin{array}{clll}
+  P, Q & \Coloneqq \\
+       & | \quad \napping            & \textrm{napping kitten}    & \textrm{Do nothing; halt.}                                    \\
+       & | \quad \listening{x}{y}{P} & \textrm{listening kitten}  & \textrm{Listen on channel }x\textrm{ for channel }y\textrm{.} \\
+       & | \quad \chatting{x}{y}{P}  & \textrm{chatting kitten}   & \textrm{Say "}y\textrm{" on channel }x\textrm{; don't wait.}  \\
+       & | \quad \two{P}{Q}          & \textrm{two kittens}       & \textrm{Run }P\textrm{ and }Q\textrm{ in parallel.}           \\
+       & | \quad \whispering{x}{P}   & \textrm{whispering kitten} & \textrm{fresh channel name }x\textrm{; Use it in }P\textrm{.} \\
+       & | \quad \mama{P}            & \textrm{mama cat}          & \textrm{Run copies of }P\textrm{ forever.} \\
+\end{array}
+\end{equation}
+#+end_export
+
+This pi calculus is-low-level, like $\lambda$ calculus, only with
+concurrency added. We'd have to build up numbers (like Church
+numerals), Booleans, sets, functions, conditionals, loops,
+everything. We'll do a little better, later. First, let's save
+some drowning kittens!
+
+** A Cartoon
+
+Here is a tiny calculation cartoon, again from the wiki page,
+showing a reduction similar to an \eta\nobreakdash-reduction in
+\lambda calculus:
+
+#+LaTeX_HEADER: \newcommand{\kitOne}{\chatting{x}{z}{\napping}}
+#+LaTeX_HEADER: \newcommand{\kitTwo}{\listening{x}{y}{\chatting{y}{x}{\listening{x}{y}{\napping}}}}
+#+LaTeX_HEADER: \newcommand{\kitThree}{\listening{z}{v}{\chatting{v}{v}{\napping}}}
+
+#+begin_export latex
+\begin{equation}
+\begin{array}{clll}
+  (\nu\,x) & (      & \kitOne \\
+           & \vert  & \kitTwo \\
+           & \vert  & \kitThree \\
+       {}  & )
+\end{array}
+\end{equation}
+#+end_export
+
+#+LaTeX_HEADER: \newcommand{\wkit}{\whispering{x}{P}}
+
+I see four drowning kittens. Kitten Zero is a whispering
+kitten $\wkit$. She whispers "$x$" to the other kittens,
+meaning "let's talk on channel $x$!" One might write:
+
+#+begin_export latex
+\begin{equation}
+\label{eqn:the-first-boat}
+\whispering{x}{\left(
+\begin{array}{clll}
+ {}     & \kitOne \\
+ \vert  & \kitTwo \\
+ \vert  & \kitThree \\
+\end{array}\right)}
+\end{equation}
+#+end_export
+
+Kitten Zero is obviously going to be the captain of a boat
+containing the remaining kittens, but we've only just started to
+wright boats.
+
+#+begin_quote
+/We'll say "kitten" and mean "an actual kitten, or a little boat
+containing kittens or more little boats." Each little boat contains zero-or-more kittens and zero-or-more more littler boats./
+#+end_quote
+
+One of the three remaining kittens is chatting on channel $x$ and
+the other two are listening, one on $x$ and the other on $z$.
+These three are doing their things two at a time,
+$\two{P}{(\two{Q}{R})}$ or $\two{(\two{P}{Q})}{R}$, it doesn't
+matter how you think about it (/associativity of/ par).[fn:: A
+better /par/ boat could hold any number of kittens, in any order.
+We'll get there.]
+
+Kitten One, $\kitOne$, chats on $x$, "Hey, let's continue chatting
+on $z$!" Then she takes a nap. Only one of the other kittens,
+Kitten Two, $\kitTwo$, listens on $x$.[fn:: If more than one
+kitten listens on the same channel, that is a classic race
+condition. A compiler can warn about this directly from the syntax
+of the program! At run time, only one will hear and the other will
+starve, at least for a while.] She thinks, "Oy! Here I am waiting
+on $x$ for someone to tell me where (on what channel) to continue,
+and I just heard 'continue on $z$,' so I'll switch to $z$. After I
+switch, I'll have something to say, but just let me switch,
+first!"
+
+#+begin_export latex
+\begin{equation}
+\label{eqn:the-first-chat}
+\whispering{x}{\left(
+\begin{array}{clll}
+ {}     & \kitOne \\
+ {}     & \parallel \hspace{4.5pt} \downarrow \\
+ \vert  & \kitTwo \\
+ {}     & \hspace{9.5pt}\downarrow\hspace{8.5pt}\downarrow \\
+ \vert  & \listening{x}{z}{\chatting{z}{x}{\listening{x}{y}{\napping}}} \\
+ \vert  & \kitThree \\
+\end{array}\right)}
+\end{equation}
+#+end_export
+
+#+LaTeX_HEADER: \newcommand{\kitTwoSuffix}{\chatting{y}{x}{\cdots}}
+#+LaTeX_HEADER: \newcommand{\kitTwoSuffixx}{\chatting{y}{x}{\listening{x}{y}{\napping}}}
+
+The out-channel $\bar{x}$ of Kitten One matches the in-channel $x$
+of Kitten Two; Kitten One said something and Kitten Two heard it.
+The /say-prefix/, $\bar{x}\langle{}z\rangle$, before the dot of
+Kitten One, $\kitOne$, gets gobbled up, and then Kitten One takes a
+nap, $0$. The /hear-prefix/, $x(y)$, before Kitten Two's first dot, the
+first dot of $\kitTwo$, also gets gobbled up. Plus, $y$ changes to
+$z$ in the next say-prefix, $\bar{y}\langle{x}\rangle$, of Kitten
+Two's first suffix, $\kitTwoSuffixx$:
+
+#+begin_export latex
+\begin{equation}
+\label{eqn:after-step-one}
+\whispering{x}{\left(
+\begin{array}{clll}
+ {}     & \napping  \\
+ \vert  & \chatting{z}{x}{\listening{x}{y}{\napping}} \\
+ \vert  & \listening{z}{v}{\chatting{v}{v}{\napping}} \\
+\end{array}\right)}
+\end{equation}
+#+end_export
+
+This is rather like the substitution of actual arguments for
+formal parameters in a function call in an ordinary programming
+language.
+
+** Free and Bound
+
+#+LaTeX_HEADER: \newcommand{\kitTwoHearSuffix}{\listening{x}{y}{\napping}}
+
+Before this substitution of $z$ for $y$, the $y$ in Kitten
+Two's next say-prefix, $\bar{y}\langle{x}\rangle$, is /free/.
+That means it must change to $z$. However, the $y$ in Kitten
+Two's next hear-suffix, $x(y).0$, isn't free. The $y$ in
+$x(y)$ doesn't change to $z$ because that $y$ is /local/ to
+the final suffix, $0$. If $0$ had more to do using $y$, that
+$y$ would shadow the earlier $y$. In this case, the suffix $0$
+has no more to do; don't worry.
+
+/Bound/ is a synonym for /not free/. A variable $y$ is either
+free or bound in a prefix, $(\nu\,x)$,
+$\bar{y}\langle{x}\rangle$, or $x(y)$. It can't be both.[fn::
+What about the strange case $x(x)$? We'll solve that soon.]
+Once $y$ is bound, it's bound in all suffixes to the right up
+until the next binding of $y$. Any re-bindings of $y$ in a
+long suffix pertain to the closest binding to the left. That
+closest binding must be a whispering kitten or a listening
+kitten.
+
+\newpage
+** Binding
+
+There are only two ways to bind a name --- only two /binding prefix forms/:
+
+- whispering :: --- $\whispering{x}{P}$ binds $x$ in its suffixes
+  $P.Q.\cdots$, \newline up until the next binding of $x$.
+
+- listening :: --- $\listening{x}{y}{Q}$ binds $y$ in its suffixes
+  $Q.R.\cdots$, \newline up until the next binding of $y$.
+
+#+LaTeX_HEADER: \theoremstyle{definition}
+#+LaTeX_HEADER: \newtheorem{definition}{Definition}
+
+#+LaTeX_HEADER: \theoremstyle{slogan}
+#+LaTeX_HEADER: \newtheorem{slogan}{Slogan}
+
+#+LaTeX_HEADER: \theoremstyle{warning}
+#+LaTeX_HEADER: \newtheorem{warning}{Warning}
+
+\label{def:binding}
+\begin{definition}{\emph{binding, scope:}}
+  Each binding of a given name, say $y$, pertains to the entire
+  suffix of its binding form, up until the next binding of $y$.
+  That new binding
+  \emph{shadows} the prior binding. This is like the
+  \emph{environment model} or \emph{lexical binding} of an
+  ordinary programming language.
+  A sequence of binding prefixes describes a right-hugging
+  nest of \emph{scopes} in which to look up values of
+  bound variables.
+
+  Shadowing, if undesirable, can be removed
+  by $\alpha$\nobreakdash-renaming the new bound occurrence of $y$,
+  say to $y_1$,
+  bringing the prior binding of $y$ into scope of $y_1$.
+  $\blacksquare$
+\end{definition}
+
+\alpha\nobreakdash-Renaming is explained immediately below in
+Section [[renaming]].
+
+In our example, looking at Kitten Two's suffix, $\kitTwoSuffixx$
+in Equation \ref{eqn:the-first-boat} before any changes, one
+doesn't yet know /to what value/ $y$ gets bound. One only finds
+out later in Equations \ref{eqn:the-first-chat} and
+\ref{eqn:after-step-one}, when Kitten Two's hear-prefix, $x(y)$,
+lines up with $\bar{x}$ in Kitten One's say-prefix,
+$\bar{x}\langle{z}\rangle$.
+
+This usage of the word
+/bound/ means /eventually bound to something/. The term
+/bound/ by itself can be ambiguous, because one might say
+/bound/ either when we already do know /bound to what/ or when we
+might only eventually know.
+
+** Substitution
+
+Here is a general rule for /substitution/, with some
+terminology to be clarified:
+
+\label{def:substitution}
+\begin{definition}{\emph{substitution}:}
+  When the channel $x$ of a left-most say-prefix, $\bar{x}\langle{z}\rangle$,
+  equals the channel $x$ of a left-most hear-prefix, $x(y)$, the prefixes
+  are gobbled up and all free occurrences of $y$ on the
+  right of the hear-prefix suffer substitution of $z$ for $y$. If there
+  are two or more listeners on $x$, the results are non-deterministic.
+  $\blacksquare$
+\end{definition}
+
+Hiding in that little word "non-deterministic" is the whole value
+proposition of this exercise: we're going to write programs that
+can detect race conditions at compile time, in a type checker!
+The compiler can warn the user. Sometimes, race conditions are
+desired, but usually they're not.
+
+** Renaming
+<<renaming>> What if there were already some bound $z$'s
+amongst the suffixes of free $y$'s? The kitten listening on
+$y$ and hearing $z$ would have to patch that up first. It
+doesn't matter what temporary name she gives to a channel, so
+long as the same channel has the same bound name everywhere in
+the suffixes. One might rename preexisting $z$'s something
+like $z_1$ so long as $z_1$ doesn't itself collide with
+preexisting names. That's /alpha renaming/. It might
+harmlessly un-shadow some names.
+
+One doesn't have that problem here, but we might later.
+Kittens always remember their sailorly duty to clean up messes
+in their boats.
+
+\label{def:renaming}
+\begin{definition}{\emph{renaming}:}
+  Prior to substitution of $z$ for a free variable $y$ in the suffixes of
+  a hear-prefix,
+  any bound occurrences of $z$ to the right of the hear-prefix must be
+  renamed consistently lest they collide with the incoming $z$
+  that replaces $y$. $\blacksquare$
+\end{definition}
+
+** Animated Cartoons
+
+I can't animate cartoons in a paper, but I visualize
+calculations as symbols moving around in an animated cartoon
+(please forgive another of my mental afflictions:
+synaesthesia). It saves me mistakes, plus the overwhelming time
+spent looking for mistakes. I animate calculations
+with pen and paper.
+
+** Finishing Up
+
+In Equation \ref{eqn:after-step-one}, Kitten Two, now
+$\chatting{z}{x}{\listening{x}{z}{\napping}}$, says on $z$
+"Switch to $x$, will you?" to whomever is listening. Then she
+waits and listens on $x$ for $y$. Kitten Three, $\kitThree$, is
+listening on $z$ for a channel. She temporarily calls that
+channel $v$, but now she knows that $v$ is really $x$:
+
+#+begin_export latex
+\begin{equation}
+\whispering{x}{\left(
+\begin{array}{clll}
+ {}     & \napping  \\
+ \vert  & {\listening{x}{y}{\napping}} \\
+ \vert  & {\chatting{x}{x}{\napping}} \\
+\end{array}\right)}
+\end{equation}
+#+end_export
+
+See how the $z$ chat-listen pair got gobbled up and how $x$
+got substituted for both free $v$'s in Kitten Three's suffix?
+If not, do an animation on paper. Kitten Three didn't have to
+patch up any bound $x$'s, but she remembers to check. Both
+occurrences of $x$ in $\bar{x}\langle{x}\rangle$ are free,
+just as both $v$'s were free before substitution.
+
+Kitten Three says "$x$" on $x$ and takes a nap without
+waiting. Kitten Two hears on $x$ that her temporary, bound
+channel name $y$ really should be $x$ again. She changes her
+$y$ to $x$, notices she doesn't have any patching up or
+anything else to do, and takes a nap. If you don't see it in
+your mind's eye, animate it on paper.
+
+#+begin_export latex
+\begin{equation}
+\whispering{x}{\left(
+\begin{array}{clll}
+ {}     & \napping   \\
+ \vert  & {\napping} \\
+ \vert  & {\napping} \\
+\end{array}\right)}
+\end{equation}
+#+end_export
+
+** Something Weird Happened
+<<weird>>
+In your animation, you'll see that Kitten Three becomes $x(x)$
+after /matching up/ and before /renaming/ and /substitution/. This
+temporary condition appears to state that $x$ is both bound and
+free in the same prefix, and that can't be!
+
+The resolution is that the two $x$'s are different $x$'s! The
+first $x$, outside the parentheses, is a real, free name of a
+real channel --- in fact, the channel furnished by and bound
+in the whispering Kitten Zero, $(\nu\,x)$. That $x$ is subject
+to /matching up/ with a say-prefix on $\bar{x}$. The second
+$x$, inside the parentheses, is a bound stand-in for
+/whatever-x-will-become/, this time, the real
+$x$ said by  $\bar{x}\langle{x}\rangle$. That real $x$ gets
+substituted for stand-in $x$ in the suffix, which happens to
+be $0$, don't worry.
+
+All the kittens are napping safely in the whisperer's boat.
+
+** COMMENT Telepathic Kittens
+
+Several kittens used the same temporary bound names $z$ and $x$ at
+various steps in this calculation, but it doesn't matter what each
+one thinks to herself. They usually don't have to patch up names
+that /other/ kittens are thinking about, only their own. This is
+/the environment model for variables/. Sometimes, kittens can be
+telepathic and then they know some temporary names that other
+kittens are thinking about. Those are /free variables/. Sometimes,
+telepathic kittens have some patching up to do, also. Let's talk
+about that later.
+
+** All Names are Channels
+
+Every variable, $x$, $y$, $z$, $v$, stands in for a
+communication channel. Sometimes one knows the channel that a
+variable stands for, say a bound variable in a whisper or a
+free variable before matching or after substitution. Other
+times, a variable stands for a channel we'll find out about
+later, say a bound variable in a hear-prefix matching. That's
+all one has so far: channels, known or unknown.
+
+Here are the stages in a reduction:
+
+1. \textbf{Matching} --- a free channel $x$ in a hear-prefix
+   $x(y)$ is identical to a free channel $\bar{x}$ in a say-prefix
+   $\bar{x}\langle{z}\rangle$. Exactly one of the matching
+   hear-prefixes is chosen, non-deterministically. It is noted
+   that $z$ will replace $x$.
+
+2. \textbf{Renaming} --- All bound $z$'s in the suffix of
+   $x(y)$ are consistently renamed to prevent collisions with
+   the incoming $z$.
+
+3. \textbf{Substitution} --- All free $y$'s in the suffix of
+   $x(y)$ are replaced with $z$.
+
+4. \textbf{Gobbling} --- $x(y)$ and $\bar{x}\langle{z}\rangle$
+   are removed, exposing the first prefix of their suffixes.
+
+Sidestep the "weird" problem of $x(x)$ (Section [[weird]] above).
+Never construct $x(x)$. Just gobble its predecessor hear-prefix,
+$x(y)$.
+
+** Bail the Boats!
+
+For now, we've got all kittens safely napping in the big
+"whisper" boat. But they're not /dry/. They had to bail out a
+/lot/ of water --- syntactic noise --- to keep from drowning
+whilst Venus-the-boatwright was working. Venus will fix that
+with some little boats /inside/ other boats, including the
+biggest "whisper" boat.
+
+Venus first bails out most of the water, leaving little skeletal,
+boats-in-progress --- ordinary mathematical function notation:
+
+#+begin_export latex
+\begin{equation}
+\whispering{x}{\left(
+\begin{array}{clll}
+ {}     & \texttt{say} (x, z, \napping) \\
+ \vert  & \texttt{hear}(x, y, \texttt{say}(y, x, \texttt{hear}(x, y, \napping))) \\
+ \vert  & \texttt{hear}(z, v, \texttt{say}(v, v, \napping))
+\end{array}\right)}
+\end{equation}
+#+end_export
+
+There is still too much water, and some kittens
+still aren't inside boats! Venus! Finish the boats:
+
+#+LaTeX_HEADER: \newcommand\say [3]{\left(\texttt{say}\thickspace{}#1\thickspace{}#2\thickspace{}#3\right)}
+#+LaTeX_HEADER: \newcommand\hear[3]{\left(\texttt{hear}\thickspace{}#1\thickspace{}#2\thickspace{}#3\right)}
+
+#+LaTeX_HEADER: \newcommand\kitA{\say{x}{z}{\napping}}
+#+LaTeX_HEADER: \newcommand\kitB{\hear{x}{y}{\say{y}{x}{\hear{x}{y}{\napping}}}}
+#+LaTeX_HEADER: \newcommand\kitC{\hear{z}{v}{\say{v}{v}{\napping}}}
+
+#+begin_export latex
+\begin{equation}
+\whispering{x}{\left(
+\begin{array}{clll}
+ {}     & \kitA \\
+ \vert  & \kitB \\
+ \vert  & \kitC \\
+\end{array}\right)}
+\end{equation}
+#+end_export
+
+Venus! You're not done! Everything must be a kitten or a boat!
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (channel x
+    (par (say x z 0)
+         (par (hear x y
+                (say y x
+                  (hear x y 0)))
+              (hear z v
+               (say v v 0)))))
+#+end_src
+
+Hooray, all the kittens are safe and dry! But they can't nap, yet.
+Venus! Rearrange the boats so kittens can chat and then nap!
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (channel x
+    (par (par (say  x z 0)  ;; Oooh!, x's line up!
+              (hear x y
+                    (say y x
+                         (hear x y 0))))
+         (hear z v
+               (say v v 0))))
+#+end_src
+
+This is great because there is a rule that says whenever a
+=say= and a =hear= line up their channels, rename, substitute
+and gobble up one =say= and its matching =hear=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (channel x
+    (par (par 0
+              (say z x
+                   (hear x y 0)))
+         (hear z v
+               (say v v 0))))
+#+end_src
+
+Darn it! Venus! Rearrange the =par= boats again, (it's always OK
+to do that. In the code-base that accompanies this article,
+"rearranging the pars" is called "convolving."):
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (channel x
+    (par 0
+         (par (say  z x (hear x y 0))
+              (hear z v (say  v v 0)))))
+#+end_src
+
+Substitute and gobble:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (channel x
+    (par 0
+         (par (hear x y 0)
+              (say  x x 0))))
+#+end_src
+
+One more time:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (channel x
+    (par 0 (par 0 0)))
+#+end_src
+
+\newpage
+Inside a =par= boat, it doesn't matter whether you write
+=hear= before =say= or =say= before =hear= --- =par= is the
+captain and doesn't care; =par= is commutative. Also, because
+any number of napping kittens in =par= boats is equivalent to
+a all the kittens napping, write
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (channel x 0)
+#+end_src
+
+Finally, because there is nothing to do with channel $x$, The
+whispering kitten can nap, too.
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  0
+#+end_src
+
+Thanks, Venus!
+
+\newpage
+** Kitten Boat Calculus
+
+This is what Venus-the-boatwright had in mind whilst she built:
+
+#+LaTeX_HEADER: \newcommand\knapping    [0]{\texttt{(nap)}}
+#+LaTeX_HEADER: \newcommand\kpar        [2]{\texttt{(par}\thickspace{}#1\thickspace{}#2\texttt{)}}
+#+LaTeX_HEADER: \newcommand\kwhispering [2]{\texttt{(channel}\thickspace{}#1\thickspace{}#2\texttt{)}}
+#+LaTeX_HEADER: \newcommand\kmama       [1]{\texttt{(repeat}\thickspace{}#1\texttt{)}}
+
+#+begin_export latex
+\begin{equation}
+\begin{array}{clll}
+  K, L & \Coloneqq \\
+       & | \quad \knapping            & \textrm{napping kitten}    & \textrm{Do nothing; halt.}                                   \\
+       & | \quad \hear{x}{y}{K}       & \textrm{listening kitten}  & \textrm{Listen on channel }x\textrm{ for channel }y.         \\
+       & | \quad \say{x}{y}{K}        & \textrm{chatting kitten}   & \textrm{Say "}y\textrm{" on channel }x\textrm{; don't wait.} \\
+       & | \quad \kpar{K}{L}          & \textrm{two kittens}       & \textrm{Run }K\textrm{ and }L\textrm{ in parallel.}          \\
+       & | \quad \kwhispering{x}{K}   & \textrm{whispering kitten} & \textrm{fresh channel name }x\textrm{; use it in }K\textrm{.}\\
+       & | \quad \kmama{K}            & \textrm{mama cat}          & \textrm{run copies of }K\textrm{ forever}\textrm{.}          \\
+\end{array}
+\end{equation}
+#+end_export
+
+* COMMENT Channels and Names
+
+The kittens are named Kitten One, Kitten Two, and Kitten
+Three. These aren't names in kitten-speak, not names for
+channels like $x$ and $y$. These are names in boat-speak, just
+so one doesn't write out the full boats over and over again.
+
+Let's run some real code! For technical reasons, there is some
+punctuation --- dots and quote marks here and there --- for
+kittens written out in Clojure.
+
+** Kit-1
+
+\vskip 0.26cm
+#+begin_src clojure :exports code
+  (def kit-1
+    (say. 'x 'z (nap.)))
+#+end_src
+
+#+RESULTS:
+: #'intrinsic-function.core/kit-1
+
+Notice that when =kit-1= eventually takes a nap, she's not
+saying or hearing anything. /The free names of =(nap)=, the
+names subject to substitution, are the empty set/:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (free-names (nap.))
+#+end_src
+
+#+RESULTS:
+: #{}
+
+# Those are the names of channels that some other kitten can bind
+# in a =say= boat.
+
+In fact, the names that =kit-1= will eventually know about while
+napping, the /bound names, the names subject to renaming, are also the
+empty set/:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (bound-names (nap.))
+#+end_src
+
+#+RESULTS:
+: #{}
+
+#+begin_export latex
+\begin{slogan}
+  Free names are subject to substitution.
+  Free names are stand-ins for unknowns.
+  Bound names are subject to renaming.
+  Bound names are known or eventually known.
+  $\blacksquare$
+\end{slogan}
+#+end_export
+
+Before she naps, Kitten One says $z$ on $x$, so both those names
+are free for =kit-1=, meaning she just barks them out. They don't
+stand for anything else in potential suffixes of =kit-1=:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (free-names kit-1)
+#+end_src
+
+#+RESULTS:
+: #{x z}
+
+=Kit-1= doesn't wait for any names before nap-time, so her
+/bound names/ are the empty set:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (bound-names kit-1)
+#+end_src
+
+#+RESULTS:
+: #{}
+
+** Kit-2
+
+Kitten Two listens on $x$ for bound $y$, then says, on whatever
+$y$ becomes, "$x$".
+
+\vskip 0.26cm
+#+begin_src clojure :exports code
+  (def kit-2
+    (hear. 'x 'y
+     (say. 'y 'x
+      (hear. 'x 'y (nap.)))))
+#+end_src
+
+#+RESULTS:
+: #'intrinsic-function.core/kit-2
+
+/We/ know that in her immediately-next say-prefix,
+=(say y x)=, $y$ is a free variable and subject to
+substitution. It eventually becomes $z$, but /she/ doesn't
+know so yet. She only knows that she will /eventually/ know
+that $y$ stands for $z$; $y$ is eventually bound, thus bound.
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (bound-names kit-2)
+#+end_src
+
+#+RESULTS:
+: #{y}
+
+Kitten Two's final activity is to listen on $x$ for
+whatever-\(y\)-becomes. In that final activity, in isolation,
+she doesn't know whether she will ever know $x$, so the free
+variables --- subject to substitution --- of that final
+activity had better include $x$.
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (do (def kit-2-final
+        (hear. 'x 'y (nap.)))
+      (free-names kit-2-final))
+#+end_src
+
+#+RESULTS:
+: #{x}
+
+By nap-time, she'll know what $y$ stands for, but she won't
+use it while napping; $y$ is eventually bound thus bound in
+her final activity:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (bound-names kit-2-final)
+#+end_src
+
+#+RESULTS:
+: #{y}
+
+In her next-to-last activity, which includes her last activity,
+Kitten Two will know what $y$ is, so it is bound:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (bound-names
+   (say. 'y 'x
+    kit-2-final))
+#+end_src
+
+#+RESULTS:
+: #{y}
+
+\newpage
+Kit-2 never uses $x$. She just passes $x$ along, so it's free:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (free-names kit-2)
+#+end_src
+
+#+RESULTS:
+: #{x}
+
+** Kit-3
+
+Kitten Three listens on $z$ for $v$ --- a temporary name --- then
+says "$v$" on $v$: after substitution of something for $v$:
+
+\vskip 0.26cm
+#+begin_src clojure :exports code
+  (def kit-3
+    (hear. 'z 'v
+     (say. 'v 'v (nap.))))
+#+end_src
+
+#+RESULTS:
+: #'intrinsic-function.core/kit-3
+
+Her bound names include $v$, at least until it becomes free
+before substitution:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (bound-names kit-3)
+#+end_src
+
+#+RESULTS:
+: #{v}
+
+Her free names --- subject to substitution --- include $z$:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (free-names kit-3)
+#+end_src
+
+#+RESULTS:
+: #{z}
+
+Can you write down the free and bound names in her last activity,
+=(say 'v 'v)=? Here are spoilers:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both :results output
+  (let [kit-3-last (say. 'v 'v (nap.))]
+    (println (free-names kit-3-last))
+    (println (bound-names kit-3-last)))
+#+end_src
+
+#+RESULTS:
+: #{v}
+: #{}
+
+\newpage
+** Kitten Zero --- the Whisper Boat
+
+The bound names of Kitten Zero, captain of the Whisper Boat,
+include all the bound names of the other kittens, so had better be
+$x$ for her own, $y$ from Kitten Two, and $v$ from kitten Three:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (do (def whisper-boat
+        (channel. 'x
+                  (par. kit-1
+                        (par. kit-2 kit-3))))
+      (bound-names whisper-boat))
+#+end_src
+
+#+RESULTS:
+: #{x y v}
+
+
+Can you write out her free names? Here is a spoiler:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (free-names whisper-boat)
+#+end_src
+
+#+RESULTS:
+: #{z}
+
+The free names --- subject to substitution --- include only $z$
+from both Kitten One, who barks them out in =(say. 'x 'z)=, and
+Kitten Three, who listens on $z$ for a substitution:
+
+* COMMENT Rewriting
+
+All that was done with term rewriting[fn::
+https://arxiv.org/pdf/1701.00638.pdf], a medium-sized theory with
+unfinished edges. Our needs are very blue-collar.
+
+
+
+** That's Calculus, not Programming
+
+* COMMENT Asynchrony
+
+jump ahead and try Clojure's very blue-collar
+/core.async/[fn:: https://clojuredocs.org/clojure.core.async]
+
+** Listening Kitten
+
+** Chatting Kitten
+
+* Change Log
+
+2023-06-Apr :: Start.
