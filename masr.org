@@ -223,6 +223,9 @@ Clojure for MASR has many advantages over the current approach:
   and records[fn::
   https://clojuredocs.org/clojure.core/defrecord].
 
+- The step from ASDL to Clojure is eliminated. The Clojure will
+  automatically track ASR because it /is/ ASR.
+
 *** Type Systems
 
 Clojure has a powerful specification subsystem, clojure.spec.[fn::
@@ -231,6 +234,59 @@ for both ordinary, everyday type-checking as well as advanced
 research into dependent types, concurrency types,[fn::
 https://rholang.io/] rewriting, and proofs.
 
+* MASR
+
+The development in this document mirrors the structure of an ASR
+snapshot in ASDL.[fn:: [https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]]
+We introduce some terminology, explained in context.
+
+** Terms
+
+These are the "objects" of ASR, items to the left-hand side of an
+equals sign in the ASDL grammar.
+
+*** symbol
+
+**** Variable
+
+*** storage_type
+*** access
+*** intent
+*** deftype
+*** presence
+*** abi
+*** stmt
+*** expr
+*** ttype
+*** restriction_arg
+*** binop
+*** logicalbinop
+*** cmpop
+*** integerboz
+*** arraybound
+*** arraystorage
+*** cast_kind
+*** dimension
+*** alloc_arg
+*** attribute
+*** attribute_arg
+*** call_arg
+*** tbind
+*** array_index
+*** do_loop_head
+*** case_stmt
+*** type_stmt
+*** enumtype
+
+** Phantom Terms
+
+Terms used, explicitly or implicitly,  but not defined in ASDL.
+
+Some items specified as /symbol_table/ are actually /symtab_id/.
+
+*** symtab_id
+*** symbol_table
+*** identifier
 
 * COMMENT Abstract (TL;DR)
 
