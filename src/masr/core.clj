@@ -1,4 +1,5 @@
 (ns masr.core
+  (:use     [masr.specs])
   (:require [masr.protocols :refer [Summarize, summary, conditional-summary]]
             [clojure.pprint :refer [pprint]])
   (:gen-class))
