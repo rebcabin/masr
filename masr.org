@@ -252,6 +252,27 @@ equals sign in the ASDL grammar.
 *** storage_type
 *** access
 *** intent
+
+Set of =Local=, =In=, =Out=, =InOut=, =ReturnVar=, =Unspecified=.
+
+Records seem fundamentally incompatible with entity maps
+clojure.spec.[fn:: https://clojure.org/guides/spec] Entity maps
+are more important, so we're going that way.[fn::
+https://stackoverflow.com/questions/48366052/is-it-possible-to-use-namespaced-keywords-with-records]
+
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defrecord intent
+      [masr.intent/intent-sym])
+
+  (s/def ::intent-sym
+    #{'Local, 'In, 'Out, 'InOut, 'ReturnVar, 'Unspecified})
+
+  (s/def ::intent
+    (s/keys ::intent-sym))
+#+end_src
+
 *** deftype
 *** presence
 *** abi
