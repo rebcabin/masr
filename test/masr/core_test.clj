@@ -249,6 +249,29 @@
 ;; => (c Xr hm J GYGMt bTEY4 zJTt56 fz7Dan5C zw pT17Sa)
 
 
+;;  _    _         _   _  __ _
+;; (_)__| |___ _ _| |_(_)/ _(_)___ _ _ ___
+;; | / _` / -_) ' \  _| |  _| / -_) '_(_-<
+;; |_\__,_\___|_||_\__|_|_| |_\___|_| /__/
+
+
+(deftest identifiers-test
+  (is (s/valid? ::asr/identifiers (identifiers [])))
+  (is (s/valid? ::asr/identifiers (identifiers ())))
+  (is (s/valid? ::asr/identifiers (identifiers #{})))
+  (is (not (s/valid? ::asr/identifiers (identifiers {}))))
+  (is (s/valid? ::asr/identifiers (identifiers ['foo])))
+  (is (s/valid? ::asr/identifiers (identifiers '(foo))))
+  (is (s/valid? ::asr/identifiers (identifiers #{'foo})))
+  (is (not (s/valid? ::asr/identifiers (identifiers {'foo 'bar}))))
+  (is (s/valid? ::asr/identifiers (identifiers ['foo 'bar])))
+  (is (s/valid? ::asr/identifiers (identifiers '(foo bar))))
+  (is (s/valid? ::asr/identifiers (identifiers #{'foo 'bar})))
+  (is (s/valid? ::asr/identifiers (identifiers ['foo 'foo])))
+  (is (s/valid? ::asr/identifiers (identifiers '(foo foo))))
+  )
+
+
 ;;  _     _           _
 ;; (_)_ _| |_ ___ _ _| |_
 ;; | | ' \  _/ -_) ' \  _|

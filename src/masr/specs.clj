@@ -289,13 +289,48 @@
   (let [csym (s/conform ::identifier sym)]
     (or (s/invalid? csym) csym)))
 
+
+;;  _    _         _   _  __ _
+;; (_)__| |___ _ _| |_(_)/ _(_)___ _ _ ___
+;; | / _` / -_) ' \  _| |  _| / -_) '_(_-<
+;; |_\__,_\___|_||_\__|_|_| |_\___|_| /__/
+
+;; for productions like identifier*;
+;; not an ASDL term
+
+
+(def MIN-NUMBER-OF-IDENTIFIERS  0)
+(def MAX-NUMBER-OF-IDENTIFIERS 99)
+
+
+(s/def ::identifiers
+  (s/coll-of ::identifier
+             :min-count MIN-NUMBER-OF-IDENTIFIERS,
+             :max-count MAX-NUMBER-OF-IDENTIFIERS,
+             :into #{}))
+
+#_
+(gen/sample (s/gen ::identifiers) 2)
+;; => (#{U p lu qr R F V0 g2 b8 Od T4 YQ d}
+;;     #{H t x p u q M v o R A W n m P J T k z E})
+
+
+(defn identifiers
+  "Remove duplicates, i.e., create a _set_."
+  [it]
+  (if (or (not (coll? it))
+          (map? it))
+    false ;; "true" would do just as well.
+    (let [idents-coll (map identifier it)
+          idents-conf (s/conform ::identifiers idents-coll)]
+      (or (s/invalid? idents-conf)
+          idents-coll))))
+
+
 ;;     _ _                   _
 ;;  __| (_)_ __  ___ _ _  __(_)___ _ _
 ;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \
 ;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_|
-
-;; TODO -- refactor so it's a term?
-;; Over-engineering? Or eliminating a special case?
 
 
 ;; -+-+-+-+-+-
@@ -346,7 +381,7 @@
 
 
 (defn dimension [it]
-  (if (or (set? it) (map? it))
+  (if (or (not (coll? it)) (set? it) (map? it))
     false  ;; "true" would do just as well.
     (let [conf (s/conform ::asr-term
                               {::term ::dimension,
@@ -388,7 +423,7 @@
 
 (s/def ::dimensions
   (s/coll-of (term-selector-spec ::dimension)
-             :min-count 0,
+             :min-count MIN-NUMBER-OF-DIMENSIONS,
              :max-count MAX-NUMBER-OF-DIMENSIONS,
              :into []))
 
@@ -431,19 +466,20 @@
 ;;                  :dimension-content ()}]
 
 
-(defn dimensions [dimension-contents-coll]
-  (if (or (set? dimension-contents-coll)
-          (map? dimension-contents-coll))
-    false  ;; "true" would do just as well.
-    (let [dims-coll (map dimension dimension-contents-coll)
+(defn dimensions [it]
+  (if (or (not (coll? it))
+          (set? it)
+          (map? it))
+    false ;; "true" would do just as well.
+    (let [dims-coll (map dimension it)
           dims-conf (s/conform ::dimensions dims-coll)]
       (or (s/invalid? dims-conf)
-          (let [dims-cont (map #(map second (::dimension-content %)) dims-conf)
-                recon     (map dimension dims-cont)]
-            recon)))))
-
-
-(s/valid? ::dimensions (dimensions ['(1 60) '()]))
+          (let [dims-cont (map
+                           #(map
+                             second
+                             (::dimension-content %))
+                           dims-conf)]
+            (map dimension dims-cont))))))
 
 
 ;;  _     _           _
