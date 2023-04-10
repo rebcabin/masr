@@ -17,7 +17,7 @@
 ;; permits.
 
 
-;; terms (nodes) in the ASDL grammar:
+;; terms (nodes) in the ASDL grammar (things to the left of equals signs):
 ;;
 ;;  1 unit            = TranslationUnit(symbol_table, node*)
 ;;  2 symbol          = ... many heads ...
@@ -55,14 +55,22 @@
 ;;
 ;; 31 identifier      = specified below
 ;; 32 symbol_table    = a clojure map
-;; 33 dimension       = see below
+;; 33 dimensions      = dimension*, see below
+
+;; things that are not terms:
+;;
 ;;  0 atoms           = int, float, bool, nat, bignat
+
+
+;; ================================================================
 
 
 ;;       _
 ;;  __ _| |_ ___ _ __  ___
 ;; / _` |  _/ _ \ '  \(_-<
 ;; \__,_|\__\___/_|_|_/__/
+
+;; not terms in the grammar:
 
 
 ;; See "numbers.clj" for big-int, big-nat, and nat.
@@ -77,6 +85,8 @@
 ;; |_.__/_\__, |_|_||_\__(_)
 ;;        |___/
 
+;; not a term; missing from clojure:
+
 
 (defn bigint?
   "Doesn't seem to be defined in system-supplied libraries."
@@ -90,6 +100,9 @@
 ;; (_|_) |_.__/_\__, |_||_\__,_|\__|
 ;;              |___/
 
+;; not a term
+
+
 ;; Overwrite print-method for clojure BigInt to get rid of
 ;; the "N" at the end (can't do this inside (-main) lest
 ;; compile errors).
@@ -102,6 +115,11 @@
   [b, ^Writer w]
   (.write w (str b))
   #_(.write "N"))
+
+
+;; -+-+-+-+-+-
+;;  s p e c s
+;; -+-+-+-+-+-
 
 
 (s/def ::bignat
@@ -130,8 +148,23 @@
 ;; (_|_) |_||_\__,_|\__|
 
 
+;; -+-+-+-+-+-
+;;  s p e c s
+;; -+-+-+-+-+-
+
+
 (s/def ::nat (s/or :nat-int  nat-int?,
                    :bignat  ::bignat))
+
+
+;; -+-+-+-+-+-+-
+;;  s y n t a x
+;; -+-+-+-+-+-+-
+
+
+(defn nat [it]
+  (second (s/conform ::nat it)))
+
 
 #_
 (s/exercise ::nat 5)
@@ -142,10 +175,45 @@
 ;;     [1 [:bignat 1]])
 
 
+;; ================================================================
+
+
+;;                  _
+;;  __ _ ____ _ ___| |_ ___ _ _ _ __
+;; / _` (_-< '_|___|  _/ -_) '_| '  \
+;; \__,_/__/_|      \__\___|_| |_|_|_|
+
+
+;; See multi-spec in https://clojure.org/guides/spec
+;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
+
+
+;; An asr-term is a map containing a ::term keyword,
+;; i.e., :masr.specs/term, or ::asr/term if
+;; masr.specs is aliased to asr, as in
+;; (:use [masr.specs :as asr]).
+
+
+(s/def ::term keyword?)  ;; like ::intent, ::symbol, ::expr, ...
+
+
+;; ::term is a fn that picks the dispatch value
+(defmulti term ::term)
+
+
+;; Here is the multi-spec; see below for examples of its usage.
+(s/def ::asr-term (s/multi-spec term ::term))
+
+
 ;;  _    _         _   _  __ _
 ;; (_)__| |___ _ _| |_(_)/ _(_)___ _ _
 ;; | / _` / -_) ' \  _| |  _| / -_) '_|
 ;; |_\__,_\___|_||_\__|_|_| |_\___|_|
+
+
+;; -+-+-+-+-+-
+;;  s p e c s
+;; -+-+-+-+-+-
 
 
 (let [alpha-re #"[a-zA-Z_]"  ;; "let over lambda."
@@ -168,10 +236,11 @@
                s (gen/string-alphanumeric)]
       (symbol (str c s))))
 
-  (s/def :masr.specs/identifier ;; side effects the spec registry!
+  (s/def ::identifier ;; side effects the spec registry!
     (s/with-gen
       identifier?
       (fn [] identifier-generator))))  ;; fn wrapping a macro
+
 
 #_
 (gen/sample (s/gen :masr.specs/identifier))
@@ -184,10 +253,23 @@
 ;; => true
 
 
+;; -+-+-+-+-+-+-
+;;  s y n t a x
+;; -+-+-+-+-+-+-
+
+
+(defn identifier [sym]
+  (s/conform ::identifier sym))
+
 ;;     _ _                   _
-;;  __| (_)_ __  ___ _ _  __(_)___ _ _  ___
-;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \(_-<
-;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_/__/
+;;  __| (_)_ __  ___ _ _  __(_)___ _ _
+;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \
+;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_|
+
+
+;; -+-+-+-+-+-
+;;  s p e c s
+;; -+-+-+-+-+-
 
 
 ;; dimension = (expr? start, expr? length)
@@ -220,6 +302,31 @@
 ;;     (0 0)
 ;;     ()
 ;;     (0))
+
+
+;; -+-+-+-+-+-+-
+;;  s y n t a x
+;; -+-+-+-+-+-+-
+
+
+(defn dimension [it]
+  (map second (s/conform ::dimension it)))
+
+
+;; -+-+-+-+-+-+-
+;;  s y n t a x
+;; -+-+-+-+-+-+-
+
+
+;;     _ _                   _
+;;  __| (_)_ __  ___ _ _  __(_)___ _ _  ___
+;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \(_-<
+;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_/__/
+
+
+;; -+-+-+-+-+-
+;;  s p e c s
+;; -+-+-+-+-+-
 
 
 (def MIN-NUMBER-OF-DIMENSIONS 0)  ;; TODO: 1?
@@ -256,32 +363,6 @@
 ;;     [() (789 2768)]
 ;;     [(0 221667) (0 1)]
 ;;     [() (2) (0) (19931) (0 397) (1) (3) () ()])
-
-
-;;                  _
-;;  __ _ ____ _ ___| |_ ___ _ _ _ __
-;; / _` (_-< '_|___|  _/ -_) '_| '  \
-;; \__,_/__/_|      \__\___|_| |_|_|_|
-
-
-;; See multi-spec in https://clojure.org/guides/spec
-;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
-
-
-;; An asr-term is a map containing a ::term keyword,
-;; i.e., :masr.specs/term, or ::asr/term if
-;; masr.specs is aliased to asr, as in
-;; (:use [masr.specs :as asr]).
-
-
-(s/def ::term keyword?)  ;; like ::intent, ::symbol, ::expr, ...
-
-
-;; ::term is a fn that picks the dispatch value
-(defmulti term ::term)
-
-
-(s/def ::asr-term (s/multi-spec term ::term))
 
 
 ;;  _     _           _

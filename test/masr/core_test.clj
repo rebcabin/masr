@@ -15,6 +15,16 @@
 
 
 (deftest nat-test
+  (testing "better syntax"
+    (is (s/valid? ::asr/nat    (nat 42)))
+    (is (s/valid? ::asr/nat    (nat 4200000000000)))
+    (is (s/valid? ::asr/nat    (nat 0)))
+    (is (s/valid? ::asr/nat    (nat (bigint 42N))))
+    (is (s/valid? ::asr/nat    (nat (bigint 4200000000000N))))
+    (is (s/valid? ::asr/nat    (nat (bigint 0N))))
+    (is (s/valid? ::asr/bignat (nat (bigint 42N))))
+    (is (s/valid? ::asr/bignat (nat (bigint 4200000000000N))))
+    (is (s/valid? ::asr/bignat (nat (bigint 0N)))))
   (is (s/valid? ::asr/nat 42))
   (is (s/valid? ::asr/nat 4200000000000))
   (is (s/valid? ::asr/nat 0))
@@ -30,6 +40,37 @@
 ;; => (1 0 58 0 12
 ;;     0 3751 13 185743679156 4
 ;;     9 758 2475515847708 30 474561204531338)
+
+
+;;     _ _                   _
+;;  __| (_)_ __  ___ _ _  __(_)___ _ _
+;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \
+;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_|
+
+
+(deftest dimension-test
+  (testing "better syntax"
+    (is (s/valid? ::asr/dimension (dimension '(1 60))))
+    (is (s/valid? ::asr/dimension (dimension '())))
+    (is (s/valid? ::asr/dimension (dimension  ())))
+    (is (s/valid? ::asr/dimension (dimension '(0))))
+    (is (s/valid?
+         ::asr/dimension
+         (dimension
+          '(606 66979216746710640882869059905284213752707))))
+    (is (thrown? clojure.lang.ArityException
+                 (not (s/valid? ::asr/dimension (dimension 1 60)))))
+    (is (thrown? clojure.lang.ArityException
+                 (not (s/valid? ::asr/dimension (dimension)))))
+    (testing "implicit conversion to seq via 'dimension' fncall"
+      (is (s/valid? ::asr/dimension (dimension [1 60])))
+      (is (s/valid? ::asr/dimension (dimension [])))
+      (is (s/valid? ::asr/dimension (dimension [0])))
+      (is (s/valid?
+           ::asr/dimension
+           (dimension
+            [606 66979216746710640882869059905284213752707]))))
+    ))
 
 
 ;;     _ _                   _
@@ -69,6 +110,17 @@
 
 
 (deftest identifier-test
+  (testing "better syntax"
+    (is (s/valid? ::asr/identifier      (identifier 'foobar)))
+    (is (s/valid? ::asr/identifier      (identifier '_foobar)))
+    (is (s/valid? ::asr/identifier      (identifier '__f_oobar)))
+    (is (s/valid? ::asr/identifier      (identifier '_1234)))
+    (is (s/valid? ::asr/identifier      (identifier '_1__234)))
+    (is (not (s/valid? ::asr/identifier (identifier '1234))))
+    ;; '1a won't even compile, throwing java.lang.NumberFormatException
+    (is (not (s/valid? ::asr/identifier (identifier ""))))
+    (is (not (s/valid? ::asr/identifier (identifier "asdf"))))
+    (is (not (s/valid? ::asr/identifier (identifier :asdf)))))
   (is (s/valid? ::asr/identifier      'foobar))
   (is (s/valid? ::asr/identifier      '_foobar))
   (is (s/valid? ::asr/identifier      '__f_oobar))
@@ -134,10 +186,6 @@
                        {::asr/term        ::asr/intent,
                         ::asr/intent-enum 'foobar})))))
 
-(s/explain ::asr/term (intent 'Local))
-(= (intent 'Local)
-   {::asr/term        ::asr/intent,
-    ::asr/intent-enum 'Local})
 
 ;;     _                             _
 ;;  __| |_ ___ _ _ __ _ __ _ ___ ___| |_ _  _ _ __  ___
