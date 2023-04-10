@@ -3,7 +3,8 @@
             [clojure.set                   :as set ]
             #_[clojure.zip                   :as z   ]
             [clojure.spec.gen.alpha        :as gen ]
-            [clojure.test.check.generators :as tgen]))
+            [clojure.test.check.generators :as tgen]
+            [masr.specs :as asr]))
 
 
 ;; ASDL tuples like `(1 2)` are Clojure lists.
@@ -174,6 +175,30 @@
 ;;     [226 [:bignat 226]])
 ;;     [1 [:bignat 1]])
 
+#_
+(gen/sample (s/gen ::bignat) 5)
+;; => (0 17 0 225 951132862023730457)
+
+#_
+(nat-int? 951132862023730457951132862023730457)
+;; => false
+
+#_
+(gen/sample (s/gen ::nat) 5)
+;; => (1 0 240306 4284 0)
+
+#_
+(s/valid? ::nat 42)
+;; => true
+
+#_
+(s/valid? ::nat 951132862023730457951132862023730457)
+;; => true
+
+#_
+(not (s/valid? ::nat [:nat-int 42]))
+;; => true
+
 
 ;; ================================================================
 
@@ -266,6 +291,9 @@
 ;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \
 ;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_|
 
+;; TODO -- refactor so it's a term?
+;; Over-engineering? Or eliminating a special case?
+
 
 ;; -+-+-+-+-+-
 ;;  s p e c s
@@ -279,11 +307,16 @@
 (def MAX-START 2)
 
 
-(s/def ::dimension
+(s/def ::dimension-content
   (s/coll-of ::nat
              :min-count MIN-START,
              :max-count MAX-START,
              :into ()))
+
+
+(defmethod term ::dimension [_]
+  (s/keys :req [::term ::dimension-content]))
+
 
 #_
 (s/exercise ::dimension 5)
@@ -309,13 +342,25 @@
 ;; -+-+-+-+-+-+-
 
 
+(s/valid?  ::asr-term {::term ::dimension, ::dimension-content '(1 60)})
+(s/conform ::asr-term {::term ::dimension, ::dimension-content '(1 60)})
+
 (defn dimension [it]
-  (map second (s/conform ::dimension it)))
+  (let [conf (s/conform ::asr-term
+                        {::term ::dimension,
+                         ::dimension-content it})]
+    {::term ::dimension
+     ::dimension-content
+     (map second (::dimension-content conf))}))
 
+#_
+(= (s/conform ::asr-term {::term ::dimension, ::dimension-content '(1 60)})
+   (dimension '(1 60)))
+;; => false
 
-;; -+-+-+-+-+-+-
-;;  s y n t a x
-;; -+-+-+-+-+-+-
+#_
+(s/valid? ::asr-term (dimension '(1 60)))
+;; => true
 
 
 ;;     _ _                   _
@@ -333,36 +378,66 @@
 (def MAX-NUMBER-OF-DIMENSIONS 9)
 
 
+(defn term-selector-spec [kwd]
+  (s/and ::asr-term
+         #(= kwd (::term %))))
+
+
 (s/def ::dimensions
-  (s/coll-of ::dimension
+  (s/coll-of (term-selector-spec ::dimension)
              :min-count 0,
              :max-count MAX-NUMBER-OF-DIMENSIONS,
              :into []))
 
 #_
-(-> ::dimensions (s/exercise 5))
-;; => ([[() (1 0) (0) ()] [() ([:bignat 1] [:nat-int 0]) ([:nat-int 0]) ()]]
-;;     [[(0) (0) (1) (2902780)]
-;;      [([:bignat 0]) ([:bignat 0]) ([:nat-int 1]) ([:bignat 2902780])]]
-;;     [[() (15) (1 1) (1 264) (1 7) () (0 1) (2 0)]
-;;      [()
-;;       ([:bignat 15])
-;;       ([:nat-int 1] [:nat-int 1])
-;;       ([:nat-int 1] [:bignat 264])
-;;       ([:nat-int 1] [:bignat 7])
-;;       ()
-;;       ([:nat-int 0] [:nat-int 1])
-;;       ([:nat-int 2] [:nat-int 0])]]
-;;     [[(6038406) () () () (7810)] [([:bignat 6038406]) () () () ([:bignat 7810])]]
-;;     [[(43876) (6 8) ()] [([:bignat 43876]) ([:nat-int 6] [:nat-int 8]) ()]])
-
-#_
 (gen/sample (s/gen ::dimensions) 5)
-;; => ([() (0) () (7 0) (0 1) (0 22) (7)]
+;; => ([]
+;;     [#:masr.specs{:term :masr.specs/dimension,
+;;                   :dimension-content (3093 25)}
+;;      #:masr.specs{:term :masr.specs/dimension,
+;;                   :dimension-content (1790998)}]
 ;;     []
-;;     [() (789 2768)]
-;;     [(0 221667) (0 1)]
-;;     [() (2) (0) (19931) (0 397) (1) (3) () ()])
+;;     [#:masr.specs{:term :masr.specs/dimension,
+;;                   :dimension-content (0 57)}
+;;      #:masr.specs{:term :masr.specs/dimension,
+;;                   :dimension-content ()}
+;;      #:masr.specs{:term :masr.specs/dimension,
+;;                   :dimension-content (0 2051435)}
+;;      #:masr.specs{:term :masr.specs/dimension,
+;;                   :dimension-content (13 163)}
+;;      #:masr.specs{:term :masr.specs/dimension,
+;;                   :dimension-content (9 4)}
+;;      #:masr.specs{:term :masr.specs/dimension,
+;;                   :dimension-content (0 105)}
+;;      #:masr.specs{:term :masr.specs/dimension,
+;;                   :dimension-content (1 533036)}]
+;;     [#:masr.specs{:term :masr.specs/dimension,
+;;                   :dimension-content (0)}])
+
+
+;; -+-+-+-+-+-+-
+;;  s y n t a x
+;; -+-+-+-+-+-+-
+
+
+(s/conform ::dimensions [(dimension '(1 60)) (dimension '())])
+;; => [#:masr.specs{:term :masr.specs/dimension,
+;;                  :dimension-content
+;;                  ([:nat-int 1] [:nat-int 60])}
+;;     #:masr.specs{:term :masr.specs/dimension,
+;;                  :dimension-content ()}]
+
+
+(defn dimensions [dimension-contents-coll]
+  (let [dims-coll (map dimension dimension-contents-coll)
+        dims-conf (s/conform ::dimensions dims-coll)
+        dims-cont (map #(map second (::dimension-content %)) dims-conf)
+        recon     (map dimension dims-cont)]
+    recon
+    ))
+
+
+(s/valid? ::dimensions (dimensions ['(1 60) '()]))
 
 
 ;;  _     _           _

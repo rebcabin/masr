@@ -13,27 +13,34 @@
 ;; | ' \ || | '  \| '_ \/ -_) '_(_-<
 ;; |_||_\_,_|_|_|_|_.__/\___|_| /__/
 
-
-(deftest nat-test
-  (testing "better syntax"
-    (is (s/valid? ::asr/nat    (nat 42)))
-    (is (s/valid? ::asr/nat    (nat 4200000000000)))
-    (is (s/valid? ::asr/nat    (nat 0)))
-    (is (s/valid? ::asr/nat    (nat (bigint 42N))))
-    (is (s/valid? ::asr/nat    (nat (bigint 4200000000000N))))
-    (is (s/valid? ::asr/nat    (nat (bigint 0N))))
-    (is (s/valid? ::asr/bignat (nat (bigint 42N))))
-    (is (s/valid? ::asr/bignat (nat (bigint 4200000000000N))))
-    (is (s/valid? ::asr/bignat (nat (bigint 0N)))))
-  (is (s/valid? ::asr/nat 42))
-  (is (s/valid? ::asr/nat 4200000000000))
-  (is (s/valid? ::asr/nat 0))
-  (is (s/valid? ::asr/nat (bigint 42N)))
-  (is (s/valid? ::asr/nat (bigint 4200000000000N)))
-  (is (s/valid? ::asr/nat (bigint 0N)))
-  (is (s/valid? ::asr/bignat (bigint 42N)))
-  (is (s/valid? ::asr/bignat (bigint 4200000000000N)))
-  (is (s/valid? ::asr/bignat (bigint 0N))))
+(let [huge     951132862023730457951132862023730457
+      biggish  4200000000000
+      biggishN 4200000000000N]
+ (deftest nat-test
+   (testing "better syntax"
+     (is (s/valid? ::asr/nat    (nat 42)))
+     (is (s/valid? ::asr/nat    (nat biggish)))
+     (is (s/valid? ::asr/nat    (nat 0)))
+     (is (s/valid? ::asr/nat    (nat (bigint 42N))))
+     (is (s/valid? ::asr/nat    (nat (bigint biggishN))))
+     (is (s/valid? ::asr/nat    (nat (bigint 0N))))
+     (is (s/valid? ::asr/bignat (nat (bigint 42N))))
+     (is (s/valid? ::asr/bignat (nat (bigint biggishN))))
+     (is (s/valid? ::asr/bignat (nat (bigint 0N))))
+     (is (s/valid? ::asr/bignat (nat huge)))
+     (is (s/valid? ::asr/nat    (nat huge))))
+   (is (s/valid? ::asr/bignat  huge))
+   (is (s/valid? ::asr/nat     huge))
+   (is (not (s/valid? nat-int? huge)))
+   (is (s/valid? ::asr/nat 42))
+   (is (s/valid? ::asr/nat biggish))
+   (is (s/valid? ::asr/nat 0))
+   (is (s/valid? ::asr/nat (bigint 42N)))
+   (is (s/valid? ::asr/nat (bigint biggishN)))
+   (is (s/valid? ::asr/nat (bigint 0N)))
+   (is (s/valid? ::asr/bignat (bigint 42N)))
+   (is (s/valid? ::asr/bignat (bigint biggishN)))
+   (is (s/valid? ::asr/bignat (bigint 0N)))))
 
 #_
 (gen/sample (s/gen ::asr/nat) 15)
@@ -50,31 +57,50 @@
 
 (deftest dimension-test
   (testing "better syntax"
-    (is (s/valid? ::asr/dimension (dimension '(1 60))))
-    (is (s/valid? ::asr/dimension (dimension '())))
-    (is (s/valid? ::asr/dimension (dimension  ())))
-    (is (s/valid? ::asr/dimension (dimension '(0))))
+    (is (s/valid? ::asr/asr-term (dimension '(1 60))))
+    (is (s/valid? ::asr/asr-term (dimension '())))
+    (is (s/valid? ::asr/asr-term (dimension  ())))
+    (is (s/valid? ::asr/asr-term (dimension '(0))))
     (is (s/valid?
-         ::asr/dimension
+         ::asr/asr-term
          (dimension
           '(606 66979216746710640882869059905284213752707))))
-    (is (not (s/valid? ::asr/dimension 0)))
-    (is (not (s/valid? ::asr/dimension 'foo)))
-    (is (not (s/valid? ::asr/dimension "")))
-    (is (not (s/valid? ::asr/dimension :bar)))
+    (is (not (s/valid? ::asr/asr-term 0)))
+    (is (not (s/valid? ::asr/asr-term 'foo)))
+    (is (not (s/valid? ::asr/asr-term "")))
+    (is (not (s/valid? ::asr/asr-term :bar)))
     (is (thrown? clojure.lang.ArityException
                  (not (s/valid? ::asr/dimension (dimension 1 60)))))
     (is (thrown? clojure.lang.ArityException
                  (not (s/valid? ::asr/dimension (dimension)))))
     (testing "implicit conversion to seq via 'dimension' fncall"
-      (is (s/valid? ::asr/dimension (dimension [1 60])))
-      (is (s/valid? ::asr/dimension (dimension [])))
-      (is (s/valid? ::asr/dimension (dimension [0])))
+      (is (s/valid? ::asr/asr-term (dimension [1 60])))
+      (is (s/valid? ::asr/asr-term (dimension [])))
+      (is (s/valid? ::asr/asr-term (dimension [0])))
       (is (s/valid?
-           ::asr/dimension
+           ::asr/asr-term
            (dimension
             [606 66979216746710640882869059905284213752707]))))
     ))
+
+
+#_
+(dimension '(1 60))
+;; => #:masr.specs{:term :masr.specs/dimension, :dimension-content (1 60)}
+
+#_
+(let [gen (s/gen (term-selector-spec ::asr/dimension))]
+  (gen/sample gen 10))
+;; => (#::asr{:term ::asr/dimension, :dimension-content (1 2)}
+;;     #::asr{:term ::asr/dimension, :dimension-content ()}
+;;     #::asr{:term ::asr/dimension, :dimension-content (0)}
+;;     #::asr{:term ::asr/dimension, :dimension-content (11)}
+;;     #::asr{:term ::asr/dimension, :dimension-content ()}
+;;     #::asr{:term ::asr/dimension, :dimension-content (716)}
+;;     #::asr{:term ::asr/dimension, :dimension-content (92974 80)}
+;;     #::asr{:term ::asr/dimension, :dimension-content (2 2217367)}
+;;     #::asr{:term ::asr/dimension, :dimension-content (45 2)}
+;;     #::asr{:term ::asr/dimension, :dimension-content (26679 96)})
 
 
 ;;     _ _                   _
@@ -82,29 +108,52 @@
 ;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \(_-<
 ;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_/__/
 
+;; dimensions = dimension* (implicitly defined in ASDL with * metaoperator).
+;;
+;; DESIGN DECISION: dimension is a ::asr/asr-term but dimensions is NOT;
+;; dimensions is just a collection.
+;; (s/def ::dimensions
+;;   (s/coll-of ::dimension
+;;              :min-count 0,
+;;              :max-count MAX-NUMBER-OF-DIMENSIONS,
+;;              :into []))
+
 
 (deftest dimensions-test
-  (is (s/valid? ::asr/dimension []))
-  (is (s/valid? ::asr/dimension [1]))
-  (is (not (s/valid? ::asr/dimensions [0]))))
+  (is (s/valid? ::asr/dimensions (dimensions ['(1 60) '()])))
+  (is (s/valid? ::asr/dimensions (dimensions ['(1 60)])))
+  (is (s/valid? ::asr/dimensions (dimensions ['(1 60) []])))
+  (is (s/valid? ::asr/dimensions (dimensions [])))
+  (is (s/valid? ::asr/dimensions (dimensions '((1 60) ()))))
+  (is (s/valid? ::asr/dimensions (dimensions '((1 60)))))
+  (is (s/valid? ::asr/dimensions (dimensions '((1 60) []))))
+  (is (s/valid? ::asr/dimensions (dimensions ()))))
 
 #_
-(gen/sample (s/gen ::asr/dimensions) 15)
-;; => ([(1 1) (0) (1754) (0 15)]
-;;     [() (15633) (1) (1 58)]
-;;     [(0 0) (1) (45004 1) ()]
-;;     [(1) (1 25) (0) (108763 1741) (306) (6 4) (2978 3963195) (1 1) ()]
-;;     [() () (2 525175) (4 1) (0 0) ()]
-;;     [(5)]
-;;     [() () (4) (4) (25) (20837531 2) (1 37872207289)]
-;;     [(10) () (13 3) () ()]
-;;     [() (18)]
-;;     [(2457788469) (0) (1416182 23337056983) (3893755855203 0) () ()]
-;;     [() (1) () ()]
-;;     [(8 13039750) (54 3) (29203272247 130) (56993925 3254579507612190)]
-;;     [(21) (183 782719780057) () () (107266401) (14973)]
-;;     [() (1 8140351019424905159520934198)]
-;;     [(19699876832435852013432329851) (17) (88930935959209684 1648) () () ()])
+(gen/sample (s/gen ::asr/dimensions) 5)
+;; => ([#:masr.specs{:term :masr.specs/dimension, :dimension-content (3)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (11 0)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1 6674)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content ()}]
+;;     [#:masr.specs{:term :masr.specs/dimension, :dimension-content (13 2)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (17)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (0 7208)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (0 6578)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content ()}]
+;;     [#:masr.specs{:term :masr.specs/dimension, :dimension-content (1686186484)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (2 4)}]
+;;     [#:masr.specs{:term :masr.specs/dimension, :dimension-content ()}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1 11)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1447797)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (31428)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (2551 2037)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content ()}]
+;;     [#:masr.specs{:term :masr.specs/dimension, :dimension-content (24 10722173)}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content ()}
+;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (12)}])
 
 
 ;;  _    _         _   _  __ _
@@ -159,11 +208,11 @@
                     ::asr/asr-term
                     #(= ::asr/intent (::asr/term %))))
             5)
-;; => (#:masr.specs{:term :masr.specs/intent, :intent-enum ReturnVar}
-;;     #:masr.specs{:term :masr.specs/intent, :intent-enum In}
-;;     #:masr.specs{:term :masr.specs/intent, :intent-enum Unspecified}
-;;     #:masr.specs{:term :masr.specs/intent, :intent-enum Unspecified}
-;;     #:masr.specs{:term :masr.specs/intent, :intent-enum InOut})
+;; => (#::asr{:term ::asr/intent, :intent-enum ReturnVar}
+;;     #::asr{:term ::asr/intent, :intent-enum In}
+;;     #::asr{:term ::asr/intent, :intent-enum Unspecified}
+;;     #::asr{:term ::asr/intent, :intent-enum Unspecified}
+;;     #::asr{:term ::asr/intent, :intent-enum InOut})
 
 
 (deftest intent-test
@@ -202,11 +251,11 @@
                     ::asr/asr-term
                     #(= ::asr/storage-type (::asr/term %))))
             5)
-;; => (#:masr.specs{:term :masr.specs/storage-type, :storage-type-enum Save}
-;;     #:masr.specs{:term :masr.specs/storage-type, :storage-type-enum Save}
-;;     #:masr.specs{:term :masr.specs/storage-type, :storage-type-enum Parameter}
-;;     #:masr.specs{:term :masr.specs/storage-type, :storage-type-enum Save}
-;;     #:masr.specs{:term :masr.specs/storage-type, :storage-type-enum Parameter})
+;; => (#::asr{:term ::asr/storage-type, :storage-type-enum Save}
+;;     #::asr{:term ::asr/storage-type, :storage-type-enum Save}
+;;     #::asr{:term ::asr/storage-type, :storage-type-enum Parameter}
+;;     #::asr{:term ::asr/storage-type, :storage-type-enum Save}
+;;     #::asr{:term ::asr/storage-type, :storage-type-enum Parameter})
 
 
 (deftest storage-type-test
@@ -229,11 +278,11 @@
                     ::asr/asr-term
                     #(= ::asr/abi (::asr/term %))))
             5)
-;; => (#:masr.specs{:term :masr.specs/abi, :abi-enum Interactive, :abi-external true}
-;;     #:masr.specs{:term :masr.specs/abi, :abi-enum Source, :abi-external false}
-;;     #:masr.specs{:term :masr.specs/abi, :abi-enum Source, :abi-external false}
-;;     #:masr.specs{:term :masr.specs/abi, :abi-enum Source, :abi-external false}
-;;     #:masr.specs{:term :masr.specs/abi, :abi-enum Interactive, :abi-external true})
+;; => (#::asr{:term ::asr/abi, :abi-enum Interactive, :abi-external true}
+;;     #::asr{:term ::asr/abi, :abi-enum Source, :abi-external false}
+;;     #::asr{:term ::asr/abi, :abi-enum Source, :abi-external false}
+;;     #::asr{:term ::asr/abi, :abi-enum Source, :abi-external false}
+;;     #::asr{:term ::asr/abi, :abi-enum Interactive, :abi-external true})
 
 
 (deftest abi-test
