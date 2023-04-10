@@ -269,7 +269,10 @@
   (is (s/valid? ::asr/identifiers (identifiers #{'foo 'bar})))
   (is (s/valid? ::asr/identifiers (identifiers ['foo 'foo])))
   (is (s/valid? ::asr/identifiers (identifiers '(foo foo))))
-  )
+  ;; #{'foo 'foo} won't compile!
+  (is (not (s/valid? ::asr/identifiers (identifiers ['foo 123]))))
+  (is (not (s/valid? ::asr/identifiers (identifiers ['foo "foo"]))))
+  (is (not (s/valid? ::asr/identifiers (identifiers ['foo :foo])))))
 
 
 ;;  _     _           _

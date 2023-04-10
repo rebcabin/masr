@@ -123,7 +123,7 @@
 
 #+TITLE:  MASR --- Meta Abstract Semantics Representation
 #+AUTHOR: Brian Beckman
-#+DATE:   6 Apr 2023
+#+DATE:   10 Apr 2023
 
 #+BEGIN_SRC elisp :exports none
   (setq org-babel-python-command "python3")
@@ -160,13 +160,13 @@ multiple compilers. Current compilers targeting ASR include
 LFortran[fn:: https://lfortran.org/] and LPython.[fn::
 https://lpython.org/] The advantage of removing all vestiges of
 original language syntax from the IL is flexibility: it's easier
-to write new front-ends and optimizing back ends. This is in sharp
-contrast to standard practice of decorating abstract syntax trees
-(ASTs) with semantic information and then carrying those into the
-back ends. That makes back ends less reusable because most
-languages have syntactic peculiarities that must be reflected in
-their ASTs. ASR has no known downsides: it's fast, compact (in
-binary) and a full-featured programming language in its own right.
+to write new front-ends and back ends. This is in sharp contrast
+to standard practice of decorating abstract syntax trees (ASTs)
+with semantic information and then carrying decorated ASTs into
+the back ends. Such makes back ends less reusable because most
+languages have syntactic peculiarities reflected in their ASTs.
+ASR has no known downsides: it's fast, compact (in binary) and a
+full-featured programming language in its own right.
 
 ** Issues and Mitigations
 
@@ -175,21 +175,20 @@ binary) and a full-featured programming language in its own right.
 ASR is currently specified in ASDL[fn::
 https://en.wikipedia.org/wiki/Abstract-Type_and_Scheme-Definition_Language],
 a moribund meta language published in 1987. To build an LCompiler,
-we read the ASDL grammar for ASR and generate fast processors in
+we parse the ASDL grammar for ASR and generate fast processors in
 C++. Compiler front ends call these processors to manipulate ASR
 trees. Ultimately, ASR is fed to the compiler back ends, e.g.,
 LLVM, x86, C, etc.
 
 So far as we know, our ASDL tools are the only extant ones in the
-World. There is no ecosystem for it. We need to replace ASDL with
+World. There is no ecosystem for ASDL. We need to replace ASDL with
 something more modern with a robust, lively ecosystem.
 
 *** ASR Processors are Hard to Prototype and Verify / Validate
 
-ASR-to-ASR transformation is where the magic of LCompilers
-happens. Optimization, static type-checking, partial evaluation,
-abstract execution, and rewriting are examples of such
-transformations.
+ASR-to-ASR transformations are the magic of LCompilers.
+Optimization, static type-checking, partial evaluation, abstract
+execution, and rewriting are examples of such transformations.
 
 Though ASR has an output representation in S-expressions, all work
 with it is currently done in C++ with opaque binary
@@ -200,21 +199,24 @@ visualize, modify, and debug.
 The mitigation is to perform these development activities with
 languages friendly to S-expressions and with rich toolkits for
 visualization and transformations. We've chosen Clojure, and have
-a prototype for validation and test-generation in Clojure.[fn::
-https://github.com/rebcabin/asr-tester]
+a prototype for validation and test-generation in Clojure, namely
+/asr-tester/.[fn:: https://github.com/rebcabin/asr-tester] The
+current work inherits learnings from that old project.
 
 *** Volatility
 
-ASR changes nearly daily, for good reasons. However, existing ASR
-processors in Clojure must chase the ASDL specification, and that
-chasing consumes almost all development time in Clojure.
+ASR changes nearly daily, for good reasons. However, asr-tester
+must chase the ASDL specification, and that chasing consumes
+almost all development time in Clojure.
 
-We propose to replace the ground-level specification in ASDL with
-a ground-level specification in Clojure, directly. Initially, we
-can generate the needed C++ processors from Clojure, then rewrite
-them in C++ when ASDL stabilizes. I call this new ASR
-specification MASR, for Meta-ASR. It's pronounced "Maser,"
-building on Physics puns that abound in our work.
+We propose to replace the ground-level specification of ASR in
+ASDL with a ground-level specification in Clojure, directly. We
+propose to generate the needed C++ processors from Clojure, then
+rewrite them by hand in C++ if necessary when ASDL stabilizes.
+
+I call this new ASR specification MASR, for Meta-ASR. It's
+pronounced "Maser," building on Physics puns that abound in our
+work.
 
 Clojure for MASR has many advantages over the current approach:
 
@@ -230,21 +232,91 @@ Clojure for MASR has many advantages over the current approach:
 
 Clojure has a powerful specification subsystem, clojure.spec.[fn::
 https://clojuredocs.org/clojure.spec.alpha] This should suffice
-for both ordinary, everyday type-checking as well as advanced
+for both ordinary, everyday type-checking as well as for advanced
 research into dependent types, concurrency types,[fn::
 https://rholang.io/] rewriting, and proofs.
 
 * MASR
 
-The development in this document mirrors the structure of an ASR
-snapshot in ASDL.[fn:: [https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]]
+The development in this document may lag the code. The document
+mirrors the structure of an ASR snapshot in ASDL.[fn::
+[https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]]
+
 We introduce some terminology, explained in context.
 
 ** Terms
 
 These are the "objects" of ASR, items to the left-hand side of an
-equals sign in the ASDL grammar.
+equals sign in the ASDL grammar. Table \ref{tbl:terms} exhibits
+terms that are fully specified, implicit, or term-like in the
+current ASDL grammar. The definitions have been abbreviated and
+edited for presentation and fit.
 
+There are many syntactic and semantic ambiguities in the ASDL
+grammar. These ambiguities are resolved in the actual,
+hand-written C++ code in LFortran and LPython that implements the
+grammar.
+
+A primary objective of MASR is to resolve these ambiguities in
+Clojure, enabling more automation and relieving pressure on C++
+programmers.
+
+#+caption: Terms (nodes) in the ASDL grammar (things left of equals signs):
+#+label: tbl:terms
+|----+-------------------+------------------------------------------------------------------|
+|    | **term**          | **partial expansion**                                            |
+|----+-------------------+------------------------------------------------------------------|
+|  1 | =unit=            | =TranslationUnit(symbol_table, node*)=                           |
+|  2 | =symbol=          | \ldots many heads \ldots                                         |
+|  3 | =storage_type=    | =Default= \vert =Save= \vert =Parameter= \vert =Allocatable=     |
+|  4 | =access=          | =Public= \vert =Private=                                         |
+|  5 | =intent=          | =Local= \vert =In= \vert =Out= \vert =InOut= \vert \ldots        |
+|  6 | =deftype=         | =Implementation= \vert =Interface=                               |
+|  7 | =presence=        | =Required= \vert =Optional=                                      |
+|  8 | =abi=             | =Source= \vert =LFortranModule= \vert \ldots \vert =Intrinsic=   |
+|  9 | =stmt=            | \ldots many heads \ldots                                         |
+| 10 | =expr=            | \ldots many heads \ldots                                         |
+| 11 | =ttype=           | =Integer(int, dimension*)= \vert \ldots                          |
+| 12 | =restriction_arg= | =RestrictionArg(= ident =, symbol)=                              |
+| 13 | =binop=           | =Add= \vert =Sub= \vert \ldots \vert =BitRShift=                 |
+| 14 | =logicalbinop=    | =And= \vert =Or= \vert =Xor= \vert =NEqv= \vert =Eqv=            |
+| 15 | =cmpop=           | =Eq= \vert =NotEq= \vert =Lt= \vert =LtE= \vert =Gt= \vert =GtE= |
+| 16 | =integerboz=      | =Binary= \vert =Hex= \vert =Octal=                               |
+| 17 | =arraybound=      | =LBound= \vert =UBound=                                          |
+| 18 | =arraystorage=    | =RowMajor= \vert =ColMajor=                                      |
+| 19 | =cast_kind=       | =RealToInteger= \vert =IntegerToReal= \vert \ldots               |
+| 20 | =dimension=       | =(expr? start, expr? length)=                                    |
+| 21 | =alloc_arg=       | =(expr a, dimension* dims)=                                      |
+| 22 | =attribute=       | =Attribute(= ident =name,= attr-arg* =args)=                     |
+| 23 | =attribute_arg=   | =(= ident =arg)=                                                 |
+| 24 | =call_arg=        | =(expr? value)=                                                  |
+| 25 | =tbind=           | =Bind(string lang, string name)=                                 |
+| 26 | =array_index=     | =(= expr? =left,= expr? =right,= expr? =step)=                   |
+| 27 | =do_loop_head=    | =(= expr? =v,= expr? =start= expr? =end,= expr? =step)=          |
+| 28 | =case_stmt=       | =CaseStmt(expr*, stmt*)= \vert \ldots                            |
+| 29 | =type_stmt=       | =TypeStmtName(symbol, stmt*)= \vert \ldots                       |
+| 30 | =enumtype=        | =IntegerConsecutiveFromZero= \vert \ldots                        |
+|----+-------------------+------------------------------------------------------------------|
+|    | **implicit**      |                                                                  |
+|----+-------------------+------------------------------------------------------------------|
+| 31 | =symbol_table=    | Clojure maps                                                     |
+| 32 | =symtab_id=       | an =int=                                                         |
+|----+-------------------+------------------------------------------------------------------|
+|    | **term-like*      |                                                                  |
+|----+-------------------+------------------------------------------------------------------|
+|  0 | =dimensions=      | =dimension*=, via Clojure vectors or lists                       |
+|  0 | atoms             | =int= \vert =float= \vert =bool= \vert =nat= \vert =bignat=      |
+|  0 | =identifier=      | by regex                                                         |
+|  0 | =identifiers=     | =identifier*=, via Clojure sets                                  |
+|----+-------------------+------------------------------------------------------------------|
+
+** Concepts
+
+The following sections explain the architecture and approach taken
+in the Clojure code. Overall, clojure.spec is /force majeur/ for
+driving out ambiguity.
+
+*** unit
 *** symbol
 
 **** Variable
@@ -253,24 +325,12 @@ equals sign in the ASDL grammar.
 *** access
 *** intent
 
-Set of =Local=, =In=, =Out=, =InOut=, =ReturnVar=, =Unspecified=.
-
-Records seem fundamentally incompatible with entity maps
-clojure.spec.[fn:: https://clojure.org/guides/spec] Entity maps
-are more important, so we're going that way.[fn::
-https://stackoverflow.com/questions/48366052/is-it-possible-to-use-namespaced-keywords-with-records]
+An =intent= is one of =Local=, =In=, =Out=, =InOut=, =ReturnVar=,
+=Unspecified=. The spec for an intent is
 
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  (defrecord intent
-      [masr.intent/intent-sym])
-
-  (s/def ::intent-sym
-    #{'Local, 'In, 'Out, 'InOut, 'ReturnVar, 'Unspecified})
-
-  (s/def ::intent
-    (s/keys ::intent-sym))
 #+end_src
 
 *** deftype
@@ -299,15 +359,22 @@ https://stackoverflow.com/questions/48366052/is-it-possible-to-use-namespaced-ke
 *** type_stmt
 *** enumtype
 
-** Phantom Terms
+** Implicit Terms
 
 Terms used, explicitly or implicitly,  but not defined in ASDL.
 
-Some items specified as /symbol_table/ are actually /symtab_id/.
+Some items specified in ASDL as /symbol_table/ are actually
+/symtab_id/.
 
 *** symtab_id
 *** symbol_table
+
+** Term-Like Items
+
+*** dimensions
+*** atoms
 *** identifier
+*** identifiers
 
 * COMMENT Abstract (TL;DR)
 
