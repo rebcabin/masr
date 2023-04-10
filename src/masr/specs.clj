@@ -54,13 +54,13 @@
 
 ;; terms not specified in ASDL:
 ;;
-;; 31 identifier      = specified below
-;; 32 symbol_table    = a clojure map
-;; 33 dimensions      = dimension*, see below
+;; 31 symbol_table    = a clojure map
+;; 32 dimensions      = dimension*, see below
 
 ;; things that are not terms:
 ;;
 ;;  0 atoms           = int, float, bool, nat, bignat
+;;  0 identifier      = specified below
 
 
 ;; ================================================================
@@ -164,7 +164,9 @@
 
 
 (defn nat [it]
-  (second (s/conform ::nat it)))
+  (let [cit (s/conform ::nat it)]
+    (or (s/invalid? cit)
+        (second cit))))
 
 
 #_
@@ -284,7 +286,8 @@
 
 
 (defn identifier [sym]
-  (s/conform ::identifier sym))
+  (let [csym (s/conform ::identifier sym)]
+    (or (s/invalid? csym) csym)))
 
 ;;     _ _                   _
 ;;  __| (_)_ __  ___ _ _  __(_)___ _ _
@@ -342,16 +345,16 @@
 ;; -+-+-+-+-+-+-
 
 
-(s/valid?  ::asr-term {::term ::dimension, ::dimension-content '(1 60)})
-(s/conform ::asr-term {::term ::dimension, ::dimension-content '(1 60)})
-
 (defn dimension [it]
-  (let [conf (s/conform ::asr-term
-                        {::term ::dimension,
-                         ::dimension-content it})]
-    {::term ::dimension
-     ::dimension-content
-     (map second (::dimension-content conf))}))
+  (if (or (set? it) (map? it))
+    false  ;; "true" would do just as well.
+    (let [conf (s/conform ::asr-term
+                              {::term ::dimension,
+                               ::dimension-content it})]
+          (or (s/invalid? conf)
+              {::term ::dimension
+               ::dimension-content
+               (map second (::dimension-content conf))}))))
 
 #_
 (= (s/conform ::asr-term {::term ::dimension, ::dimension-content '(1 60)})
@@ -419,7 +422,7 @@
 ;;  s y n t a x
 ;; -+-+-+-+-+-+-
 
-
+#_
 (s/conform ::dimensions [(dimension '(1 60)) (dimension '())])
 ;; => [#:masr.specs{:term :masr.specs/dimension,
 ;;                  :dimension-content
@@ -429,12 +432,15 @@
 
 
 (defn dimensions [dimension-contents-coll]
-  (let [dims-coll (map dimension dimension-contents-coll)
-        dims-conf (s/conform ::dimensions dims-coll)
-        dims-cont (map #(map second (::dimension-content %)) dims-conf)
-        recon     (map dimension dims-cont)]
-    recon
-    ))
+  (if (or (set? dimension-contents-coll)
+          (map? dimension-contents-coll))
+    false  ;; "true" would do just as well.
+    (let [dims-coll (map dimension dimension-contents-coll)
+          dims-conf (s/conform ::dimensions dims-coll)]
+      (or (s/invalid? dims-conf)
+          (let [dims-cont (map #(map second (::dimension-content %)) dims-conf)
+                recon     (map dimension dims-cont)]
+            recon)))))
 
 
 (s/valid? ::dimensions (dimensions ['(1 60) '()]))
