@@ -255,3 +255,71 @@
 ;;     [() (789 2768)]
 ;;     [(0 221667) (0 1)]
 ;;     [() (2) (0) (19931) (0 397) (1) (3) () ()])
+
+
+;;  _     _           _
+;; (_)_ _| |_ ___ _ _| |_
+;; | | ' \  _/ -_) ' \  _|
+;; |_|_||_\__\___|_||_\__|
+
+;; intent = Local | In | Out | InOut | ReturnVar | Unspecified
+
+;; See multi-spec in https://clojure.org/guides/spec
+;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
+
+
+(s/def ::term keyword?)  ;; like ::intent, ::symbol, ::expr, ...
+
+
+;; These enum values are also called "heads."
+(s/def ::intent-enum #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+
+
+;; ::term is a fn that picks the dispatch value
+(defmulti term ::term)
+
+
+;; {::term ::intent, ::intent-enum 'Local}
+(defmethod term ::intent [_]
+  (s/keys :req [::term ::intent-enum]))
+
+
+(s/def ::asr-term (s/multi-spec term ::term))
+
+#_
+(s/valid? ::asr-term {::term ::intent, ::intent-enum 'Local})
+;; => true
+
+
+;; __   __        _      _    _
+;; \ \ / /_ _ _ _(_)__ _| |__| |___
+;;  \ V / _` | '_| / _` | '_ \ / -_)
+;;   \_/\__,_|_| |_\__,_|_.__/_\___|
+
+;; | Variable(symbol_table   parent_symtab,   ;; really an integer id
+;;            identifier     name,
+;;            identifier   * dependencies,    ;; vector of dependency
+;;            intent         intent,
+;;            expr         ? symbolic_value,  ;; lack specified by nil
+;;            expr         ? value,
+;;            storage_type   storage,
+;;            ttype          type,
+;;            abi            abi,
+;;            access         access,
+;;            presence       presence,
+;;            bool           value_attr)
+
+;; (Variable                ;   head, term: symbol
+;;  2                       ;   symbol_table    parent-symtab-id
+;;                                         ;     TODO: NOT SYMBOL!
+;;  x                       ;   identifier      nym
+;;  []                      ;   identifier *    dependencies
+;;  Local                   ;   intent          intent
+;;  ()                      ;   expr ?          symbolic-value
+;;  ()                      ;   expr ?          value
+;;  Default                 ;   storage_type    storage
+;;  (Integer 4 [])          ;   ttype           tipe
+;;  Source                  ;   abi             abi
+;;  Public                  ;   access          access
+;;  Required                ;   presence        presence
+;;  .false.)})              ;   bool            value-attr
