@@ -1,6 +1,6 @@
 (ns masr.core-test
   (:use     [masr.core]
-            ;; https://groups.google.com/g/clojure/c/i770QaIFiF0
+            ;; https://groups.google.com/g/clojure/c/i770QaIFiF0 :
             [masr.specs :as asr])
   (:require [clojure.test :refer :all]
             [clojure.spec.alpha :as s]

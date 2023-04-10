@@ -257,34 +257,48 @@
 ;;     [() (2) (0) (19931) (0 397) (1) (3) () ()])
 
 
-;;  _     _           _
-;; (_)_ _| |_ ___ _ _| |_
-;; | | ' \  _/ -_) ' \  _|
-;; |_|_||_\__\___|_||_\__|
+;;                  _
+;;  __ _ ____ _ ___| |_ ___ _ _ _ __
+;; / _` (_-< '_|___|  _/ -_) '_| '  \
+;; \__,_/__/_|      \__\___|_| |_|_|_|
 
-;; intent = Local | In | Out | InOut | ReturnVar | Unspecified
 
 ;; See multi-spec in https://clojure.org/guides/spec
 ;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
 
 
+;; An asr-term is a map containing a ::term keyword,
+;; i.e., :masr.specs/term, or ::asr/term if
+;; masr.specs is aliased to asr, as in
+;; (:use [masr.specs :as asr]).
+
+
 (s/def ::term keyword?)  ;; like ::intent, ::symbol, ::expr, ...
-
-
-;; These enum values are also called "heads."
-(s/def ::intent-enum #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 
 
 ;; ::term is a fn that picks the dispatch value
 (defmulti term ::term)
 
 
+(s/def ::asr-term (s/multi-spec term ::term))
+
+
+;;  _     _           _
+;; (_)_ _| |_ ___ _ _| |_
+;; | | ' \  _/ -_) ' \  _|
+;; |_|_||_\__\___|_||_\__|
+
+;; This is an example of how to spec an enum.
+
+;; intent = Local | In | Out | InOut | ReturnVar | Unspecified
+
+;; These enum values are also called "heads."
+(s/def ::intent-enum #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+
+
 ;; {::term ::intent, ::intent-enum 'Local}
 (defmethod term ::intent [_]
   (s/keys :req [::term ::intent-enum]))
-
-
-(s/def ::asr-term (s/multi-spec term ::term))
 
 #_
 (s/valid? ::asr-term {::term ::intent, ::intent-enum 'Local})
