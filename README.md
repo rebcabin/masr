@@ -12,7 +12,13 @@ Radiation. Yes, it's a physics pun. We like physics puns.
 
 - type `lein run` at the terminal
 
+# Read
+
+`masr.pdf`
+
 # Modify
+
+- `masr.org`
 
 Write Clojure code. Use
 
