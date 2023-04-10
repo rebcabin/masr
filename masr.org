@@ -244,13 +244,23 @@ mirrors the structure of an ASR snapshot in ASDL.[fn::
 
 We introduce some terminology, explained in context.
 
-** Terms
+** Terms and Heads
 
-These are the "objects" of ASR, items to the left-hand side of an
-equals sign in the ASDL grammar. Table \ref{tbl:terms} exhibits
-terms that are fully specified, implicit, or term-like in the
-current ASDL grammar. The definitions have been abbreviated and
-edited for presentation and fit.
+/Terms/ are the "objects" or "productions" of ASR, items to the
+left-hand side of an equals sign in the ASDL grammar. Table
+\ref{tbl:terms} exhibits terms that are fully specified, implicit,
+or term-like in the current ASDL grammar. The definitions have
+been abbreviated and edited for presentation and fit.
+
+/Heads/ are the things that appear on the right-hand sides of
+terms equations. They are of two kinds:
+
+- /function-like heads/ :: --- have parentheses and typed
+  parameters.
+
+- /enum-like heads/ :: --- no parentheses
+
+** Critique and Objectives
 
 There are many syntactic and semantic ambiguities in the ASDL
 grammar. These ambiguities are resolved in the actual,
@@ -310,11 +320,15 @@ programmers.
 |  0 | =identifiers=     | =identifier*=, via Clojure sets                                  |
 |----+-------------------+------------------------------------------------------------------|
 
-** Concepts
+\newpage
+* Concepts
 
 The following sections explain the architecture and approach taken
-in the Clojure code. Overall, clojure.spec is /force majeur/ for
-driving out ambiguity.
+in the Clojure code. Overall, clojure.spec is /force majeure/ for
+driving out ambiguity. The Clojure tests exhibit many examples
+that pass and, more importantly, fail the specs in the source.
+
+** Terms and Heads
 
 *** unit
 *** symbol
