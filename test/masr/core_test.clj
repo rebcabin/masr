@@ -111,6 +111,15 @@
 
 
 (deftest intent-test
+  (testing "better syntax"
+    (is      (s/valid? ::asr/asr-term (intent 'Local)))
+    (is      (s/valid? ::asr/asr-term (intent 'Unspecified)))
+    (is (not (s/valid? ::asr/asr-term (intent 'foobar))))
+    (is (not (s/valid? ::asr/asr-term (intent []))))
+    (is (not (s/valid? ::asr/asr-term (intent "foobar"))))
+    (is (not (s/valid? ::asr/asr-term (intent ""))))
+    (is (not (s/valid? ::asr/asr-term (intent 42))))
+    (is (thrown? clojure.lang.ArityException (intent))))
   (is (s/valid? ::asr/asr-term
                 {::asr/term        ::asr/intent,
                  ::asr/intent-enum 'Local}))
@@ -125,6 +134,10 @@
                        {::asr/term        ::asr/intent,
                         ::asr/intent-enum 'foobar})))))
 
+(s/explain ::asr/term (intent 'Local))
+(= (intent 'Local)
+   {::asr/term        ::asr/intent,
+    ::asr/intent-enum 'Local})
 
 ;;     _                             _
 ;;  __| |_ ___ _ _ __ _ __ _ ___ ___| |_ _  _ _ __  ___

@@ -307,6 +307,24 @@
 ;; => true
 
 
+;; An instance written as {::term ::intent, ::intent-enum 'Local}
+;; a bit ugly. Let's write
+
+
+(defn intent [sym]
+  (s/conform
+   ::asr-term
+   {::term ::intent, ::intent-enum sym}))
+
+#_
+(intent 'Local)
+;; => #:masr.specs{:term :masr.specs/intent, :intent-enum Local}
+
+#_
+(intent 42)
+;; => :clojure.spec.alpha/invalid
+
+
 ;;     _                             _
 ;;  __| |_ ___ _ _ __ _ __ _ ___ ___| |_ _  _ _ __  ___
 ;; (_-<  _/ _ \ '_/ _` / _` / -_)___|  _| || | '_ \/ -_)
