@@ -58,6 +58,10 @@
          ::asr/dimension
          (dimension
           '(606 66979216746710640882869059905284213752707))))
+    (is (not (s/valid? ::asr/dimension 0)))
+    (is (not (s/valid? ::asr/dimension 'foo)))
+    (is (not (s/valid? ::asr/dimension "")))
+    (is (not (s/valid? ::asr/dimension :bar)))
     (is (thrown? clojure.lang.ArityException
                  (not (s/valid? ::asr/dimension (dimension 1 60)))))
     (is (thrown? clojure.lang.ArityException
