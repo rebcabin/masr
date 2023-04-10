@@ -25,6 +25,12 @@
   (is (s/valid? ::asr/bignat (bigint 4200000000000N)))
   (is (s/valid? ::asr/bignat (bigint 0N))))
 
+#_
+(gen/sample (s/gen ::asr/nat) 15)
+;; => (1 0 58 0 12
+;;     0 3751 13 185743679156 4
+;;     9 758 2475515847708 30 474561204531338)
+
 
 ;;     _ _                   _
 ;;  __| (_)_ __  ___ _ _  __(_)___ _ _  ___
@@ -36,6 +42,24 @@
   (is (s/valid? ::asr/dimension []))
   (is (s/valid? ::asr/dimension [1]))
   (is (not (s/valid? ::asr/dimensions [0]))))
+
+#_
+(gen/sample (s/gen ::asr/dimensions) 15)
+;; => ([(1 1) (0) (1754) (0 15)]
+;;     [() (15633) (1) (1 58)]
+;;     [(0 0) (1) (45004 1) ()]
+;;     [(1) (1 25) (0) (108763 1741) (306) (6 4) (2978 3963195) (1 1) ()]
+;;     [() () (2 525175) (4 1) (0 0) ()]
+;;     [(5)]
+;;     [() () (4) (4) (25) (20837531 2) (1 37872207289)]
+;;     [(10) () (13 3) () ()]
+;;     [() (18)]
+;;     [(2457788469) (0) (1416182 23337056983) (3893755855203 0) () ()]
+;;     [() (1) () ()]
+;;     [(8 13039750) (54 3) (29203272247 130) (56993925 3254579507612190)]
+;;     [(21) (183 782719780057) () () (107266401) (14973)]
+;;     [() (1 8140351019424905159520934198)]
+;;     [(19699876832435852013432329851) (17) (88930935959209684 1648) () () ()])
 
 
 ;;  _    _         _   _  __ _
@@ -79,27 +103,81 @@
                     ::asr/asr-term
                     #(= ::asr/intent (::asr/term %))))
             5)
-;; => (#::asr{:term ::asr/intent, :intent-enum Out}
-;;     #::asr{:term ::asr/intent, :intent-enum InOut}
-;;     #::asr{:term ::asr/intent, :intent-enum InOut}
-;;     #::asr{:term ::asr/intent, :intent-enum Unspecified}
-;;     #::asr{:term ::asr/intent, :intent-enum Out})
+;; => (#:masr.specs{:term :masr.specs/intent, :intent-enum ReturnVar}
+;;     #:masr.specs{:term :masr.specs/intent, :intent-enum In}
+;;     #:masr.specs{:term :masr.specs/intent, :intent-enum Unspecified}
+;;     #:masr.specs{:term :masr.specs/intent, :intent-enum Unspecified}
+;;     #:masr.specs{:term :masr.specs/intent, :intent-enum InOut})
 
 
 (deftest intent-test
   (is (s/valid? ::asr/asr-term
-                {::asr/term
-                 ::asr/intent,
+                {::asr/term        ::asr/intent,
                  ::asr/intent-enum 'Local}))
   (is (s/valid? ::asr/asr-term
-                {::asr/term
-                 ::asr/intent,
+                {::asr/term        ::asr/intent,
                  ::asr/intent-enum 'Unspecified}))
   (testing "missing key"
     (is (not (s/valid? ::asr/asr-term
                        {::asr/intent-enum 'Unspecified}))))
   (testing "incorrect value"
     (is (not (s/valid? ::asr/asr-term
-                       {::asr/term
-                        ::asr/intent,
+                       {::asr/term        ::asr/intent,
                         ::asr/intent-enum 'foobar})))))
+
+
+;;     _                             _
+;;  __| |_ ___ _ _ __ _ __ _ ___ ___| |_ _  _ _ __  ___
+;; (_-<  _/ _ \ '_/ _` / _` / -_)___|  _| || | '_ \/ -_)
+;; /__/\__\___/_| \__,_\__, \___|    \__|\_, | .__/\___|
+;;                     |___/             |__/|_|
+
+#_
+(gen/sample (s/gen (s/and
+                    ::asr/asr-term
+                    #(= ::asr/storage-type (::asr/term %))))
+            5)
+;; => (#:masr.specs{:term :masr.specs/storage-type, :storage-type-enum Save}
+;;     #:masr.specs{:term :masr.specs/storage-type, :storage-type-enum Save}
+;;     #:masr.specs{:term :masr.specs/storage-type, :storage-type-enum Parameter}
+;;     #:masr.specs{:term :masr.specs/storage-type, :storage-type-enum Save}
+;;     #:masr.specs{:term :masr.specs/storage-type, :storage-type-enum Parameter})
+
+
+(deftest storage-type-test
+  (is (s/valid? ::asr/asr-term
+                {::asr/term ::asr/storage-type
+                 ::asr/storage-type-enum 'Default}))
+  (testing "incorrect value"
+    (is (not (s/valid? ::asr/asr-term
+                       {::asr/term ::asr/storage-type,
+                        ::asr/storage-type-enum 'foobar})))))
+
+
+;;       _    _
+;;  __ _| |__(_)
+;; / _` | '_ \ |
+;; \__,_|_.__/_|
+
+
+(gen/sample (s/gen (s/and
+                    ::asr/asr-term
+                    #(= ::asr/abi (::asr/term %))))
+            5)
+;; => (#:masr.specs{:term :masr.specs/abi, :abi-enum Interactive, :abi-external true}
+;;     #:masr.specs{:term :masr.specs/abi, :abi-enum Source, :abi-external false}
+;;     #:masr.specs{:term :masr.specs/abi, :abi-enum Source, :abi-external false}
+;;     #:masr.specs{:term :masr.specs/abi, :abi-enum Source, :abi-external false}
+;;     #:masr.specs{:term :masr.specs/abi, :abi-enum Interactive, :abi-external true})
+
+
+(deftest abi-test
+  (is (s/valid? ::asr/asr-term
+                {::asr/term        ::asr/abi
+                 ::asr/abi-enum     'Source
+                 ::asr/abi-external  false}))
+  (testing "'Source ABI cannot be External"
+    (is (not (s/valid? ::asr/asr-term
+                       {::asr/term        ::asr/abi
+                        ::asr/abi-enum     'Source
+                        ::asr/abi-external  true})))))

@@ -1,5 +1,6 @@
 (ns masr.specs
   (:require [clojure.spec.alpha            :as s   ]
+            [clojure.set                   :as set ]
             #_[clojure.zip                   :as z   ]
             [clojure.spec.gen.alpha        :as gen ]
             [clojure.test.check.generators :as tgen]))
@@ -290,6 +291,7 @@
 
 ;; This is an example of how to spec an enum.
 
+
 ;; intent = Local | In | Out | InOut | ReturnVar | Unspecified
 
 ;; These enum values are also called "heads."
@@ -302,6 +304,94 @@
 
 #_
 (s/valid? ::asr-term {::term ::intent, ::intent-enum 'Local})
+;; => true
+
+
+;;     _                             _
+;;  __| |_ ___ _ _ __ _ __ _ ___ ___| |_ _  _ _ __  ___
+;; (_-<  _/ _ \ '_/ _` / _` / -_)___|  _| || | '_ \/ -_)
+;; /__/\__\___/_| \__,_\__, \___|    \__|\_, | .__/\___|
+;;                     |___/             |__/|_|
+
+
+;; storage_type = Default | Save | Parameter | Allocatable
+
+(s/def ::storage-type-enum #{'Default, 'Save, 'Parameter, 'Allocatable})
+
+
+(defmethod term ::storage-type [_]
+  (s/keys :req [::term ::storage-type-enum]))
+
+#_
+(s/valid? ::asr-term
+          {::term ::storage-type
+           ::storage-type-enum 'Default})
+;; => true
+
+;;       _    _
+;;  __ _| |__(_)
+;; / _` | '_ \ |
+;; \__,_|_.__/_|
+
+
+(def external-abis
+  #{'LFortranModule, 'GFortranModule,
+    'BindC, 'Interactive, 'Intrisic})
+
+
+(def internal-abis #{'Source})
+
+
+(s/def ::abi-enum (set/union external-abis internal-abis))
+
+
+(s/def ::abi-external ::bool)
+
+
+(defn iff [a b]
+  (or (and a b)
+      (not (or a b))))
+
+
+(defn implies [a b]
+  (not (and a (not b)))) ;; same as (or (not a) b)
+
+
+(defmethod term ::abi [_]
+  (s/with-gen
+    (s/and
+     #(iff (= 'Source (::abi-enum %)) (not (::abi-external %)))
+     (s/keys :req [::term ::abi-enum ::abi-external]))
+    (fn []
+      (tgen/one-of
+       [(tgen/hash-map
+         ::term         (gen/return ::abi-enum)
+         ::abi-enum     (s/gen external-abis)
+         ::abi-external (gen/return true))
+        (tgen/hash-map
+         ::term         (gen/return ::abi-enum)
+         ::abi-enum     (s/gen internal-abis)
+         ::abi-external (gen/return false))] ))))
+
+#_
+(s/def ::tuple-ttype
+  (s/with-gen
+    (s/cat
+     :head  #{'Tuple}
+     :type (s/or :empty     empty?
+                 :vector-of (s/* ::ttype)))
+    (fn []
+      (tgen/fmap
+       list*
+       (tgen/tuple
+        (tgen/return 'Tuple)
+        (tgen/vector (s/gen ::ttype)))))))
+
+#_
+(s/valid? ::asr-term
+          {::term      ::abi
+           ::abi-enum 'Source
+           ::abi-external false})
 ;; => true
 
 
