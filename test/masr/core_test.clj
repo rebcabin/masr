@@ -201,9 +201,22 @@
     ;; '1a won't even compile, throwing java.lang.NumberFormatException
     (is (not (s/valid? ::asr/identifier (identifier ""))))
     (is (not (s/valid? ::asr/identifier (identifier "asdf"))))
+    (is (not (s/valid? ::asr/identifier (identifier :asdf))))
+
+    (is (not (s/valid? ::asr/identifier (identifier ()))))
+    (is (not (s/valid? ::asr/identifier (identifier []))))
+    (is (not (s/valid? ::asr/identifier (identifier {}))))
+    (is (not (s/valid? ::asr/identifier (identifier #{}))))
+    (is (not (s/valid? ::asr/identifier (identifier '(foo)))))
+    (is (not (s/valid? ::asr/identifier (identifier ['foo]))))
+    (is (not (s/valid? ::asr/identifier (identifier {'foo 'bar}))))
+    (is (not (s/valid? ::asr/identifier (identifier #{'foo}))))
+    (is (not (s/valid? ::asr/identifier (identifier '1234))))
+    (is (not (s/valid? ::asr/identifier (identifier ""))))
+    (is (not (s/valid? ::asr/identifier (identifier "asdf"))))
     (is (not (s/valid? ::asr/identifier (identifier :asdf)))))
 
-(is (s/valid? ::asr/identifier      'foobar))
+  (is (s/valid? ::asr/identifier      'foobar))
   (is (s/valid? ::asr/identifier      '_foobar))
   (is (s/valid? ::asr/identifier      '__f_oobar))
   (is (s/valid? ::asr/identifier      '_1234))
@@ -221,20 +234,7 @@
   ;; '1abcd won't even compile, throwing java.lang.NumberFormatException
   (is (not (s/valid? ::asr/identifier "")))
   (is (not (s/valid? ::asr/identifier "asdf")))
-  (is (not (s/valid? ::asr/identifier :asdf)))
-
-  (is (not (s/valid? ::asr/identifier (identifier ()))))
-  (is (not (s/valid? ::asr/identifier (identifier []))))
-  (is (not (s/valid? ::asr/identifier (identifier {}))))
-  (is (not (s/valid? ::asr/identifier (identifier #{}))))
-  (is (not (s/valid? ::asr/identifier (identifier '(foo)))))
-  (is (not (s/valid? ::asr/identifier (identifier ['foo]))))
-  (is (not (s/valid? ::asr/identifier (identifier {'foo 'bar}))))
-  (is (not (s/valid? ::asr/identifier (identifier #{'foo}))))
-  (is (not (s/valid? ::asr/identifier (identifier '1234))))
-  (is (not (s/valid? ::asr/identifier (identifier ""))))
-  (is (not (s/valid? ::asr/identifier (identifier "asdf"))))
-  (is (not (s/valid? ::asr/identifier (identifier :asdf))))  )
+  (is (not (s/valid? ::asr/identifier :asdf))))
 
 
 ;; A Clojure symbol is NOT an ASR identifier, but an
