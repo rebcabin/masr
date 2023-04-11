@@ -221,10 +221,11 @@
 ;; (:use [masr.specs :as asr]).
 
 
-(s/def ::term keyword?)  ;; like ::intent, ::symbol, ::expr, ...
+;; like ::intent, ::symbol, ::expr, ...
+(s/def ::term qualified-keyword?)
 
 
-;; ::term is a fn that picks the dispatch value
+;; ::term is a fn that picks the multi-spec dispatch value.
 (defmulti term ::term)
 
 
@@ -297,34 +298,76 @@
 
 ;; for productions like identifier*;
 ;; not an ASDL term
+;;
+;; there are three kinds https://github.com/rebcabin/masr/issues/1
+;; identifier-set  : unordered, no duplicates
+;; identifier-list : ordered, duplicates allowed (we use vector)
+;; identifier-suit : ordered, duplicates not allowed
 
 
 (def MIN-NUMBER-OF-IDENTIFIERS  0)
 (def MAX-NUMBER-OF-IDENTIFIERS 99)
 
 
-(s/def ::identifiers
+(s/def ::identifier-set
   (s/coll-of ::identifier
              :min-count MIN-NUMBER-OF-IDENTIFIERS,
              :max-count MAX-NUMBER-OF-IDENTIFIERS,
              :into #{}))
 
 #_
-(gen/sample (s/gen ::identifiers) 2)
+(gen/sample (s/gen ::identifier-set) 2)
 ;; => (#{U p lu qr R F V0 g2 b8 Od T4 YQ d}
 ;;     #{H t x p u q M v o R A W n m P J T k z E})
 
 
-(defn identifiers
+(defn identifier-set
   "Remove duplicates, i.e., create a _set_."
   [it]
   (if (or (not (coll? it))
           (map? it))
     false ;; "true" would do just as well.
     (let [idents-coll (map identifier it)
-          idents-conf (s/conform ::identifiers idents-coll)]
+          idents-conf (s/conform ::identifier-set idents-coll)]
       (or (s/invalid? idents-conf)
-          idents-coll))))
+          idents-conf))))
+
+
+(s/def ::identifier-list
+  (s/coll-of ::identifier
+             :min-count MIN-NUMBER-OF-IDENTIFIERS,
+             :max-count MAX-NUMBER-OF-IDENTIFIERS,
+             :into []))
+
+#_
+(s/valid? ::identifier-list [])
+;; => true
+
+#_
+(s/valid? ::identifier-list ['__foo_bar])
+;; => true
+
+#_
+(gen/sample (s/gen ::identifier-list) 5)
+;; => ([]
+;;     [b HM F2c iB c Mf N h4V Wu sK cK dmf N7E j yl e2]
+;;     [qN1p Nk O5]
+;;     [li O0 y Hg vx Q8Zf5 X09AY t6N Emi0]
+;;     [bR V]
+
+
+(defn identifier-list
+  "Create a vector; ordered, duplicates allowed. Some
+  Clojure functions will convert the vector to a seq
+  or list, it matters not."
+  [it]
+  (if (or (not (coll? it))
+          (map? it))
+    false ;; "true" would do just as well.
+    (let [idents-coll (map identifier it)
+          idents-conf (s/conform ::identifier-list idents-coll)]
+      (or (s/invalid? idents-conf)
+          idents-conf))))
 
 
 ;;     _ _                   _

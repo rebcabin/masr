@@ -255,24 +255,25 @@
 ;; |_\__,_\___|_||_\__|_|_| |_\___|_| /__/
 
 
-(deftest identifiers-test
-  (is (s/valid? ::asr/identifiers (identifiers [])))
-  (is (s/valid? ::asr/identifiers (identifiers ())))
-  (is (s/valid? ::asr/identifiers (identifiers #{})))
-  (is (not (s/valid? ::asr/identifiers (identifiers {}))))
-  (is (s/valid? ::asr/identifiers (identifiers ['foo])))
-  (is (s/valid? ::asr/identifiers (identifiers '(foo))))
-  (is (s/valid? ::asr/identifiers (identifiers #{'foo})))
-  (is (not (s/valid? ::asr/identifiers (identifiers {'foo 'bar}))))
-  (is (s/valid? ::asr/identifiers (identifiers ['foo 'bar])))
-  (is (s/valid? ::asr/identifiers (identifiers '(foo bar))))
-  (is (s/valid? ::asr/identifiers (identifiers #{'foo 'bar})))
-  (is (s/valid? ::asr/identifiers (identifiers ['foo 'foo])))
-  (is (s/valid? ::asr/identifiers (identifiers '(foo foo))))
+(deftest identifier-set-test
+  (is (s/valid? ::asr/identifier-set (identifier-set [])))
+  (is (s/valid? ::asr/identifier-set (identifier-set ())))
+  (is (s/valid? ::asr/identifier-set (identifier-set #{})))
+  (is (not (s/valid? ::asr/identifier-set (identifier-set {}))))
+  (is (s/valid? ::asr/identifier-set (identifier-set ['foo])))
+  (is (s/valid? ::asr/identifier-set (identifier-set '(foo))))
+  (is (s/valid? ::asr/identifier-set (identifier-set #{'foo})))
+  (is (not (s/valid? ::asr/identifier-set (identifier-set {'foo 'bar}))))
+  (is (s/valid? ::asr/identifier-set (identifier-set ['foo 'bar])))
+  (is (s/valid? ::asr/identifier-set (identifier-set '(foo bar))))
+  (is (s/valid? ::asr/identifier-set (identifier-set #{'foo 'bar})))
+  (is (s/valid? ::asr/identifier-set (identifier-set ['foo 'foo])))
+  (is (= 1 (count (identifier-set ['foo 'foo]))))
+  (is (s/valid? ::asr/identifier-set (identifier-set '(foo foo))))
   ;; #{'foo 'foo} won't compile!
-  (is (not (s/valid? ::asr/identifiers (identifiers ['foo 123]))))
-  (is (not (s/valid? ::asr/identifiers (identifiers ['foo "foo"]))))
-  (is (not (s/valid? ::asr/identifiers (identifiers ['foo :foo])))))
+  (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo 123]))))
+  (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo "foo"]))))
+  (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo :foo])))))
 
 
 ;;  _     _           _
@@ -298,6 +299,9 @@
     (is      (s/valid? ::asr/asr-term (intent 'Unspecified)))
     (is (not (s/valid? ::asr/asr-term (intent 'foobar))))
     (is (not (s/valid? ::asr/asr-term (intent []))))
+    (is (not (s/valid? ::asr/asr-term (intent ()))))
+    (is (not (s/valid? ::asr/asr-term (intent {}))))
+    (is (not (s/valid? ::asr/asr-term (intent #{}))))
     (is (not (s/valid? ::asr/asr-term (intent "foobar"))))
     (is (not (s/valid? ::asr/asr-term (intent ""))))
     (is (not (s/valid? ::asr/asr-term (intent 42))))

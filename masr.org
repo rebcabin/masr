@@ -330,23 +330,117 @@ that pass and, more importantly, fail the specs in the source.
 
 ** Terms and Heads
 
-*** unit
-*** symbol
+We present these terms somewhat out of order. =intent= is first as
+it is the archetype for the several enum-like terms and heads. It
+also illustrates the overall architectural approach for all
+Clojure specs in MASR.
 
-**** Variable
-
-*** storage_type
-*** access
 *** intent
 
 An =intent= is one of =Local=, =In=, =Out=, =InOut=, =ReturnVar=,
-=Unspecified=. The spec for an intent is
+=Unspecified=. The spec for the contents of an intent is simply
+this set of enum-like heads. A Clojure /set/ in =#{= \ldots =}=
+brackets doubles as a predicate function that tests set
+membership. A Clojure /spec/ is any predicate function. Therefore
+the case of =intent= contents is very easy.
 
+The name of the spec is =::intent-enum=. The double colon
+signifies that \linebreak =intent-enum= is a keyword in the
+namespace =masr.specs=. The names of all Clojure specs must be so
+qualified in namespaces. In test files, we must explicitly name
+these specs.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
+  (s/def ::intent-enum
+    #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 #+end_src
 
+=::intent-enum= is the spec for the contents of an =intent=. The
+spec for =intent= itself is one method or implementation of a
+polymorphic =::asr-term=, which is a Clojure /multi-spec/.[fn::
+https://clojure.org/guides/spec] Such multi-specs are articulated
+via =defmethods= on a =defmulti=, as explained in the guide cited
+in the footnote.
+
+We start with a spec for =::term=. Any fully qualified keyword is
+a MASR term. This spec leaves room for growth of MASR.
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  ;; like ::intent, ::symbol, ::expr, ...
+  (s/def ::term qualified-keyword?)
+#+end_src
+
+Next, we specify a =defmulti=[fn::
+https://clojuredocs.org/clojure.core/defmulti], which is a
+polymorphic interface for all specs of terms. The name of the
+polymorphic interface and of all =defmethods=[fn::
+https://clojuredocs.org/clojure.core/defmethod] that implement the
+interface is =term=.
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  ;; ::term is a fn that picks the multi-spec dispatch value.
+  (defmulti term ::term)
+#+end_src
+
+Next, we have the particular method that specifies intents:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defmethod term ::intent [_]
+    (s/keys :req [::term ::intent-enum]))
+#+end_src
+
+This spec requires that any intent is a Clojure hash-map
+
+The names of all polymorphic methods that
+
+We see three levels to fully specify an intent: contents, general
+level multi-spec, and particular /implementation/ or method of the
+the multi-spec.
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::term keyword?)  ;; like ::intent, ::symbol, ::expr, ...
+  ;; ::term is a fn that picks the multi-spec dispatch value.
+  (defmulti term ::term)
+  (defmethod term ::intent [_]
+    (s/keys :req [::term ::intent-enum]))
+  ;; Here is the multi-spec; see below for examples of its usage.
+  (s/def ::asr-term (s/multi-spec term ::term))
+#+end_src
+
+At one level, a Clojure object that conforms to a multi-spec is a
+hash-map in ={= \ldots =}= that contains the required (namespaced)
+keys =::term= and =::intent-enum=. We always track the name of the
+term so that every Clojure hash-map is fully self-describing.
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (is (s/valid? ::asr/asr-term
+                {::asr/term        ::asr/intent,
+                 ::asr/intent-enum 'Local}))
+  (is (s/valid? ::asr/asr-term
+                {::asr/term        ::asr/intent,
+                 ::asr/intent-enum 'Unspecified}))
+  (testing "missing key"
+    (is (not (s/valid? ::asr/asr-term
+                       {::asr/intent-enum 'Unspecified}))))
+  (testing "incorrect value"
+    (is (not (s/valid? ::asr/asr-term
+                       {::asr/term        ::asr/intent,
+                        ::asr/intent-enum 'foobar}))))
+#+end_src
+
+*** unit
+*** symbol
+
+**** TODO Variable
+
+*** storage_type
+*** access
 *** deftype
 *** presence
 *** abi
