@@ -268,12 +268,35 @@
   (is (s/valid? ::asr/identifier-set (identifier-set '(foo bar))))
   (is (s/valid? ::asr/identifier-set (identifier-set #{'foo 'bar})))
   (is (s/valid? ::asr/identifier-set (identifier-set ['foo 'foo])))
+  ;; check set-ness
   (is (= 1 (count (identifier-set ['foo 'foo]))))
   (is (s/valid? ::asr/identifier-set (identifier-set '(foo foo))))
   ;; #{'foo 'foo} won't compile!
   (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo 123]))))
   (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo "foo"]))))
   (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo :foo])))))
+
+
+(deftest identifier-list-test
+  (is (s/valid? ::asr/identifier-list (identifier-list [])))
+  (is (s/valid? ::asr/identifier-list (identifier-list ())))
+  (is (s/valid? ::asr/identifier-list (identifier-list #{})))
+  (is (not (s/valid? ::asr/identifier-list (identifier-list {}))))
+  (is (s/valid? ::asr/identifier-list (identifier-list ['foo])))
+  (is (s/valid? ::asr/identifier-list (identifier-list '(foo))))
+  (is (s/valid? ::asr/identifier-list (identifier-list #{'foo})))
+  (is (not (s/valid? ::asr/identifier-list (identifier-list {'foo 'bar}))))
+  (is (s/valid? ::asr/identifier-list (identifier-list ['foo 'bar])))
+  (is (s/valid? ::asr/identifier-list (identifier-list '(foo bar))))
+  (is (s/valid? ::asr/identifier-list (identifier-list #{'foo 'bar})))
+  (is (s/valid? ::asr/identifier-list (identifier-list ['foo 'foo])))
+  ;; check that duplicates are allowed
+  (is (= 2 (count (identifier-list ['foo 'foo]))))
+  (is (s/valid? ::asr/identifier-list (identifier-list '(foo foo))))
+  ;; #{'foo 'foo} won't compile!
+  (is (not (s/valid? ::asr/identifier-list (identifier-list ['foo 123]))))
+  (is (not (s/valid? ::asr/identifier-list (identifier-list ['foo "foo"]))))
+  (is (not (s/valid? ::asr/identifier-list (identifier-list ['foo :foo])))))
 
 
 ;;  _     _           _
