@@ -299,6 +299,26 @@
   (is (not (s/valid? ::asr/identifier-list (identifier-list ['foo :foo])))))
 
 
+(deftest identifier-suit-test
+  (is (s/valid? ::asr/identifier-suit (identifier-suit [])))
+  (is (s/valid? ::asr/identifier-suit (identifier-suit ())))
+  (is (s/valid? ::asr/identifier-suit (identifier-suit #{})))
+  (is (not (s/valid? ::asr/identifier-suit (identifier-suit {}))))
+  (is (s/valid? ::asr/identifier-suit (identifier-suit ['foo])))
+  (is (s/valid? ::asr/identifier-suit (identifier-suit '(foo))))
+  (is (s/valid? ::asr/identifier-suit (identifier-suit #{'foo})))
+  (is (not (s/valid? ::asr/identifier-suit (identifier-suit {'foo 'bar}))))
+  (is (s/valid? ::asr/identifier-suit (identifier-suit ['foo 'bar])))
+  (is (s/valid? ::asr/identifier-suit (identifier-suit '(foo bar))))
+  (is (s/valid? ::asr/identifier-suit (identifier-suit #{'foo 'bar})))
+  (is (not (s/valid? ::asr/identifier-suit (identifier-suit ['foo 'foo]))))
+  (is (not (s/valid? ::asr/identifier-suit (identifier-suit '(foo foo)))))
+  ;; #{'foo 'foo} won't compile!
+  (is (not (s/valid? ::asr/identifier-suit (identifier-suit ['foo 123]))))
+  (is (not (s/valid? ::asr/identifier-suit (identifier-suit ['foo "foo"]))))
+  (is (not (s/valid? ::asr/identifier-suit (identifier-suit ['foo :foo])))))
+
+
 ;;  _     _           _
 ;; (_)_ _| |_ ___ _ _| |_
 ;; | | ' \  _/ -_) ' \  _|

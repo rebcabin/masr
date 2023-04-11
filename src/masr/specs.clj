@@ -165,8 +165,9 @@
 
 (defn nat [it]
   (let [cit (s/conform ::nat it)]
-    (or (s/invalid? cit)
-        (second cit))))
+    (if (s/invalid? cit)
+      ::invalid-nat
+      (second cit))))
 
 
 #_
@@ -288,7 +289,12 @@
 
 (defn identifier [sym]
   (let [csym (s/conform ::identifier sym)]
-    (or (s/invalid? csym) csym)))
+    (if (s/invalid? csym)
+      ::invalid-identifier
+      csym)))
+
+
+(identifier 123)
 
 
 ;;  _    _         _   _  __ _
@@ -309,6 +315,11 @@
 (def MAX-NUMBER-OF-IDENTIFIERS 99)
 
 
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  i d e n t i f i e r - s e t
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+
 (s/def ::identifier-set
   (s/coll-of ::identifier
              :min-count MIN-NUMBER-OF-IDENTIFIERS,
@@ -326,11 +337,17 @@
   [it]
   (if (or (not (coll? it))
           (map? it))
-    false ;; "true" would do just as well.
+    ::invalid-identifier-set
     (let [idents-coll (map identifier it)
           idents-conf (s/conform ::identifier-set idents-coll)]
-      (or (s/invalid? idents-conf)
-          idents-conf))))
+      (if (s/invalid? idents-conf)
+        ::invalid-identifier-set
+        idents-conf))))
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  i d e n t i f i e r - l i s t
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
 (s/def ::identifier-list
@@ -357,17 +374,49 @@
 
 
 (defn identifier-list
-  "Create a vector; ordered, duplicates allowed. Some
-  Clojure functions will convert the vector to a seq
-  or list, it matters not."
+  "Create a vector; ordered, duplicates allowed. Some Clojure
+  functions will convert the vector to a seq or list, it matters
+  not."
   [it]
   (if (or (not (coll? it))
           (map? it))
-    false ;; "true" would do just as well.
+    ::invalid-identifier-list
     (let [idents-coll (map identifier it)
           idents-conf (s/conform ::identifier-list idents-coll)]
-      (or (s/invalid? idents-conf)
-          idents-conf))))
+      (if (s/invalid? idents-conf)
+        ::invalid-identifier-list
+        idents-conf))))
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  i d e n t i f i e r - s u i t
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+
+(s/def ::identifier-suit
+  (s/and
+   (s/coll-of ::identifier
+              :min-count MIN-NUMBER-OF-IDENTIFIERS,
+              :max-count MAX-NUMBER-OF-IDENTIFIERS,
+              :into [])
+   ;; no duplicates
+   #(= (count %) (count (set %)))))
+
+
+(defn identifier-suit
+  "Create a vector; ordered, NO duplicates allowed. Some Clojure
+  functions will convert the vector to a seq or list, it matters
+  not."
+  [it]
+  (if (or (not (coll? it))
+          (map? it)
+          (not (= (count it) (count (set it)))))
+    ::invalid-identifier-suit
+    (let [idents-coll (map identifier it)
+          idents-conf (s/conform ::identifier-suit idents-coll)]
+      (if (s/invalid? idents-conf)
+        ::invalid-identifier-suit
+        idents-conf))))
 
 
 ;;     _ _                   _
@@ -425,14 +474,15 @@
 
 (defn dimension [it]
   (if (or (not (coll? it)) (set? it) (map? it))
-    false  ;; "true" would do just as well.
+    ::invalid-dimension
     (let [conf (s/conform ::asr-term
-                              {::term ::dimension,
-                               ::dimension-content it})]
-          (or (s/invalid? conf)
-              {::term ::dimension
-               ::dimension-content
-               (map second (::dimension-content conf))}))))
+                          {::term ::dimension,
+                           ::dimension-content it})]
+      (if (s/invalid? conf)
+        ::invalid-dimension
+        {::term ::dimension
+         ::dimension-content
+         (map second (::dimension-content conf))}))))
 
 #_
 (= (s/conform ::asr-term {::term ::dimension, ::dimension-content '(1 60)})
@@ -513,16 +563,17 @@
   (if (or (not (coll? it))
           (set? it)
           (map? it))
-    false ;; "true" would do just as well.
+    ::invalid-dimensions
     (let [dims-coll (map dimension it)
           dims-conf (s/conform ::dimensions dims-coll)]
-      (or (s/invalid? dims-conf)
-          (let [dims-cont (map
-                           #(map
-                             second
-                             (::dimension-content %))
-                           dims-conf)]
-            (map dimension dims-cont))))))
+      (if (s/invalid? dims-conf)
+        ::invalid-dimensions
+        (let [dims-cont (map
+                         #(map
+                           second
+                           (::dimension-content %))
+                         dims-conf)]
+          (map dimension dims-cont))))))
 
 
 ;;  _     _           _
