@@ -115,6 +115,10 @@
 #+STARTUP: indent
 
 #+LaTeX_CLASS_OPTIONS: [10pt,oneside,x11names]
+#+MACRO: color \textcolor{$1}{$2}
+# Doesn't work: #+MACRO: colorbf \textcolor{$1}{\textbf{$2}}
+# Use this instead:
+#+LaTeX_HEADER: \newcommand\colorbf[2]{\textcolor{#1}{\textbf{#2}}}
 
 #+LATEX: \setlength\parindent{0pt}
 
@@ -149,127 +153,163 @@
 :  of 2022-09-12
 : org version: 9.5.5
 
-* Abstract (TL;DR)
+\clearpage
+* Abstract
 
-** ASR
+Abstract Semantics Representation (ASR) is an
+innovative intermediate representation[fn::
+https://en.wikipedia.org/wiki/Intermediate_representation]
+(IR) for multiple LCompilers.[fn:lcompilers:
+https://github.com/lcompilers/libasr] ASR is
+independent of the particular programming language
+under compilation. Current compiler front-ends
+targeting ASR include LFortran[fn::
+https://lfortran.org/] and LPython.[fn::
+https://lpython.org/] ASR is also agnostic to the
+compiler back end. Current back ends targeted /from/
+ASR include LLVM, x86, C, and WASM[fn::
+https://webassembly.org/]
 
-The Abstract Semantics Representation (ASR) of
-LCompilers.[fn:lcompilers: https://github.com/lcompilers/libasr]
-is a syntax-free, machine-agnostic intermediate language (IL) for
-multiple compilers. Current compilers targeting ASR include
-LFortran[fn:: https://lfortran.org/] and LPython.[fn::
-https://lpython.org/] The advantage of removing all vestiges of
-original language syntax from the IL is flexibility: it's easier
-to write new front-ends and back ends. This is in sharp contrast
-to standard practice of decorating abstract syntax trees (ASTs)
-with semantic information and then carrying decorated ASTs into
-the back ends. Such makes back ends less reusable because most
-languages have syntactic peculiarities reflected in their ASTs.
-ASR has no known downsides: it's fast, compact (in binary) and a
-full-featured programming language in its own right.
+Being agnostic means that it is easy to write new
+compilers, both at the front end and the back end.
+For example, LFortran predates LPython. When the
+need for a Python compiler arose, only a Python
+front end was necessary. Within a few days, a new
+end-to-end compiler, LPython, was created.
 
-** Issues and Mitigations
+LCompiler back ends are completely reusable because
+ASR eliminates all original language syntax from the
+IR, in sharp contrast to typical practice, which
+treat semantics as decorations on syntax trees.
 
-*** ASDL is Moribund
+In addition to being more flexible, LCompilers are
+faster than average because optimizers are not
+hampered by useless syntactic structure.
 
-ASR is currently specified in ASDL[fn::
-https://en.wikipedia.org/wiki/Abstract-Type_and_Scheme-Definition_Language],
-a moribund meta language published in 1987. To build an LCompiler,
-we parse the ASDL grammar for ASR and generate fast processors in
-C++. Compiler front ends call these processors to manipulate ASR
-trees. Ultimately, ASR is fed to the compiler back ends, e.g.,
-LLVM, x86, C, etc.
+# ASR-to-ASR
+# transformations are the magic of LCompilers.
+# Optimization, type-checking, partial evaluation,
+# abstract execution, and rewriting are examples of
+# such transformations.
 
-So far as we know, our ASDL tools are the only extant ones in the
-World. There is no ecosystem for ASDL. We need to replace ASDL with
-something more modern with a robust, lively ecosystem.
+# ASR is a full programming language in its own
+# right, just one with no native syntax,
 
-*** ASR Processors are Hard to Prototype and Verify / Validate
+Current specifications for ASR are written in
+ASDL,[fn::
+https://en.wikipedia.org/wiki/Abstract-Type_and_Scheme-Definition_Language]
+a metalanguage similar in spirit to yacc but less
+rich, by design.[fn::
+https://en.wikipedia.org/wiki/Yacc]
+To build an LCompiler like LFortran or LPython, the
+ASDL grammar for ASR is parsed and a library in C++
+is generated. Compiler front ends call this library
+to transform and emit ASR trees.
 
-ASR-to-ASR transformations are the magic of LCompilers.
-Optimization, static type-checking, partial evaluation, abstract
-execution, and rewriting are examples of such transformations.
+ASDL has several deficiencies, and MASR, [fn::
+pronounced "maser;" it is a Physics pun] described
+in this document, alleviates them.
 
-Though ASR has an output representation in S-expressions, all work
-with it is currently done in C++ with opaque binary
-representations. As usual with such, it's difficult
-(time-consuming and error-prone) to prototype, verify, validate,
-visualize, modify, and debug.
+This document is pedagogical, explaining  MASR and
+teaching how to extend and maintain its Clojure code.
 
-The mitigation is to perform these development activities with
-languages friendly to S-expressions and with rich toolkits for
-visualization and transformations. We've chosen Clojure, and have
-a prototype for validation and test-generation in Clojure, namely
-/asr-tester/.[fn:: https://github.com/rebcabin/asr-tester] The
-current work inherits learnings from that old project.
+* Issues with ASDL
 
-*** Volatility
+** ASDL is Moribund
 
-ASR changes nearly daily, for good reasons. However, asr-tester
-must chase the ASDL specification, and that chasing consumes
-almost all development time in Clojure.
+ASDL has not progressed since originally published
+in 1987. We know of no other projects adopting ASDL.
+We should replace ASDL with a modern metalanguage
+that has a robust, lively ecosystem.
 
-We propose to replace the ground-level specification of ASR in
-ASDL with a ground-level specification in Clojure, directly. We
-propose to generate the needed C++ processors from Clojure, then
-rewrite them by hand in C++ if necessary when ASDL stabilizes.
+\newpage
+** ASDL is Incomplete
 
-I call this new ASR specification MASR, for Meta-ASR. It's
-pronounced "Maser," building on Physics puns that abound in our
-work.
+All work with ASR is currently done with opaque
+binary representations and code written in C++. As
+usual with such, it's more time-consuming and
+error-prone than necessary to prototype, verify,
+validate, visualize, modify, and debug.
 
-Clojure for MASR has many advantages over the current approach:
+** ASDL is Volatile
 
-- Metavariables, attributes, and types are explicit via clojure
-  hash-maps[fn:: https://clojuredocs.org/clojure.core/hash-map]
-  and records[fn::
-  https://clojuredocs.org/clojure.core/defrecord].
+The ASDL for ASR changes frequently, for good
+reasons. However, stand-aside tools like
+asr-tester[fn::
+https://github.com/rebcabin/asr-tester] must chase
+the ASDL specification. Just keeping up with ASDL
+consumes almost all development time for asr-tester.
+We should unify the language for expressing ASR with
+the tools that verify and test ASR.
 
-- The step from ASDL to Clojure is eliminated. The Clojure will
-  automatically track ASR because it /is/ ASR.
+** ASDL is Ambiguous
 
-*** Type Systems
+There are many syntactic and semantic ambiguities in
+the ASDL grammar. For example, the specification
+=integer*= might mean an ordered collection of
+=integer= or an unordered collection, with duplicate
+elements allowed or not.
 
-Clojure has a powerful specification subsystem, clojure.spec.[fn::
-https://clojuredocs.org/clojure.spec.alpha] This should suffice
-for both ordinary, everyday type-checking as well as for advanced
-research into dependent types, concurrency types,[fn::
-https://rholang.io/] rewriting, and proofs.
+ASDL cannot express such distinctions. In practice,
+the C++ implementations implicitly make these
+distinctions. In one place =integer*= means an
+ordered collection. In another place, =integer*=
+means an unordered collection, but only the
+generated C++ code knows where.
 
-* MASR
+Hiding fine distinctions in specifications in the
+generated code is not good engineering practice in
+the face of a known better solution.
 
-The development in this document may lag the code. The document
-mirrors the structure of an ASR snapshot in ASDL.[fn::
+* Clojure Solves ASDL Issues
+
+ASR expressions, being trees, have a natural
+representation in S-Expressions.[fn::
+https://en.wikipedia.org/wiki/S-expression] Clojure,
+being a modern Lisp, natively handles S-Expressions.
+Clojure is modern with a robust, lively ecosystem.
+# It is a natural replacement for ASDL.
+
+# In addition to a native fit for data format,
+Clojure.spec,[fn:clojure-spec:
+https://clojuredocs.org/clojure.spec.alpha] is a
+/force majeure/ for precision, completeness,
+verification, and validation. The collection of MASR
+specs amounts to a meta-type system for ASR.
+
+Clojure specs are arbitrary predicates, capable of
+expressing type-system logic beyond the typical
+capabilities of hard-coded type systems. Clojure
+specs can be invoked at run time, while a compiler
+is built, and at compile-time, while the code for
+the compiler is being generated. That flexibility
+affords new opportunities, say for experiments in
+dependent types and concurrency types.[fn::
+https://rholang.io/]. In the short run, clojure.spec
+will help us make more things explicit and relieve
+pressure on C++ programmers.
+
+This document may lag the Clojure code. The document
+mirrors an ASR snapshot in ASDL.[fn::
 [https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]]
 
-We introduce some terminology, explained in context.
+* MASR Terms and Heads
 
-** Terms and Heads
+/Terms/ are the "objects" or "productions" of ASR,
+items to the left-hand side of an equals sign in the
+ASDL grammar. Table \ref{tbl:terms} exhibits terms
+that are
 
-/Terms/ are the "objects" or "productions" of ASR, items to the
-left-hand side of an equals sign in the ASDL grammar. Table
-\ref{tbl:terms} exhibits terms that are fully specified, implicit,
-or term-like in the current ASDL grammar. The definitions have
-been abbreviated and edited for presentation and fit.
+- explicitly specified in ASDL, like =symbol= or
+  =dimension=
 
-/Heads/ are the things that appear on the right-hand sides of
-terms equations. They are of two kinds:
+- used but not defined in ASDL, like =symbol_table=
 
-- /function-like heads/ :: --- have parentheses and typed
-  parameters.
+- term-like but not defined in ASDL, like
+  =identifier=
 
-- /enum-like heads/ :: --- no parentheses
-
-** Critique and Objectives
-
-There are many syntactic and semantic ambiguities in the ASDL
-grammar. These ambiguities are resolved in the actual,
-hand-written C++ code in LFortran and LPython that implements the
-grammar.
-
-A primary objective of MASR is to resolve these ambiguities in
-Clojure, enabling more automation and relieving pressure on C++
-programmers.
+The definitions in Table \ref{tbl:terms} have been
+abbreviated and edited for presentation.
 
 #+caption: Terms (nodes) in the ASDL grammar (things left of equals signs):
 #+label: tbl:terms
@@ -320,35 +360,99 @@ programmers.
 |  0 | =identifiers=     | =identifier*=, via Clojure sets                                  |
 |----+-------------------+------------------------------------------------------------------|
 
+/Heads/ are things like =Local= and =CaseStmt= that
+appear on the right-hand sides of terms equations in
+Table \ref{tbl:terms}. There are of two kinds of heads:
+
+- /function-like heads/ :: --- have parentheses and typed
+  parameters, \newline e.g., =CaseStmt(expr*, stmt*)=
+
+- /enum-like heads/ :: --- no parentheses, e.g., =Local=
+
+MASR has a Clojure spec and  syntactic sugar for each head.
+There are about 250 heads by a recent count.
+
 \newpage
-* Concepts
+* Specs
 
-The following sections explain the architecture and approach taken
-in the Clojure code. Overall, clojure.spec is /force majeure/ for
-driving out ambiguity. The Clojure tests exhibit many examples
-that pass and, more importantly, fail the specs in the source.
+The following sections
 
-** Terms and Heads
+- summarize the Clojure specs for all ASR terms and heads
 
-We present these terms somewhat out of order. =intent= is first as
-it is the archetype for the several enum-like terms and heads. It
-also illustrates the overall architectural approach for all
-Clojure specs in MASR.
+- pedagogically explain the architecture and
+  approach taken in the Clojure code. The
+  architecture is the remainder from several
+  experiments. For example, =defrecord= and
+  =defprotocol= for polymorphism was tried and
+  discarded in favor of multi-specs.[fn:multi-spec:
+  https://clojure.org/guides/spec]
 
-*** intent
+The tests in =core_test.clj= exhibit many examples
+that pass and, more importantly, fail the specs. The
+specs are written in the source file =specs.cl=. The
+best way to learn the code is to study the tests and
+to run  them in the Clojure REPL or in the CIDER
+debugger in Emacs.[fn:: https://docs.cider.mx/cider/debugging/debugger.html]
 
-An =intent= is one of =Local=, =In=, =Out=, =InOut=, =ReturnVar=,
-=Unspecified=. The spec for the contents of an intent is simply
-this set of enum-like heads. A Clojure /set/ in =#{= \ldots =}=
-brackets doubles as a predicate function that tests set
-membership. A Clojure /spec/ is any predicate function. Therefore
-the case of =intent= contents is very easy.
+We present the terms somewhat out of the order of
+Table \ref{tbl:terms}. First is /intent/, as it is
+the archetype for several enum-like terms and heads.
 
-The name of the spec is =::intent-enum=. The double colon
-signifies that \linebreak =intent-enum= is a keyword in the
-namespace =masr.specs=. The names of all Clojure specs must be so
-qualified in namespaces. In test files, we must explicitly name
-these specs.
+** intent
+
+*** \colorbf{red}{Sets for Contents}
+
+An ASR /intent/ is one of the symbols
+
+=Local=, =In=, =Out=, =InOut=, =ReturnVar=, =Unspecified=.
+
+The spec for the contents of an intent is simply
+this set of enum-like heads. Any Clojure /set/
+(e.g., in =#{= \ldots =}= brackets) doubles as a
+predicate function that tests for set membership.
+The result of the test is the candidate member if
+the candidate is present in the set. In the
+following two examples, the set appears in the
+function position of the usual Clojure function-call
+syntax =(function args*)=:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (#{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified} 'Local)
+#+end_src
+
+#+RESULTS:
+: Local
+
+When the candidate element, say =fubar=, is not in the set, the
+result is =nil=, which does not print:
+
+\vskip 0.26cm
+#+begin_src clojure :exports both
+  (#{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified} 'fubar)
+#+end_src
+
+#+RESULTS:
+
+Any predicate function can be registered as a
+Clojure spec.[fn:clojure-spec] Therefore the spec
+for /intent contents/ is just the set of valid
+members. The name of the spec is \linebreak =::intent-enum=.
+
+*** \colorbf{red}{Specs have Fully Qualified Keyword Names}
+
+The double colon in =::intent-enum= is shorthand; it
+implicitly signifies that \linebreak =intent-enum=
+is a keyword in the namespace =masr.specs=. The
+names of all Clojure specs must be fully qualified
+in namespaces.
+
+The namespace =masr.specs= covers all names defined
+in the entire file =specs.clj=, where the syntax
+=::intent-enum= is valid. In files other than
+=specs.clj=, one explicitly writes the
+namespace, as in =:masr.specs/intent-enum= . More on
+that later.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -356,15 +460,105 @@ these specs.
     #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 #+end_src
 
-=::intent-enum= is the spec for the contents of an =intent=. The
-spec for =intent= itself is one method or implementation of a
-polymorphic =::asr-term=, which is a Clojure /multi-spec/.[fn::
-https://clojure.org/guides/spec] Such multi-specs are articulated
-via =defmethods= on a =defmulti=, as explained in the guide cited
-in the footnote.
+*** \colorbf{red}{How to Use Specs}
+<<how-to-use-specs>>
 
-We start with a spec for =::term=. Any fully qualified keyword is
-a MASR term. This spec leaves room for growth of MASR.
+To check an expression like ='Local= against the
+=::intent-enum= spec, write
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/valid? ::intent-enum 'Local)
+  ;; => true
+  (s/valid? ::intent-enum 'fubar)
+  ;; => false
+#+end_src
+
+To produce conforming or invalid instances inline to
+other code, write
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/conform ::intent-enum 'Local)
+  ;; => Local
+  (s/conform ::intent-enum 'fubar)
+  ;; => :clojure.spec.alpha/invalid
+#+end_src
+
+To generate a few conforming samples, write
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+(gen/sample (s/gen ::intent-enum) 5)
+;; => (Unspecified Unspecified Out Unspecified Local)
+#+end_src
+
+or, with conformance explanation (trivial in this
+case):
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+(s/exercise ::intent-enum 5)
+;; => ([Out Out]
+;;     [ReturnVar ReturnVar]
+;;     [In In]
+;;     [Local Local]
+;;     [ReturnVar ReturnVar])
+#+end_src
+
+Strip out the conformance information as follows:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+(map second (s/exercise ::intent-enum 5))
+;; => (In ReturnVar Out In ReturnVar)
+#+end_src
+
+=s/valid?=, =s/conform=, =gen/sample=, and
+=s/exercise= pertain to any Clojure specs, no matter
+how complex or rich.
+
+*** \colorbf{red}{The Spec that Contains the Contents}
+
+=::intent-enum= is just the spec for the /contents/ of an
+intent, not for the intent itself. The spec for the intent
+itself is an implementation of a polymorphic Clojure
+/multi-spec/[fn:multi-spec], =::asr-term=.
+
+*** \colorbf{red}{Multi-Specs}
+
+A multi-spec is like a tagged union in C. The
+multi-spec, =::asr-term=, as shown below, pertains
+to all Clojure hash-maps[fn:hash-map:
+https://clojuredocs.org/clojure.core/hash-map] that
+have a tag named =::term= with a value like
+=::intent= or =::storage-type=, etc.
+
+A multi-spec has three components:
+
+- =defmulti=[fn:: https://clojuredocs.org/clojure.core/defmulti] :: ---
+  a polymorphic interface that declares the
+  /tag-fetcher function/, \linebreak =::term= in this case,
+  which fetches a tag value from any candidate
+  hash-map. The =defmulti= dispatches to a
+  =defmethod= that matches the fetched tag value,
+  =::intent= in this case. =::term= is a fully
+  qualified keyword of course, but keywords double
+  as tag-fetchers for hash-maps in Clojure.[fn:: https://stackoverflow.com/questions/6915531]
+
+- =defmethod=[fn:: https://clojuredocs.org/clojure.core/defmethod] :: ---
+  individual specs, each implementing the interface;
+  in this case, if the =::term= of a hash-map
+  matches =::intent=, then the corresponding
+  =defmethod= is invoked (see Section [[defmethod]] below).
+
+- =s/multi-spec= :: --- tying together the =defmulti= and,
+  redundantly, the tag-fetcher.[fn:: Multi-specs allow re-tagging,
+  but we do not need that level of generality.]
+
+*** \colorbf{red}{Specs for All Terms}
+
+Start with a spec for =::term=:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -372,20 +566,46 @@ a MASR term. This spec leaves room for growth of MASR.
   (s/def ::term qualified-keyword?)
 #+end_src
 
-Next, we specify a =defmulti=[fn::
-https://clojuredocs.org/clojure.core/defmulti], which is a
-polymorphic interface for all specs of terms. The name of the
-polymorphic interface and of all =defmethods=[fn::
-https://clojuredocs.org/clojure.core/defmethod] that implement the
-interface is =term=.
+The spec says that any fully qualified keyword, like
+=::intent=, is a MASR term. This spec leaves room for
+growth of MASR by adding more fully qualified
+keywords for more MASR types.
+
+=s/def= stands for =clojure.spec.alpha/def=, the =def= macro in
+the \linebreak =clojure.spec.alpha= namespace. The namespace is aliased to
+=s=.
+
+Next, specify the =defmulti= polymorphic interface
+=term= (no colons) for all term specs:
+# The name of the polymorphic
+# interface and also of all =defmethods= that
+# implement the interface is =term=, contrast to
+# =::term=, the tag-fetcher:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  ;; ::term is a fn that picks the multi-spec dispatch value.
   (defmulti term ::term)
 #+end_src
 
-Next, we have the particular method that specifies intents:
+This =defmulti= dispatches to a =defmethod= based on the results
+of applying the keyword-qua-function =::term= to a hash-map:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (::term {::term ::intent ...})
+#+end_src
+
+equals =::intent=.
+
+The spec is named =::term= and the tag-fetcher is named =::term=.
+They don't need to be the same. They could have different names.
+
+*** \colorbf{red}{Spec for intent}
+<<defmethod>>
+
+If applying =::term= to a Clojure hash-map produces
+=::intent=, the following spec, which specifies all
+intents, will be invoked:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -393,79 +613,121 @@ Next, we have the particular method that specifies intents:
     (s/keys :req [::term ::intent-enum]))
 #+end_src
 
-This spec requires that any intent is a Clojure hash-map
-
-The names of all polymorphic methods that
-
-We see three levels to fully specify an intent: contents, general
-level multi-spec, and particular /implementation/ or method of the
-the multi-spec.
+This spec states that an /intent/ is a Clojure
+hash-map with at least a =::term= keyword and an
+=::intent-enum= keyword. The following shows a valid
+example:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  (s/def ::term keyword?)  ;; like ::intent, ::symbol, ::expr, ...
-  ;; ::term is a fn that picks the multi-spec dispatch value.
-  (defmulti term ::term)
-  (defmethod term ::intent [_]
-    (s/keys :req [::term ::intent-enum]))
-  ;; Here is the multi-spec; see below for examples of its usage.
-  (s/def ::asr-term (s/multi-spec term ::term))
+  (is (s/valid? ::asr-term
+                {::term        ::intent,
+                 ::intent-enum 'Local}))
 #+end_src
 
-At one level, a Clojure object that conforms to a multi-spec is a
-hash-map in ={= \ldots =}= that contains the required (namespaced)
-keys =::term= and =::intent-enum=. We always track the name of the
-term so that every Clojure hash-map is fully self-describing.
+*** \colorbf{red}{The Multi-Spec, Again: ::asr-term}
+
+Where did =::asr-term= come from? It's the =s/multi-spec=:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  (is (s/valid? ::asr/asr-term
-                {::asr/term        ::asr/intent,
-                 ::asr/intent-enum 'Local}))
-  (is (s/valid? ::asr/asr-term
-                {::asr/term        ::asr/intent,
-                 ::asr/intent-enum 'Unspecified}))
-  (testing "missing key"
-    (is (not (s/valid? ::asr/asr-term
-                       {::asr/intent-enum 'Unspecified}))))
-  (testing "incorrect value"
-    (is (not (s/valid? ::asr/asr-term
-                       {::asr/term        ::asr/intent,
-                        ::asr/intent-enum 'foobar}))))
+  ;;     name of the mult-spec    defmulti  tag fn
+  ;;     ------------------------   ----    ------
+  (s/def ::asr-term (s/multi-spec   term    ::term))
 #+end_src
 
-*** unit
-*** symbol
+This states that =::asr-term= is a multi-spec that ties
+=defmulti term= to the tag-fetcher =::term=.
 
-**** TODO Variable
+*** \colorbf{red}{Another asr-term}
 
-*** storage_type
-*** access
-*** deftype
-*** presence
-*** abi
-*** stmt
-*** expr
-*** ttype
-*** restriction_arg
-*** binop
-*** logicalbinop
-*** cmpop
-*** integerboz
-*** arraybound
-*** arraystorage
-*** cast_kind
-*** dimension
-*** alloc_arg
-*** attribute
-*** attribute_arg
-*** call_arg
-*** tbind
-*** array_index
-*** do_loop_head
-*** case_stmt
-*** type_stmt
-*** enumtype
+Another asr-term for an enum-like is that for =storage-type=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::storage-type-enum
+    #{'Default, 'Save, 'Parameter, 'Allocatable})
+
+  (defmethod term ::storage-type [_]
+    (s/keys :req [::term ::storage-type-enum]))
+#+end_src
+
+All enum-like specs follow this pattern. All one
+must do to define a new asr-term is specify the
+contents and write a =defmethod=.
+
+\newpage
+*** \colorbf{red}{Syntax Sugar}
+
+={::term ::intent, ::intent-enum 'Local}=, a valid
+=asr-term= instance, is long and ugly. Write a short
+function, =intent=, via =s/conform=, explained in
+section [[how-to-use-specs]]:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defn intent [sym]
+    (let [intent_ (s/conform
+                   ::asr-term
+                   {::term ::intent, ::intent-enum sym})]
+      (if (s/invalid? intent_)
+        ::invalid-intent
+        intent_)))
+#+end_src
+
+so that instances have a shorter expressions:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (testing "better syntax"
+    (is      (s/valid? ::asr-term (intent 'Local)))
+    (is      (s/valid? ::asr-term (intent 'Unspecified)))
+    (is (not (s/valid? ::asr-term (intent 'foobar))))
+    (is (not (s/valid? ::asr-term (intent []))))
+    (is (not (s/valid? ::asr-term (intent ()))))
+    (is (not (s/valid? ::asr-term (intent {}))))
+    (is (not (s/valid? ::asr-term (intent #{}))))
+    (is (not (s/valid? ::asr-term (intent "foobar"))))
+    (is (not (s/valid? ::asr-term (intent ""))))
+    (is (not (s/valid? ::asr-term (intent 42))))
+    (is (thrown? clojure.lang.ArityException (intent))))
+#+end_src
+
+All our specs are like that: a long-form hash-map and a short-form
+sugar function that does a conformance check.
+
+** unit
+** symbol
+
+*** TODO Variable
+
+** storage_type
+** access
+** deftype
+** presence
+** abi
+** stmt
+** expr
+** ttype
+** restriction_arg
+** binop
+** logicalbinop
+** cmpop
+** integerboz
+** arraybound
+** arraystorage
+** cast_kind
+** dimension
+** alloc_arg
+** attribute
+** attribute_arg
+** call_arg
+** tbind
+** array_index
+** do_loop_head
+** case_stmt
+** type_stmt
+** enumtype
 
 ** Implicit Terms
 
@@ -557,7 +819,7 @@ All integers are finite and can be summed in a finite number of
 steps, with no chance of a spin, deadlock, race, or other
 divergent behavior. Interpret that mathematical proposition as a
 type. In Python, with PEP 483,[fn:: https://peps.python.org/pep-0483/]
-one writes
+write
 
 \vskip 0.26cm
 #+begin_src python exports code

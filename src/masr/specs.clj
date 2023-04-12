@@ -590,6 +590,40 @@
 (s/def ::intent-enum #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 
 
+#_
+(s/valid? ::intent-enum 'Local)
+;; => true
+
+#_
+(s/valid? ::intent-enum 'fubar)
+;; => false
+
+#_
+(s/conform ::intent-enum 'Local)
+;; => Local
+
+#_
+(s/conform ::intent-enum 'fubar)
+;; => :clojure.spec.alpha/invalid
+
+#_
+(gen/sample (s/gen ::intent-enum) 5)
+;; => (Unspecified Unspecified Out Unspecified Local)
+
+#_
+(s/exercise ::intent-enum 5)
+;; => ([Out Out]
+;;     [ReturnVar ReturnVar]
+;;     [In In]
+;;     [Local Local]
+;;     [ReturnVar ReturnVar])
+
+
+#_
+(map second (s/exercise ::intent-enum 5))
+;; => (In ReturnVar Out In ReturnVar)
+
+
 ;; {::term ::intent, ::intent-enum 'Local}
 (defmethod term ::intent [_]
   (s/keys :req [::term ::intent-enum]))
@@ -604,9 +638,12 @@
 
 
 (defn intent [sym]
-  (s/conform
-   ::asr-term
-   {::term ::intent, ::intent-enum sym}))
+  (let [intent_ (s/conform
+                 ::asr-term
+                 {::term ::intent, ::intent-enum sym})]
+    (if (s/invalid? intent_)
+      ::invalid-intent
+      intent_)))
 
 #_
 (intent 'Local)
