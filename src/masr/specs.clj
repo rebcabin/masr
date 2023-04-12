@@ -683,7 +683,7 @@
 
 (def external-abis
   #{'LFortranModule, 'GFortranModule,
-    'BindC, 'Interactive, 'Intrisic})
+    'BindC, 'Interactive, 'Intrinsic})
 
 
 (def internal-abis #{'Source})
@@ -720,19 +720,23 @@
          ::abi-enum     (s/gen internal-abis)
          ::abi-external (gen/return false))] ))))
 
-#_
-(s/def ::tuple-ttype
-  (s/with-gen
-    (s/cat
-     :head  #{'Tuple}
-     :type (s/or :empty     empty?
-                 :vector-of (s/* ::ttype)))
-    (fn []
-      (tgen/fmap
-       list*
-       (tgen/tuple
-        (tgen/return 'Tuple)
-        (tgen/vector (s/gen ::ttype)))))))
+
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
+
+
+(defn abi
+  "Destructure they keyword :external"
+  [it, & {:keys [external]}]
+  (let [abi_ (s/conform
+              ::asr-term
+              {::term ::abi,
+               ::abi-enum it,
+               ::abi-external external})]
+    (if (s/invalid? abi_)
+      ::invalid-abi
+      abi_)))
 
 #_
 (s/valid? ::asr-term

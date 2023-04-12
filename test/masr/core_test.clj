@@ -415,8 +415,29 @@
                 {::asr/term        ::asr/abi
                  ::asr/abi-enum     'Source
                  ::asr/abi-external  false}))
+  (is (s/valid? ::asr/asr-term (abi 'Source         :external false)))
+  (is (s/valid? ::asr/asr-term (abi 'LFortranModule :external true)))
+  (is (s/valid? ::asr/asr-term (abi 'GFortranModule :external true)))
+  (is (s/valid? ::asr/asr-term (abi 'BindC          :external true)))
+  (is (s/valid? ::asr/asr-term (abi 'Interactive    :external true)))
+  (is (s/valid? ::asr/asr-term (abi 'Intrinsic      :external true)))
   (testing "'Source ABI cannot be External"
     (is (not (s/valid? ::asr/asr-term
                        {::asr/term        ::asr/abi
                         ::asr/abi-enum     'Source
-                        ::asr/abi-external  true})))))
+                        ::asr/abi-external  true})))
+    (is (not (s/valid? ::asr/asr-term (abi 'Source         :external true))))
+    (is (not (s/valid? ::asr/asr-term (abi 'LFortranModule :external false))))
+    (is (not (s/valid? ::asr/asr-term (abi 'GFortranModule :external false))))
+    (is (not (s/valid? ::asr/asr-term (abi 'BindC          :external false))))
+    (is (not (s/valid? ::asr/asr-term (abi 'Interactive    :external false))))
+    (is (not (s/valid? ::asr/asr-term (abi 'Intrinsic      :external false))))
+    (is (not (s/valid? ::asr/asr-term (abi 'Source :external 42))))
+    (is (not (s/valid? ::asr/asr-term (abi 'Source :external "foo"))))
+    (is (not (s/valid? ::asr/asr-term (abi 'Source :external 'foo))))
+    (is (not (s/valid? ::asr/asr-term (abi 'Source false))))
+    (is (not (s/valid? ::asr/asr-term (abi 'Source true))))
+    (is (not (s/valid? ::asr/asr-term (abi 'Source 42))))
+    (is (not (s/valid? ::asr/asr-term (abi 'foo true))))
+    (is (not (s/valid? ::asr/asr-term (abi 'foo false))))
+    ))

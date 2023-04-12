@@ -210,8 +210,9 @@ ASDL has several deficiencies, and MASR, [fn::
 pronounced "maser;" it is a Physics pun] described
 in this document, alleviates them.
 
-This document is pedagogical, explaining  MASR and
-teaching how to extend and maintain its Clojure code.
+This document is pedagogical, both explaining MASR
+and teaching how to extend and maintain its Clojure
+code.
 
 * Issues with ASDL
 
