@@ -679,7 +679,7 @@ contents and write a =defmethod=.
 ={::term ::intent, ::intent-enum 'Local}=, a valid
 =asr-term= instance, is long and ugly. Write a short
 function, =intent=, via =s/conform=, explained in
-section [[how-to-use-specs]]:
+Section [[how-to-use-specs]]:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -862,7 +862,7 @@ Some items specified in ASDL as /symbol_table/ are actually
 - This paper is a stepping-stone in self-education. Perhaps you
   will join me for a while on the road.
 
-- In here, The Kitten Calculus, section 2.11 of /Communicating
+- In here, The Kitten Calculus, Section 2.11 of /Communicating
   Concurrent Kittens/,[fn:drowning:
   https://github.com/rebcabin/concurrent-kittens/blob/main/intrinsic-function/kittens-in-boats.pdf]
   is motivated as a type system for proving concurrency properties
