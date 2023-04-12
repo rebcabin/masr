@@ -727,7 +727,7 @@
 
 
 (defn abi
-  "Destructure they keyword :external"
+  "Destructure the keyword :external"
   [it, & {:keys [external]}]
   (let [abi_ (s/conform
               ::asr-term

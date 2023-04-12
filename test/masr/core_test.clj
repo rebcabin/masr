@@ -421,7 +421,7 @@
   (is (s/valid? ::asr/asr-term (abi 'BindC          :external true)))
   (is (s/valid? ::asr/asr-term (abi 'Interactive    :external true)))
   (is (s/valid? ::asr/asr-term (abi 'Intrinsic      :external true)))
-  (testing "'Source ABI cannot be External"
+  (testing "non-conforming examples"
     (is (not (s/valid? ::asr/asr-term
                        {::asr/term        ::asr/abi
                         ::asr/abi-enum     'Source

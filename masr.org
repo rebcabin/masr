@@ -818,9 +818,81 @@ Generate a few conforming samples:
   ;;            :abi-enum Interactive, :abi-external true})
 #+end_src
 
+*** \colorbf{red}{Syntax Sugar}
+
+
+The sugar for /abi/ uses Clojure destructuring[fn::
+https://clojure.org/guides/destructuring][fn::
+https://gist.github.com/rebcabin/a3c24be3e17135f355348c834ab14141]
+for keyword arguments.
+
+Conforming examples:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (abi 'Source         :external false)
+  (abi 'LFortranModule :external true)
+  (abi 'GFortranModule :external true)
+  (abi 'BindC          :external true)
+  (abi 'Interactive    :external true)
+  (abi 'Intrinsic      :external true)
+#+end_src
+
+Non-conforming due to incorrect boolean:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (abi 'Source         :external true)
+  (abi 'LFortranModule :external false)
+  (abi 'GFortranModule :external false)
+  (abi 'BindC          :external false)
+  (abi 'Interactive    :external false)
+  (abi 'Intrinsic      :external false)
+#+end_src
+
+\newpage
+Non-conforming due to incorrect structure:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (abi 'Source :external 42)
+  (abi 'Source :external "foo")
+  (abi 'Source :external 'foo)
+  (abi 'Source false)
+  (abi 'Source true)
+  (abi 'Source 42)
+  (abi 'foo true)
+  (abi 'foo false)
+#+end_src
+
+We don't show tests of incorrect arity.
+
+Here is the implementation of the sugar, exhibiting
+the destructuring technique:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defn abi
+    "Destructure the keyword :external"
+    [it, & {:keys [external]}]
+    (let [abi_ (s/conform
+                ::asr-term
+                {::term ::abi,
+                 ::abi-enum it,
+                 ::abi-external external})]
+      (if (s/invalid? abi_)
+        ::invalid-abi
+        abi_)))
+#+end_src
+
 ** stmt
 ** expr
+
+\clearpage
 ** ttype
+
+
+
 ** restriction_arg
 ** binop
 ** logicalbinop
