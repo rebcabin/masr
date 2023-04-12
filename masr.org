@@ -291,7 +291,7 @@ pressure on C++ programmers.
 
 This document may lag the Clojure code. The document
 mirrors an ASR snapshot in ASDL.[fn::
-[https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]]
+https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]
 
 * MASR Terms and Heads
 

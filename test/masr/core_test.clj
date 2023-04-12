@@ -5,7 +5,8 @@
   (:require [clojure.test :refer :all]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
-            [masr.core :as masr]))
+            [masr.core :as masr]
+            [clojure.set :as set]))
 
 
 ;;                 _
