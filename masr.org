@@ -399,6 +399,7 @@ Table \ref{tbl:terms}. First is /intent/, as it is
 the archetype for several enum-like terms and heads.
 
 ** intent
+<<intent>>
 
 *** \colorbf{red}{Sets for Contents}
 
@@ -721,7 +722,101 @@ sugar function that does a conformance check.
 ** access
 ** deftype
 ** presence
+
+\newpage
 ** abi
+<<abi>>
+
+/Abi/ is a rich case. It is enum-like, similar to
+/intent/ (Section [[intent]]), but with restrictions.
+Its heads include several /external-abis/:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (def external-abis
+    #{'LFortranModule, 'GFortranModule,
+      'BindC, 'Interactive, 'Intrisic})
+#+end_src
+
+and one /internal-abi/, specified as a Clojure set
+to get the membership-test functionality:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (def internal-abis #{'Source})
+#+end_src
+
+The /abi-enum/ spec for the contents of an /abi/
+term is the unions of these two sets:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::abi-enum
+    (set/union external-abis internal-abis))
+#+end_src
+
+Specify an additional key in a conforming /abi/
+hash-map with a =::bool= predicate:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::abi-external ::bool)
+#+end_src
+
+Add a convenience function for logic:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defn iff [a b]
+    (or (and a b)
+        (not (or a b))))
+#+end_src
+
+Specify the =defmethod= for the /abi/ itself with a
+hand-written generator (clojure.spec is not quite
+strong enough to create the generator automatically):
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defmethod term ::abi [_]
+    (s/with-gen
+      (s/and
+       #(iff (= 'Source (::abi-enum %))
+             (not (::abi-external %)))
+       (s/keys :req [::term ::abi-enum ::abi-external]))
+      (fn []
+        (tgen/one-of
+         [(tgen/hash-map
+           ::term         (gen/return ::abi-enum)
+           ::abi-enum     (s/gen external-abis)
+           ::abi-external (gen/return true))
+          (tgen/hash-map
+           ::term         (gen/return ::abi-enum)
+           ::abi-enum     (s/gen internal-abis)
+           ::abi-external (gen/return false))] ))))
+#+end_src
+
+\newpage
+Generate a few conforming samples:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (gen/sample (s/gen (s/and
+                      ::asr/asr-term
+                      #(= ::asr/abi (::asr/term %))))
+              5)
+  ;; => (#::asr{:term ::asr/abi,
+  ;;            :abi-enum Interactive, :abi-external true}
+  ;;     #::asr{:term ::asr/abi,
+  ;;            :abi-enum Source, :abi-external false}
+  ;;     #::asr{:term ::asr/abi,
+  ;;            :abi-enum Source, :abi-external false}
+  ;;     #::asr{:term ::asr/abi,
+  ;;            :abi-enum Source, :abi-external false}
+  ;;     #::asr{:term ::asr/abi,
+  ;;            :abi-enum Interactive, :abi-external true})
+#+end_src
+
 ** stmt
 ** expr
 ** ttype
