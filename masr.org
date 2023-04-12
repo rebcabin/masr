@@ -625,6 +625,22 @@ example:
                  ::intent-enum 'Local}))
 #+end_src
 
+Generate a few samples:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (gen/sample (s/gen (s/and
+                      ::asr/asr-term
+                      #(= ::asr/intent (::asr/term %))))
+              5)
+  ;;=> (#::asr{:term ::asr/intent, :intent-enum ReturnVar}
+  ;;    #::asr{:term ::asr/intent, :intent-enum In}
+  ;;    #::asr{:term ::asr/intent, :intent-enum Unspecified}
+  ;;    #::asr{:term ::asr/intent, :intent-enum Unspecified}
+  ;;    #::asr{:term ::asr/intent, :intent-enum InOut})
+#+end_src
+
+
 *** \colorbf{red}{The Multi-Spec, Again: ::asr-term}
 
 Where did =::asr-term= come from? It's the =s/multi-spec=:
