@@ -9,10 +9,10 @@
             ))
 
 
-;; Unmap "Integer" so I can use that symbol. Access
-;; the original via "java.lang.Integer." Lein test produces
-;; unmaskable warnings.
-
+;; Unmap "Integer" so I can use that symbol in
+;; ttypes. Access the original
+;; via "java.lang.Integer." Lein test and lein run
+;; produce unmaskable warnings.
 
 (ns-unmap *ns* 'Integer)
 
@@ -85,10 +85,53 @@
 
 
 ;; See "numbers.clj" for big-int, big-nat, and nat.
-(s/def :masr.specs/int   int?)
-(s/def :masr.specs/float float?)
-(s/def :masr.specs/bool  boolean?)
+(s/def ::int   int?)     ;; java.lang.Long
+(s/def ::float float?)
+(s/def ::bool  boolean?)
 
+;; biggest
+#_
+(int? 9223372036854775807)
+;; => true
+
+;; same
+#_
+(int? 0x7FFFFFFFFFFFFFFF)
+;; => true
+
+;; Can't do obvious negatives:
+#_
+(try (+ 1 0x7FFFFFFFFFFFFFFF)
+     (catch java.lang.ArithmeticException e (.getMessage e)))
+;; => "long overflow"
+
+;; too big
+#_
+(int? 9223372036854775808)
+;; => false
+
+;; same
+#_
+(int? 0x8000000000000000)
+;; => false
+
+;; Too late! No way back!
+#_
+(= 0x7FFFFFFFFFFFFFFF (- 0x8000000000000000 1))
+;; => true
+
+#_
+(int? (- 0x8000000000000000 1))
+;; => false
+
+;; corner case: TODO
+#_
+(= -1 0xFFFFFFFFFFFFFFFF)
+;; => false
+
+#_
+(= (java.lang.Long. -1) 0xFFFFFFFFFFFFFFFF)
+;; => false
 
 ;;  _    _      _     _  ___
 ;; | |__(_)__ _(_)_ _| ||__ \
@@ -104,6 +147,14 @@
   [n]
   (instance? clojure.lang.BigInt n))
 
+#_
+(bigint? 0x8000000000000000)
+;; => true
+
+#_
+(bigint? 0xFFFFFFFFFFFFFFFF)
+;; => true
+
 
 ;;  _ _   _    _                _
 ;; (_|_) | |__(_)__ _ _ _  __ _| |_
@@ -115,8 +166,7 @@
 
 
 ;; Overwrite print-method for clojure BigInt to get rid of
-;; the "N" at the end (can't do this inside (-main) lest
-;; compile errors).
+;; the "N" at the end.
 
 
 (import '(java.io Writer))
@@ -139,15 +189,6 @@
     ;; size-bounded-bignat is not public, else I would call it
     (fn [] tgen/size-bounded-bigint)))
 
-
-;; C-c C-v C-f C-c e to generate pretty-printed
-;; comments. Then stub off the call to save a tiny
-;; bit of runtime. Remove the #_ and press C-c C-c
-;; in the expression to see results in a CIDER Emacs
-;; buffer. We follow this convenience convention
-;; frequently in this development section. Comments
-;; are cheap.
-
 #_
 (->> ::bignat s/exercise (map second))
 ;; => (7 13 63 98225932 4572 28 31914670493 80 252 256185)
@@ -164,8 +205,23 @@
 ;; -+-+-+-+-+-
 
 
-(s/def ::nat (s/or :nat-int  nat-int?,
-                   :bignat  ::bignat))
+;; Allowing bigints causes problems with s/conform
+;; (gotta map second over it, and that mapping
+;; pollutes things).
+
+;; (s/def ::nat (s/or :nat-int  nat-int?,
+;;                    :bignat  ::bignat))
+
+
+(s/def ::nat nat-int?)
+
+#_
+(nat-int? 9223372036854775807)
+;; => true
+
+#_
+(nat-int? 0x8000000000000000)
+;; => false
 
 
 ;; -+-+-+-+-+-+-
@@ -177,24 +233,16 @@
   (let [cit (s/conform ::nat it)]
     (if (s/invalid? cit)
       ::invalid-nat
-      (second cit))))
+      cit)))
 
 
 #_
 (s/exercise ::nat 5)
-;; => ([0 [:nat-int 0]]
-;;     [4 [:bignat 4]]
-;;     [1328 [:bignat 1328]]
-;;     [226 [:bignat 226]])
-;;     [1 [:bignat 1]])
+;; => ([1 1] [0 0] [0 0] [0 0] [4 4])
 
 #_
 (gen/sample (s/gen ::bignat) 5)
 ;; => (0 17 0 225 951132862023730457)
-
-#_
-(nat-int? 951132862023730457951132862023730457)
-;; => false
 
 #_
 (gen/sample (s/gen ::nat) 5)
@@ -206,11 +254,7 @@
 
 #_
 (s/valid? ::nat 951132862023730457951132862023730457)
-;; => true
-
-#_
-(not (s/valid? ::nat [:nat-int 42]))
-;; => true
+;; => false
 
 
 ;; ================================================================
@@ -458,28 +502,12 @@
   (s/keys :req [::term ::dimension-content]))
 
 
-#_
-(s/exercise ::dimension 5)
-;; => ([(132) ([:bignat 132])]
-;;     [(0) ([:nat-int 0])]
-;;     [(199) ([:bignat 199])]
-;;     [(1 3) ([:nat-int 1] [:nat-int 3])]
-;;     [(6 1049) ([:nat-int 6] [:bignat 1049])])
-
-#_
-(gen/sample (s/gen ::dimension) 7)
-;; => ((1 60)
-;;     (1)
-;;     (606 66979216746710640882869059905284213752707)
-;;     (52862))
-;;     (0 0)
-;;     ()
-;;     (0))
+(defn term-selector-spec [kwd]
+  (s/and ::asr-term
+         #(= kwd (::term %))))
 
 
-;; -+-+-+-+-+-+-
-;;  s y n t a x
-;; -+-+-+-+-+-+-
+;; TODO gen/sample for dimension
 
 
 (defn dimension [it]  ;; candidate contents
@@ -492,12 +520,12 @@
         ::invalid-dimension
         {::term ::dimension
          ::dimension-content
-         (map second (::dimension-content conf))}))))
+         (::dimension-content conf)}))))
 
 #_
 (= (s/conform ::asr-term {::term ::dimension, ::dimension-content '(1 60)})
    (dimension '(1 60)))
-;; => false
+;; => true
 
 #_
 (s/valid? ::asr-term (dimension '(1 60)))
@@ -519,26 +547,17 @@
 (def MAX-NUMBER-OF-DIMENSIONS 9)
 
 
-(defn term-selector-spec [kwd]
-  (s/and ::asr-term
-         #(= kwd (::term %))))
-
-
 (s/def ::dimensions
   (s/coll-of (term-selector-spec ::dimension)
              :min-count MIN-NUMBER-OF-DIMENSIONS,
              :max-count MAX-NUMBER-OF-DIMENSIONS,
              :into []))
 
-
+#_
 (s/valid? ::dimensions [(dimension '(1 60)) (dimension '())])
-;; => [#:masr.specs{:term :masr.specs/dimension,
-;;                  :dimension-content
-;;                  ([:nat-int 1] [:nat-int 60])}
-;;     #:masr.specs{:term :masr.specs/dimension,
-;;                  :dimension-content ()}]
+;; => true
 
-
+;; TODO
 #_
 (gen/sample (s/gen ::dimensions) 5)
 ;; => ([]
@@ -572,14 +591,18 @@
 #_
 (s/conform ::dimensions [(dimension '(1 60)) (dimension '())])
 ;; => [#:masr.specs{:term :masr.specs/dimension,
-;;                  :dimension-content
-;;                  ([:nat-int 1] [:nat-int 60])}
+;;                  :dimension-content (1 60)}
 ;;     #:masr.specs{:term :masr.specs/dimension,
 ;;                  :dimension-content ()}]
 
 
+;; -+-+-+-+-+-+-
+;;  s y n t a x
+;; -+-+-+-+-+-+-
+
+
 (defn dimensions
-  [it]  ;; candidate contents
+  [it] ;; candidate contents
   (if (or (not (coll? it))
           (set? it)
           (map? it))
@@ -589,11 +612,16 @@
       (if (s/invalid? dims-conf)
         ::invalid-dimensions
         (let [dims-cont (map
-                         #(map
-                           second
-                           (::dimension-content %))
+                         ::dimension-content
                          dims-conf)]
           (map dimension dims-cont))))))
+
+#_
+(dimensions [[6 60] []])
+;; => (#:masr.specs{:term :masr.specs/dimension,
+;;                  :dimension-content (6 60)}
+;;     #:masr.specs{:term :masr.specs/dimension,
+;;                  :dimension-content ()})
 
 
 ;;  _     _           _
@@ -608,7 +636,6 @@
 
 ;; These enum values are also called "heads."
 (s/def ::intent-enum #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
-
 
 #_
 (s/valid? ::intent-enum 'Local)
@@ -671,7 +698,7 @@
 
 #_
 (intent 42)
-;; => :clojure.spec.alpha/invalid
+;; => :masr.specs/invalid-intent
 
 
 ;;     _                             _
@@ -680,8 +707,8 @@
 ;; /__/\__\___/_| \__,_\__, \___|    \__|\_, | .__/\___|
 ;;                     |___/             |__/|_|
 
-
 ;; storage_type = Default | Save | Parameter | Allocatable
+
 
 (s/def ::storage-type-enum #{'Default, 'Save, 'Parameter, 'Allocatable})
 
@@ -694,6 +721,7 @@
           {::term ::storage-type
            ::storage-type-enum 'Default})
 ;; => true
+
 
 ;;       _    _
 ;;  __ _| |__(_)

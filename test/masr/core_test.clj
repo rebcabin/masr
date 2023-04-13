@@ -22,45 +22,58 @@
 
 (let [huge     951132862023730457951132862023730457
       biggish  4200000000000
+      biggest  0x7FFFFFFFFFFFFFFF
+      toobig   0x8000000000000000
       biggishN 4200000000000N]
   (deftest nat-test
-    (testing "better syntax"
-      (is (s/valid? ::asr/nat      (nat 42)))
-      (is (s/valid? ::asr/nat      (nat biggish)))
-      (is (s/valid? ::asr/nat      (nat 0)))
-      (is (s/valid? ::asr/nat      (nat (bigint 42N))))
-      (is (s/valid? ::asr/nat      (nat (bigint biggishN))))
-      (is (s/valid? ::asr/nat      (nat (bigint 0N))))
-      (is (s/valid? ::asr/bignat   (nat (bigint 42N))))
-      (is (s/valid? ::asr/bignat   (nat (bigint biggishN))))
-      (is (s/valid? ::asr/bignat   (nat (bigint 0N))))
-      (is (s/valid? ::asr/bignat   (nat huge)))
-      (is (s/valid? ::asr/nat      (nat huge)))
-      (is (s/valid? ::asr/nat      (nat '1234)))
-      (is (not (s/valid? ::asr/nat (nat "f"))))
-      (is (not (s/valid? ::asr/nat (nat ()))))
-      (is (not (s/valid? ::asr/nat (nat '(1)))))
-      (is (not (s/valid? ::asr/nat (nat []))))
-      (is (not (s/valid? ::asr/nat (nat [1 2 3]))))
-      (is (not (s/valid? ::asr/nat (nat {}))))
-      (is (not (s/valid? ::asr/nat (nat {2 3}))))
-      (is (not (s/valid? ::asr/nat (nat #{}))))
-      (is (not (s/valid? ::asr/nat (nat #{2 3}))))
-      (is (not (s/valid? ::asr/nat (nat 'a1234))))
-      (is (thrown? clojure.lang.ArityException
-                   (nat))))
-    (is (s/valid? ::asr/bignat  huge))
-    (is (s/valid? ::asr/nat     huge))
-    (is (not (s/valid? nat-int? huge)))
-    (is (s/valid? ::asr/nat 42))
-    (is (s/valid? ::asr/nat biggish))
-    (is (s/valid? ::asr/nat 0))
-    (is (s/valid? ::asr/nat (bigint 42N)))
-    (is (s/valid? ::asr/nat (bigint biggishN)))
-    (is (s/valid? ::asr/nat (bigint 0N)))
-    (is (s/valid? ::asr/bignat (bigint 42N)))
-    (is (s/valid? ::asr/bignat (bigint biggishN)))
-    (is (s/valid? ::asr/bignat (bigint 0N)))))
+    (testing "raw nats"
+      (is (s/valid? ::asr/bignat huge))
+      (is (s/valid? ::asr/nat 42))
+      (is (s/valid? ::asr/nat biggish))
+      (is (s/valid? ::asr/nat biggest))
+      (is (s/valid? ::asr/nat 0))
+      (testing "too big"
+        (is (not (s/valid? ::asr/nat toobig)))
+        (is (not (s/valid? ::asr/nat (bigint 42N))))
+        (is (not (s/valid? ::asr/nat (bigint biggishN))))
+        (is (not (s/valid? ::asr/nat (bigint 0N))))
+        (is (not (s/valid? ::asr/nat huge)))
+        (is (not (s/valid? nat-int? huge))))
+      (testing "negative"
+        (is (not (s/valid? ::asr/bignat (- huge))))
+        (is (not (s/valid? ::asr/nat -42)))
+        (is (not (s/valid? ::asr/nat (- biggish)))))
+      (is (s/valid? ::asr/bignat (bigint 42N)))
+      (is (s/valid? ::asr/bignat (bigint biggishN)))
+      (is (s/valid? ::asr/bignat (bigint 0N))))
+    (testing "syntax sugar"
+      (is (s/valid? ::asr/nat (nat 42)))
+      (is (s/valid? ::asr/nat (nat biggish)))
+      (is (s/valid? ::asr/nat (nat 0)))
+      (is (s/valid? ::asr/nat (nat '1234)))
+      (testing "too big"
+        (is (not (s/valid? ::asr/nat      (nat (bigint 42N)))))
+        (is (not (s/valid? ::asr/nat      (nat (bigint biggishN)))))
+        (is (not (s/valid? ::asr/nat      (nat (bigint 0N)))))
+        (is (not (s/valid? ::asr/bignat   (nat (bigint 42N)))))
+        (is (not (s/valid? ::asr/bignat   (nat (bigint biggishN)))))
+        (is (not (s/valid? ::asr/bignat   (nat (bigint 0N)))))
+        (is (not (s/valid? ::asr/bignat   (nat huge))))
+        (is (not (s/valid? ::asr/nat      (nat huge)))))
+      (testing "wrong type"
+        (is (not (s/valid? ::asr/nat (nat "f"))))
+        (is (not (s/valid? ::asr/nat (nat ()))))
+        (is (not (s/valid? ::asr/nat (nat '(1)))))
+        (is (not (s/valid? ::asr/nat (nat []))))
+        (is (not (s/valid? ::asr/nat (nat [1 2 3]))))
+        (is (not (s/valid? ::asr/nat (nat {}))))
+        (is (not (s/valid? ::asr/nat (nat {2 3}))))
+        (is (not (s/valid? ::asr/nat (nat #{}))))
+        (is (not (s/valid? ::asr/nat (nat #{2 3}))))
+        (is (not (s/valid? ::asr/nat (nat 'a1234))))
+        (is (thrown? clojure.lang.ArityException
+                     (nat)))))
+))
 
 #_
 (gen/sample (s/gen ::asr/nat) 15)
@@ -81,10 +94,10 @@
     (is (s/valid? ::asr/asr-term (dimension '())))
     (is (s/valid? ::asr/asr-term (dimension  ())))
     (is (s/valid? ::asr/asr-term (dimension '(0))))
-    (is (s/valid?
-         ::asr/asr-term
-         (dimension
-          '(606 66979216746710640882869059905284213752707))))
+    (is (not (s/valid?
+              ::asr/asr-term
+              (dimension
+               '(606 66979216746710640882869059905284213752707)))))
     (is (not (s/valid? ::asr/asr-term 0)))
     (is (not (s/valid? ::asr/asr-term 'foo)))
     (is (not (s/valid? ::asr/asr-term "")))
@@ -107,10 +120,10 @@
       (is (s/valid? ::asr/asr-term (dimension [1 60])))
       (is (s/valid? ::asr/asr-term (dimension [])))
       (is (s/valid? ::asr/asr-term (dimension [0])))
-      (is (s/valid?
-           ::asr/asr-term
-           (dimension
-            [606 66979216746710640882869059905284213752707]))))
+      (is (not (s/valid?
+                ::asr/asr-term
+                (dimension
+                 [606 66979216746710640882869059905284213752707])))))
     ))
 
 #_
