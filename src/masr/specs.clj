@@ -530,6 +530,15 @@
              :max-count MAX-NUMBER-OF-DIMENSIONS,
              :into []))
 
+
+(s/valid? ::dimensions [(dimension '(1 60)) (dimension '())])
+;; => [#:masr.specs{:term :masr.specs/dimension,
+;;                  :dimension-content
+;;                  ([:nat-int 1] [:nat-int 60])}
+;;     #:masr.specs{:term :masr.specs/dimension,
+;;                  :dimension-content ()}]
+
+
 #_
 (gen/sample (s/gen ::dimensions) 5)
 ;; => ([]
@@ -836,7 +845,8 @@
 
 
 ;;; Too difficult to make the following into a macro
-;;; because of namespace issues
+;;; because of namespace issues, but don't like copy-
+;;; paste code like this.
 
 
 (defn Integer
@@ -891,16 +901,8 @@
       Logical_)))
 
 
-(s/valid? ::asr-ttype-head (Integer :kind 4, :dimensions []))
-(s/valid? ::asr-ttype-head (Integer))
-(s/conform ::asr-ttype-head (Integer))
-;; => #:masr.specs{:ttype-head :masr.specs/Integer,
-;;                 :bytes-kind 4,
-;;                 :dimensions []}
-(= (Integer 4 []) (Integer :kind 4, :dimensions []))
-(= (Integer 42 ['gobble-de-gook]) (Integer :kind 4))
-(not (s/valid? ::asr-ttype-head (Integer :kind 3)))
-(= (Integer) (Integer 3))
+(defn ttype [head]
+  {::term ::ttype, ::head head})
 
 
 ;; __   __        _      _    _
