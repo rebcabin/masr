@@ -7,4 +7,7 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (println "Hello, World!"))
+  (println "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+  (println "Note from the Authors:")
+  (println "The warnings about Integer are expected and not maskable!")
+  (println "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"))

@@ -9,6 +9,12 @@
             [clojure.set :as set]))
 
 
+(println "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+(println "Note from the Authors:")
+(println "The warnings about Integer are expected and not maskable!")
+(println "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+
+
 ;;                 _
 ;;  _ _ _  _ _ __ | |__  ___ _ _ ___
 ;; | ' \ || | '  \| '_ \/ -_) '_(_-<
@@ -17,44 +23,44 @@
 (let [huge     951132862023730457951132862023730457
       biggish  4200000000000
       biggishN 4200000000000N]
- (deftest nat-test
-   (testing "better syntax"
-     (is (s/valid? ::asr/nat      (nat 42)))
-     (is (s/valid? ::asr/nat      (nat biggish)))
-     (is (s/valid? ::asr/nat      (nat 0)))
-     (is (s/valid? ::asr/nat      (nat (bigint 42N))))
-     (is (s/valid? ::asr/nat      (nat (bigint biggishN))))
-     (is (s/valid? ::asr/nat      (nat (bigint 0N))))
-     (is (s/valid? ::asr/bignat   (nat (bigint 42N))))
-     (is (s/valid? ::asr/bignat   (nat (bigint biggishN))))
-     (is (s/valid? ::asr/bignat   (nat (bigint 0N))))
-     (is (s/valid? ::asr/bignat   (nat huge)))
-     (is (s/valid? ::asr/nat      (nat huge)))
-     (is (s/valid? ::asr/nat      (nat '1234)))
-     (is (not (s/valid? ::asr/nat (nat "f"))))
-     (is (not (s/valid? ::asr/nat (nat ()))))
-     (is (not (s/valid? ::asr/nat (nat '(1)))))
-     (is (not (s/valid? ::asr/nat (nat []))))
-     (is (not (s/valid? ::asr/nat (nat [1 2 3]))))
-     (is (not (s/valid? ::asr/nat (nat {}))))
-     (is (not (s/valid? ::asr/nat (nat {2 3}))))
-     (is (not (s/valid? ::asr/nat (nat #{}))))
-     (is (not (s/valid? ::asr/nat (nat #{2 3}))))
-     (is (not (s/valid? ::asr/nat (nat 'a1234))))
-     (is (thrown? clojure.lang.ArityException
-                  (nat))))
-   (is (s/valid? ::asr/bignat  huge))
-   (is (s/valid? ::asr/nat     huge))
-   (is (not (s/valid? nat-int? huge)))
-   (is (s/valid? ::asr/nat 42))
-   (is (s/valid? ::asr/nat biggish))
-   (is (s/valid? ::asr/nat 0))
-   (is (s/valid? ::asr/nat (bigint 42N)))
-   (is (s/valid? ::asr/nat (bigint biggishN)))
-   (is (s/valid? ::asr/nat (bigint 0N)))
-   (is (s/valid? ::asr/bignat (bigint 42N)))
-   (is (s/valid? ::asr/bignat (bigint biggishN)))
-   (is (s/valid? ::asr/bignat (bigint 0N)))))
+  (deftest nat-test
+    (testing "better syntax"
+      (is (s/valid? ::asr/nat      (nat 42)))
+      (is (s/valid? ::asr/nat      (nat biggish)))
+      (is (s/valid? ::asr/nat      (nat 0)))
+      (is (s/valid? ::asr/nat      (nat (bigint 42N))))
+      (is (s/valid? ::asr/nat      (nat (bigint biggishN))))
+      (is (s/valid? ::asr/nat      (nat (bigint 0N))))
+      (is (s/valid? ::asr/bignat   (nat (bigint 42N))))
+      (is (s/valid? ::asr/bignat   (nat (bigint biggishN))))
+      (is (s/valid? ::asr/bignat   (nat (bigint 0N))))
+      (is (s/valid? ::asr/bignat   (nat huge)))
+      (is (s/valid? ::asr/nat      (nat huge)))
+      (is (s/valid? ::asr/nat      (nat '1234)))
+      (is (not (s/valid? ::asr/nat (nat "f"))))
+      (is (not (s/valid? ::asr/nat (nat ()))))
+      (is (not (s/valid? ::asr/nat (nat '(1)))))
+      (is (not (s/valid? ::asr/nat (nat []))))
+      (is (not (s/valid? ::asr/nat (nat [1 2 3]))))
+      (is (not (s/valid? ::asr/nat (nat {}))))
+      (is (not (s/valid? ::asr/nat (nat {2 3}))))
+      (is (not (s/valid? ::asr/nat (nat #{}))))
+      (is (not (s/valid? ::asr/nat (nat #{2 3}))))
+      (is (not (s/valid? ::asr/nat (nat 'a1234))))
+      (is (thrown? clojure.lang.ArityException
+                   (nat))))
+    (is (s/valid? ::asr/bignat  huge))
+    (is (s/valid? ::asr/nat     huge))
+    (is (not (s/valid? nat-int? huge)))
+    (is (s/valid? ::asr/nat 42))
+    (is (s/valid? ::asr/nat biggish))
+    (is (s/valid? ::asr/nat 0))
+    (is (s/valid? ::asr/nat (bigint 42N)))
+    (is (s/valid? ::asr/nat (bigint biggishN)))
+    (is (s/valid? ::asr/nat (bigint 0N)))
+    (is (s/valid? ::asr/bignat (bigint 42N)))
+    (is (s/valid? ::asr/bignat (bigint biggishN)))
+    (is (s/valid? ::asr/bignat (bigint 0N)))))
 
 #_
 (gen/sample (s/gen ::asr/nat) 15)
@@ -398,46 +404,107 @@
 ;; / _` | '_ \ |
 ;; \__,_|_.__/_|
 
-#_
+
 (gen/sample (s/gen (s/and
                     ::asr/asr-term
                     #(= ::asr/abi (::asr/term %))))
             5)
-;; => (#::asr{:term ::asr/abi, :abi-enum Interactive, :abi-external true}
+;; => (#::asr{:term ::asr/abi, :abi-enum Intrinsic, :abi-external true}
+;;     #::asr{:term ::asr/abi, :abi-enum Interactive, :abi-external true}
 ;;     #::asr{:term ::asr/abi, :abi-enum Source, :abi-external false}
 ;;     #::asr{:term ::asr/abi, :abi-enum Source, :abi-external false}
-;;     #::asr{:term ::asr/abi, :abi-enum Source, :abi-external false}
-;;     #::asr{:term ::asr/abi, :abi-enum Interactive, :abi-external true})
+;;     #::asr{:term ::asr/abi, :abi-enum Source, :abi-external false})
 
 
 (deftest abi-test
-  (is (s/valid? ::asr/asr-term
-                {::asr/term        ::asr/abi
-                 ::asr/abi-enum     'Source
-                 ::asr/abi-external  false}))
-  (is (s/valid? ::asr/asr-term (abi 'Source         :external false)))
-  (is (s/valid? ::asr/asr-term (abi 'LFortranModule :external true)))
-  (is (s/valid? ::asr/asr-term (abi 'GFortranModule :external true)))
-  (is (s/valid? ::asr/asr-term (abi 'BindC          :external true)))
-  (is (s/valid? ::asr/asr-term (abi 'Interactive    :external true)))
-  (is (s/valid? ::asr/asr-term (abi 'Intrinsic      :external true)))
+  (testing "conforming examples"
+    (is (s/valid? ::asr/asr-term
+                 {::asr/term        ::asr/abi
+                  ::asr/abi-enum     'Source
+                  ::asr/abi-external  false}))
+    (is (s/valid? ::asr/asr-term (abi 'Source         :external false)))
+    (is (s/valid? ::asr/asr-term (abi 'LFortranModule :external true)))
+    (is (s/valid? ::asr/asr-term (abi 'GFortranModule :external true)))
+    (is (s/valid? ::asr/asr-term (abi 'BindC          :external true)))
+    (is (s/valid? ::asr/asr-term (abi 'Interactive    :external true)))
+    (is (s/valid? ::asr/asr-term (abi 'Intrinsic      :external true))))
   (testing "non-conforming examples"
-    (is (not (s/valid? ::asr/asr-term
-                       {::asr/term        ::asr/abi
-                        ::asr/abi-enum     'Source
-                        ::asr/abi-external  true})))
-    (is (not (s/valid? ::asr/asr-term (abi 'Source         :external true))))
-    (is (not (s/valid? ::asr/asr-term (abi 'LFortranModule :external false))))
-    (is (not (s/valid? ::asr/asr-term (abi 'GFortranModule :external false))))
-    (is (not (s/valid? ::asr/asr-term (abi 'BindC          :external false))))
-    (is (not (s/valid? ::asr/asr-term (abi 'Interactive    :external false))))
-    (is (not (s/valid? ::asr/asr-term (abi 'Intrinsic      :external false))))
-    (is (not (s/valid? ::asr/asr-term (abi 'Source :external 42))))
-    (is (not (s/valid? ::asr/asr-term (abi 'Source :external "foo"))))
-    (is (not (s/valid? ::asr/asr-term (abi 'Source :external 'foo))))
-    (is (not (s/valid? ::asr/asr-term (abi 'Source false))))
-    (is (not (s/valid? ::asr/asr-term (abi 'Source true))))
-    (is (not (s/valid? ::asr/asr-term (abi 'Source 42))))
-    (is (not (s/valid? ::asr/asr-term (abi 'foo true))))
-    (is (not (s/valid? ::asr/asr-term (abi 'foo false))))
+    (testing "incorrect :external ::bool value"
+      (is (not (s/valid? ::asr/asr-term
+                        {::asr/term        ::asr/abi
+                         ::asr/abi-enum     'Source
+                         ::asr/abi-external  true})))
+      (is (not (s/valid? ::asr/asr-term
+                         (abi 'Source         :external true))))
+      (is (not (s/valid? ::asr/asr-term
+                         (abi 'LFortranModule :external false))))
+      (is (not (s/valid? ::asr/asr-term
+                         (abi 'GFortranModule :external false))))
+      (is (not (s/valid? ::asr/asr-term
+                         (abi 'BindC          :external false))))
+      (is (not (s/valid? ::asr/asr-term
+                         (abi 'Interactive    :external false))))
+      (is (not (s/valid? ::asr/asr-term
+                         (abi 'Intrinsic      :external false)))))
+    (testing "incorrect :external type"
+      (is (not (s/valid? ::asr/asr-term (abi 'Source :external 42))))
+      (is (not (s/valid? ::asr/asr-term (abi 'Source :external "foo"))))
+      (is (not (s/valid? ::asr/asr-term (abi 'Source :external 'foo)))))
+    (testing "missing keyword; :external defaults to nil"
+      (is (not (s/valid? ::asr/asr-term (abi 'Source false))))
+      (is (not (s/valid? ::asr/asr-term (abi 'Source true))))
+      (is (not (s/valid? ::asr/asr-term (abi 'Source 42))))
+      (is (not (s/valid? ::asr/asr-term (abi 'foo true))))
+      (is (not (s/valid? ::asr/asr-term (abi 'foo false)))))
     ))
+
+
+;;  _   _
+;; | |_| |_ _  _ _ __  ___
+;; |  _|  _| || | '_ \/ -_)
+;;  \__|\__|\_, | .__/\___|
+;;          |__/|_|
+
+
+(deftest ttype-test
+  (is (s/valid? ::asr/asr-term
+                {::asr/term ::asr/ttype,
+                 ::asr/asr-ttype-head
+                 {::asr/ttype-head ::asr/Integer,
+                  ::asr/bytes-kind 4
+                  ::asr/dimensions []}}))
+  (is (s/valid? ::asr/asr-term
+                {::asr/term ::asr/ttype,
+                 ::asr/asr-ttype-head
+                 {::asr/ttype-head ::asr/Real,
+                  ::asr/bytes-kind 4
+                  ::asr/dimensions []}}))
+  (testing "syntax sugar"
+    (is (s/valid? ::asr/asr-ttype-head (Integer :kind 1, :dimensions [])))
+    (is (s/valid? ::asr/asr-ttype-head (Integer :kind 2, :dimensions [])))
+    (is (s/valid? ::asr/asr-ttype-head (Integer :kind 4, :dimensions [])))
+    (is (s/valid? ::asr/asr-ttype-head (Integer :kind 8, :dimensions [])))
+    (is (s/valid? ::asr/asr-ttype-head (Integer)))
+    (is (s/valid? ::asr/asr-ttype-head (Real :kind 1, :dimensions [])))
+    (is (s/valid? ::asr/asr-ttype-head (Real :kind 2, :dimensions [])))
+    (is (s/valid? ::asr/asr-ttype-head (Real :kind 4, :dimensions [])))
+    (is (s/valid? ::asr/asr-ttype-head (Real :kind 8, :dimensions [])))
+    (is (s/valid? ::asr/asr-ttype-head (Real))))
+  (testing "non-conformance"
+    (is (not (s/valid? ::asr/asr-ttype-head (Integer :kind 42))))
+    (is (not (s/valid? ::asr/asr-ttype-head (Integer :dimensions 'fubar)))))
+  (testing "defaults"
+    (is (= (s/conform ::asr/asr-ttype-head (Integer))
+           (Integer :kind 4, :dimensions [])))
+    (is (= (s/conform ::asr/asr-ttype-head (Integer :kind 4))
+           (Integer :kind 4, :dimensions [])))
+    (is (= (s/conform ::asr/asr-ttype-head (Integer :dimensions []))
+           (Integer :kind 4, :dimensions []))))
+  (testing "order-independence"
+    (is (= (s/conform ::asr/asr-ttype-head
+                      (Integer :dimensions [], :kind 4))
+           (Integer :kind 4, :dimensions []))))
+  (testing "pitfalls -- sugar is too permissive"
+    (is (= (s/conform ::asr/asr-ttype-head
+                      (Integer 42 ['gobble-de-gook]))
+           (Integer :kind 4, :dimensions [])))))

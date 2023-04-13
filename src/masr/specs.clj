@@ -1,10 +1,20 @@
 (ns masr.specs
   (:require [clojure.spec.alpha            :as s   ]
             [clojure.set                   :as set ]
-            #_[clojure.zip                   :as z   ]
             [clojure.spec.gen.alpha        :as gen ]
             [clojure.test.check.generators :as tgen]
-            [masr.specs :as asr]))
+            [masr.logic :refer        [iff implies]]
+            [masr.utils :refer        [plnecho    ]]
+            #_[clojure.zip                   :as z   ]
+            ))
+
+
+;; Unmap "Integer" so I can use that symbol. Access
+;; the original via "java.lang.Integer." Lein test produces
+;; unmaskable warnings.
+
+
+(ns-unmap *ns* 'Integer)
 
 
 ;; ASDL tuples like `(1 2)` are Clojure lists.
@@ -16,7 +26,6 @@
 ;; In general, these Clojure specs are more
 ;; discriminating, precise, and detailed than ASDL
 ;; permits.
-
 
 ;; terms (nodes) in the ASDL grammar (things to the left of equals signs):
 ;;
@@ -57,7 +66,8 @@
 ;; 31 symbol_table    = a clojure map
 ;; 32 dimensions      = dimension*, see below
 
-;; things that are not terms:
+
+;; term-like things that are not terms:
 ;;
 ;;  0 atoms           = int, float, bool, nat, bignat
 ;;  0 identifier      = specified below
@@ -334,7 +344,7 @@
 
 (defn identifier-set
   "Remove duplicates, i.e., create a _set_."
-  [it]
+  [it] ;; candidate contents
   (if (or (not (coll? it))
           (map? it))
     ::invalid-identifier-set
@@ -377,7 +387,7 @@
   "Create a vector; ordered, duplicates allowed. Some Clojure
   functions will convert the vector to a seq or list, it matters
   not."
-  [it]
+  [it] ;; candidate contents
   (if (or (not (coll? it))
           (map? it))
     ::invalid-identifier-list
@@ -472,7 +482,7 @@
 ;; -+-+-+-+-+-+-
 
 
-(defn dimension [it]
+(defn dimension [it]  ;; candidate contents
   (if (or (not (coll? it)) (set? it) (map? it))
     ::invalid-dimension
     (let [conf (s/conform ::asr-term
@@ -559,7 +569,8 @@
 ;;                  :dimension-content ()}]
 
 
-(defn dimensions [it]
+(defn dimensions
+  [it]  ;; candidate contents
   (if (or (not (coll? it))
           (set? it)
           (map? it))
@@ -618,7 +629,6 @@
 ;;     [Local Local]
 ;;     [ReturnVar ReturnVar])
 
-
 #_
 (map second (s/exercise ::intent-enum 5))
 ;; => (In ReturnVar Out In ReturnVar)
@@ -640,7 +650,8 @@
 (defn intent [sym]
   (let [intent_ (s/conform
                  ::asr-term
-                 {::term ::intent, ::intent-enum sym})]
+                 {::term        ::intent,
+                  ::intent-enum sym})]
     (if (s/invalid? intent_)
       ::invalid-intent
       intent_)))
@@ -695,15 +706,6 @@
 (s/def ::abi-external ::bool)
 
 
-(defn iff [a b]
-  (or (and a b)
-      (not (or a b))))
-
-
-(defn implies [a b]
-  (not (and a (not b)))) ;; same as (or (not a) b)
-
-
 (defmethod term ::abi [_]
   (s/with-gen
     (s/and
@@ -712,11 +714,11 @@
     (fn []
       (tgen/one-of
        [(tgen/hash-map
-         ::term         (gen/return ::abi-enum)
+         ::term         (gen/return ::abi)
          ::abi-enum     (s/gen external-abis)
          ::abi-external (gen/return true))
         (tgen/hash-map
-         ::term         (gen/return ::abi-enum)
+         ::term         (gen/return ::abi)
          ::abi-enum     (s/gen internal-abis)
          ::abi-external (gen/return false))] ))))
 
@@ -728,11 +730,12 @@
 
 (defn abi
   "Destructure the keyword :external"
-  [it, & {:keys [external]}]
+  [the-abi-enum,
+   & {:keys [external]}]  ;; defaults to nil
   (let [abi_ (s/conform
               ::asr-term
-              {::term ::abi,
-               ::abi-enum it,
+              {::term         ::abi,
+               ::abi-enum     the-abi-enum,
                ::abi-external external})]
     (if (s/invalid? abi_)
       ::invalid-abi
@@ -744,6 +747,160 @@
            ::abi-enum 'Source
            ::abi-external false})
 ;; => true
+
+
+;;  _____ _
+;; |_   _| |_ _  _ _ __  ___
+;;   | | |  _| || | '_ \/ -_)
+;;   |_|  \__|\_, | .__/\___|
+;;            |__/|_|
+
+
+;; kind: The `kind` member selects the kind of a given type. We currently
+;; support the following:
+;; Integer kinds: 1 (i8), 2 (i16), 4 (i32), 8 (i64)
+;; Real kinds: 4 (f32), 8 (f64)
+;; Complex kinds: 4 (c32), 8 (c64)
+;; Character kinds: 1 (utf8 string)
+;; Logical kinds: 1, 2, 4: (boolean represented by 1, 2, 4 bytes; the default
+;;     kind is 4, just like the default integer kind, consistent with Python
+;;     and Fortran: in Python "Booleans in Python are implemented as a subclass
+;;     of integers", in Fortran the "default logical kind has the same storage
+;;     size as the default integer"; we currently use kind=4 as default
+;;     integer, so we also use kind=4 for the default logical.)
+
+;; ttype
+;;     = Integer(int kind, dimension* dims)
+;;     | Real(int kind, dimension* dims)
+;;     | Complex(int kind, dimension* dims)
+;;     | Character(int kind, int len, expr? len_expr, dimension* dims)
+;;     | Logical(int kind, dimension* dims)
+;;     | Set(ttype type)
+;;     | List(ttype type)
+;;     | Tuple(ttype* type)
+;;     | Struct(symbol derived_type, dimension* dims)
+;;     | Enum(symbol enum_type, dimension *dims)
+;;     | Union(symbol union_type, dimension *dims)
+;;     | Class(symbol class_type, dimension* dims)
+;;     | Dict(ttype key_type, ttype value_type)
+;;     | Pointer(ttype type)
+;;     | Const(ttype type)
+;;     | CPtr()
+;;     | TypeParameter(identifier param, dimension* dims)
+;;     | FunctionType(ttype* arg_types, ttype? return_var_type,
+;;         abi abi, deftype deftype, string? bindc_name, bool elemental,
+;;         bool pure, bool module, bool inline, bool static,
+;;         ttype* type_params, symbol* restrictions, bool is_restriction)
+
+
+;;; a support spec:
+
+
+(s/def ::bytes-kind #{1 2 4 8})
+
+
+;;; Nested multi-spec:
+
+
+;; Stumble-on the naming convention: multi-specs begin with
+;; ::asr-<the_rest_of_the_name>, as in ::asr-term and
+;; ::asr-ttype-head.
+
+
+(do (defmulti ttype-head ::ttype-head)
+    (s/def ::asr-ttype-head
+      (s/multi-spec ttype-head ::ttype-head)))
+
+
+(defmacro def-ttype-head [it]
+  `(defmethod ttype-head ~it [_#] ;; https://clojurians.slack.com/archives/C03S1KBA2/p1681407527447379
+     (s/keys :req [::ttype-head ::bytes-kind ::dimensions])))
+
+
+(def-ttype-head ::Integer)
+(def-ttype-head ::Real)
+(def-ttype-head ::Complex)
+(def-ttype-head ::Logical)
+
+
+;;; Now, the asr-term defmethod spec for ttype.
+
+
+(defmethod term ::ttype [_]
+  (s/keys :req [::term ::asr-ttype-head]))
+
+
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
+
+
+;;; Too difficult to make the following into a macro
+;;; because of namespace issues
+
+
+(defn Integer
+  [& {:keys [kind, dimensions],
+      :or {kind 4, dimensions []}}] ;; defaults
+  (let [Integer_ (s/conform
+                  ::asr-ttype-head
+                  {::ttype-head ::Integer
+                   ::bytes-kind kind,
+                   ::dimensions dimensions})]
+    (if (s/invalid? Integer_)
+      ::invalid-Integer
+      Integer_)))
+
+
+(defn Real
+  [& {:keys [kind, dimensions],
+      :or {kind 4, dimensions []}}] ;; defaults
+  (let [Real_ (s/conform
+                  ::asr-ttype-head
+                  {::ttype-head ::Real
+                   ::bytes-kind kind,
+                   ::dimensions dimensions})]
+    (if (s/invalid? Real_)
+      ::invalid-Real
+      Real_)))
+
+
+(defn Complex
+  [& {:keys [kind, dimensions],
+      :or {kind 4, dimensions []}}] ;; defaults
+  (let [Complex_ (s/conform
+               ::asr-ttype-head
+               {::ttype-head ::Complex
+                ::bytes-kind kind,
+                ::dimensions dimensions})]
+    (if (s/invalid? Complex_)
+      ::invalid-Complex
+      Complex_)))
+
+
+(defn Logical
+  [& {:keys [kind, dimensions],
+      :or {kind 4, dimensions []}}] ;; defaults
+  (let [Logical_ (s/conform
+               ::asr-ttype-head
+               {::ttype-head ::Logical
+                ::bytes-kind kind,
+                ::dimensions dimensions})]
+    (if (s/invalid? Logical_)
+      ::invalid-Logical
+      Logical_)))
+
+
+(s/valid? ::asr-ttype-head (Integer :kind 4, :dimensions []))
+(s/valid? ::asr-ttype-head (Integer))
+(s/conform ::asr-ttype-head (Integer))
+;; => #:masr.specs{:ttype-head :masr.specs/Integer,
+;;                 :bytes-kind 4,
+;;                 :dimensions []}
+(= (Integer 4 []) (Integer :kind 4, :dimensions []))
+(= (Integer 42 ['gobble-de-gook]) (Integer :kind 4))
+(not (s/valid? ::asr-ttype-head (Integer :kind 3)))
+(= (Integer) (Integer 3))
 
 
 ;; __   __        _      _    _
