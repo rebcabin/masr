@@ -635,52 +635,47 @@
                :dimension-content ()}])
 
 
+;;                        _ _ _
+;;  ___ _ _ _  _ _ __ ___| (_) |_____
+;; / -_) ' \ || | '  \___| | | / / -_)
+;; \___|_||_\_,_|_|_|_|  |_|_|_\_\___|
+
+
+(defmacro enum-like [term, heads]
+  (let [ns "masr.specs"
+        tkw (keyword ns (str term))
+        tke (keyword ns (str term "-enum"))
+        tki (keyword ns (str "invalid-" term))]
+    `(do
+       (s/def ~tke ~heads)       ;; the set
+       (defmethod term ~tkw [_#] ;; the multi-spec
+         (s/keys :req [:masr.specs/term ~tke]))
+       (defn ~term [it#]        ;; the syntax
+         (let [st# (s/conform
+                    :masr.specs/asr-term
+                    {:masr.specs/term ~tkw
+                     ~tke it#})]
+           (if (s/invalid? st#) ~tki, st#))))))
+
+
 ;;  _     _           _
 ;; (_)_ _| |_ ___ _ _| |_
 ;; | | ' \  _/ -_) ' \  _|
 ;; |_|_||_\__\___|_||_\__|
 
-;; This is an example of how to spec an enum.
-
-
 ;; intent = Local | In | Out | InOut | ReturnVar | Unspecified
 
-;; These enum values are also called "heads."
-(s/def ::intent-enum #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+
+(enum-like intent #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 
 (tests
  (s/valid?  ::intent-enum 'Local) := true
  (s/valid?  ::intent-enum 'fubar) := false
- (s/conform ::intent-enum 'Local) := 'Local)
-
-
-(defmethod term ::intent [_]
-  (s/keys :req [::term ::intent-enum]))
-
-(tests
- (s/valid? ::asr-term
-           {::term ::intent,
-            ::intent-enum 'Local}) := true)
-
-
-;; An instance written as {::term ::intent, ::intent-enum 'Local}
-;; a bit ugly. Let's write
-
-
-(defn intent [sym]
-  (let [intent_ (s/conform
-                 ::asr-term
-                 {::term        ::intent,
-                  ::intent-enum sym})]
-    (if (s/invalid? intent_)
-      ::invalid-intent
-      intent_)))
-
-(tests
- (intent 'Local) :=
+ (s/conform ::intent-enum 'Local) := 'Local
+ (intent 'Local)                  :=
  #:masr.specs{:term :masr.specs/intent,
               :intent-enum 'Local}
- (intent 42) := :masr.specs/invalid-intent)
+ (intent 42)                      := :masr.specs/invalid-intent)
 
 
 ;;     _                             _
@@ -692,17 +687,17 @@
 ;; storage_type = Default | Save | Parameter | Allocatable
 
 
-(s/def ::storage-type-enum #{'Default, 'Save, 'Parameter, 'Allocatable})
+(enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
 
-
-(defmethod term ::storage-type [_]
-  (s/keys :req [::term ::storage-type-enum]))
-
-#_
-(s/valid? ::asr-term
-          {::term ::storage-type
-           ::storage-type-enum 'Default})
-;; => true
+(tests
+ (s/valid? ::storage-type-enum 'Default)       := true
+ (s/valid? ::storage-type-enum 'foobar)        := false
+ (s/valid? ::asr-term
+           {::term ::storage-type
+            ::storage-type-enum 'Default})     := true
+ (s/valid? ::asr-term (storage-type 'Default)) := true
+ (s/valid? ::asr-term (storage-type 'foobar))  := false
+ (storage-type 'foobar)                        := ::invalid-storage-type)
 
 
 ;;       _    _

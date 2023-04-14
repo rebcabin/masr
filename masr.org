@@ -406,19 +406,25 @@ The following sections
 - summarize the Clojure specs for all ASR terms and heads
 
 - pedagogically explain the architecture and
-  approach taken in the Clojure code. The
-  architecture is the remainder from several
-  experiments. For example, =defrecord= and
-  =defprotocol= for polymorphism was tried and
-  discarded in favor of multi-specs.[fn:multi-spec:
-  https://clojure.org/guides/spec]
+  approach taken in the Clojure code so that anyone
+  may extend and maintain it.
+
+The architecture is the remainder from several
+experiments. For example, \linebreak =defrecord= and
+=defprotocol= for polymorphism were tried and
+discarded in favor of multi-specs.[fn:multi-spec:
+https://clojure.org/guides/spec]
 
 The tests in =core_test.clj= exhibit many examples
-that pass and, more importantly, fail the specs. The
-specs are written in the source file =specs.cl=. The
-best way to learn the code is to study the tests and
-to run  them in the Clojure REPL or in the CIDER
-debugger in Emacs.[fn:: https://docs.cider.mx/cider/debugging/debugger.html]
+that pass and, more importantly, fail the specs. We
+also keep lightweight, load-time tests inline to the
+source file for the specs, =specs.clj=. The balance
+between inline tests and separate tests is fluid.
+
+The best way to learn the code is to study the tests
+and to run them in the Clojure REPL or in the CIDER
+debugger in Emacs.[fn::
+https://docs.cider.mx/cider/debugging/debugger.html]
 
 We present the terms somewhat out of the order of
 Table \ref{tbl:terms}. First is /intent/, as it is
@@ -433,15 +439,18 @@ An ASR /intent/ is one of the symbols
 
 =Local=, =In=, =Out=, =InOut=, =ReturnVar=, =Unspecified=.
 
-The spec for the contents of an intent is simply
+The spec for the /contents/ of an intent is simply
 this set of enum-like heads. Any Clojure /set/
 (e.g., in =#{= \ldots =}= brackets) doubles as a
-predicate function that tests for set membership.
-The result of the test is the candidate member if
-the candidate is present in the set. In the
-following two examples, the set appears in the
+predicate function for set membership. In
+the following two examples, the set appears in the
 function position of the usual Clojure function-call
-syntax =(function args*)=:
+syntax
+$\texttt{(}\textit{function} \textit{args}\texttt{*)}$:
+
+If a candidate member is in a set, the result of
+calling the set like a function is the candidate
+member.
 
 \vskip 0.26cm
 #+begin_src clojure :exports both
@@ -464,22 +473,20 @@ result is =nil=, which does not print:
 Any predicate function can be registered as a
 Clojure spec.[fn:clojure-spec] Therefore the spec
 for /intent contents/ is just the set of valid
-members. The name of the spec is \linebreak =::intent-enum=.
+members.
 
 *** \colorbf{red}{Specs have Fully Qualified Keyword Names}
 
-The double colon in =::intent-enum= is shorthand; it
-implicitly signifies that \linebreak =intent-enum=
-is a keyword in the namespace =masr.specs=. The
-names of all Clojure specs must be fully qualified
-in namespaces.
+The name of the spec is =::intent-enum=. The double
+colon in =::intent-enum= is shorthand. In the file
+=specs.clj=, double colon implicitly signifies that
+a keyword like =intent-enum= is in the namespace
+=masr.specs=. In other files, like =core_test.clj=,
+the same keyword is spelled
+=:masr.specs/intent-enum=.
 
-The namespace =masr.specs= covers all names defined
-in the entire file =specs.clj=, where the syntax
-=::intent-enum= is valid. In files other than
-=specs.clj=, one explicitly writes the
-namespace, as in =:masr.specs/intent-enum= . More on
-that later.
+The names of all Clojure specs must be
+fully qualified in namespaces.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -501,8 +508,8 @@ To check an expression like ='Local= against the
   ;; => false
 #+end_src
 
-To produce conforming or invalid entities inline to
-other code, write
+To produce conforming or non-conforming (invalid)
+entities in other code, write
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -555,23 +562,26 @@ itself is an implementation of a polymorphic Clojure
 *** \colorbf{red}{Multi-Specs}
 
 A multi-spec is like a tagged union in C. The
-multi-spec, =::asr-term=, as shown below, pertains
-to all Clojure hash-maps[fn:hash-map:
+multi-spec, =::asr-term=, pertains to all Clojure
+hash-maps[fn:hash-map:
 https://clojuredocs.org/clojure.core/hash-map] that
 have a tag named =::term= with a value like
-=::intent= or =::storage-type=, etc.
+=::intent= or =::storage-type=, etc. The values, if
+themselves fully qualified keywords, are recursively
+checked.
 
 A multi-spec has three components:
 
 - =defmulti=[fn:: https://clojuredocs.org/clojure.core/defmulti] :: ---
   a polymorphic interface that declares the
   /tag-fetcher function/, \linebreak =::term= in
-  this case, which fetches a tag value from any
-  candidate hash-map. The =defmulti= dispatches to a
-  =defmethod= that matches the fetched tag value,
-  =::intent= in this case. =::term= is a fully
-  qualified keyword of course, but keywords double
-  as tag-fetchers for hash-maps in Clojure.[fn::
+  this case. The tag-fetcher function fetches a
+  tag's value from any candidate hash-map. The
+  =defmulti= dispatches to a =defmethod= that
+  matches the fetched tag value, =::intent= in this
+  case. =::term= is a fully qualified keyword of
+  course, but all keywords double as tag-fetchers
+  for hash-maps.[fn::
   https://stackoverflow.com/questions/6915531]
 
 - =defmethod=[fn:: https://clojuredocs.org/clojure.core/defmethod] :: ---
@@ -597,14 +607,14 @@ Start with a spec for =::term=:
 The spec says that any fully qualified keyword, like
 =::intent=, is a MASR term. This spec leaves room for
 growth of MASR by adding more fully qualified
-keywords for more MASR types /qua/ terms.
+keywords for more MASR types-/qua/-terms.
 
-=s/def= stands for =clojure.spec.alpha/def=, the =def= macro in
-the \linebreak =clojure.spec.alpha= namespace. The namespace is aliased to
-=s=.
+=s/def= stands for =clojure.spec.alpha/def=, the
+=def= macro in the \linebreak =clojure.spec.alpha=
+namespace. The namespace is aliased to =s=.
 
-Next, specify the =defmulti= polymorphic interface
-=term= (no colons) for all term specs:
+Next, specify the =defmulti= polymorphic interface,
+=term=, (no colons) for all term specs:
 # The name of the polymorphic
 # interface and also of all =defmethods= that
 # implement the interface is =term=, contrast to
@@ -634,7 +644,7 @@ They don't need to be the same. They could have different names.
 
 If applying =::term= to a Clojure hash-map produces
 =::intent=, the following spec, which specifies all
-intents, will be invoked. It must ignore its
+intents, will be invoked. It ignores its
 argument, =_=:
 
 \vskip 0.26cm
@@ -644,10 +654,8 @@ argument, =_=:
 #+end_src
 
 This spec states that an /intent/ is a Clojure
-hash-map with at least a =::term= keyword and an
-=::intent-enum= keyword. The =::intent-enum=
-sub-spec is recursively checked, as one can see in
-Section [[examples-of-intent]] below.
+hash-map with a =::term= keyword and an
+=::intent-enum= keyword.
 
 *** \colorbf{red}{The Multi-Spec Itself: ::asr-term}
 
@@ -689,6 +697,7 @@ Here is an invalid sample:
 #+RESULTS:
 : false
 
+\newpage
 Generate a few valid samples:
 
 \vskip 0.26cm
@@ -742,7 +751,8 @@ Section [[how-to-use-specs]]:
         intent_)))
 #+end_src
 
-Entities have shorter expressions:
+\newpage
+Entities have shorter expression with the sugar:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -762,6 +772,43 @@ Entities have shorter expressions:
 
 All our specs are like that: a long-form hash-map and a short-form
 sugar function that does a conformance check.
+
+*** \colorbf{red}{Capture the Enum-Like Pattern in a Macro}
+
+All enum-likes have a /contents/ spec, a =defmethod
+term=, and a syntax-sugar function. The following
+macro pertains to all such enum-like multi-specs:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defmacro enum-like [term, heads]
+    (let [ns "masr.specs"
+          tkw (keyword ns (str term))
+          tke (keyword ns (str term "-enum"))
+          tki (keyword ns (str "invalid-" term))]
+      `(do
+         (s/def ~tke ~heads)       ;; the set
+         (defmethod term ~tkw [_#] ;; the multi-spec
+           (s/keys :req [:masr.specs/term ~tke]))
+         (defn ~term [it#]        ;; the syntax
+           (let [st# (s/conform
+                      :masr.specs/asr-term
+                      {:masr.specs/term ~tkw
+                       ~tke it#})]
+             (if (s/invalid? st#) ~tki, st#))))))
+#+end_src
+
+Use the macro like this:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (enum-like
+   intent
+   #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+  (enum-like
+   storage-type
+   #{'Default, 'Save, 'Parameter, 'Allocatable})
+#+end_src
 
 ** unit
 ** symbol
