@@ -5,8 +5,13 @@
             [clojure.test.check.generators :as tgen]
             [masr.logic :refer        [iff implies]]
             [masr.utils :refer        [plnecho    ]]
+            [hyperfiddle.rcf :refer   [tests tap %]]
             #_[clojure.zip                   :as z   ]
             ))
+
+
+;; lightweight, load-time testing:
+(hyperfiddle.rcf/enable!)
 
 
 ;; Unmap "Integer" so I can use that symbol in
@@ -89,49 +94,29 @@
 (s/def ::float float?)
 (s/def ::bool  boolean?)
 
-;; biggest
-#_
-(int? 9223372036854775807)
-;; => true
+;; See the REPL for test results:
 
-;; same
-#_
-(int? 0x7FFFFFFFFFFFFFFF)
-;; => true
+(def biggest-int 9223372036854775807)
+(def biggest-hex 0x7fffffffffffffff)
+(def too-big-int 9223372036854775808)
+(def too-big-hex 0x8000000000000000)
+(def not-minus-1 0xFFFFFFFFFFFFFFFF)
 
-;; Can't do obvious negatives:
-#_
-(try (+ 1 0x7FFFFFFFFFFFFFFF)
-     (catch java.lang.ArithmeticException e (.getMessage e)))
-;; => "long overflow"
+(tests ;; ignored in prod
+ (int? biggest-int)                   := true
+ biggest-hex                          := biggest-int
+ (try (inc biggest-hex)
+      (catch java.lang.ArithmeticException
+          e (.getMessage e)))         := "long overflow"
+ (int? too-big-int)                   := false
+ (int? too-big-hex)                   := false
+ (dec  too-big-hex)                   := biggest-int
+ ;; Too late! No way back!
+ (int? (dec too-big-hex))             := false
+ ;; corner case TODO
+ (= -1 (dec not-minus-1))             := false
+ (= (java.lang.Long. -1) not-minus-1) := false )
 
-;; too big
-#_
-(int? 9223372036854775808)
-;; => false
-
-;; same
-#_
-(int? 0x8000000000000000)
-;; => false
-
-;; Too late! No way back!
-#_
-(= 0x7FFFFFFFFFFFFFFF (- 0x8000000000000000 1))
-;; => true
-
-#_
-(int? (- 0x8000000000000000 1))
-;; => false
-
-;; corner case: TODO
-#_
-(= -1 0xFFFFFFFFFFFFFFFF)
-;; => false
-
-#_
-(= (java.lang.Long. -1) 0xFFFFFFFFFFFFFFFF)
-;; => false
 
 ;;  _    _      _     _  ___
 ;; | |__(_)__ _(_)_ _| ||__ \
@@ -147,13 +132,9 @@
   [n]
   (instance? clojure.lang.BigInt n))
 
-#_
-(bigint? 0x8000000000000000)
-;; => true
-
-#_
-(bigint? 0xFFFFFFFFFFFFFFFF)
-;; => true
+(tests
+ (bigint? too-big-hex) := true
+ (bigint? not-minus-1) := true)
 
 
 ;;  _ _   _    _                _
@@ -189,9 +170,18 @@
     ;; size-bounded-bignat is not public, else I would call it
     (fn [] tgen/size-bounded-bigint)))
 
+(tests
+ (s/valid? ::bignat not-minus-1) := true
+ (s/valid? ::bignat too-big-hex) := true
+ (s/valid? ::bignat biggest-hex) := false)
+
 #_
 (->> ::bignat s/exercise (map second))
 ;; => (7 13 63 98225932 4572 28 31914670493 80 252 256185)
+
+#_
+(gen/sample (s/gen ::bignat) 5)
+;; => (0 17 0 225 951132862023730457)
 
 
 ;;  _ _             _
@@ -199,29 +189,28 @@
 ;;  _ _  | ' \/ _` |  _|
 ;; (_|_) |_||_\__,_|\__|
 
+;; Recently refactored to exclude bigints for
+;; convenience of s/conform in later specs.
+
+;; Allowing bigints causes problems with s/conform
+;; (gotta map second over s/conforms with an s/or,
+;; and that mapping pollutes syntactic sugar and
+;; just doesn't work with gen/generate).
+
+;; (s/def ::nat (s/or :nat-int  nat-int?,
+;;                    :bignat  ::bignat))
+
 
 ;; -+-+-+-+-+-
 ;;  s p e c s
 ;; -+-+-+-+-+-
 
 
-;; Allowing bigints causes problems with s/conform
-;; (gotta map second over it, and that mapping
-;; pollutes things).
-
-;; (s/def ::nat (s/or :nat-int  nat-int?,
-;;                    :bignat  ::bignat))
-
-
 (s/def ::nat nat-int?)
 
-#_
-(nat-int? 9223372036854775807)
-;; => true
-
-#_
-(nat-int? 0x8000000000000000)
-;; => false
+(tests
+ (nat-int? biggest-int) := true
+ (nat-int? too-big-hex) := false)
 
 
 ;; -+-+-+-+-+-+-
@@ -235,26 +224,20 @@
       ::invalid-nat
       cit)))
 
+(tests
+ (s/valid? ::nat 42)          := true
+ (s/valid? ::nat -42)         := false
+ (s/valid? ::nat 0)           := true
+ (s/valid? ::nat too-big-hex) := false
+ (s/valid? ::nat biggest-hex) := true)
 
 #_
 (s/exercise ::nat 5)
 ;; => ([1 1] [0 0] [0 0] [0 0] [4 4])
 
 #_
-(gen/sample (s/gen ::bignat) 5)
-;; => (0 17 0 225 951132862023730457)
-
-#_
 (gen/sample (s/gen ::nat) 5)
 ;; => (1 0 240306 4284 0)
-
-#_
-(s/valid? ::nat 42)
-;; => true
-
-#_
-(s/valid? ::nat 951132862023730457951132862023730457)
-;; => false
 
 
 ;; ================================================================
@@ -273,7 +256,7 @@
 ;; An asr-term is a map containing a ::term keyword,
 ;; i.e., :masr.specs/term, or ::asr/term if
 ;; masr.specs is aliased to asr, as in
-;; (:use [masr.specs :as asr]).
+;; (:use [masr.specs :as asr]) in core_tests.clj.
 
 
 ;; like ::intent, ::symbol, ::expr, ...
@@ -324,16 +307,14 @@
       identifier?
       (fn [] identifier-generator))))  ;; fn wrapping a macro
 
+(tests
+ (s/valid? :masr.specs/identifier 'foobar) := true
+ (s/valid? :masr.specs/identifier '1234)   := false)
 
 #_
 (gen/sample (s/gen :masr.specs/identifier))
 ;; => (e c Q G Z2qP fXzg1 sRx2J6 YIhKlV k6 f7k1Xl4)
 ;; => (k hM LV QWC qW0X RGk3u W Kg6X Q2YvFO621 ODUt9)
-
-
-#_
-(s/valid? :masr.specs/identifier 'foobar)
-;; => true
 
 
 ;; -+-+-+-+-+-+-
@@ -347,8 +328,8 @@
       ::invalid-identifier
       csym)))
 
-
-(identifier 123)
+(tests
+ (identifier 123) := ::invalid-identifier)
 
 
 ;;  _    _         _   _  __ _
@@ -380,10 +361,8 @@
              :max-count MAX-NUMBER-OF-IDENTIFIERS,
              :into #{}))
 
-#_
-(gen/sample (s/gen ::identifier-set) 2)
-;; => (#{U p lu qr R F V0 g2 b8 Od T4 YQ d}
-;;     #{H t x p u q M v o R A W n m P J T k z E})
+(tests
+ (every? set? (gen/sample (s/gen ::identifier-set))) := true)
 
 
 (defn identifier-set
@@ -398,6 +377,19 @@
         ::invalid-identifier-set
         idents-conf))))
 
+(tests
+ (let [x (identifier-set ['a 'a])]
+   (s/valid? ::identifier-set x) := true
+   (set?  x)                     := true
+   (count x)                     := 1)
+ (let [x (identifier-set [])]
+   (s/valid? ::identifier-set x) := true
+   (set?  x)                     := true
+   (count x)                     := 0)
+ (let [x (identifier-set ['a '1])]
+   (s/valid? ::identifier-set x) := false
+   x                             := ::invalid-identifier-set))
+
 
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 ;;  i d e n t i f i e r - l i s t
@@ -410,21 +402,8 @@
              :max-count MAX-NUMBER-OF-IDENTIFIERS,
              :into []))
 
-#_
-(s/valid? ::identifier-list [])
-;; => true
-
-#_
-(s/valid? ::identifier-list ['__foo_bar])
-;; => true
-
-#_
-(gen/sample (s/gen ::identifier-list) 5)
-;; => ([]
-;;     [b HM F2c iB c Mf N h4V Wu sK cK dmf N7E j yl e2]
-;;     [qN1p Nk O5]
-;;     [li O0 y Hg vx Q8Zf5 X09AY t6N Emi0]
-;;     [bR V]
+(tests
+ (every? vector? (gen/sample (s/gen ::identifier-list))) := true)
 
 
 (defn identifier-list
@@ -440,6 +419,19 @@
       (if (s/invalid? idents-conf)
         ::invalid-identifier-list
         idents-conf))))
+
+(tests
+ (let [x (identifier-list ['a 'a])]
+   (s/valid? ::identifier-list x) := true
+   (vector? x)                    := true
+   (count   x)                    := 2)
+ (let [x (identifier-list [])]
+   (s/valid? ::identifier-list x) := true
+   (vector? x)                    := true
+   (count   x)                    := 0)
+ (let [x (identifier-list ['a '1])]
+   (s/valid? ::identifier-list x) := false
+   x                              := ::invalid-identifier-list))
 
 
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
@@ -471,6 +463,22 @@
       (if (s/invalid? idents-conf)
         ::invalid-identifier-suit
         idents-conf))))
+
+(tests
+ (let [x (identifier-suit ['a 'a])]
+   (s/valid? ::identifier-suit x) := false
+   (vector? x)                    := false)
+ (let [x (identifier-suit ['a 'b])]
+   (s/valid? ::identifier-suit x) := true
+   (vector? x)                    := true
+   (count   x)                    := 2)
+ (let [x (identifier-suit [])]
+   (s/valid? ::identifier-suit x) := true
+   (vector? x)                    := true
+   (count   x)                    := 0)
+ (let [x (identifier-suit ['a '1])]
+   (s/valid? ::identifier-suit x) := false
+   x                              := ::invalid-identifier-suit))
 
 
 ;;     _ _                   _
@@ -522,14 +530,17 @@
          ::dimension-content
          (::dimension-content conf)}))))
 
-#_
-(= (s/conform ::asr-term {::term ::dimension, ::dimension-content '(1 60)})
-   (dimension '(1 60)))
-;; => true
-
-#_
-(s/valid? ::asr-term (dimension '(1 60)))
-;; => true
+(tests
+ (s/conform ::asr-term
+            {::term  ::dimension,
+             ::dimension-content '(1 60)}) :=
+ (dimension '(1 60))
+ (s/valid? ::asr-term (dimension  60))     := false
+ (s/valid? ::asr-term (dimension [60]))    := true
+ (s/valid? ::asr-term (dimension [0]))     := true
+ (s/valid? ::asr-term (dimension []))      := true
+ (s/valid? ::asr-term (dimension '(1 60))) := true
+ (s/valid? ::asr-term (dimension '()))     := true)
 
 
 ;;     _ _                   _
@@ -553,9 +564,16 @@
              :max-count MAX-NUMBER-OF-DIMENSIONS,
              :into []))
 
-#_
-(s/valid? ::dimensions [(dimension '(1 60)) (dimension '())])
-;; => true
+(tests
+ (s/valid? ::dimensions
+           [(dimension '(1 60)) (dimension '())])  := true
+ (s/conform ::dimensions
+            [(dimension '(1 60)) (dimension '())]) :=
+ [#:masr.specs{:term :masr.specs/dimension,
+               :dimension-content [1 60]}
+  #:masr.specs{:term :masr.specs/dimension,
+               :dimension-content ()}])
+
 
 ;; TODO
 #_
@@ -588,13 +606,6 @@
 ;;  s y n t a x
 ;; -+-+-+-+-+-+-
 
-#_
-(s/conform ::dimensions [(dimension '(1 60)) (dimension '())])
-;; => [#:masr.specs{:term :masr.specs/dimension,
-;;                  :dimension-content (1 60)}
-;;     #:masr.specs{:term :masr.specs/dimension,
-;;                  :dimension-content ()}]
-
 
 ;; -+-+-+-+-+-+-
 ;;  s y n t a x
@@ -616,12 +627,12 @@
                          dims-conf)]
           (map dimension dims-cont))))))
 
-#_
-(dimensions [[6 60] []])
-;; => (#:masr.specs{:term :masr.specs/dimension,
-;;                  :dimension-content (6 60)}
-;;     #:masr.specs{:term :masr.specs/dimension,
-;;                  :dimension-content ()})
+(tests
+ (dimensions [[6 60] []]) :=
+ [#:masr.specs{:term :masr.specs/dimension,
+               :dimension-content [6 60]}
+  #:masr.specs{:term :masr.specs/dimension,
+               :dimension-content ()}])
 
 
 ;;  _     _           _
@@ -637,46 +648,19 @@
 ;; These enum values are also called "heads."
 (s/def ::intent-enum #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 
-#_
-(s/valid? ::intent-enum 'Local)
-;; => true
-
-#_
-(s/valid? ::intent-enum 'fubar)
-;; => false
-
-#_
-(s/conform ::intent-enum 'Local)
-;; => Local
-
-#_
-(s/conform ::intent-enum 'fubar)
-;; => :clojure.spec.alpha/invalid
-
-#_
-(gen/sample (s/gen ::intent-enum) 5)
-;; => (Unspecified Unspecified Out Unspecified Local)
-
-#_
-(s/exercise ::intent-enum 5)
-;; => ([Out Out]
-;;     [ReturnVar ReturnVar]
-;;     [In In]
-;;     [Local Local]
-;;     [ReturnVar ReturnVar])
-
-#_
-(map second (s/exercise ::intent-enum 5))
-;; => (In ReturnVar Out In ReturnVar)
+(tests
+ (s/valid?  ::intent-enum 'Local) := true
+ (s/valid?  ::intent-enum 'fubar) := false
+ (s/conform ::intent-enum 'Local) := 'Local)
 
 
-;; {::term ::intent, ::intent-enum 'Local}
 (defmethod term ::intent [_]
   (s/keys :req [::term ::intent-enum]))
 
-#_
-(s/valid? ::asr-term {::term ::intent, ::intent-enum 'Local})
-;; => true
+(tests
+ (s/valid? ::asr-term
+           {::term ::intent,
+            ::intent-enum 'Local}) := true)
 
 
 ;; An instance written as {::term ::intent, ::intent-enum 'Local}
@@ -692,13 +676,11 @@
       ::invalid-intent
       intent_)))
 
-#_
-(intent 'Local)
-;; => #:masr.specs{:term :masr.specs/intent, :intent-enum Local}
-
-#_
-(intent 42)
-;; => :masr.specs/invalid-intent
+(tests
+ (intent 'Local) :=
+ #:masr.specs{:term :masr.specs/intent,
+              :intent-enum 'Local}
+ (intent 42) := :masr.specs/invalid-intent)
 
 
 ;;     _                             _
@@ -778,11 +760,11 @@
       ::invalid-abi
       abi_)))
 
-#_
-(s/valid? ::asr-term
-          {::term      ::abi
-           ::abi-enum 'Source
-           ::abi-external false})
+(tests
+ (s/valid? ::asr-term
+           {::term      ::abi
+            ::abi-enum 'Source
+            ::abi-external false}) := true)
 ;; => true
 
 
