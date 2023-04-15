@@ -6,13 +6,11 @@
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
             [masr.core :as masr]
+            [masr.utils :refer [warnings-banner]]
             [clojure.set :as set]))
 
 
-(println "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-(println "Note from the Authors:")
-(println "The warnings about Integer are expected and not maskable!")
-(println "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+(warnings-banner)
 
 
 ;;                 _
@@ -491,50 +489,67 @@
   (s/valid? ::asr/asr-ttype-head term))
 
 
+(defn vt? [term]
+  (s/valid? ::asr/asr-term term))
+
+
 (defn cfh [head]
   (s/conform ::asr/asr-ttype-head head))
 
 
 (deftest ttype-test
-  (is (s/valid? ::asr/asr-term
-                {::asr/term ::asr/ttype,
-                 ::asr/asr-ttype-head
-                 {::asr/ttype-head ::asr/Integer,
-                  ::asr/bytes-kind 4
-                  ::asr/dimensions []}}))
-  (is (s/valid? ::asr/asr-term
-                {::asr/term ::asr/ttype,
-                 ::asr/asr-ttype-head
-                 {::asr/ttype-head ::asr/Real,
-                  ::asr/bytes-kind 4
-                  ::asr/dimensions []}}))
-  ;; (is (s/valid? ::asr/asr-term
-  ;;               (ttype (Integer :kind 2,
-  ;;                               :dimensions (dimensions [[6, 660]])))))
+  (testing "full-sugar and light-sugar)"
+    (is (vt? (ttype (Integer))))
+    (is (vt? (ttype (Integer 4))))
+    (is (vt? (ttype (Integer 4 []))))
+    (is (vt? (ttype (Integer 4 [[6 60] [42]]))))
+    (is (vt? (ttype (Integer))))
+    (is (vt? (ttype (Integer 8))))
+    (is (vt? (ttype (Integer 8 []))))
+    (is (vt? (ttype (Integer 8 [[6 60] [82]]))))
+    (is (vt? (ttype (Logical))))
+    (is (vt? (ttype (Logical 4))))
+    (is (vt? (ttype (Logical 4 []))))
+    (is (vt? (ttype (Logical 4 [[6 60] [42]]))))
+    (is (vt? (ttype (Integer- {:dimensions [], :kind 4}))))
+    (is (vt? (ttype (Integer- {:kind 4, :dimensions []}))))
+    (testing "non-conformance"
+      (is (not (vt? (ttype (Logical 4 ['fubar])))))
+      (is (not (vt? (ttype (Logical 8)))))
+      (is (not (vt? (ttype (Logical 0 [])))))
+      (is (not (vt? (ttype (Logical 42 [[6 60] [42]])))))))
+  (testing "full-form"
+    (is (vt?
+        {::asr/term ::asr/ttype,
+         ::asr/asr-ttype-head
+         {::asr/ttype-head   ::asr/Integer,
+          ::asr/integer-kind 4
+          ::asr/dimensions   []}}))
+    (is (vt?
+         {::asr/term ::asr/ttype,
+          ::asr/asr-ttype-head
+          {::asr/ttype-head   ::asr/Real,
+           ::asr/real-kind    4
+           ::asr/dimensions   []}})))
   (testing "syntax sugar"
-    (is (vh? (Integer :kind 1, :dimensions [])))
-    (is (vh? (Integer :kind 2, :dimensions [])))
-    (is (vh? (Integer :kind 4, :dimensions [])))
-    (is (vh? (Integer :kind 8, :dimensions [])))
+    (is (vh? (Integer 1 [])))
+    (is (vh? (Integer 2 [])))
+    (is (vh? (Integer 4 [])))
+    (is (vh? (Integer 8 [])))
     (is (vh? (Integer)))
-    (is (vh? (Real :kind 1, :dimensions [])))
-    (is (vh? (Real :kind 2, :dimensions [])))
-    (is (vh? (Real :kind 4, :dimensions [])))
-    (is (vh? (Real :kind 8, :dimensions [])))
+    (is (vh? (Real 4 [])))
+    (is (vh? (Real 8 [])))
     (is (vh? (Real))))
   (testing "non-conformance"
-    (is (not (vh? (Integer :kind 42))))
-    (is (not (vh? (Integer :dimensions 'fubar)))))
+    (is (not (vh? (Real 1 []))))
+    (is (not (vh? (Real 2 []))))
+    (is (not (vh? (Integer 42))))
+    (is (not (vh? (Integer 'fubar)))))
   (testing "defaults"
     (is (= (cfh (Integer))
-           (Integer :kind 4, :dimensions [])))
-    (is (= (cfh (Integer :kind 4))
-           (Integer :kind 4, :dimensions [])))
-    (is (= (cfh (Integer :dimensions []))
-           (Integer :kind 4, :dimensions []))))
-  (testing "order-independence"
-    (is (= (cfh (Integer :dimensions [], :kind 4))
-           (Integer :kind 4, :dimensions []))))
-  (testing "pitfalls -- sugar is too permissive"
-    (is (= (cfh (Integer 42 ['gobble-de-gook]))
-           (Integer :kind 4, :dimensions [])))))
+           (Integer 4 [])))
+    (is (= (cfh (Integer 4))
+           (Integer 4 []))))
+  (testing "order-independence of light sugar"
+    (is (= (cfh (Integer- {:dimensions [], :kind 4}))
+           (Integer- {:kind 4, :dimensions []})))))

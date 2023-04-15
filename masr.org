@@ -1007,6 +1007,10 @@ archetype for all function-like heads, just as
     (s/keys :req [::term ::asr-ttype-head]))
 #+end_src
 
+*** Full Form
+
+One may always write out ttype specs in full:
+
 \vskip 0.26cm
 #+begin_src clojure :eval never
   (s/valid? ::asr-term
@@ -1014,78 +1018,32 @@ archetype for all function-like heads, just as
              ::asr-ttype-head
              {::ttype-head ::Integer,
               ::bytes-kind 4
-              ::dimensions []}})
+              ::dimensions [[6 60] [82]]}})
 #+end_src
 
-*** TODO Sugar
+*** Sugar
 
-The sugar for ttypes is too permissive. On balance,
-we accept this fact. See
-[[https://github.com/rebcabin/masr/issues/3][Issue 3 on MASR's GitHub repo]] for discussion. This
-is subject to change.
-The following tests illustrate.
-
-The fully-sugared specs for =Integer=, =Real=,
-=Complex=, and =Logical= take two keyword arguments,
-=:kind= and =dimensions==:
+Sugar for ttypes comes in two varieties, /light
+sugar/ and /full sugar/.
+Light sugar require specs with keywords, as in:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  (is (s/valid? ::asr/asr-ttype-head
-                (Integer :kind 1, :dimensions [])))
-  (is (s/valid? ::asr/asr-ttype-head
-                (Integer :kind 4, :dimensions [])))
-  (is (s/valid? ::asr/asr-ttype-head
-                (Real :kind 8, :dimensions [])))
-  (is (s/valid? ::asr/asr-ttype-head (Real)))
+  (ttype (Integer- {:dimensions [], :kind 4}))
+  (ttype (Integer- {:kind 4, :dimensions []}))
 #+end_src
 
-Incorrect values for the keyword arguments are invalid:
+Full sugar uses positional arguments, as in
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  (is (not (s/valid? ::asr/asr-ttype-head
-                     (Integer :kind 42))))
-  (is (not (s/valid? ::asr/asr-ttype-head
-                     (Integer :dimensions 'fubar))))
+  (ttype (Integer))
+  (ttype (Integer 4))
+  (ttype (Integer 2 []))
+  (ttype (Integer 8 [[6 60] [42]]))
 #+end_src
 
-\newpage
-The keyword arguments default to  =:kind 4= and =dimensions []=:
-
-\vskip 0.26cm
-#+begin_src clojure :eval never
-  (is (= (s/conform ::asr/asr-ttype-head
-                    (Integer))
-         (Integer :kind 4, :dimensions [])))
-  (is (= (s/conform ::asr/asr-ttype-head
-                    (Integer :kind 4))
-         (Integer :kind 4, :dimensions [])))
-  (is (= (s/conform ::asr/asr-ttype-head
-                    (Integer :dimensions []))
-         (Integer :kind 4, :dimensions [])))
-#+end_src
-
-The order of the keyword arguments does not matter:
-
-\vskip 0.26cm
-#+begin_src clojure :eval never
-  (is (= (s/conform ::asr/asr-ttype-head
-                    (Integer :dimensions [], :kind 4))
-         (Integer :kind 4, :dimensions [])))
-#+end_src
-
-Missing keywords are a **PITFALL**. The keyword
-values default to nil, which are replaced with the
-defaults =:kind 4= and =dimensions []=.
-
-\vskip 0.26cm
-#+begin_src clojure :eval never
-  (testing "pitfalls -- sugar is too permissive"
-    (is (= (s/conform ::asr/asr-ttype-head
-                      (Integer 42 ['gobble-de-gook]))
-           (Integer :kind 4, :dimensions []))))
-#+end_src
+See the tests for many examples.
 
 ** restriction_arg
 ** binop

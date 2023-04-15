@@ -1,12 +1,14 @@
 (ns masr.specs
-  (:require [clojure.spec.alpha            :as s   ]
-            [clojure.set                   :as set ]
-            [clojure.spec.gen.alpha        :as gen ]
-            [clojure.test.check.generators :as tgen]
-            [masr.logic :refer        [iff implies]]
-            [masr.utils :refer        [plnecho    ]]
-            [hyperfiddle.rcf :refer   [tests tap %]]
-            #_[clojure.zip                   :as z   ]
+  (:require [clojure.spec.alpha            :as      s            ]
+            [clojure.set                   :as      set          ]
+            [clojure.spec.gen.alpha        :as      gen          ]
+            [clojure.test.check.generators :as      tgen         ]
+            [clojure.string                :as      str          ]
+            [masr.logic                    :refer   [iff implies ]]
+            [masr.utils                    :refer   [plnecho     ]]
+            [hyperfiddle.rcf               :refer   [tests tap % ]]
+            [blaster.clj-fstring           :refer   [f-str]]
+            #_[clojure.zip                 :as z                 ]
             ))
 
 
@@ -14,12 +16,14 @@
 (hyperfiddle.rcf/enable!)
 
 
-;; Unmap "Integer" so I can use that symbol in
-;; ttypes. Access the original
-;; via "java.lang.Integer." Lein test and lein run
-;; produce unmaskable warnings.
+;; Unmap "Integer" and "Character" so I can use
+;; those symbols in ttypes. Access the originals
+;; via "java.lang.Integer" "java.lang.Character."
+;; Lein test and lein run produce unmaskable
+;; warnings.
 
 (ns-unmap *ns* 'Integer)
+(ns-unmap *ns* 'Character)
 
 
 ;; ASDL tuples like `(1 2)` are Clojure lists.
@@ -337,8 +341,9 @@
 ;; | / _` / -_) ' \  _| |  _| / -_) '_(_-<
 ;; |_\__,_\___|_||_\__|_|_| |_\___|_| /__/
 
-;; for productions like identifier*;
 ;; not an ASDL term
+
+;; for productions like identifier*;
 ;;
 ;; there are three kinds https://github.com/rebcabin/masr/issues/1
 ;; identifier-set  : unordered, no duplicates
@@ -517,8 +522,17 @@
 
 ;; TODO gen/sample for dimension
 
+#_
+(gen/sample (s/gen ::dimension-content) 5)
+;; => ((1) (0 1) (0) (0 0) ())
 
-(defn dimension [it]  ;; candidate contents
+
+;; -+-+-+-+-+-+-
+;;  s y n t a x
+;; -+-+-+-+-+-+-
+
+
+(defn dimension [it] ;; candidate contents
   (if (or (not (coll? it)) (set? it) (map? it))
     ::invalid-dimension
     (let [conf (s/conform ::asr-term
@@ -526,7 +540,7 @@
                            ::dimension-content it})]
       (if (s/invalid? conf)
         ::invalid-dimension
-        {::term ::dimension
+        {::term ::dimension,
          ::dimension-content
          (::dimension-content conf)}))))
 
@@ -632,7 +646,11 @@
  [#:masr.specs{:term :masr.specs/dimension,
                :dimension-content [6 60]}
   #:masr.specs{:term :masr.specs/dimension,
-               :dimension-content ()}])
+               :dimension-content ()}]
+ (dimensions []) := ())
+
+
+;; ================================================================
 
 
 ;;                        _ _ _
@@ -650,7 +668,7 @@
        (s/def ~tke ~heads)       ;; the set
        (defmethod term ~tkw [_#] ;; the multi-spec
          (s/keys :req [:masr.specs/term ~tke]))
-       (defn ~term [it#]        ;; the syntax
+       (defn ~term [it#]         ;; the syntax
          (let [st# (s/conform
                     :masr.specs/asr-term
                     {:masr.specs/term ~tkw
@@ -760,7 +778,6 @@
            {::term      ::abi
             ::abi-enum 'Source
             ::abi-external false}) := true)
-;; => true
 
 
 ;;  _____ _
@@ -810,31 +827,62 @@
 ;;; a support spec:
 
 
-(s/def ::bytes-kind #{1 2 4 8})
+(s/def ::integer-kind   #{1 2 4 8})
+(s/def ::real-kind      #{4 8})
+(s/def ::complex-kind   #{4 8})
+(s/def ::logical-kind   #{1 2 4})
+(s/def ::character-kind #{1})
+
+(tests (s/valid? ::integer-kind 42) := false)
 
 
 ;;; Nested multi-spec:
 
 
-;; Stumble-on the naming convention: multi-specs begin with
+;; All multi-specs begin with
 ;; ::asr-<the_rest_of_the_name>, as in ::asr-term and
 ;; ::asr-ttype-head.
 
 
 (do (defmulti ttype-head ::ttype-head)
+    ;; name of this multi-spec
+    ;; \                     /
+    ;;  `---------.---------'
+    ;;            |
+    ;;      .-----^------,
+    ;;     /              \
     (s/def ::asr-ttype-head
       (s/multi-spec ttype-head ::ttype-head)))
 
 
 (defmacro def-ttype-head [it]
-  `(defmethod ttype-head ~it [_#] ;; https://clojurians.slack.com/archives/C03S1KBA2/p1681407527447379
-     (s/keys :req [::ttype-head ::bytes-kind ::dimensions])))
+  (let [ns     "masr.specs"
+        strit  (str it)
+        method (keyword ns (str/capitalize strit))
+        kind   (keyword ns (str (str/lower-case strit) "-kind"))]
+    `(defmethod ttype-head ~method [_#]
+        (s/keys :req [::ttype-head ~kind ::dimensions]))))
 
 
-(def-ttype-head ::Integer)
-(def-ttype-head ::Real)
-(def-ttype-head ::Complex)
-(def-ttype-head ::Logical)
+(def-ttype-head Integer)
+(def-ttype-head Real)
+(def-ttype-head Complex)
+(def-ttype-head Logical)
+(def-ttype-head Character)
+
+(tests
+ (s/valid? ::asr-ttype-head
+           {::type-head ::Integer
+            ::integer-kind 42
+            ::dimensions []})                         := false
+ (let [a {::ttype-head   ::Integer
+          ::integer-kind 4
+          ::dimensions   (dimensions [[6 60] [42]])}]
+   (s/conform ::asr-ttype-head a)                     := a)
+ (let [a {::ttype-head   ::Real
+          ::real-kind    8
+          ::dimensions   (dimensions [[6 60] [42]])}]
+   (s/conform ::asr-ttype-head a)                     := a))
 
 
 ;;; Now, the asr-term defmethod spec for ttype.
@@ -843,71 +891,101 @@
 (defmethod term ::ttype [_]
   (s/keys :req [::term ::asr-ttype-head]))
 
+(tests
+ (s/valid? ::asr-term
+           {::term ::ttype,
+            ::asr-ttype-head
+            {::ttype-head ::Real,
+             ::real-kind  4
+             ::dimensions []}})       := true
+ (s/valid? ::asr-term
+           {::term ::ttype,
+            ::asr-ttype-head
+            {::ttype-head ::Real,
+             ::real-kind  2
+             ::dimensions []}})       := false)
+
 
 ;; -+-+-+-+-+-
 ;;  s u g a r
 ;; -+-+-+-+-+-
 
+(defmacro def-ttype-and-head [it]
+  (let [ns  "masr.specs"
+        cap (str/capitalize (str it)) ;; like "Integer"
+        scp (symbol cap)              ;; Like Integer
+        nym (symbol (str cap "-"))    ;; like Integer-
+        tth (keyword ns cap)          ;; like ::Integer
+        kdh (keyword ns (str/lower-case (str it "-kind")))
+        ;; ... like ::integer-kind
+        ivh (keyword ns (str/lower-case (str "invalid-" it)))
+        ;; ... like ::invalid-integer
+        dfk 4  ;; default kind
+        dfd [] ;; default dimensions
+        _   (case scp
+              Integer true
+              Real    true
+              Complex true
+              Logical true
+              (throw (java.lang.IllegalArgumentException.
+                      (f-str "Can't define sugar for {cap}."))))]
+    `(do
+       ;; Define the light-sugar fns Integer-, Real-,
+       ;; Complex- Logical-, Character- that require a full
+       ;; map of arguments, like
+       ;; (Integer- {:kind 4 :dimensions []}
+       (defn ~nym ;; like Integer-
+         [{kind# :kind, dimensions# :dimensions}]
+         (let [cnf# (s/conform
+                     ::asr-ttype-head
+                     {::ttype-head ~tth,
+                      ~kdh         kind#,
+                      ::dimensions (dimensions
+                                    dimensions#)})]
+           (if (s/invalid? cnf#) ~ivh, cnf#)))
+       ;; Define the full-sugar fns Integer, Real,
+       ;; Complex Logical, Character that require a
+       ;; full map of arguments, like
+       ;; (Integer 4 []), (Integer 4), (Integer)
+       (defn ~scp
+         ([kindx# dimsx#] (~nym {:kind kindx# :dimensions dimsx#}))
+         ([kindy#]        (~nym {:kind kindy# :dimensions ~dfd}))
+         ;; dfk = 4  is the default kinds for
+         ;;          Integer, Real, Complex, Logical
+         ;; dfd = [] is the default dimensions
+         ([]              (~nym {:kind ~dfk   :dimensions ~dfd})))
+       )))
 
-;;; Too difficult to make the following into a macro
-;;; because of namespace issues, but don't like copy-
-;;; paste code like this.
+(def-ttype-and-head Integer)
+(def-ttype-and-head Real)
+(def-ttype-and-head Complex)
+(def-ttype-and-head Logical)
+;; The following throws desired uncatchable error before run-time:
+;; (def-ttype-and-head Character)
 
+;; Define the full-sugar fns
+;; Integer, Real, Complex, Logical, Character
 
-(defn Integer
-  [& {:keys [kind, dimensions],
-      :or {kind 4, dimensions []}}] ;; defaults
-  (let [Integer_ (s/conform
-                  ::asr-ttype-head
-                  {::ttype-head ::Integer
-                   ::bytes-kind kind,
-                   ::dimensions dimensions})]
-    (if (s/invalid? Integer_)
-      ::invalid-Integer
-      Integer_)))
-
-
-(defn Real
-  [& {:keys [kind, dimensions],
-      :or {kind 4, dimensions []}}] ;; defaults
-  (let [Real_ (s/conform
-                  ::asr-ttype-head
-                  {::ttype-head ::Real
-                   ::bytes-kind kind,
-                   ::dimensions dimensions})]
-    (if (s/invalid? Real_)
-      ::invalid-Real
-      Real_)))
-
-
-(defn Complex
-  [& {:keys [kind, dimensions],
-      :or {kind 4, dimensions []}}] ;; defaults
-  (let [Complex_ (s/conform
-               ::asr-ttype-head
-               {::ttype-head ::Complex
-                ::bytes-kind kind,
-                ::dimensions dimensions})]
-    (if (s/invalid? Complex_)
-      ::invalid-Complex
-      Complex_)))
-
-
-(defn Logical
-  [& {:keys [kind, dimensions],
-      :or {kind 4, dimensions []}}] ;; defaults
-  (let [Logical_ (s/conform
-               ::asr-ttype-head
-               {::ttype-head ::Logical
-                ::bytes-kind kind,
-                ::dimensions dimensions})]
-    (if (s/invalid? Logical_)
-      ::invalid-Logical
-      Logical_)))
-
+(tests
+ (s/valid? ::asr-ttype-head (Integer 4))    := true
+ (s/valid? ::asr-ttype-head (Integer 42))   := false
+ (s/valid? ::asr-ttype-head (Integer))      := true
+ (s/valid? ::asr-ttype-head (Integer 4 [])) := true
+ )
 
 (defn ttype [head]
-  {::term ::ttype, ::head head})
+  {::term ::ttype,
+   ::asr-ttype-head head})
+
+(tests
+ (s/valid? ::asr-term (ttype (Integer 4)))                := true
+ (s/valid? ::asr-term (ttype (Integer 4 [])))             := true
+ (s/valid? ::asr-term (ttype (Integer 4  [[6 60] [42]]))) := true
+ (s/valid? ::asr-term (ttype (Integer 4 ["foo"])))        := false
+ (s/valid? ::asr-term (ttype (Integer 42 [])))            := false
+ (s/valid? ::asr-term (ttype (Real  1 [])))               := false
+ (s/valid? ::asr-term (ttype (Logical 8 [])))             := false
+ )
 
 
 ;; __   __        _      _    _
