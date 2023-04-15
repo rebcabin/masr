@@ -827,7 +827,7 @@
 ;;; a support spec:
 
 
-(s/def ::integer-kind   #{1 2 4 8})
+(s/def ::integer-kind   #{1 2 4 8 16})
 (s/def ::real-kind      #{4 8})
 (s/def ::complex-kind   #{4 8})
 (s/def ::logical-kind   #{1 2 4})
