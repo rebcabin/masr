@@ -988,8 +988,8 @@ the destructuring technique:
 ** ttype
 <<ttype>>
 
-Ttype [\emph{sic}] has a nested multi-spec. This is an
-archetype for all function-like heads, just as
+Ttype [\emph{sic}] has a nested multi-spec. Ttype is
+an archetype for all function-like heads, just as
 /intent/ is an archetype for all enum-like heads.
 
 \vskip 0.26cm
@@ -1021,11 +1021,11 @@ One may always write out ttype specs in full:
               ::dimensions [[6 60] [82]]}})
 #+end_src
 
-*** Sugar
+*** Sugar for Integer, Real, Complex, Logical
 
 Sugar for ttypes comes in two varieties, /light
-sugar/ and /full sugar/.
-Light sugar require specs with keywords, as in:
+sugar/ and /full sugar/. Light sugar require specs
+with keywords, as in:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1044,6 +1044,8 @@ Full sugar uses positional arguments, as in
 #+end_src
 
 See the tests for many examples.
+
+*** TODO Character
 
 ** restriction_arg
 ** binop

@@ -787,44 +787,23 @@
 ;;            |__/|_|
 
 
-;; kind: The `kind` member selects the kind of a given type. We currently
-;; support the following:
+;; kind: The `kind` member selects the kind of a
+;; given type. We currently support the following:
+;;
 ;; Integer kinds: 1 (i8), 2 (i16), 4 (i32), 8 (i64)
 ;; Real kinds: 4 (f32), 8 (f64)
 ;; Complex kinds: 4 (c32), 8 (c64)
 ;; Character kinds: 1 (utf8 string)
-;; Logical kinds: 1, 2, 4: (boolean represented by 1, 2, 4 bytes; the default
-;;     kind is 4, just like the default integer kind, consistent with Python
-;;     and Fortran: in Python "Booleans in Python are implemented as a subclass
-;;     of integers", in Fortran the "default logical kind has the same storage
-;;     size as the default integer"; we currently use kind=4 as default
-;;     integer, so we also use kind=4 for the default logical.)
-
-;; ttype
-;;     = Integer(int kind, dimension* dims)
-;;     | Real(int kind, dimension* dims)
-;;     | Complex(int kind, dimension* dims)
-;;     | Character(int kind, int len, expr? len_expr, dimension* dims)
-;;     | Logical(int kind, dimension* dims)
-;;     | Set(ttype type)
-;;     | List(ttype type)
-;;     | Tuple(ttype* type)
-;;     | Struct(symbol derived_type, dimension* dims)
-;;     | Enum(symbol enum_type, dimension *dims)
-;;     | Union(symbol union_type, dimension *dims)
-;;     | Class(symbol class_type, dimension* dims)
-;;     | Dict(ttype key_type, ttype value_type)
-;;     | Pointer(ttype type)
-;;     | Const(ttype type)
-;;     | CPtr()
-;;     | TypeParameter(identifier param, dimension* dims)
-;;     | FunctionType(ttype* arg_types, ttype? return_var_type,
-;;         abi abi, deftype deftype, string? bindc_name, bool elemental,
-;;         bool pure, bool module, bool inline, bool static,
-;;         ttype* type_params, symbol* restrictions, bool is_restriction)
-
-
-;;; a support spec:
+;; Logical kinds: 1, 2, 4: (boolean represented by
+;;     1, 2, 4 bytes; the default kind is 4, just
+;;     like the default integer kind, consistent
+;;     with Python and Fortran: in Python "Booleans
+;;     in Python are implemented as a subclass of
+;;     integers", in Fortran the "default logical
+;;     kind has the same storage size as the default
+;;     integer"; we currently use kind=4 as default
+;;     integer, so we also use kind=4 for the
+;;     default logical.)
 
 
 (s/def ::integer-kind   #{1 2 4 8 16})
@@ -836,7 +815,25 @@
 (tests (s/valid? ::integer-kind 42) := false)
 
 
-;;; Nested multi-spec:
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  I n t e g e r ,   R e a l ,   C o m p l e x ,   L o g i c a l
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+
+;; Here are the first four ttypes, which all follow
+;; a common pattern captured in macros. There are
+;; more that don't follow that pattern.
+
+;; ttype
+;;     = Integer(int kind, dimension* dims)
+;;     | Real(int kind, dimension* dims)
+;;     | Complex(int kind, dimension* dims)
+;;     | Logical(int kind, dimension* dims)
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  N e s t e d   m u l t i - s p e c :
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
 ;; All multi-specs begin with
@@ -931,7 +928,7 @@
                       (f-str "Can't define sugar for {cap}."))))]
     `(do
        ;; Define the light-sugar fns Integer-, Real-,
-       ;; Complex- Logical-, Character- that require a full
+       ;; Complex- Logical-, that require a full
        ;; map of arguments, like
        ;; (Integer- {:kind 4 :dimensions []}
        (defn ~nym ;; like Integer-
@@ -960,8 +957,7 @@
 (def-ttype-and-head Real)
 (def-ttype-and-head Complex)
 (def-ttype-and-head Logical)
-;; The following throws desired uncatchable error before run-time:
-;; (def-ttype-and-head Character)
+
 
 ;; Define the full-sugar fns
 ;; Integer, Real, Complex, Logical, Character
@@ -986,6 +982,25 @@
  (s/valid? ::asr-term (ttype (Real  1 [])))               := false
  (s/valid? ::asr-term (ttype (Logical 8 [])))             := false
  )
+
+;; ttype
+;;     | Character(int kind, int len, expr? len_expr, dimension* dims)
+;;     | Set(ttype type)
+;;     | List(ttype type)
+;;     | Tuple(ttype* type)
+;;     | Struct(symbol derived_type, dimension* dims)
+;;     | Enum(symbol enum_type, dimension *dims)
+;;     | Union(symbol union_type, dimension *dims)
+;;     | Class(symbol class_type, dimension* dims)
+;;     | Dict(ttype key_type, ttype value_type)
+;;     | Pointer(ttype type)
+;;     | Const(ttype type)
+;;     | CPtr()
+;;     | TypeParameter(identifier param, dimension* dims)
+;;     | FunctionType(ttype* arg_types, ttype? return_var_type,
+;;         abi abi, deftype deftype, string? bindc_name, bool elemental,
+;;         bool pure, bool module, bool inline, bool static,
+;;         ttype* type_params, symbol* restrictions, bool is_restriction)
 
 
 ;; __   __        _      _    _
