@@ -93,33 +93,9 @@
 ;; not terms in the grammar:
 
 
-;; See "numbers.clj" for big-int, big-nat, and nat.
 (s/def ::int   int?)     ;; java.lang.Long
 (s/def ::float float?)
 (s/def ::bool  boolean?)
-
-;; See the REPL for test results:
-
-(def biggest-int 9223372036854775807)
-(def biggest-hex 0x7fffffffffffffff)
-(def too-big-int 9223372036854775808)
-(def too-big-hex 0x8000000000000000)
-(def not-minus-1 0xFFFFFFFFFFFFFFFF)
-
-(tests ;; ignored in prod
- (int? biggest-int)                   := true
- biggest-hex                          := biggest-int
- (try (inc biggest-hex)
-      (catch java.lang.ArithmeticException
-          e (.getMessage e)))         := "long overflow"
- (int? too-big-int)                   := false
- (int? too-big-hex)                   := false
- (dec  too-big-hex)                   := biggest-int
- ;; Too late! No way back!
- (int? (dec too-big-hex))             := false
- ;; corner case TODO
- (= -1 (dec not-minus-1))             := false
- (= (java.lang.Long. -1) not-minus-1) := false )
 
 
 ;;  _    _      _     _  ___
@@ -131,14 +107,39 @@
 ;; not a term; missing from clojure:
 
 
+;; ================================================================
+;; See
+;; https://clojurians.slack.com/archives/C03S1KBA2/p1681690965585429.
+;;
+;; gist:
+;;
+;; Without a minus sign, clojure interprets hex
+;; literals as non-negative. unchecked-long is
+;; the way to sanity.
+
+(tests (unchecked-long 0x8000000000000000)  := -9223372036854775808
+       (unchecked-long 0xFFFFFFFFFFFFFFFF)  := -1
+       (unchecked-long 0x8000000000000000)  := -0x8000000000000000
+       (unchecked-long -0xFFFFFFFFFFFFFFFF) := 1)
+
+
 (defn bigint?
   "Doesn't seem to be defined in system-supplied libraries."
   [n]
   (instance? clojure.lang.BigInt n))
 
+
+(def biggest-int 9223372036854775807)
+(def biggest-hex 0x7fffffffffffffff)
+(def too-big-int 9223372036854775808)
+(def too-big-hex 0x8000000000000000)
+(def not-minus-1 0xFFFFFFFFFFFFFFFF)
+(def minus-1-int (unchecked-long 0xFFFFFFFFFFFFFFFF))
+
 (tests
  (bigint? too-big-hex) := true
- (bigint? not-minus-1) := true)
+ (bigint? not-minus-1) := true
+ (bigint? minus-1-int) := false)
 
 
 ;;  _ _   _    _                _
@@ -175,6 +176,7 @@
     (fn [] tgen/size-bounded-bigint)))
 
 (tests
+ (s/valid? ::bignat minus-1-int) := false
  (s/valid? ::bignat not-minus-1) := true
  (s/valid? ::bignat too-big-hex) := true
  (s/valid? ::bignat biggest-hex) := false)
@@ -229,11 +231,18 @@
       cit)))
 
 (tests
- (s/valid? ::nat 42)          := true
- (s/valid? ::nat -42)         := false
- (s/valid? ::nat 0)           := true
- (s/valid? ::nat too-big-hex) := false
- (s/valid? ::nat biggest-hex) := true)
+ (s/valid? ::nat (nat 42))                    := true
+ (s/valid? ::nat (nat -42))                   := false
+ (s/valid? ::nat (nat 0))                     := true
+ (s/valid? ::nat (nat 0xFFFFFFFFFFFFFFFF))    := false
+ (s/valid? ::nat (nat -0xFFFFFFFFFFFFFFFF))   := false
+ (s/valid?
+  ::nat
+  (nat (unchecked-long 0xFFFFFFFFFFFFFFFF)))  := false
+ (s/valid?
+  ::nat
+  (nat (unchecked-long -0xFFFFFFFFFFFFFFFF))) := true
+ (s/valid? ::nat (nat 0x7FFFFFFFFFFFFFFF))    := true)
 
 #_
 (s/exercise ::nat 5)

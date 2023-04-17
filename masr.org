@@ -399,11 +399,77 @@ MASR has a Clojure spec and  syntactic sugar for each head.
 There are about 250 heads by a recent count.
 
 \newpage
+* Base Specs
+
+The specs for /atoms/ are unsurprising:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::int   int?)     ;; java.lang.Long
+  (s/def ::float float?)
+  (s/def ::bool  boolean?)
+#+end_src
+
+We restrict the spec for natural numbers to /int/
+for practical reasons:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+   (s/def ::nat nat-int?)
+   ;; sugar
+   (defn nat [it]
+     (let [cit (s/conform ::nat it)]
+       (if (s/invalid? cit)
+         ::invalid-nat
+         cit)))
+#+end_src
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+   (tests
+    (s/valid? ::nat (nat 42))                    := true
+    (s/valid? ::nat (nat -42))                   := false
+    (s/valid? ::nat (nat 0))                     := true
+    (s/valid? ::nat (nat 0xFFFFFFFFFFFFFFFF))    := false
+    (s/valid? ::nat (nat -0xFFFFFFFFFFFFFFFF))   := false
+    (s/valid?
+     ::nat
+     (nat (unchecked-long 0xFFFFFFFFFFFFFFFF)))  := false
+    (s/valid?
+     ::nat
+     (nat (unchecked-long -0xFFFFFFFFFFFFFFFF))) := true
+    (s/valid? ::nat (nat 0x7FFFFFFFFFFFFFFF))    := true)
+#+end_src
+
+** Notes
+
+A Clojure /int/ is a Java /Long/, with some peculiar
+behavior for hex literals.[fn::
+https://clojurians.slack.com/archives/C03S1KBA2/p1681690965585429]
+The gist is that hex literals for negative numbers
+in Clojure must have explicit minus signs. To access
+the underlying =java.lang.Long=, one must employ
+Clojure's =unchecked-long=.
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests (unchecked-long 0x8000000000000000)
+         := -9223372036854775808
+         (unchecked-long 0xFFFFFFFFFFFFFFFF)
+         := -1
+         (unchecked-long 0x8000000000000000)
+         := -0x8000000000000000
+         (unchecked-long -0xFFFFFFFFFFFFFFFF)
+         := 1)
+#+end_src
+
+\newpage
 * Specs
 
 The following sections
 
-- summarize the Clojure specs for all ASR terms and heads
+- summarize the Clojure specs for all ASR terms and
+  heads
 
 - pedagogically explain the architecture and
   approach taken in the Clojure code so that anyone
@@ -1056,6 +1122,9 @@ See the tests for many examples.
 ** arraystorage
 ** cast_kind
 ** dimension
+
+
+
 ** alloc_arg
 ** attribute
 ** attribute_arg
