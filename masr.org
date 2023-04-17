@@ -447,9 +447,10 @@ A Clojure /int/ is a Java /Long/, with some peculiar
 behavior for hex literals.[fn::
 https://clojurians.slack.com/archives/C03S1KBA2/p1681690965585429]
 The gist is that hex literals for negative numbers
-in Clojure must have explicit minus signs. To access
-the underlying =java.lang.Long=, one must employ
-Clojure's =unchecked-long=.
+in Clojure must have explicit minus signs, lest they
+become =clojure.lang.BigInt=, which we disallow in
+MASR. To access the underlying =java.lang.Long=, one
+must employ Clojure's =unchecked-long=.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
