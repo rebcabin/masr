@@ -305,7 +305,7 @@
     #(re-matches alphameric-re %))
 
   (defn identifier? [sy]
-    (and (symbol? sy)  ;; excludes strings, numbers, quoted numbers
+    (and (symbol? sy)  ;; exclude strings, numbers, quoted numbers
          (let [s (str sy)]
            (and (alpha? (subs s 0 1))
                 (alphameric? (subs s 1))))))
@@ -315,14 +315,15 @@
                s (gen/string-alphanumeric)]
       (symbol (str c s))))
 
-  (s/def ::identifier ;; side effects the spec registry!
+  (s/def ::identifier
     (s/with-gen
       identifier?
       (fn [] identifier-generator))))  ;; fn wrapping a macro
 
 (tests
- (s/valid? :masr.specs/identifier 'foobar) := true
- (s/valid? :masr.specs/identifier '1234)   := false)
+ (s/valid? :masr.specs/identifier 'foobar)  := true
+ (s/valid? :masr.specs/identifier '_f__547) := true
+ (s/valid? :masr.specs/identifier '1234)    := false)
 
 #_
 (gen/sample (s/gen :masr.specs/identifier))
@@ -330,9 +331,9 @@
 ;; => (k hM LV QWC qW0X RGk3u W Kg6X Q2YvFO621 ODUt9)
 
 
-;; -+-+-+-+-+-+-
-;;  s y n t a x
-;; -+-+-+-+-+-+-
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
 
 
 (defn identifier [sym]
@@ -342,7 +343,8 @@
       csym)))
 
 (tests
- (identifier 123) := ::invalid-identifier)
+ (identifier 'foo) := 'foo
+ (identifier 123)  := ::invalid-identifier)
 
 
 ;;  _    _         _   _  __ _
@@ -373,7 +375,7 @@
   (s/coll-of ::identifier
              :min-count MIN-NUMBER-OF-IDENTIFIERS,
              :max-count MAX-NUMBER-OF-IDENTIFIERS,
-             :into #{}))
+             :into #{})) ;; empty set
 
 (tests
  (every? set? (gen/sample (s/gen ::identifier-set))) := true)
@@ -565,12 +567,16 @@
             {::term  ::dimension,
              ::dimension-content '(1 60)}) :=
  (dimension '(1 60))
- (s/valid? ::asr-term (dimension  60))     := false
- (s/valid? ::asr-term (dimension [60]))    := true
- (s/valid? ::asr-term (dimension [0]))     := true
- (s/valid? ::asr-term (dimension []))      := true
- (s/valid? ::asr-term (dimension '(1 60))) := true
- (s/valid? ::asr-term (dimension '()))     := true)
+ (s/valid? ::asr-term (dimension  60))             := false
+ (s/valid? ::asr-term (dimension [[]]))            := false
+ (s/valid? ::asr-term (dimension 'foobar))         := false
+ (s/valid? ::asr-term (dimension ['foobar]))       := false
+ ;; Arity throw! (s/valid? ::asr-term (dimension)) := false
+ (s/valid? ::asr-term (dimension []))              := true
+ (s/valid? ::asr-term (dimension [60]))            := true
+ (s/valid? ::asr-term (dimension [0]))             := true
+ (s/valid? ::asr-term (dimension '(1 60)))         := true
+ (s/valid? ::asr-term (dimension '()))             := true)
 
 
 ;;     _ _                   _
@@ -599,7 +605,32 @@
              :max-count MAX-NUMBER-OF-DIMENSIONS,
              :into []))
 
+
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
+
+
+(tests (s/valid?
+        ::dimensions
+        [#:masr.specs{:term :masr.specs/dimension,
+                      :dimension-content [1 60]}
+         #:masr.specs{:term :masr.specs/dimension,
+                      :dimension-content ()}]) := true
+       (s/valid?
+        ::dimensions
+        [{::term ::dimension,
+          ::dimension-content [1 60]}
+         {::term ::dimension,
+          ::dimension-content ()}])            := true)
+
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
+
+
 (tests
+ (s/valid? ::dimensions [])                        := true
  (s/valid? ::dimensions
            [(dimension '(1 60)) (dimension '())])  := true
  (s/conform ::dimensions

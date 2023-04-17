@@ -563,18 +563,314 @@ must employ Clojure's =unchecked-long=.
 
 This section of the document exhibits specs for the
 /term-like nodes/ in Table \ref{tbl:nodes}: namely
-=dimensions=, =identifier=, =identifiers=. Note
-carefully the singulars and plurals in the names of
-the specs.
+=dimensions=, =identifier=, and =identifiers=. These
+are not terms, but share some similarities with
+terms. Note carefully the singulars and plurals in
+the names of the specs.
 
 ** dimensions [\emph{sic}]
 <<dimensions>>
 
+A MASR /dimensions/ [\emph{sic}], =dimension*= in
+ASDL, is a homogeneous ordered collection (list or
+vector) of zero or more dimension instances
+([[dimension]]). Because \linebreak =::dimensions=
+[\emph{sic}] is not a term, we do not need nested
+multi-specs. However, because =::dimension=
+[\emph{sic}] is a term, the spec for =::dimensions=
+must ensure that the elements of its collection
+conform to =::dimension=, which is an =asr-term=
+multi-spec. We ensure so with a function that
+selects terms that match a given spec, =dimension=
+in this case. We may reuse that function in other
+specs that represent collections that are not,
+themselves, terms.
 
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defn term-selector-spec [kwd]
+    (s/and ::asr-term
+           #(= kwd (::term %))))
+#+end_src
 
+Here is the spec, =::dimensions=, for dimensions. We
+limit the number of dimensions to 9 for practical
+reasons. The meaning of a =::dimensions= instance
+with 0 dimensions is an open question (Issue
+6[fn:issue6]).
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (def MIN-NUMBER-OF-DIMENSIONS 0)  ;; TODO: 1?
+  (def MAX-NUMBER-OF-DIMENSIONS 9)
+
+  (s/def ::dimensions
+    (s/coll-of (term-selector-spec ::dimension)
+               :min-count MIN-NUMBER-OF-DIMENSIONS,
+               :max-count MAX-NUMBER-OF-DIMENSIONS,
+               :into []))
+#+end_src
+
+\newpage
+*** FullForm
+
+The following tests show a couple of ways of writing
+out a =::dimensions= instance in full-form. The
+first is necessary in files other than =specs.clj=,
+say in =core_tests.clj=. The second can be used in
+=specs.clj=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests (s/valid?
+          ::dimensions
+          [#:masr.specs{:term :masr.specs/dimension,
+                        :dimension-content [1 60]}
+           #:masr.specs{:term :masr.specs/dimension,
+                        :dimension-content ()}]) := true
+         (s/valid?
+          ::dimensions
+          [{::term ::dimension,
+            ::dimension-content [1 60]}
+           {::term ::dimension,
+            ::dimension-content ()}])            := true)
+#+end_src
+
+*** Sugar
+
+The following tests illustrate the sugar for
+=::dimensions=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests
+   (s/valid? ::dimensions [])                        := true
+   (s/valid? ::dimensions
+             [(dimension '(1 60)) (dimension '())])  := true
+   (s/conform ::dimensions
+              [(dimension '(1 60)) (dimension '())]) :=
+   [#:masr.specs{:term :masr.specs/dimension,
+                 :dimension-content [1 60]}
+    #:masr.specs{:term :masr.specs/dimension,
+                 :dimension-content ()}])
+#+end_src
+
+\clearpage
 ** identifier  [\emph{sic}]
 
+An ASR identifier is a C or Fortran identifier,
+which begins with an alphabetic glyph or an
+underscore, and has alpha-numeric characters or
+underscores following. The only complication in the
+spec is the need to generate instances via
+=s/with-gen=. The spec solves the problem for
+identifiers and shows a pattern for other specs that
+need custom generators.
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (let [alpha-re #"[a-zA-Z_]"  ;; "let over lambda."
+        alphameric-re #"[a-zA-Z0-9_]*"]
+    (def alpha?
+      #(re-matches alpha-re %))
+    (def alphameric?
+      #(re-matches alphameric-re %))
+    (defn identifier? [sy]
+      ;; exclude strings, numbers, quoted numbers
+      (and (symbol? sy)
+           (let [s (str sy)]
+             (and (alpha? (subs s 0 1))
+                  (alphameric? (subs s 1))))))
+    (def identifier-generator
+      (tgen/let [c (gen/char-alpha)
+                 s (gen/string-alphanumeric)]
+        (symbol (str c s))))
+    (s/def ::identifier
+      (s/with-gen
+        identifier?
+        ;; fn wrapping a macro:
+        (fn [] identifier-generator))))
+#+end_src
+
+The following tests illustrate validation and
+generation:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests
+   (s/valid? :masr.specs/identifier 'foobar)  := true
+   (s/valid? :masr.specs/identifier '_f__547) := true
+   (s/valid? :masr.specs/identifier '1234)    := false)
+
+  #_
+  (gen/sample (s/gen :masr.specs/identifier))
+  ;; => (e c Q G Z2qP fXzg1 sRx2J6 YIhKlV k6 f7k1Xl4)
+  ;; => (k hM LV QWC qW0X RGk3u W Kg6X Q2YvFO621 ODUt9)
+#+end_src
+
+\newpage
+*** Sugar
+
+We define a simple function for creating conforming
+identifiers and illustrate it with a couple of
+tests:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defn identifier [sym]
+    (let [csym (s/conform ::identifier sym)]
+      (if (s/invalid? csym)
+        ::invalid-identifier
+        csym)))
+
+  (tests
+   (identifier 'foo) := 'foo
+   (identifier 123)  := ::invalid-identifier)
+#+end_src
+
+\clearpage
 ** identifiers [\emph{sic}]
+
+ASDL =identifier*= is ambiguous. There are three
+kinds of identifier collections in MASRd:[fn::
+https://github.com/rebcabin/masr/issues/1]
+
+- identifier-set  :: --- unordered, no duplicates
+
+- identifier-list :: --- ordered, duplicates allowed
+  (we use vector)
+
+- identifier-suit :: -- ordered, duplicates not
+  allowed
+
+For all three kinds, we limit the number of
+identifiers to 99 for practical purposes:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (def MIN-NUMBER-OF-IDENTIFIERS  0)
+  (def MAX-NUMBER-OF-IDENTIFIERS 99)
+#+end_src
+
+*** identifier-set
+
+The spec for a set of identifiers is
+straightforward because of Clojure's literal syntax,
+=#{\ldots}=, for sets, including the empty set:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::identifier-set
+    (s/coll-of ::identifier
+               :min-count MIN-NUMBER-OF-IDENTIFIERS,
+               :max-count MAX-NUMBER-OF-IDENTIFIERS,
+               :into #{})) ;; empty set
+#+end_src
+
+See the code for uninteresting details of the
+sugar-function, =identifier-set=. The following
+tests show it at work:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+(tests
+ (let [x (identifier-set ['a 'a])]
+   (s/valid? ::identifier-set x) := true
+   (set?  x)                     := true
+   (count x)                     := 1)
+ (let [x (identifier-set [])]
+   (s/valid? ::identifier-set x) := true
+   (set?  x)                     := true
+   (count x)                     := 0)
+ (let [x (identifier-set ['a '1])]
+   (s/valid? ::identifier-set x) := false
+   x := ::invalid-identifier-set))
+#+end_src
+
+\newpage
+*** identifier-list
+
+The spec for a list of identifiers is almost the
+same as the spec for a set of identifiers. It
+differs only in the =:into= clause --- into a vector
+rather than into a set:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests
+   (let [x (identifier-list ['a 'a])]
+     (s/valid? ::identifier-list x) := true
+     (vector? x)                    := true
+     (count   x)                    := 2)
+   (let [x (identifier-list [])]
+     (s/valid? ::identifier-list x) := true
+     (vector? x)                    := true
+     (count   x)                    := 0)
+   (let [x (identifier-list ['a '1])]
+     (s/valid? ::identifier-list x) := false
+     x := ::invalid-identifier-list)) ;; empty set
+#+end_src
+
+The implementation of the sugar-function for
+identifier-list is uninteresting. The following
+tests show it at work:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests
+   (let [x (identifier-list ['a 'a])]
+     (s/valid? ::identifier-list x) := true
+     (vector? x)                    := true
+     (count   x)                    := 2)
+   (let [x (identifier-list [])]
+     (s/valid? ::identifier-list x) := true
+     (vector? x)                    := true
+     (count   x)                    := 0)
+   (let [x (identifier-list ['a '1])]
+     (s/valid? ::identifier-list x) := false
+     x := ::invalid-identifier-list))
+#+end_src
+
+\newpage
+*** identifier-suit
+
+The spec for an identifier-suit is almost the same
+as for identifier-list, only checking that there are
+no duplicate elements
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::identifier-suit
+    (s/and
+     (s/coll-of ::identifier
+                :min-count MIN-NUMBER-OF-IDENTIFIERS,
+                :max-count MAX-NUMBER-OF-IDENTIFIERS,
+                :into [])
+     ;; no duplicates
+     #(= (count %) (count (set %)))))
+#+end_src
+
+Here are the tests for the (uninteresting)
+sugar-function:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests
+   (let [x (identifier-suit ['a 'a])]
+     (s/valid? ::identifier-suit x) := false
+     (vector? x)                    := false)
+   (let [x (identifier-suit ['a 'b])]
+     (s/valid? ::identifier-suit x) := true
+     (vector? x)                    := true
+     (count   x)                    := 2)
+   (let [x (identifier-suit [])]
+     (s/valid? ::identifier-suit x) := true
+     (vector? x)                    := true
+     (count   x)                    := 0)
+   (let [x (identifier-suit ['a '1])]
+     (s/valid? ::identifier-suit x) := false
+     x := ::invalid-identifier-suit))
+#+end_src
 
 \clearpage
 * Specs
@@ -1202,7 +1498,8 @@ One may always write out ttype specs in full:
 *** Sugar for Integer, Real, Complex, Logical
 
 Sugar for ttypes comes in two varieties, /light
-sugar/ and /full sugar/. Light sugar require specs
+sugar/ and /full sugar/. Names for light-sugar specs
+have trailing hyphens. Light sugar requires specs
 with keywords, as in:
 
 \vskip 0.26cm
@@ -1211,7 +1508,8 @@ with keywords, as in:
   (ttype (Integer- {:kind 4, :dimensions []}))
 #+end_src
 
-Full sugar uses positional arguments, as in
+Names for full-sugar specs do not have trailing
+hyphens. Full sugar uses positional arguments, as in
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1256,7 +1554,7 @@ If there is one nat, it specifies the length of any
 array dimension that enjoys the instance. For
 example, in the ttype =(Integer 4 [[42]])= ([[ttype]]) ,
 the one dimension in the dimensions [\emph{sic}]
-([[dimensions]]) of the ttype is =[42]=, and the ttype
+([[dimensions]]) of the ttype is =[42]=. The ttype
 specifies a rank-1 array of 42 4-byte integers, with
 indices starting at 1 and running \linebreak
 through 42.
@@ -1267,23 +1565,25 @@ the instance, and the second nat specifies the
 length. For example, in the ttype
 =(Integer 4 [[6 60]])= ([[ttype]]), the one dimension in
 the dimensions [\emph{sic}] ([[dimensions]]) of the
-ttype is =[6 60]=, and the ttype specifies a rank-1
+ttype is =[6 60]=. The ttype specifies a rank-1
 array of 60 4-byte integers with indices starting at
 6 and running through 65.
 
 If there are no nats, i.e., the array dimension of
 any array enjoying the instance is **unspecified**.
 For an example, consider the ttype
-=(Integer 4 [[]])= ([[ttype]]).
+=(Integer 4 [[]])= ([[ttype]]). This unspecified type is
+an open question, Issue 6.[fn:issue6] Also
+unspecified is a dimension of zero length.[fn:issue7]
 
 *** TODO: Issue 6: Empty Dimension
 
-See Issue 6 in MASR's GitHub repo[fn::
+See Issue 6 in MASR's GitHub repo[fn:issue6:
 https://github.com/rebcabin/masr/issues/6] for
 discussion of the meaning of \linebreak
-=(Integer 4 [[]])=. Empty dimensions [\emph{sic}] as
-in =(Integer 4 [])=, are discussed in Section
-[[dimensions]].
+=(Integer 4 [[]])=. Empty dimensions [\emph{sic}],
+as in =(Integer 4 [])=, are also unspecified and
+further discussed in Section [[dimensions]].
 
 *** TODO: Issue 7: Zero Length
 
@@ -1298,7 +1598,7 @@ grammar.[fn:grammar-snapshot] The meaning is
   (Integer 4 [[6 0]])
 #+end_src
 
-See Issue 7 in MASR's GitHub repo.[fn::
+See Issue 7 in MASR's GitHub repo.[fn:issue7:
 https://github.com/rebcabin/masr/issues/7]
 
 *** TODO: Issue 5: Unspecified Starting Index
@@ -1344,14 +1644,20 @@ for /dimension/:
               {::term  ::dimension,
                ::dimension-content '(1 60)}) :=
    (dimension '(1 60))
-   (s/valid? ::asr-term (dimension  60))     := false
-   (s/valid? ::asr-term (dimension [60]))    := true
-   (s/valid? ::asr-term (dimension [0]))     := true
-   (s/valid? ::asr-term (dimension []))      := true
-   (s/valid? ::asr-term (dimension '(1 60))) := true
-   (s/valid? ::asr-term (dimension '()))     := true)
+   (s/valid? ::asr-term (dimension  60))            := false
+   (s/valid? ::asr-term (dimension [[]]))           := false
+   (s/valid? ::asr-term (dimension 'foobar))        := false
+   (s/valid? ::asr-term (dimension ['foobar]))      := false
+   ;; throw arity (s/valid? ::asr-term (dimension)) := false
+   (s/valid? ::asr-term (dimension []))             := true
+   (s/valid? ::asr-term (dimension [60]))           := true
+   (s/valid? ::asr-term (dimension [0]))            := true
+   (s/valid? ::asr-term (dimension '(1 60)))        := true
+   (s/valid? ::asr-term (dimension '()))            := true)
 #+end_src
 
+
+\clearpage
 ** alloc_arg
 ** attribute
 ** attribute_arg
@@ -1363,15 +1669,15 @@ for /dimension/:
 ** type_stmt
 ** enumtype
 
-** Implicit Terms
+* Implicit Terms
 
 Terms used, explicitly or implicitly,  but not defined in ASDL.
 
 Some items specified in ASDL as /symbol_table/ are actually
 /symtab_id/.
 
-*** symtab_id
-*** symbol_table
+** symtab_id
+** symbol_table
 
 * Change Log
 
