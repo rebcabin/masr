@@ -509,14 +509,14 @@
 ;; dimension = (expr? start, expr? length)
 
 
-(def MIN-START 0)  ;; TODO: 1?
-(def MAX-START 2)
+(def MIN-DIMENSION-COUNT 0)
+(def MAX-DIMENSION-COUNT 2)
 
 
 (s/def ::dimension-content
   (s/coll-of ::nat
-             :min-count MIN-START,
-             :max-count MAX-START,
+             :min-count MIN-DIMENSION-COUNT,
+             :max-count MAX-DIMENSION-COUNT,
              :into ()))
 
 
@@ -524,9 +524,16 @@
   (s/keys :req [::term ::dimension-content]))
 
 
-(defn term-selector-spec [kwd]
-  (s/and ::asr-term
-         #(= kwd (::term %))))
+(tests
+ (s/valid? ::asr-term
+           {::term ::dimension
+            ::dimension-content [6 60]}) := true
+ (s/valid? ::asr-term
+           {::term ::dimension
+            ::dimension-content [0]})    := true
+ (s/valid? ::asr-term
+           {::term ::dimension
+            ::dimension-content []})     := true)
 
 
 ;; TODO gen/sample for dimension
@@ -536,9 +543,9 @@
 ;; => ((1) (0 1) (0) (0 0) ())
 
 
-;; -+-+-+-+-+-+-
-;;  s y n t a x
-;; -+-+-+-+-+-+-
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
 
 
 (defn dimension [it] ;; candidate contents
@@ -579,6 +586,11 @@
 
 (def MIN-NUMBER-OF-DIMENSIONS 0)  ;; TODO: 1?
 (def MAX-NUMBER-OF-DIMENSIONS 9)
+
+
+(defn term-selector-spec [kwd]
+  (s/and ::asr-term
+         #(= kwd (::term %))))
 
 
 (s/def ::dimensions

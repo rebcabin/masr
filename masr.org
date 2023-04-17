@@ -50,6 +50,7 @@
 #+LaTeX_HEADER: \usepackage{cmll}
 #+LaTeX_HEADER: \usepackage{amsmath}
 #+LaTeX_HEADER: \usepackage{amsthm}
+#+LaTeX_HEADER: \usepackage{amsthm}
 #+LaTeX_HEADER: \usepackage{amssymb}
 #+LaTeX_HEADER: \usepackage{interval}  % must install texlive-full
 #+LaTeX_HEADER: \usepackage{mathtools}
@@ -110,6 +111,18 @@
 #+LaTeX_HEADER: \newcommand\llb{low-level \belex}
 #+LaTeX_HEADER: \newcommand\hlb{high-level \belex}
 #+LaTeX_HEADER: \newcommand{\Coloneqq}{\mathrel{\vcenter{\hbox{$:\,:\,=$}}{}}}
+
+#+LaTeX_HEADER: \theoremstyle{definition}
+#+LaTeX_HEADER: \newtheorem{definition}{Definition}
+
+#+LaTeX_HEADER: \theoremstyle{slogan}
+#+LaTeX_HEADER: \newtheorem{slogan}{Slogan}
+
+#+LaTeX_HEADER: \theoremstyle{warning}
+#+LaTeX_HEADER: \newtheorem{warning}{Warning}
+
+#+LaTeX_HEADER: \theoremstyle{premise}
+#+LaTeX_HEADER: \newtheorem{premise}{Premise}
 
 #+SELECT_TAGS: export
 #+STARTUP: indent
@@ -201,21 +214,31 @@ https://en.wikipedia.org/wiki/Abstract-Type_and_Scheme-Definition_Language]
 a metalanguage similar in spirit to yacc but less
 rich, by design.[fn::
 https://en.wikipedia.org/wiki/Yacc] To build an
-LCompiler like LFortran or LPython, the ASDL grammar
-for ASR is parsed and a library, asrlib, in C++ is
-generated. Compiler front ends call this library to
-transform and emit ASR trees.
+LCompiler like LFortran or LPython, the ASDL
+grammar[fn:grammar-snapshot:
+https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]
+for ASR is parsed and a library, libasr,[fn:libasr:
+https://github.com/lfortran/lfortran/tree/c648a8d824242b676512a038bf2257f3b28dad3b/src/libasr]
+in C++ is generated. Compiler front ends call this
+library to transform and emit ASR trees.
 
 ASDL has several deficiencies, and MASR, [fn::
 pronounced "maser;" it is a Physics pun] described
 in this document, alleviates them. We aim to replace
-asrlib with MASR.
+libasr with MASR.
 
 This document is pedagogical, both explaining MASR
 and teaching how to extend and maintain its Clojure
 code.
 
+This document may lag the Clojure code. It may also
+lag the current state of libasr, at least until MASR
+replaces libasr. The document mirrors an ASDL
+snapshot.[fn:grammar-snapshot]
+
+\clearpage
 * Issues with ASDL
+<<issues>>
 
 ** ASDL is Moribund
 
@@ -224,45 +247,63 @@ in 1987. We know of no other projects adopting ASDL.
 We should replace ASDL with a modern metalanguage
 that has a robust, lively ecosystem.
 
-\newpage
 ** ASDL is Incomplete
 
-All work with ASR is currently done with opaque
-binary representations and code written in C++. As
-usual with such, it's more time-consuming and
-error-prone than necessary to prototype, verify,
-validate, visualize, modify, and debug.
+Much of the semantics of ASR is currently expressed
+only in hand-written C++ code. The reason is that
+ASDL is not sufficiently expressive to cover the
+needed cases. As usual with such a design, it's more
+time-consuming and error-prone than necessary to
+prototype, verify, validate, visualize, modify, and
+debug. Something more expressive than ASDL is
+needed to take some responsibility off of
+hand-written C++ code.
 
-** ASDL is Volatile
+** ASDL's ASR is Volatile
 
 The ASDL for ASR changes frequently, for good
 reasons. However, stand-aside tools like
 asr-tester[fn::
 https://github.com/rebcabin/asr-tester] must chase
-the ASDL specification. Just keeping up with ASDL
+the specification. Just keeping up with ASR-in-ASDL
 consumes almost all development time for asr-tester.
-We should unify the language for expressing ASR with
+We should unify the language that expresses ASR with
 the tools that verify and test ASR.
 
 ** ASDL is Ambiguous
+<<asdl-is-ambiguous>>
 
 There are many syntactic and semantic ambiguities in
-the ASDL grammar. For example, the specification
-=integer*= might mean an ordered collection of
-=integer= or an unordered collection, with duplicate
-elements allowed or not.
+the ASDL grammar.[fn:grammar-snapshot]. For example,
+the type notation =integer*= might mean, in one
+place in the grammar, a list of =integer= with
+duplicate entries allowed, and, in another place in
+the grammar, a set of =integer= with duplicate
+entries not allowed..
 
-ASDL cannot express such distinctions. In practice,
-the C++ implementations implicitly make these
-distinctions. In one place =integer*= means an
-ordered collection. In another place, =integer*=
-means an unordered collection, but only the
-generated C++ code knows where.
+ASDL is not sufficient to express such distinctions.
+In practice, the hand-written C++ implementations
+implicitly make these distinctions, hiding them from
+view and making them difficult to revise. It is bad
+practice to hide fine distinctions that have
+observable effects in the implementations. Instead,
+we should express those distinctions directly in the
+specifications. Because ASDL cannot express such
+distinctions, we must adopt something more
+expressive than ASDL.
 
-Hiding fine distinctions in specifications in the
-generated code is not good engineering practice in
-the face of a known better solution.
+# Another kind of ambiguity concerns =symbol_table=.
+# In some places in the ASDL
+# grammar,[fn:grammar-snapshot] the type
+# =symbol_table= means a literal hash-map. In other
+# places, =symbol_table= means an integer ID. Only the
+# hand-written C++ code knows where.
 
+# That kind of ambiguity is avoidable in ASDL. That
+# kind of ambiguity is simply a design flaw in the
+# expression of ASR in ASDL.
+
+\clearpage
 * Clojure Solves ASDL Issues
 
 ASR expressions, being trees, have a natural
@@ -271,74 +312,108 @@ https://en.wikipedia.org/wiki/S-expression] Clojure,
 being a modern Lisp, natively handles S-Expressions.
 Clojure is modern. Clojure has a robust, lively
 ecosystem.
-# It is a natural replacement for ASDL.
 
-# In addition to a native fit for data format,
 Clojure.spec,[fn:clojure-spec:
 https://clojuredocs.org/clojure.spec.alpha] is a
 /force majeure/ for precision, completeness,
 verification, and validation. The collection of MASR
 specs amounts to a meta-type system for ASR.
 
-Clojure specs are arbitrary predicates, capable of
-expressing type-system logic beyond typical,
-hard-coded type systems. That flexibility affords
-new opportunities, say for experiments in dependent
+Clojure specs are arbitrary predicate functions.
+Clojure specs can easily express the difference
+between /list/ and /set/, solving the ambiguity
+issue outlined in Section [[asdl-is-ambiguous]]. Clojure
+specs, moreover, can flexibly express type-system
+features beyond the logics of typical, hard-coded
+type systems. That flexibility affords new long-term
+opportunities, say for experiments in dependent
 types and concurrency types.[fn::
 https://rholang.io/]. In the short run, clojure.spec
 will make type constraints for ASDL explicit and
 manifest, and will relieve the burden on C++
 programmers to manage implicit constraints.
 
-This document may lag the Clojure code. It may also
-lag the current state of asrlib, at least until MASR
-replaces asrlib. The document mirrors an ASDL
-snapshot.[fn::
-https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]
-
 \clearpage
-* MASR Tenets
+* MASR Definitions
 
-- Hash-Maps :: --- ASR entities shall be hash-maps
-  with fully-qualified keywords as keys (see Section
-  [[intent]] for motivating example).
+\begin{framed}
+\begin{definition}
+  A \emph{spec} is a predicate function
+  that tests an expression for conformance.
+  \emph{Spec} is a synonym for \emph{type}
+  in this document.
+\end{definition}
+\vskip 0.26cm
+\end{framed}
 
-- Multi-Specs :: --- ASR entities shall be
-  recursively checked and generated via Clojure
-  multi-specs.[fn:multi-spec]
+\begin{framed}
+\begin{definition}
+\emph{Terms} are the "objects" or "productions" of ASR,
+like $\texttt{symbol}$ or $\texttt{dimension}$.
+\end{definition}
+\vskip 0.26cm
+\end{framed}
 
-- Explicit :: --- ASR entities shall contain all
-  necessary information, even at the cost of
-  verbosity. Defaults are not permitted.
+Names of terms appear to the left of equals signs in
+the ASDL grammar.[fn:grammar-snapshot] Names of
+terms are generally in lower-case.
 
-- Syntax Sugar :: --- Constructor functions for ASR
-  entities may allow default values for keyword
-  arguments (see Section [[ttype]] for an example and
-  see
-  [[https://github.com/rebcabin/masr/issues/3][Issue
-  3 on MASR's GitHub repo]].
+Table \ref{tbl:nodes} exhibits terms, ambiguous
+types, and term-like types. Ambiguous types and
+term-like types are used but not defined in the ASDL
+grammar, but are explicitly defined in MASR.
 
-\clearpage
-* MASR Terms and Heads
+The ambiguous types, =symbol_table= and =symtab_id=,
+are called out. The ASDL grammar conflates these
+two, having only =symbol_table= to mean either a
+full hash-map entity or an integer ID, depending on
+criteria hidden in hand-written C++ code. A primary
+objective of MASR is to remove this kind of
+ambiguity. This kind of ambiguity is not a
+deficiency of ASDL like that explained in Section
+[[asdl-is-ambiguous]]. Unlike the difference between a
+list and a set, ASDL can express the difference
+between a hash-map and an integer ID. The failure to
+do so is a design flaw in the current ASDL grammar.
 
-/Terms/ are the "objects" or "productions" of ASR,
-items to the left-hand side of an equals sign in the
-ASDL grammar. Table \ref{tbl:terms} exhibits terms
-that are
+The contents of Table \ref{tbl:nodes} have been
+greatly abbreviated and edited for presentation.
 
-- explicitly specified in ASDL, like =symbol= or
-  =dimension=
+\begin{framed}
+\begin{definition}
+\emph{Heads} are expressions like $\texttt{Local}$
+and $\texttt{CaseStmt}$,
+generally in PascalCase,
+that appear on the right-hand sides of
+equals signs in Table \ref{tbl:nodes}.
+\end{definition}
+\vskip 0.26cm
+\end{framed}
 
-- used but not defined in ASDL, like =symbol_table=
+See the blog post in the footnote[fn::
+https://alok-verma6597.medium.com/case-styles-in-development-camel-pascal-snake-and-kebab-case-ed8e7b2497af]
+for an informal description of /PascalCase/.
 
-- term-like but not defined in ASDL, like
-  =identifier=
+There are of two kinds of heads:
 
-The definitions in Table \ref{tbl:terms} have been
-abbreviated and edited for presentation.
+- /function-like heads/ :: --- have parentheses and typed
+  parameters, \newline e.g., =CaseStmt(expr*, stmt*)=
 
-#+caption: Terms (nodes) in the ASDL grammar (things left of equals signs):
-#+label: tbl:terms
+- /enum-like heads/ :: --- no parentheses, e.g., =Local=
+
+MASR has a Clojure spec and syntactic sugar for each
+head. There are about 250 heads by a recent count.
+
+\begin{framed}
+\begin{definition}
+  An \emph{ASR entity} is a compound type like \newline
+  $\texttt{CaseStmt(expr*, stmt*)}$, with a function-like head
+  and zero-or more arguments, possibly with names, that require recursive conformance.
+\end{definition}
+\end{framed}
+
+#+caption: Nodes in the ASDL Grammar
+#+label: tbl:nodes
 |----+-------------------+------------------------------------------------------------------|
 |    | **term**          | **partial expansion**                                            |
 |----+-------------------+------------------------------------------------------------------|
@@ -373,10 +448,10 @@ abbreviated and edited for presentation.
 | 29 | =type_stmt=       | =TypeStmtName(symbol, stmt*)= \vert \ldots                       |
 | 30 | =enumtype=        | =IntegerConsecutiveFromZero= \vert \ldots                        |
 |----+-------------------+------------------------------------------------------------------|
-|    | **implicit**      |                                                                  |
+|    | **ambiguous**     |                                                                  |
 |----+-------------------+------------------------------------------------------------------|
 | 31 | =symbol_table=    | Clojure maps                                                     |
-| 32 | =symtab_id=       | an =int=                                                         |
+| 32 | =symtab_id=       | =int= (new in MASR; not in ASDL)                                 |
 |----+-------------------+------------------------------------------------------------------|
 |    | **term-like*      |                                                                  |
 |----+-------------------+------------------------------------------------------------------|
@@ -385,23 +460,41 @@ abbreviated and edited for presentation.
 |  0 | =identifier=      | by regex                                                         |
 |  0 | =identifiers=     | =identifier*=, via Clojure sets                                  |
 |----+-------------------+------------------------------------------------------------------|
+#+TBLFM: $3=int= (new in MASR; not in ASDL)
 
-/Heads/ are things like =Local= and =CaseStmt= that
-appear on the right-hand sides of terms equations in
-Table \ref{tbl:terms}. There are of two kinds of heads:
+\clearpage
+* MASR Tenets
 
-- /function-like heads/ :: --- have parentheses and typed
-  parameters, \newline e.g., =CaseStmt(expr*, stmt*)=
+- Entity Hash-Maps :: --- ASR
+  entities[fn:clojure-spec-entity:
+  https://clojure.org/guides/spec] shall be
+  hash-maps with fully-qualified keywords as keys
+  (see Section [[intent]] for motivating example).
 
-- /enum-like heads/ :: --- no parentheses, e.g., =Local=
+- Multi-Specs :: --- ASR entity hash-maps shall be
+  recursively checked and generated via Clojure
+  multi-specs.[fn:clojure-spec-entity]
 
-MASR has a Clojure spec and  syntactic sugar for each head.
-There are about 250 heads by a recent count.
+- Explicit :: --- ASR entity hash-maps shall contain
+  all necessary information, even at the cost of
+  verbosity. Defaults are not permitted.
 
-\newpage
+- Syntax Sugar :: --- Extra constructor functions
+  for ASR entities may allow default values for
+  positional and keyword arguments. See Section
+  [[ttype]] for an example and see Issue 3 on MASR's
+  GitHub repo.[fn::
+  https://github.com/rebcabin/masr/issues/3]
+
+\clearpage
 * Base Specs
 
-The specs for /atoms/ are unsurprising:
+The specs in this section are the /atoms/ in the
+/term-like/ grouping in Table \ref{tbl:nodes}
+
+** Atoms: =int=, =float=, =bool=, =nat=
+
+The specs for =int=, =float=, and =bool= are straightforward:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -410,7 +503,7 @@ The specs for /atoms/ are unsurprising:
   (s/def ::bool  boolean?)
 #+end_src
 
-We restrict the spec for natural numbers to /int/
+We restrict the spec, =nat=, for natural numbers, to /int/,
 for practical reasons:
 
 \vskip 0.26cm
@@ -441,6 +534,7 @@ for practical reasons:
     (s/valid? ::nat (nat 0x7FFFFFFFFFFFFFFF))    := true)
 #+end_src
 
+\newpage
 ** Notes
 
 A Clojure /int/ is a Java /Long/, with some peculiar
@@ -464,7 +558,25 @@ must employ Clojure's =unchecked-long=.
          := 1)
 #+end_src
 
-\newpage
+\clearpage
+* Term-Like Nodes
+
+This section of the document exhibits specs for the
+/term-like nodes/ in Table \ref{tbl:nodes}: namely
+=dimensions=, =identifier=, =identifiers=. Note
+carefully the singulars and plurals in the names of
+the specs.
+
+** dimensions [\emph{sic}]
+<<dimensions>>
+
+
+
+** identifier  [\emph{sic}]
+
+** identifiers [\emph{sic}]
+
+\clearpage
 * Specs
 
 The following sections
@@ -479,8 +591,7 @@ The following sections
 The architecture is the remainder from several
 experiments. For example, \linebreak =defrecord= and
 =defprotocol= for polymorphism were tried and
-discarded in favor of multi-specs.[fn:multi-spec:
-https://clojure.org/guides/spec]
+discarded in favor of multi-specs.[fn:clojure-spec-entity]
 
 The tests in =core_test.clj= exhibit many examples
 that pass and, more importantly, fail the specs. We
@@ -494,7 +605,7 @@ debugger in Emacs.[fn::
 https://docs.cider.mx/cider/debugging/debugger.html]
 
 We present the terms somewhat out of the order of
-Table \ref{tbl:terms}. First is /intent/, as it is
+Table \ref{tbl:nodes}. First is /intent/, as it is
 the archetype for several enum-like terms and heads.
 
 ** intent
@@ -624,7 +735,7 @@ how complex or rich.
 =::intent-enum= is just the spec for the /contents/ of an
 intent, not for the intent itself. The spec for the intent
 itself is an implementation of a polymorphic Clojure
-/multi-spec/[fn:multi-spec], =::asr-term=.
+/multi-spec/,[fn:clojure-spec-entity] =::asr-term=.
 
 *** \colorbf{red}{Multi-Specs}
 
@@ -1122,9 +1233,124 @@ See the tests for many examples.
 ** arraybound
 ** arraystorage
 ** cast_kind
+
+\clearpage
 ** dimension
+<<dimension>>
 
+A /dimension/ is 0, 1, or 2 nats in a Clojure list
+or vector:
 
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (def MIN-DIMENSION-COUNT 0)
+  (def MAX-DIMENSION-COUNT 2)
+  (s/def ::dimension-content
+    (s/coll-of ::nat
+               :min-count MIN-DIMENSION-COUNT,
+               :max-count MAX-DIMENSION-COUNT,
+               :into ()))
+#+end_src
+
+If there is one nat, it specifies the length of any
+array dimension that enjoys the instance. For
+example, in the ttype =(Integer 4 [[42]])= ([[ttype]]) ,
+the one dimension in the dimensions [\emph{sic}]
+([[dimensions]]) of the ttype is =[42]=, and the ttype
+specifies a rank-1 array of 42 4-byte integers, with
+indices starting at 1 and running \linebreak
+through 42.
+
+If there are two nats, the first nat specifies the
+starting index of any array dimension that enjoys
+the instance, and the second nat specifies the
+length. For example, in the ttype
+=(Integer 4 [[6 60]])= ([[ttype]]), the one dimension in
+the dimensions [\emph{sic}] ([[dimensions]]) of the
+ttype is =[6 60]=, and the ttype specifies a rank-1
+array of 60 4-byte integers with indices starting at
+6 and running through 65.
+
+If there are no nats, i.e., the array dimension of
+any array enjoying the instance is **unspecified**.
+For an example, consider the ttype
+=(Integer 4 [[]])= ([[ttype]]).
+
+*** TODO: Issue 6: Empty Dimension
+
+See Issue 6 in MASR's GitHub repo[fn::
+https://github.com/rebcabin/masr/issues/6] for
+discussion of the meaning of \linebreak
+=(Integer 4 [[]])=. Empty dimensions [\emph{sic}] as
+in =(Integer 4 [])=, are discussed in Section
+[[dimensions]].
+
+*** TODO: Issue 7: Zero Length
+
+The following specs, in context of a ttype ([[ttype]])
+for convenience, are legal in the ASDL
+grammar.[fn:grammar-snapshot] The meaning is
+**unspecified**:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (Integer 4 [[0]])
+  (Integer 4 [[6 0]])
+#+end_src
+
+See Issue 7 in MASR's GitHub repo.[fn::
+https://github.com/rebcabin/masr/issues/7]
+
+*** TODO: Issue 5: Unspecified Starting Index
+
+If there is only 1 nat, the starting index is
+unspecified. In most programming languages, the
+default is 0. In Fortran and Mathematica
+(Wolframscript[fn::
+https://www.wolfram.com/wolframscript/]), the
+default is 1. We provisionally adopt that convention
+while the issue is open. See Issue 5 in MASR's
+GitHub repo.[fn::
+https://github.com/rebcabin/masr/issues/5]
+
+*** FullForm
+
+The following tests illustrate the full form for
+/dimension/:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests
+   (s/valid? ::asr-term
+             {::term ::dimension
+              ::dimension-content [6 60]}) := true
+   (s/valid? ::asr-term
+             {::term ::dimension
+              ::dimension-content [0]})    := true
+   (s/valid? ::asr-term
+             {::term ::dimension
+              ::dimension-content []})     := true)
+#+end_src
+
+*** Sugar
+
+The following tests illustrate the syntactic sugar
+for /dimension/:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests
+   (s/conform ::asr-term
+              {::term  ::dimension,
+               ::dimension-content '(1 60)}) :=
+   (dimension '(1 60))
+   (s/valid? ::asr-term (dimension  60))     := false
+   (s/valid? ::asr-term (dimension [60]))    := true
+   (s/valid? ::asr-term (dimension [0]))     := true
+   (s/valid? ::asr-term (dimension []))      := true
+   (s/valid? ::asr-term (dimension '(1 60))) := true
+   (s/valid? ::asr-term (dimension '()))     := true)
+#+end_src
 
 ** alloc_arg
 ** attribute
@@ -1146,13 +1372,6 @@ Some items specified in ASDL as /symbol_table/ are actually
 
 *** symtab_id
 *** symbol_table
-
-** Term-Like Items
-
-*** dimensions
-*** atoms
-*** identifier
-*** identifiers
 
 * Change Log
 
