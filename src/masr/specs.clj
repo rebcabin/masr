@@ -394,6 +394,7 @@
         idents-conf))))
 
 (tests
+ (s/valid? ::identifier-set #{'a 'b}) := true
  (let [x (identifier-set ['a 'a])]
    (s/valid? ::identifier-set x) := true
    (set?  x)                     := true
@@ -437,6 +438,7 @@
         idents-conf))))
 
 (tests
+ (s/valid? ::identifier-list ['a 'a 'b]) := true
  (let [x (identifier-list ['a 'a])]
    (s/valid? ::identifier-list x) := true
    (vector? x)                    := true
@@ -668,14 +670,9 @@
 ;;                   :dimension-content (0)}])
 
 
-;; -+-+-+-+-+-+-
-;;  s y n t a x
-;; -+-+-+-+-+-+-
-
-
-;; -+-+-+-+-+-+-
-;;  s y n t a x
-;; -+-+-+-+-+-+-
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
 
 
 (defn dimensions
@@ -738,6 +735,7 @@
 
 (enum-like intent #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 
+
 (tests
  (s/valid?  ::intent-enum 'Local) := true
  (s/valid?  ::intent-enum 'fubar) := false
@@ -745,7 +743,8 @@
  (intent 'Local)                  :=
  #:masr.specs{:term :masr.specs/intent,
               :intent-enum 'Local}
- (intent 42)                      := :masr.specs/invalid-intent)
+ (intent 42)                      := :masr.specs/invalid-intent
+ (s/conform ::asr-term (intent 'Local)) := (intent 'Local))
 
 
 ;;     _                             _
@@ -767,7 +766,8 @@
             ::storage-type-enum 'Default})     := true
  (s/valid? ::asr-term (storage-type 'Default)) := true
  (s/valid? ::asr-term (storage-type 'foobar))  := false
- (storage-type 'foobar)                        := ::invalid-storage-type)
+ (storage-type 'foobar)                        := ::invalid-storage-type
+ (s/conform ::asr-term (storage-type 'Default))) := (storage-type 'Default)
 
 
 ;;       _    _
@@ -829,7 +829,9 @@
  (s/valid? ::asr-term
            {::term      ::abi
             ::abi-enum 'Source
-            ::abi-external false}) := true)
+            ::abi-external false}) := true
+ (s/conform ::asr-term (abi 'Source :external false)) :=
+ (abi 'Source :external false))
 
 
 ;;  _____ _

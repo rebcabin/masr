@@ -217,15 +217,16 @@ https://en.wikipedia.org/wiki/Yacc] To build an
 LCompiler like LFortran or LPython, the ASDL
 grammar[fn:grammar-snapshot:
 https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]
-for ASR is parsed and a library, libasr,[fn:libasr:
+for ASR is parsed, and a library, libasr,[fn:libasr:
 https://github.com/lfortran/lfortran/tree/c648a8d824242b676512a038bf2257f3b28dad3b/src/libasr]
-in C++ is generated. Compiler front ends call this
-library to transform and emit ASR trees.
+in C++, is generated. Compiler front ends call
+functions in this library to transform and emit ASR
+trees.
 
 ASDL has several deficiencies, and MASR, [fn::
 pronounced "maser;" it is a Physics pun] described
 in this document, alleviates them. We aim to replace
-libasr with MASR.
+ASDL with MASR.
 
 This document is pedagogical, both explaining MASR
 and teaching how to extend and maintain its Clojure
@@ -233,8 +234,39 @@ code.
 
 This document may lag the Clojure code. It may also
 lag the current state of libasr, at least until MASR
-replaces libasr. The document mirrors an ASDL
+replaces ASDL. The document mirrors an ASDL
 snapshot.[fn:grammar-snapshot]
+
+\clearpage
+* Cheat Sheet
+
+The following table summarizes this document with
+simple conforming examples via syntactic sugar.
+There are other ways to construct conforming
+examples, but sugar is the recommended way.
+
+Equally important are non-conforming examples. See
+the body of this document, the =tests= in
+=specs.clj=, and the =deftest='s in =core_tests.clj=
+for non-conforming examples.
+
+All keywords are in namespace =masr.specs=. For
+example, =::nat= is short for =:masr.specs/nat=.
+
+| **Spec or Multi-Spec** | **term**         | **Sugared Conforming Example**     |
+|------------------------+------------------+------------------------------------|
+| =::nat=                | NA               | =(nat 42))=                        |
+| =::identifier=         | NA               | =(identifier 'boofar)=             |
+| =::identifier-set=     | NA               | =(identifier-set ['a 'a])=         |
+| =::identifier-list=    | NA               | =(identifier-list ['a 'a])=        |
+| =::identifier-suit=    | NA               | =(identifier-suit ['a 'b])=        |
+| =::asr-term=           | =::dimension=    | =(dimension [6 60])=               |
+| =::dimensions=         | NA               | =(dimensions [[6 60] [42]])=       |
+| =::asr-term=           | =::intent=       | =(intent 'Local)=                  |
+| =::asr-term=           | =::storage-type= | =(storage-type 'Default)=          |
+| =::asr-term=           | =::abi=          | =(s/conform ::asr-term=            |
+|                        |                  | =(  abi 'Source :external false))= |
+| =::asr-term=           | =::ttype=        | =(Integer 4 [[6 60] [42]])=        |
 
 \clearpage
 * Issues with ASDL
@@ -503,6 +535,8 @@ The specs for =int=, =float=, and =bool= are straightforward:
   (s/def ::bool  boolean?)
 #+end_src
 
+*** Sugar
+
 We restrict the spec, =nat=, for natural numbers, to /int/,
 for practical reasons:
 
@@ -542,9 +576,10 @@ behavior for hex literals.[fn::
 https://clojurians.slack.com/archives/C03S1KBA2/p1681690965585429]
 The gist is that hex literals for negative numbers
 in Clojure must have explicit minus signs, lest they
-become =clojure.lang.BigInt=, which we disallow in
-MASR. To access the underlying =java.lang.Long=, one
-must employ Clojure's =unchecked-long=.
+become =clojure.lang.BigInt=, which we disallow for
+dimension ([[dimension]]) and dimensions ([[dimensions]]) in
+MASR. To get negative =java.lang.Long=, one
+employs Clojure's =unchecked-long=.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -563,10 +598,12 @@ must employ Clojure's =unchecked-long=.
 
 This section of the document exhibits specs for the
 /term-like nodes/ in Table \ref{tbl:nodes}: namely
-=dimensions=, =identifier=, and =identifiers=. These
-are not terms, but share some similarities with
-terms. Note carefully the singulars and plurals in
-the names of the specs.
+=dimensions= (plural), =identifier=, and
+=identifiers=. These are not terms, but share some
+similarities with terms. Note carefully the
+singulars and plurals in the names of the specs.
+=dimension= (singular) is a term and covered in
+Section [[dimension]].
 
 ** dimensions [\emph{sic}]
 <<dimensions>>
@@ -592,6 +629,13 @@ themselves, terms.
     (s/and ::asr-term
            #(= kwd (::term %))))
 #+end_src
+
+(The notation =#(...%...)= is Clojure shorthand for
+an anonymous function (lambda) with a positional
+argument denoted by =%=, and positional arguments
+=%1, %2, ...= when there are two or more arguments.
+Applying a keyword like =::term= as a function picks
+that keyword out of its hash-map argument.)
 
 Here is the spec, =::dimensions=, for dimensions. We
 limit the number of dimensions to 9 for practical
@@ -663,9 +707,9 @@ which begins with an alphabetic glyph or an
 underscore, and has alpha-numeric characters or
 underscores following. The only complication in the
 spec is the need to generate instances via
-=s/with-gen=. The spec solves the problem for
-identifiers and shows a pattern for other specs that
-need custom generators.
+=s/with-gen=. The spec solves the generation problem
+for identifiers, plus shows a pattern for other
+specs that need custom generators.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -701,7 +745,6 @@ generation:
    (s/valid? :masr.specs/identifier 'foobar)  := true
    (s/valid? :masr.specs/identifier '_f__547) := true
    (s/valid? :masr.specs/identifier '1234)    := false)
-
   #_
   (gen/sample (s/gen :masr.specs/identifier))
   ;; => (e c Q G Z2qP fXzg1 sRx2J6 YIhKlV k6 f7k1Xl4)
@@ -722,7 +765,6 @@ tests:
       (if (s/invalid? csym)
         ::invalid-identifier
         csym)))
-
   (tests
    (identifier 'foo) := 'foo
    (identifier 123)  := ::invalid-identifier)
@@ -732,7 +774,7 @@ tests:
 ** identifiers [\emph{sic}]
 
 ASDL =identifier*= is ambiguous. There are three
-kinds of identifier collections in MASRd:[fn::
+kinds of identifier collections in MASR:[fn::
 https://github.com/rebcabin/masr/issues/1]
 
 - identifier-set  :: --- unordered, no duplicates
@@ -740,7 +782,7 @@ https://github.com/rebcabin/masr/issues/1]
 - identifier-list :: --- ordered, duplicates allowed
   (we use vector)
 
-- identifier-suit :: -- ordered, duplicates not
+- identifier-suit :: --- ordered, duplicates not
   allowed
 
 For all three kinds, we limit the number of
@@ -797,18 +839,14 @@ rather than into a set:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
+  (s/def ::identifier-list
+    (s/coll-of ::identifier
+               :min-count MIN-NUMBER-OF-IDENTIFIERS,
+               :max-count MAX-NUMBER-OF-IDENTIFIERS,
+               :into []))
   (tests
-   (let [x (identifier-list ['a 'a])]
-     (s/valid? ::identifier-list x) := true
-     (vector? x)                    := true
-     (count   x)                    := 2)
-   (let [x (identifier-list [])]
-     (s/valid? ::identifier-list x) := true
-     (vector? x)                    := true
-     (count   x)                    := 0)
-   (let [x (identifier-list ['a '1])]
-     (s/valid? ::identifier-list x) := false
-     x := ::invalid-identifier-list)) ;; empty set
+   (every? vector? (gen/sample
+                    (s/gen ::identifier-list))) := true)
 #+end_src
 
 The implementation of the sugar-function for
