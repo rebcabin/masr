@@ -553,3 +553,22 @@
   (testing "order-independence of light sugar"
     (is (= (cfh (Integer- {:dimensions [], :kind 4}))
            (Integer- {:kind 4, :dimensions []})))))
+
+
+;; __   __        _      _    _
+;; \ \ / /_ _ _ _(_)__ _| |__| |___
+;;  \ V / _` | '_| / _` | '_ \ / -_)
+;;   \_/\__,_|_| |_\__,_|_.__/_\___|
+
+;; | Variable(symbol_table   parent_symtab,   ;; really an integer id
+;;            identifier     name,
+;;            identifier   * dependencies,    ;; vector of dependency
+;;            intent         intent,
+;;            expr         ? symbolic_value,  ;; lack specified by nil
+;;            expr         ? value,
+;;            storage_type   storage,
+;;            ttype          type,
+;;            abi            abi,
+;;            access         access,
+;;            presence       presence,
+;;            bool           value_attr)

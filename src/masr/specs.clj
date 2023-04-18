@@ -633,14 +633,13 @@
 
 (tests
  (s/valid? ::dimensions [])                        := true
- (s/valid? ::dimensions
-           [(dimension '(1 60)) (dimension '())])  := true
- (s/conform ::dimensions
-            [(dimension '(1 60)) (dimension '())]) :=
- [#:masr.specs{:term :masr.specs/dimension,
-               :dimension-content [1 60]}
-  #:masr.specs{:term :masr.specs/dimension,
-               :dimension-content ()}])
+ (let [dims-example [(dimension '(1 60)) (dimension '())]]
+   (s/valid? ::dimensions dims-example)  := true
+   (s/conform ::dimensions dims-example) :=
+   [#:masr.specs{:term :masr.specs/dimension,
+                 :dimension-content [1 60]}
+    #:masr.specs{:term :masr.specs/dimension,
+                 :dimension-content ()}]))
 
 
 ;; TODO
@@ -717,7 +716,7 @@
        (s/def ~tke ~heads)       ;; the set
        (defmethod term ~tkw [_#] ;; the multi-spec
          (s/keys :req [:masr.specs/term ~tke]))
-       (defn ~term [it#]         ;; the syntax
+       (defn ~term [it#]         ;; the sugar
          (let [st# (s/conform
                     :masr.specs/asr-term
                     {:masr.specs/term ~tkw
@@ -744,7 +743,8 @@
  #:masr.specs{:term :masr.specs/intent,
               :intent-enum 'Local}
  (intent 42)                      := :masr.specs/invalid-intent
- (s/conform ::asr-term (intent 'Local)) := (intent 'Local))
+ (let [intent-example (intent 'Local)]
+   (s/conform ::asr-term intent-example) := intent-example))
 
 
 ;;     _                             _
@@ -766,8 +766,10 @@
             ::storage-type-enum 'Default})     := true
  (s/valid? ::asr-term (storage-type 'Default)) := true
  (s/valid? ::asr-term (storage-type 'foobar))  := false
- (storage-type 'foobar)                        := ::invalid-storage-type
- (s/conform ::asr-term (storage-type 'Default))) := (storage-type 'Default)
+ (storage-type 'foobar)
+ := ::invalid-storage-type
+ (let [st-example (storage-type 'Default)]
+   (s/conform ::asr-term st-example) := st-example))
 
 
 ;;       _    _
@@ -830,8 +832,8 @@
            {::term      ::abi
             ::abi-enum 'Source
             ::abi-external false}) := true
- (s/conform ::asr-term (abi 'Source :external false)) :=
- (abi 'Source :external false))
+ (let [abi-example (abi 'Source :external false)]
+   (s/conform ::asr-term abi-example) := abi-example))
 
 
 ;;  _____ _
@@ -1034,8 +1036,7 @@
  (s/valid? ::asr-term (ttype (Integer 4 ["foo"])))        := false
  (s/valid? ::asr-term (ttype (Integer 42 [])))            := false
  (s/valid? ::asr-term (ttype (Real  1 [])))               := false
- (s/valid? ::asr-term (ttype (Logical 8 [])))             := false
- )
+ (s/valid? ::asr-term (ttype (Logical 8 [])))             := false)
 
 ;; ttype
 ;;     | Character(int kind, int len, expr? len_expr, dimension* dims)
@@ -1055,6 +1056,51 @@
 ;;         abi abi, deftype deftype, string? bindc_name, bool elemental,
 ;;         bool pure, bool module, bool inline, bool static,
 ;;         ttype* type_params, symbol* restrictions, bool is_restriction)
+
+
+;;                _         _  _        _    _
+;;  ____  _ _ __ | |__  ___| || |_ __ _| |__| |___
+;; (_-< || | '  \| '_ \/ _ \ ||  _/ _` | '_ \ / -_)
+;; /__/\_, |_|_|_|_.__/\___/_|_\__\__,_|_.__/_\___|
+;;     |__/                 |___|
+
+
+(s/def ::symbol-table map?)
+
+
+
+;;  __ _ __ __ ___ ______
+;; / _` / _/ _/ -_|_-<_-<
+;; \__,_\__\__\___/__/__/
+
+
+(enum-like access #{'Public 'Private})
+
+(tests
+ (let [public (access 'Public)]
+   (s/conform ::asr-term public) := public))
+
+
+;;  _ __ _ _ ___ ___ ___ _ _  __ ___
+;; | '_ \ '_/ -_|_-</ -_) ' \/ _/ -_)
+;; | .__/_| \___/__/\___|_||_\__\___|
+;; |_|
+
+
+(enum-like presence #{'Required 'Optional})
+
+(tests
+ (let [required (presence 'Required)]
+   (s/conform ::asr-term required) := required))
+
+
+;;           _                   _   _
+;; __ ____ _| |_  _ ___ ___ __ _| |_| |_ _ _
+;; \ V / _` | | || / -_)___/ _` |  _|  _| '_|
+;;  \_/\__,_|_|\_,_\___|   \__,_|\__|\__|_|
+
+
+(s/def ::value-attr ::bool)
 
 
 ;; __   __        _      _    _
@@ -1089,3 +1135,15 @@
 ;;  Public                  ;   access          access
 ;;  Required                ;   presence        presence
 ;;  .false.)})              ;   bool            value-attr
+
+
+(defmethod term ::variable [_]
+  (s/keys :req [::term ::symbol-table
+                ::identifier
+                ::identifiers
+                ::intent
+                ::storage-type
+                ::ttype
+                ::abi
+                ::access
+                ::presence]))

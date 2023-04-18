@@ -942,6 +942,7 @@ We present the terms somewhat out of the order of
 Table \ref{tbl:nodes}. First is /intent/, as it is
 the archetype for several enum-like terms and heads.
 
+\clearpage
 ** intent
 <<intent>>
 
@@ -1006,6 +1007,7 @@ fully qualified in namespaces.
     #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 #+end_src
 
+\newpage
 *** \colorbf{red}{How to Use Specs}
 <<how-to-use-specs>>
 
@@ -1071,6 +1073,7 @@ intent, not for the intent itself. The spec for the intent
 itself is an implementation of a polymorphic Clojure
 /multi-spec/,[fn:clojure-spec-entity] =::asr-term=.
 
+\newpage
 *** \colorbf{red}{Multi-Specs}
 
 A multi-spec is like a tagged union in C. The
@@ -1286,6 +1289,7 @@ All our specs are like that: a long-form hash-map and a short-form
 sugar function that does a conformance check.
 
 *** \colorbf{red}{Capture the Enum-Like Pattern in a Macro}
+<<enum-like-macro>>
 
 All enum-likes have a /contents/ spec, a =defmethod
 term=, and a syntax-sugar function. The following
@@ -1322,15 +1326,55 @@ Use the macro like this:
    #{'Default, 'Save, 'Parameter, 'Allocatable})
 #+end_src
 
-** unit
-** symbol
+\clearpage
+** TODO unit
+
+\clearpage
+** TODO symbol
 
 *** TODO Variable
 
 ** storage_type
-** access
-** deftype
-** presence
+
+The following tests illustrate conformance:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests
+   (s/valid? ::storage-type-enum 'Default)       := true
+   (s/valid? ::storage-type-enum 'foobar)        := false
+   (s/valid? ::asr-term
+             {::term ::storage-type
+              ::storage-type-enum 'Default})     := true
+   (s/valid? ::asr-term (storage-type 'Default)) := true
+   (s/valid? ::asr-term (storage-type 'foobar))  := false
+   (storage-type 'foobar)
+              := ::invalid-storage-type
+   (s/conform ::asr-term
+              (storage-type 'Default)
+              := (storage-type 'Default)))
+#+end_src
+
+The implementation is covered in Section
+[[enum-like-macro]] on the enum-like macro.
+
+\clearpage
+** TODO access
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::symbol-table map?
+#+end_src
+
+** TODO deftype
+
+\clearpage
+** TODO presence
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::symbol-table map?
+#+end_src
 
 \newpage
 ** abi
@@ -1493,8 +1537,8 @@ the destructuring technique:
         abi_)))
 #+end_src
 
-** stmt
-** expr
+** TODO stmt
+** TODO expr
 
 \clearpage
 ** ttype
@@ -1561,14 +1605,14 @@ See the tests for many examples.
 
 *** TODO Character
 
-** restriction_arg
-** binop
-** logicalbinop
-** cmpop
-** integerboz
-** arraybound
-** arraystorage
-** cast_kind
+** TODO restriction_arg
+** TODO binop
+** TODO logicalbinop
+** TODO cmpop
+** TODO integerboz
+** TODO arraybound
+** TODO arraystorage
+** TODO cast_kind
 
 \clearpage
 ** dimension
@@ -1696,16 +1740,16 @@ for /dimension/:
 
 
 \clearpage
-** alloc_arg
-** attribute
-** attribute_arg
-** call_arg
-** tbind
-** array_index
-** do_loop_head
-** case_stmt
-** type_stmt
-** enumtype
+** TODO alloc_arg
+** TODO attribute
+** TODO attribute_arg
+** TODO call_arg
+** TODO tbind
+** TODO array_index
+** TODO do_loop_head
+** TODO case_stmt
+** TODO type_stmt
+** TODO enumtype
 
 * Implicit Terms
 
@@ -1714,11 +1758,10 @@ Terms used, explicitly or implicitly,  but not defined in ASDL.
 Some items specified in ASDL as /symbol_table/ are actually
 /symtab_id/.
 
-** symtab_id
-** symbol_table
+** TODO symtab_id
+** TODO symbol_table
 
-* Change Log
-
-2023-06-Apr :: Start.
-
-2023-12-Apr :: enum-like specs
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::symbol-table map?
+#+end_src
