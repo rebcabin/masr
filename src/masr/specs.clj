@@ -4,9 +4,10 @@
             [clojure.spec.gen.alpha        :as      gen          ]
             [clojure.test.check.generators :as      tgen         ]
             [clojure.string                :as      str          ]
-            [masr.logic                    :refer   [iff implies ]]
-            [masr.utils                    :refer   [plnecho     ]]
-            [hyperfiddle.rcf               :refer   [tests tap % ]]
+            [clojure.pprint                :refer   [pprint     ]]
+            [masr.logic                    :refer   [iff implies]]
+            [masr.utils                    :refer   [plnecho    ]]
+            [hyperfiddle.rcf               :refer   [tests tap %]]
             [blaster.clj-fstring           :refer   [f-str]]
             #_[clojure.zip                 :as z                 ]
             ))
@@ -207,9 +208,9 @@
 ;;                    :bignat  ::bignat))
 
 
-;; -+-+-+-+-+-
-;;  s p e c s
-;; -+-+-+-+-+-
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
 
 
 (s/def ::nat nat-int?)
@@ -219,9 +220,9 @@
  (nat-int? too-big-hex) := false)
 
 
-;; -+-+-+-+-+-+-
-;;  s y n t a x
-;; -+-+-+-+-+-+-
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
 
 
 (defn nat [it]
@@ -290,9 +291,9 @@
 ;; |_\__,_\___|_||_\__|_|_| |_\___|_|
 
 
-;; -+-+-+-+-+-
-;;  s p e c s
-;; -+-+-+-+-+-
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
 
 
 (let [alpha-re #"[a-zA-Z_]"  ;; "let over lambda."
@@ -381,6 +382,11 @@
  (every? set? (gen/sample (s/gen ::identifier-set))) := true)
 
 
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
+
+
 (defn identifier-set
   "Remove duplicates, i.e., create a _set_."
   [it] ;; candidate contents
@@ -405,7 +411,7 @@
    (count x)                     := 0)
  (let [x (identifier-set ['a '1])]
    (s/valid? ::identifier-set x) := false
-   x                             := ::invalid-identifier-set))
+   x := ::invalid-identifier-set))
 
 
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
@@ -421,6 +427,11 @@
 
 (tests
  (every? vector? (gen/sample (s/gen ::identifier-list))) := true)
+
+
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
 
 
 (defn identifier-list
@@ -449,7 +460,7 @@
    (count   x)                    := 0)
  (let [x (identifier-list ['a '1])]
    (s/valid? ::identifier-list x) := false
-   x                              := ::invalid-identifier-list))
+   x := ::invalid-identifier-list))
 
 
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
@@ -465,6 +476,11 @@
               :into [])
    ;; no duplicates
    #(= (count %) (count (set %)))))
+
+
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
 
 
 (defn identifier-suit
@@ -496,7 +512,7 @@
    (count   x)                    := 0)
  (let [x (identifier-suit ['a '1])]
    (s/valid? ::identifier-suit x) := false
-   x                              := ::invalid-identifier-suit))
+   x := ::invalid-identifier-suit))
 
 
 ;;     _ _                   _
@@ -505,10 +521,9 @@
 ;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_|
 
 
-;; -+-+-+-+-+-
-;;  s p e c s
-;; -+-+-+-+-+-
-
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
 
 ;; dimension = (expr? start, expr? length)
 
@@ -587,9 +602,9 @@
 ;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_/__/
 
 
-;; -+-+-+-+-+-
-;;  s p e c s
-;; -+-+-+-+-+-
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
 
 
 (def MIN-NUMBER-OF-DIMENSIONS 0)  ;; TODO: 1?
@@ -606,11 +621,6 @@
              :min-count MIN-NUMBER-OF-DIMENSIONS,
              :max-count MAX-NUMBER-OF-DIMENSIONS,
              :into []))
-
-
-;; -+-+-+-+-+-+-+-+-+-
-;;  f u l l   f o r m
-;; -+-+-+-+-+-+-+-+-+-
 
 
 (tests (s/valid?
@@ -716,12 +726,14 @@
        (s/def ~tke ~heads)       ;; the set
        (defmethod term ~tkw [_#] ;; the multi-spec
          (s/keys :req [:masr.specs/term ~tke]))
-       (defn ~term [it#]         ;; the sugar
+       (defn ~term [it#] ;; the sugar
          (let [st# (s/conform
                     :masr.specs/asr-term
                     {:masr.specs/term ~tkw
-                     ~tke it#})]
-           (if (s/invalid? st#) ~tki, st#))))))
+                     ~tke it#})
+               result# (if (s/invalid? st#) ~tki, st#)]
+           result#
+           )))))
 
 
 ;;  _     _           _
@@ -730,6 +742,11 @@
 ;; |_|_||_\__\___|_||_\__|
 
 ;; intent = Local | In | Out | InOut | ReturnVar | Unspecified
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m   &   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
 (enum-like intent #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
@@ -742,9 +759,10 @@
  (intent 'Local)                  :=
  #:masr.specs{:term :masr.specs/intent,
               :intent-enum 'Local}
- (intent 42)                      := :masr.specs/invalid-intent
+ (intent 42) := :masr.specs/invalid-intent
  (let [intent-example (intent 'Local)]
-   (s/conform ::asr-term intent-example) := intent-example))
+   (s/conform ::asr-term intent-example)
+                                  := intent-example))
 
 
 ;;     _                             _
@@ -754,6 +772,11 @@
 ;;                     |___/             |__/|_|
 
 ;; storage_type = Default | Save | Parameter | Allocatable
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m   &   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
 (enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
@@ -766,16 +789,20 @@
             ::storage-type-enum 'Default})     := true
  (s/valid? ::asr-term (storage-type 'Default)) := true
  (s/valid? ::asr-term (storage-type 'foobar))  := false
- (storage-type 'foobar)
- := ::invalid-storage-type
+ (storage-type 'foobar) := ::invalid-storage-type
  (let [st-example (storage-type 'Default)]
-   (s/conform ::asr-term st-example) := st-example))
+   (s/conform ::asr-term st-example)           := st-example))
 
 
 ;;       _    _
 ;;  __ _| |__(_)
 ;; / _` | '_ \ |
 ;; \__,_|_.__/_|
+
+
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
 
 
 (def external-abis
@@ -826,6 +853,10 @@
     (if (s/invalid? abi_)
       ::invalid-abi
       abi_)))
+
+
+;; TODO simplify sugar to default the bool
+
 
 (tests
  (s/valid? ::asr-term
@@ -887,9 +918,9 @@
 ;;     | Logical(int kind, dimension* dims)
 
 
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-;;  N e s t e d   m u l t i - s p e c :
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  N e s t e d   m u l t i - s p e c
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
 ;; All multi-specs begin with
@@ -897,6 +928,7 @@
 ;; ::asr-ttype-head.
 
 
+;; nested multi-spec
 (do (defmulti ttype-head ::ttype-head)
     ;; name of this multi-spec
     ;; \                     /
@@ -915,6 +947,11 @@
         kind   (keyword ns (str (str/lower-case strit) "-kind"))]
     `(defmethod ttype-head ~method [_#]
         (s/keys :req [::ttype-head ~kind ::dimensions]))))
+
+
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
 
 
 (def-ttype-head Integer)
@@ -963,6 +1000,7 @@
 ;;  s u g a r
 ;; -+-+-+-+-+-
 
+
 (defmacro def-ttype-and-head [it]
   (let [ns  "masr.specs"
         cap (str/capitalize (str it)) ;; like "Integer"
@@ -1008,6 +1046,7 @@
          ;; dfd = [] is the default dimensions
          ([]              (~nym {:kind ~dfk   :dimensions ~dfd})))
        )))
+
 
 (def-ttype-and-head Integer)
 (def-ttype-and-head Real)
@@ -1065,6 +1104,7 @@
 ;;     |__/                 |___|
 
 
+;; TODO: placeholder
 (s/def ::symbol-table map?)
 
 
@@ -1074,11 +1114,17 @@
 ;; \__,_\__\__\___/__/__/
 
 
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m   &   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+
 (enum-like access #{'Public 'Private})
 
 (tests
  (let [public (access 'Public)]
-   (s/conform ::asr-term public) := public))
+   (s/conform ::asr-term public) := public)
+ (access 'foobar) := ::invalid-access)
 
 
 ;;  _ __ _ _ ___ ___ ___ _ _  __ ___
@@ -1087,11 +1133,17 @@
 ;; |_|
 
 
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m   &   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+
 (enum-like presence #{'Required 'Optional})
 
 (tests
  (let [required (presence 'Required)]
-   (s/conform ::asr-term required) := required))
+   (s/conform ::asr-term required) := required)
+ (presence 'fubar) := ::invalid-presence)
 
 
 ;;           _                   _   _
@@ -1101,6 +1153,16 @@
 
 
 (s/def ::value-attr ::bool)
+
+
+;;               _        _        _    _
+;;  ____  _ _ __| |_ __ _| |__ ___(_)__| |
+;; (_-< || | '  \  _/ _` | '_ \___| / _` |
+;; /__/\_, |_|_|_\__\__,_|_.__/   |_\__,_|
+;;     |__/
+
+
+(s/def ::symtab-id ::nat)
 
 
 ;; __   __        _      _    _
@@ -1137,13 +1199,61 @@
 ;;  .false.)})              ;   bool            value-attr
 
 
-(defmethod term ::variable [_]
-  (s/keys :req [::term ::symbol-table
-                ::identifier
-                ::identifiers
-                ::intent
-                ::storage-type
-                ::ttype
-                ::abi
-                ::access
-                ::presence]))
+(s/def ::varnym ::identifier)
+
+
+;; TODO: check that dependencies are in the named table
+(s/def ::dependencies ::identifier-set)
+
+
+;; TODO placeholder; needs sugar
+(s/def ::symbolic-value empty?)
+
+
+;; TODO placeholder; needs sugar
+(s/def ::value empty?)
+
+
+;; nested multi-spec
+(do (defmulti symbol-head ::symbol-head)
+    (s/def ::asr-symbol-head
+      (s/multi-spec symbol-head ::symbolhead)))
+
+
+(defmethod term ::symbol [_]
+  (s/keys :req [::term ::asr-symbol-head]))
+
+
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
+
+
+(defmethod symbol-head ::variable [_]
+  (s/keys :req [::symbol-head
+                ::symtab-id    ::varnym          ::dependencies
+                ::intent       ::symbolic-value  ::value
+                ::storage-type ::ttype           ::abi
+                ::access       ::presence        ::value-attr]))
+
+(let [a-var {::symbol-head ::variable
+
+             ::symtab-id      (nat 2)
+             ::varnym         (identifier 'x)
+             ::dependencies   (identifier-list ())
+             ::intent         (intent 'Local)
+
+             ::symbolic-value () ;; TODO sugar
+             ::value          () ;; TODO sugar
+             ::storage-type   (storage-type 'Default)
+             ::ttype          (ttype (Integer 4 []))
+
+             ::abi            (abi 'Source :external false)
+             ::access         (access 'Public)
+             ::presence       (presence 'Required)
+             ::value-attr false ;; TODO sugar
+             }]
+  (tests
+   (s/valid? ::asr-symbol-head a-var) := true
+   (s/valid? ::asr-term {::term ::symbol
+                         ::asr-symbol-head a-var}) := true))

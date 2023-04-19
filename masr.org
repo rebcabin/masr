@@ -253,6 +253,8 @@ for non-conforming examples.
 All keywords are in namespace =masr.specs=. For
 example, =::nat= is short for =:masr.specs/nat=.
 
+#+caption: Non-nested Specs and Multi-Specs
+#+label: {tbl:non-nestes-specs}
 | **Spec or Multi-Spec** | **term**         | **Sugared Conforming Example**     |
 |------------------------+------------------+------------------------------------|
 | =::nat=                | NA               | =(nat 42))=                        |
@@ -266,7 +268,16 @@ example, =::nat= is short for =:masr.specs/nat=.
 | =::asr-term=           | =::storage-type= | =(storage-type 'Default)=          |
 | =::asr-term=           | =::abi=          | =(s/conform ::asr-term=            |
 |                        |                  | =(  abi 'Source :external false))= |
-| =::asr-term=           | =::ttype=        | =(Integer 4 [[6 60] [42]])=        |
+| =::asr-term=           | =::access=       | =(access 'Public)=                 |
+| =::asr-term=           | =::presence=     | =(presence 'Required)=             |
+
+#+caption: Nested ASR-Term Multi-Specs
+#+label: {tbl:non-nestes-specs}
+| **term**            | **head**     | **Sugared Conforming Example**     |
+|---------------------+--------------+------------------------------------|
+| =::ttype=           | =::integer=  | =(Integer 4 [[6 60] [42]])=        |
+| =::symbol=          | =::variable= |                                    |
+
 
 \clearpage
 * Issues with ASDL
@@ -1363,17 +1374,24 @@ The implementation is covered in Section
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  (s/def ::symbol-table map?
+  (enum-like access #{'Public 'Private})
+  (tests
+   (let [public (access 'Public)]
+     (s/conform ::asr-term public) := public)
+   (access 'foobar) := ::invalid-access)
 #+end_src
 
 ** TODO deftype
 
-\clearpage
 ** TODO presence
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  (s/def ::symbol-table map?
+  (enum-like presence #{'Required 'Optional})
+  (tests
+   (let [required (presence 'Required)]
+     (s/conform ::asr-term required) := required)
+   (presence 'fubar) := ::invalid-presence)
 #+end_src
 
 \newpage
