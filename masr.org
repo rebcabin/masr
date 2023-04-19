@@ -278,6 +278,144 @@ example, =::nat= is short for =:masr.specs/nat=.
 | =::ttype=           | =::integer=  | =(Integer 4 [[6 60] [42]])=        |
 | =::symbol=          | =::variable= |                                    |
 
+\clearpage
+** Multi-Specs
+
+Hash-maps that conform to multi-spec =::asr-term=
+have a =::term= attribute that matches a
+=defmethod=. For instance, the following example is
+a valid =::asr-term=; its =::term= attribute is
+=::intent=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+  (s/valid? ::asr-term
+            {::term        ::intent, ;; matches a defmethod
+             ::intent-enum 'Local})  ;; specifies contents
+#+end_src
+
+where
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+  (s/def ::intent-enum
+    #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+#+end_src
+
+Here is another =::asr-term=, this time, matching =::abi=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+  (s/valid? ::asr-term
+            {::term         ::abi,  ;; matches a defmethod
+             ::abi-enum     'Source ;; specifies contents
+             ::abi-external false}) ;; specifies contents
+#+end_src
+
+where
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+(s/def ::abi-external ::bool)
+#+end_src
+
+The other =::asr-term='s follow the obvious pattern.
+The =::term= attributes, \linebreak =::intent=,
+=abi=, etc., match one of the =term= =defmethod='s:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+  (defmulti term ::term)
+  (defmethod term ::intent    [_]
+    (s/keys :req [::term ::intent-enum]))
+  (defmethod term ::dimension [_] ,,,)
+  (defmethod term ::abi       [_] ,,,)
+  (defmethod term ::symbol    [_] ,,,)
+  ;; etc.
+#+end_src
+
+Finally, the multi-spec itself is named =::asr-term=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  ;;     name of the mult-spec    defmulti  tag fn
+  ;;     ------------------------   ----    ------
+  (s/def ::asr-term (s/multi-spec   term    ::term))
+#+end_src
+
+\clearpage
+** Nested Multi-Specs
+
+Contents of multi-specs can, themselves, be
+multi-specs. Such cases obtain when a term has
+multiple function-like heads. Examples include
+=ttype= and =symbol=.
+
+The names of all multi-specs in MASR, nested or not,
+begin with =::asr-= and end with either =term= or
+=<some-term>-head=. Examples: =::asr-term= and
+\linebreak =::asr-ttype-head=. There is only one
+level of nesting: terms above heads.
+
+Here is the =::asr-term= spec for =::ttype=; the
+/nested/ multi-spec for contents is named
+=::asr-type-head=.
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+(defmethod term ::ttype [_]
+  (s/keys :req [::term ::asr-ttype-head]))
+#+end_src
+
+where
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+(defmulti ttype-head ::ttype-head)
+(defmethod ttype-head ::Integer ,,,)
+(defmethod ttype-head ::Real    ,,,) ,,,
+(s/def ::asr-ttype-head
+      (s/multi-spec ttype-head ::ttype-head))
+#+end_src
+
+Here is a conforming example:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/valid? ::asr-term {::term ::ttype,
+             ::asr-ttype-head
+             {::ttype-head ::Real, ::real-kind 4,
+              ::dimensions [[6 60] [1 42]}})
+#+end_src
+
+Likewise, here is the =::asr-term= spec for
+=::symbol=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+(defmulti symbol-head ::symbol-head)
+(defmethod symbol-head ::Variable [_]
+  (s/keys :req [::symbol-head ::symtab-id ::varnym ,,,]))
+(defmethod symbol-head ::Module   [_] ,,,)
+(defmethod symbol-head ::Function [_] ,,,) ,,,
+(s/def ::asr-symbol-head
+      (s/multi-spec symbol-head ::symbolhead))
+#+end_src
+
+Here is a conforming example for =::Variable=,
+abbreviated:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/valid?
+   ::asr-term  {::term ::symbol,
+     ::asr-symbol-head
+     {::symbol-head ::Variable
+      ::symtab-id (nat 2)
+      ::varnym    (identifier 'x)
+      ::intent    (intent 'Local)
+      ::ttype     (ttype (Integer 4 [[0 42])) ,,, }})
+#+end_src
 
 \clearpage
 * Issues with ASDL
@@ -353,8 +491,8 @@ ASR expressions, being trees, have a natural
 representation in S-Expressions.[fn::
 https://en.wikipedia.org/wiki/S-expression] Clojure,
 being a modern Lisp, natively handles S-Expressions.
-Clojure is modern. Clojure has a robust, lively
-ecosystem.
+
+Clojure is up-to-date, lively, and production-ready.
 
 Clojure.spec,[fn:clojure-spec:
 https://clojuredocs.org/clojure.spec.alpha] is a

@@ -864,7 +864,11 @@
             ::abi-enum 'Source
             ::abi-external false}) := true
  (let [abi-example (abi 'Source :external false)]
-   (s/conform ::asr-term abi-example) := abi-example))
+   (s/conform ::asr-term abi-example) := abi-example)
+ (abi 'Source)                 := ::invalid-abi
+ (abi 'Source :external true)  := ::invalid-abi
+ (abi 'Soruce :external false) := ::invalid-abi
+ (abi 'Source :extrenal false) := ::invalid-abi)
 
 
 ;;  _____ _
@@ -962,9 +966,17 @@
 
 (tests
  (s/valid? ::asr-ttype-head
-           {::type-head ::Integer
+           {::ttype-head ::Integer
             ::integer-kind 42
             ::dimensions []})                         := false
+ (s/valid? ::asr-ttype-head
+           {::ttype-head ::Integer
+            ::integer-kind 4
+            ::dimensions []})                         := true
+ (s/valid? ::asr-ttype-head
+           {::ttype-head ::Integer
+            ::integer-kind 4
+            ::dimensions (dimensions [[6 60] [42]])}) := true
  (let [a {::ttype-head   ::Integer
           ::integer-kind 4
           ::dimensions   (dimensions [[6 60] [42]])}]
@@ -1229,18 +1241,18 @@
 ;; -+-+-+-+-+-+-+-+-+-
 
 
-(defmethod symbol-head ::variable [_]
+(defmethod symbol-head ::Variable [_]
   (s/keys :req [::symbol-head
                 ::symtab-id    ::varnym          ::dependencies
                 ::intent       ::symbolic-value  ::value
                 ::storage-type ::ttype           ::abi
                 ::access       ::presence        ::value-attr]))
 
-(let [a-var {::symbol-head ::variable
+(let [a-var {::symbol-head ::Variable
 
              ::symtab-id      (nat 2)
              ::varnym         (identifier 'x)
-             ::dependencies   (identifier-list ())
+             ::dependencies   (identifier-set ())
              ::intent         (intent 'Local)
 
              ::symbolic-value () ;; TODO sugar
