@@ -91,7 +91,7 @@
     (is (s/valid? ::asr/asr-term (dimension '(1 60))))
     (is (s/valid? ::asr/asr-term (dimension '())))
     (is (s/valid? ::asr/asr-term (dimension  ())))
-    (is (s/valid? ::asr/asr-term (dimension '(0))))
+    (is (not (s/valid? ::asr/asr-term (dimension '(0)))))
     (is (not (s/valid?
               ::asr/asr-term
               (dimension
@@ -117,7 +117,7 @@
     (testing "implicit conversion to seq via 'dimension' fncall"
       (is (s/valid? ::asr/asr-term (dimension [1 60])))
       (is (s/valid? ::asr/asr-term (dimension [])))
-      (is (s/valid? ::asr/asr-term (dimension [0])))
+      (is (not (s/valid? ::asr/asr-term (dimension [0]))))
       (is (not (s/valid?
                 ::asr/asr-term
                 (dimension
@@ -502,15 +502,15 @@
     (is (vt? (ttype (Integer))))
     (is (vt? (ttype (Integer 4))))
     (is (vt? (ttype (Integer 4 []))))
-    (is (vt? (ttype (Integer 4 [[6 60] [42]]))))
+    (is (vt? (ttype (Integer 4 [[6 60] [1 42]]))))
     (is (vt? (ttype (Integer))))
     (is (vt? (ttype (Integer 8))))
     (is (vt? (ttype (Integer 8 []))))
-    (is (vt? (ttype (Integer 8 [[6 60] [82]]))))
+    (is (vt? (ttype (Integer 8 [[6 60] [1 82]]))))
     (is (vt? (ttype (Logical))))
     (is (vt? (ttype (Logical 4))))
     (is (vt? (ttype (Logical 4 []))))
-    (is (vt? (ttype (Logical 4 [[6 60] [42]]))))
+    (is (vt? (ttype (Logical 4 [[6 60] [1 42]]))))
     (is (vt? (ttype (Integer- {:dimensions [], :kind 4}))))
     (is (vt? (ttype (Integer- {:kind 4, :dimensions []}))))
     (testing "non-conformance"

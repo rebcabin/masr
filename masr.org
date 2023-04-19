@@ -121,6 +121,9 @@
 #+LaTeX_HEADER: \theoremstyle{warning}
 #+LaTeX_HEADER: \newtheorem{warning}{Warning}
 
+#+LaTeX_HEADER: \theoremstyle{remark}
+#+LaTeX_HEADER: \newtheorem{remark}{Remark}
+
 #+LaTeX_HEADER: \theoremstyle{premise}
 #+LaTeX_HEADER: \newtheorem{premise}{Premise}
 
@@ -240,30 +243,45 @@ snapshot.[fn:grammar-snapshot]
 \clearpage
 * Cheat Sheet
 
-The following table summarizes this document with
-simple conforming examples via syntactic sugar.
-There are other ways to construct conforming
-examples, but sugar is the recommended way.
+The following tables summarize this document via
+conforming examples written via syntactic sugar.
+Every example has a full form as well as a sugared
+form. Sugared forms are shorter for common cases and
+thus recommended much of the time.
 
 Equally important are non-conforming examples. See
 the body of this document, the =tests= in
-=specs.clj=, and the =deftest='s in =core_tests.clj=
-for non-conforming examples.
+=specs.clj=, and the =deftest='s in
+=core_tests= for non-conforming examples.
 
 All keywords are in namespace =masr.specs=. For
 example, =::nat= is short for =:masr.specs/nat=.
 
-#+caption: Non-nested Specs and Multi-Specs
+#+caption: Atomic and Naked Specs (no sugar)
+#+label: {tbl:non-nestes-specs}
+| **Spec Name** | **Predicate** | **Example** |
+|---------------+---------------+-------------|
+| =::symtab-id= | =::nat=       | =42=        |
+| =::bool=      | =boolean?=    | =true=      |
+| =::float=     | =float?=      | =3.142=     |
+| =::int=       | =int?=        | =-1789=     |
+
+#+caption: Top-Level non-/term/ Specs
+#+label: {tbl:non-nestes-specs}
+| **Spec or Multi-Spec** | **Sugared Conforming Example**     |
+|------------------------+------------------------------------|
+| =::nat=                | =(nat 42))=                        |
+| =::identifier=         | =(identifier 'boofar)=             |
+| =::identifier-set=     | =(identifier-set ['a 'a])=         |
+| =::identifier-list=    | =(identifier-list ['a 'a])=        |
+| =::identifier-suit=    | =(identifier-suit ['a 'b])=        |
+| =::dimensions=         | =(dimensions [[6 60] [1 42]])=     |
+
+#+caption: /term/ Multi-Specs
 #+label: {tbl:non-nestes-specs}
 | **Spec or Multi-Spec** | **term**         | **Sugared Conforming Example**     |
 |------------------------+------------------+------------------------------------|
-| =::nat=                | NA               | =(nat 42))=                        |
-| =::identifier=         | NA               | =(identifier 'boofar)=             |
-| =::identifier-set=     | NA               | =(identifier-set ['a 'a])=         |
-| =::identifier-list=    | NA               | =(identifier-list ['a 'a])=        |
-| =::identifier-suit=    | NA               | =(identifier-suit ['a 'b])=        |
 | =::asr-term=           | =::dimension=    | =(dimension [6 60])=               |
-| =::dimensions=         | NA               | =(dimensions [[6 60] [42]])=       |
 | =::asr-term=           | =::intent=       | =(intent 'Local)=                  |
 | =::asr-term=           | =::storage-type= | =(storage-type 'Default)=          |
 | =::asr-term=           | =::abi=          | =(s/conform ::asr-term=            |
@@ -271,12 +289,16 @@ example, =::nat= is short for =:masr.specs/nat=.
 | =::asr-term=           | =::access=       | =(access 'Public)=                 |
 | =::asr-term=           | =::presence=     | =(presence 'Required)=             |
 
-#+caption: Nested ASR-Term Multi-Specs
+#+caption: Nested /head/ Multi-Specs
 #+label: {tbl:non-nestes-specs}
-| **term**            | **head**     | **Sugared Conforming Example**     |
-|---------------------+--------------+------------------------------------|
-| =::ttype=           | =::integer=  | =(Integer 4 [[6 60] [42]])=        |
-| =::symbol=          | =::variable= |                                    |
+| **term**   | **head**     | **Sugared Conforming Example** |
+|------------+--------------+--------------------------------|
+| =::ttype=  | =::Integer=  | =(Integer 4 [[6 60] [1 42]])=  |
+| =::ttype=  | =::Real=     | =(Real    8 [[6 60] [1 42]])=  |
+| =::ttype=  | =::Complex=  | =(Complex 4 [[6 60] [1 42]])=  |
+| =::ttype=  | =::Logical=  | =(Logical 1 [[6 60] [1 42]])=  |
+| =::symbol= | =::Variable= | =(Variable :symtab-id 42 ...)= |
+
 
 \clearpage
 ** Multi-Specs
@@ -575,7 +597,7 @@ See the blog post in the footnote[fn::
 https://alok-verma6597.medium.com/case-styles-in-development-camel-pascal-snake-and-kebab-case-ed8e7b2497af]
 for an informal description of /PascalCase/.
 
-There are of two kinds of heads:
+There are two kinds of heads:
 
 - /function-like heads/ :: --- have parentheses and typed
   parameters, \newline e.g., =CaseStmt(expr*, stmt*)=
@@ -648,21 +670,24 @@ head. There are about 250 heads by a recent count.
 
 - Entity Hash-Maps :: --- ASR
   entities[fn:clojure-spec-entity:
-  https://clojure.org/guides/spec] shall be
-  hash-maps with fully-qualified keywords as keys
-  (see Section [[intent]] for motivating example).
+  https://clojure.org/guides/spec] in full-form
+  shall be hash-maps with fully-qualified keywords
+  as keys (see Section [[intent]] for motivating
+  example).
 
 - Multi-Specs :: --- ASR entity hash-maps shall be
   recursively checked and generated via Clojure
   multi-specs.[fn:clojure-spec-entity]
 
-- Explicit :: --- ASR entity hash-maps shall contain
-  all necessary information, even at the cost of
-  verbosity. Defaults are not permitted.
+- Full-Form :: --- Every entity has a fully explicit
+  form in which all attributes are spelled out.
+  Full-form hash-maps shall contain all necessary
+  information, even at the cost of verbosity.
+  Defaults and optionals appear only sparingly
 
-- Syntax Sugar :: --- Extra constructor functions
-  for ASR entities may allow default values for
-  positional and keyword arguments. See Section
+- Syntax Sugar :: --- Certain constructor functions
+  may supply default entity-attribute values so as
+  to shorten common-case expressions. See Section
   [[ttype]] for an example and see Issue 3 on MASR's
   GitHub repo.[fn::
   https://github.com/rebcabin/masr/issues/3]
@@ -763,14 +788,13 @@ vector) of zero or more dimension instances
 ([[dimension]]). Because \linebreak =::dimensions=
 [\emph{sic}] is not a term, we do not need nested
 multi-specs. However, because =::dimension=
-[\emph{sic}] is a term, the spec for =::dimensions=
-must ensure that the elements of its collection
-conform to =::dimension=, which is an =asr-term=
-multi-spec. We ensure so with a function that
+[\emph{sic}] is a term, the elements of a
+=dimensions*= must conform to =::dimension=, which
+is an =asr-term= multi-spec. We ensure such
+conformance with a general-purpose function that
 selects terms that match a given spec, =dimension=
 in this case. We may reuse that function in other
-specs that represent collections that are not,
-themselves, terms.
+specs that represent non-term collections.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -779,18 +803,24 @@ themselves, terms.
            #(= kwd (::term %))))
 #+end_src
 
-(The notation =#(...%...)= is Clojure shorthand for
-an anonymous function (lambda) with a positional
-argument denoted by =%=, and positional arguments
-=%1, %2, ...= when there are two or more arguments.
-Applying a keyword like =::term= as a function picks
-that keyword out of its hash-map argument.)
+\vskip 0.26cm
+\begin{framed}
+\begin{remark}
+  The notation $\texttt{\#(...\%...)}$ is Clojure
+  shorthand for an anonymous function (lambda) with a
+  positional argument denoted by $\texttt{\%}$, and
+  positional arguments $\texttt{\%1, \%2, ...}$ when
+  there are two or more arguments. Applying a keyword
+  like $\texttt{::term}$ as a function picks that
+  keyword out of its hash-map argument.
+\end{remark}
+\vskip 0.26cm
+\end{framed}
 
 Here is the spec, =::dimensions=, for dimensions. We
 limit the number of dimensions to 9 for practical
-reasons. The meaning of a =::dimensions= instance
-with 0 dimensions is an open question (Issue
-6[fn:issue6]).
+reasons. The meaning of an empty =::dimensions=
+instance is an open question (Issue 7[fn:issue7]).
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1730,7 +1760,7 @@ One may always write out ttype specs in full:
              ::asr-ttype-head
              {::ttype-head ::Integer,
               ::bytes-kind 4
-              ::dimensions [[6 60] [82]]}})
+              ::dimensions [[6 60] [1 82]]}})
 #+end_src
 
 *** Sugar for Integer, Real, Complex, Logical
@@ -1754,7 +1784,7 @@ hyphens. Full sugar uses positional arguments, as in
   (ttype (Integer))
   (ttype (Integer 4))
   (ttype (Integer 2 []))
-  (ttype (Integer 8 [[6 60] [42]]))
+  (ttype (Integer 8 [[6 60] [1 42]]))
 #+end_src
 
 See the tests for many examples.
@@ -1774,28 +1804,20 @@ See the tests for many examples.
 ** dimension
 <<dimension>>
 
-A /dimension/ is 0, 1, or 2 nats in a Clojure list
-or vector:
+A /dimension/ is 0 or 2 nats in a Clojure list or
+vector:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
   (def MIN-DIMENSION-COUNT 0)
   (def MAX-DIMENSION-COUNT 2)
   (s/def ::dimension-content
-    (s/coll-of ::nat
-               :min-count MIN-DIMENSION-COUNT,
-               :max-count MAX-DIMENSION-COUNT,
-               :into ()))
+    (s/and (fn [it] (not (= 1 (count it))))
+           (s/coll-of ::nat
+                      :min-count MIN-DIMENSION-COUNT,
+                      :max-count MAX-DIMENSION-COUNT,
+                      :into ())))
 #+end_src
-
-If there is one nat, it specifies the length of any
-array dimension that enjoys the instance. For
-example, in the ttype =(Integer 4 [[42]])= ([[ttype]]) ,
-the one dimension in the dimensions [\emph{sic}]
-([[dimensions]]) of the ttype is =[42]=. The ttype
-specifies a rank-1 array of 42 4-byte integers, with
-indices starting at 1 and running \linebreak
-through 42.
 
 If there are two nats, the first nat specifies the
 starting index of any array dimension that enjoys
@@ -1808,30 +1830,36 @@ array of 60 4-byte integers with indices starting at
 6 and running through 65.
 
 If there are no nats, i.e., the array dimension of
-any array enjoying the instance is **unspecified**.
+any array enjoying the instance is of zero length.
 For an example, consider the ttype
-=(Integer 4 [[]])= ([[ttype]]). This unspecified type is
-an open question, Issue 6.[fn:issue6] Also
-unspecified is a dimension of zero length.[fn:issue7]
+=(Integer 4 [[]])= ([[ttype]]). This meaning of this type is
+an open question.[fn:issue7]
 
-*** TODO: Issue 6: Empty Dimension
+*** Empty Dimensions
 
-See Issue 6 in MASR's GitHub repo[fn:issue6:
-https://github.com/rebcabin/masr/issues/6] for
-discussion of the meaning of \linebreak
-=(Integer 4 [[]])=. Empty dimensions [\emph{sic}],
-as in =(Integer 4 [])=, are also unspecified and
-further discussed in Section [[dimensions]].
+Empty dimensions [\emph{sic}],
+as in =(Integer 4 [])= specify non-array types.
+These are often called, loosely, /scalars/.
+Pedantically,  the term
+/scalar/ only pertains with respect to a vector
+space.
+
+An empty dimension, as in =(Integer 4 [[]])=,
+specifies a rank-1 array of zero length. Such items
+are discussed further in Issue 7 and in Section
+[[dimensions]].
 
 *** TODO: Issue 7: Zero Length
 
 The following specs, in context of a ttype ([[ttype]])
 for convenience, are legal in the ASDL
-grammar.[fn:grammar-snapshot] The meaning is
-**unspecified**:
+grammar.[fn:grammar-snapshot] They all denote arrays
+of length 0, and the meaning of an array of length 0
+is **unspecified**:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
+  (Integer 4 [[]])
   (Integer 4 [[0]])
   (Integer 4 [[6 0]])
 #+end_src
@@ -1839,18 +1867,7 @@ grammar.[fn:grammar-snapshot] The meaning is
 See Issue 7 in MASR's GitHub repo.[fn:issue7:
 https://github.com/rebcabin/masr/issues/7]
 
-*** TODO: Issue 5: Unspecified Starting Index
-
-If there is only 1 nat, the starting index is
-unspecified. In most programming languages, the
-default is 0. In Fortran and Mathematica
-(Wolframscript[fn::
-https://www.wolfram.com/wolframscript/]), the
-default is 1. We provisionally adopt that convention
-while the issue is open. See Issue 5 in MASR's
-GitHub repo.[fn::
-https://github.com/rebcabin/masr/issues/5]
-
+\newpage
 *** FullForm
 
 The following tests illustrate the full form for
@@ -1864,7 +1881,7 @@ The following tests illustrate the full form for
               ::dimension-content [6 60]}) := true
    (s/valid? ::asr-term
              {::term ::dimension
-              ::dimension-content [0]})    := true
+              ::dimension-content [0]})    := false
    (s/valid? ::asr-term
              {::term ::dimension
               ::dimension-content []})     := true)
@@ -1888,8 +1905,8 @@ for /dimension/:
    (s/valid? ::asr-term (dimension ['foobar]))      := false
    ;; throw arity (s/valid? ::asr-term (dimension)) := false
    (s/valid? ::asr-term (dimension []))             := true
-   (s/valid? ::asr-term (dimension [60]))           := true
-   (s/valid? ::asr-term (dimension [0]))            := true
+   (s/valid? ::asr-term (dimension [60]))           := false
+   (s/valid? ::asr-term (dimension [0]))            := false
    (s/valid? ::asr-term (dimension '(1 60)))        := true
    (s/valid? ::asr-term (dimension '()))            := true)
 #+end_src
@@ -1914,7 +1931,14 @@ Terms used, explicitly or implicitly,  but not defined in ASDL.
 Some items specified in ASDL as /symbol_table/ are actually
 /symtab_id/.
 
-** TODO symtab_id
+** symtab_id
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::symtab-id ::nat)
+#+end_src
+
+\clearpage
 ** TODO symbol_table
 
 \vskip 0.26cm

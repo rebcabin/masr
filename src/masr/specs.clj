@@ -527,16 +527,20 @@
 
 ;; dimension = (expr? start, expr? length)
 
+;; Case with 1 index is disallowed.
+;; https://github.com/rebcabin/masr/issues/5
+
 
 (def MIN-DIMENSION-COUNT 0)
 (def MAX-DIMENSION-COUNT 2)
 
 
 (s/def ::dimension-content
-  (s/coll-of ::nat
-             :min-count MIN-DIMENSION-COUNT,
-             :max-count MAX-DIMENSION-COUNT,
-             :into ()))
+  (s/and (fn [it] (not (= 1 (count it))))
+   (s/coll-of ::nat
+              :min-count MIN-DIMENSION-COUNT,
+              :max-count MAX-DIMENSION-COUNT,
+              :into ())))
 
 
 (defmethod term ::dimension [_]
@@ -549,17 +553,13 @@
             ::dimension-content [6 60]}) := true
  (s/valid? ::asr-term
            {::term ::dimension
-            ::dimension-content [0]})    := true
+            ::dimension-content [0]})    := false
  (s/valid? ::asr-term
            {::term ::dimension
             ::dimension-content []})     := true)
 
 
 ;; TODO gen/sample for dimension
-
-#_
-(gen/sample (s/gen ::dimension-content) 5)
-;; => ((1) (0 1) (0) (0 0) ())
 
 
 ;; -+-+-+-+-+-
@@ -590,8 +590,8 @@
  (s/valid? ::asr-term (dimension ['foobar]))       := false
  ;; Arity throw! (s/valid? ::asr-term (dimension)) := false
  (s/valid? ::asr-term (dimension []))              := true
- (s/valid? ::asr-term (dimension [60]))            := true
- (s/valid? ::asr-term (dimension [0]))             := true
+ (s/valid? ::asr-term (dimension [60]))            := false
+ (s/valid? ::asr-term (dimension [0]))             := false
  (s/valid? ::asr-term (dimension '(1 60)))         := true
  (s/valid? ::asr-term (dimension '()))             := true)
 
@@ -968,23 +968,23 @@
  (s/valid? ::asr-ttype-head
            {::ttype-head ::Integer
             ::integer-kind 42
-            ::dimensions []})                         := false
+            ::dimensions []})                           := false
  (s/valid? ::asr-ttype-head
            {::ttype-head ::Integer
             ::integer-kind 4
-            ::dimensions []})                         := true
+            ::dimensions []})                           := true
  (s/valid? ::asr-ttype-head
            {::ttype-head ::Integer
             ::integer-kind 4
-            ::dimensions (dimensions [[6 60] [42]])}) := true
+            ::dimensions (dimensions [[6 60] [1 42]])}) := true
  (let [a {::ttype-head   ::Integer
           ::integer-kind 4
-          ::dimensions   (dimensions [[6 60] [42]])}]
-   (s/conform ::asr-ttype-head a)                     := a)
+          ::dimensions   (dimensions [[6 60] [1 42]])}]
+   (s/conform ::asr-ttype-head a)                       := a)
  (let [a {::ttype-head   ::Real
           ::real-kind    8
-          ::dimensions   (dimensions [[6 60] [42]])}]
-   (s/conform ::asr-ttype-head a)                     := a))
+          ::dimensions   (dimensions [[6 60] [1 42]])}]
+   (s/conform ::asr-ttype-head a)                       := a))
 
 
 ;;; Now, the asr-term defmethod spec for ttype.
@@ -1081,13 +1081,13 @@
    ::asr-ttype-head head})
 
 (tests
- (s/valid? ::asr-term (ttype (Integer 4)))                := true
- (s/valid? ::asr-term (ttype (Integer 4 [])))             := true
- (s/valid? ::asr-term (ttype (Integer 4  [[6 60] [42]]))) := true
- (s/valid? ::asr-term (ttype (Integer 4 ["foo"])))        := false
- (s/valid? ::asr-term (ttype (Integer 42 [])))            := false
- (s/valid? ::asr-term (ttype (Real  1 [])))               := false
- (s/valid? ::asr-term (ttype (Logical 8 [])))             := false)
+ (s/valid? ::asr-term (ttype (Integer 4)))                  := true
+ (s/valid? ::asr-term (ttype (Integer 4 [])))               := true
+ (s/valid? ::asr-term (ttype (Integer 4  [[6 60] [1 42]]))) := true
+ (s/valid? ::asr-term (ttype (Integer 4 ["foo"])))          := false
+ (s/valid? ::asr-term (ttype (Integer 42 [])))              := false
+ (s/valid? ::asr-term (ttype (Real  1 [])))                 := false
+ (s/valid? ::asr-term (ttype (Logical 8 [])))               := false)
 
 ;; ttype
 ;;     | Character(int kind, int len, expr? len_expr, dimension* dims)
