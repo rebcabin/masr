@@ -1218,6 +1218,13 @@
 (s/def ::dependencies ::identifier-set)
 
 
+;; TODO: there is ambiguity regarding identifier-sets and lists:
+(tests
+ (s/valid? ::dependencies   (identifier-list ())) := true
+ (s/valid? ::dependencies   (identifier-list ['a 'b 'c])) := true
+ (s/valid? ::identifier-set (identifier-list ['a 'a 'c])) := true)
+
+
 ;; TODO placeholder; needs sugar
 (s/def ::symbolic-value empty?)
 
@@ -1232,8 +1239,30 @@
       (s/multi-spec symbol-head ::symbolhead)))
 
 
+;; Employ the nested multi-spec:
 (defmethod term ::symbol [_]
   (s/keys :req [::term ::asr-symbol-head]))
+
+
+(s/def ::type-declaration
+  (s/or :nil nil?
+        :id  ::symtab-id))
+
+
+(defn type-declaration [ptr]
+  (let [td (s/conform ::type-declaration ptr)]
+    (if (s/invalid? td)
+      ::invalid-type-declaration
+      ;; Unpack the s/or sigil :nil or :id
+      (second td))))
+
+
+(tests (s/valid? ::type-declaration
+                 (type-declaration 'foo42)) := false
+       (s/valid? ::type-declaration
+                 (type-declaration nil))    := true
+       (s/valid? ::type-declaration
+                 (type-declaration 42))     := true)
 
 
 ;; -+-+-+-+-+-+-+-+-+-
@@ -1243,29 +1272,75 @@
 
 (defmethod symbol-head ::Variable [_]
   (s/keys :req [::symbol-head
-                ::symtab-id    ::varnym          ::dependencies
-                ::intent       ::symbolic-value  ::value
-                ::storage-type ::ttype           ::abi
-                ::access       ::presence        ::value-attr]))
+                ::symtab-id        ::varnym          ::dependencies
+                ::intent           ::symbolic-value  ::value
+                ::storage-type     ::ttype           ::abi
+                ::access           ::presence        ::value-attr
+                ::type-declaration
+                ]))
 
 (let [a-var {::symbol-head ::Variable
 
-             ::symtab-id      (nat 2)
-             ::varnym         (identifier 'x)
-             ::dependencies   (identifier-set ())
-             ::intent         (intent 'Local)
+             ::symtab-id        (nat 2)
+             ::varnym           (identifier 'x)
+             ::dependencies     (identifier-set ())
+             ::intent           (intent 'Local)
 
-             ::symbolic-value () ;; TODO sugar
-             ::value          () ;; TODO sugar
-             ::storage-type   (storage-type 'Default)
-             ::ttype          (ttype (Integer 4 []))
+             ::symbolic-value   () ;; TODO sugar
+             ::value            () ;; TODO sugar
+             ::storage-type     (storage-type 'Default)
+             ::ttype            (ttype (Integer 4 []))
 
-             ::abi            (abi 'Source :external false)
-             ::access         (access 'Public)
-             ::presence       (presence 'Required)
-             ::value-attr false ;; TODO sugar
+             ::abi              (abi 'Source :external false)
+             ::access           (access 'Public)
+             ::presence         (presence 'Required)
+             ::value-attr       false ;; TODO sugar
+
+             ::type-declaration (type-declaration nil)
              }]
+  ;; (pprint (s/conform ::asr-symbol-head a-var))
+  ;; (s/explain ::asr-symbol-head a-var)
   (tests
    (s/valid? ::asr-symbol-head a-var) := true
-   (s/valid? ::asr-term {::term ::symbol
-                         ::asr-symbol-head a-var}) := true))
+   (s/valid? ::asr-term
+             {::term ::symbol
+              ::asr-symbol-head a-var}) := true)
+  )
+
+
+;; -+-+-+-+-+-
+;;  s u g a r
+;; -+-+-+-+-+-
+
+
+(defn Variable
+  [& {:keys [;; required
+             varnym,
+             ttype,
+             symtab-id,
+             ;; defaulted
+             dependencies,
+             intent
+             symbolic-value,
+
+             value,
+             storage-type,
+             abi,
+
+             access,
+             presence,
+             value-attr
+
+             type-declaration
+             ]
+      :or {dependencies     (identifier-set ())
+           intent           (intent 'Local)
+           symbolic-value   ()
+           value            ()
+           storage-type     (storage-type 'Default)
+           abi              (abi 'Source :external false)
+           access           (access 'Public)
+           presence         (presence 'Required)
+           value-attr       false
+           type-declaration (type-declaration nil)}}]
+  )
