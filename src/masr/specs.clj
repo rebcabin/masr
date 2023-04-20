@@ -1021,8 +1021,9 @@
         tth (keyword ns cap)          ;; like ::Integer
         kdh (keyword ns (str/lower-case (str it "-kind")))
         ;; ... like ::integer-kind
-        ivh (keyword ns (str/lower-case (str "invalid-" it)))
-        ;; ... like ::invalid-integer
+        ivh (keyword ns (str/lower-case
+                         (str "invalid-" it "-ttype")))
+        ;; ... like ::invalid-integer-ttype
         dfk 4  ;; default kind
         dfd [] ;; default dimensions
         _   (case scp
@@ -1034,7 +1035,7 @@
                       (f-str "Can't define sugar for {cap}."))))]
     `(do
        ;; Define the light-sugar fns Integer-, Real-,
-       ;; Complex- Logical-, that require a full
+       ;; Complex- Logical-, that require a full-form
        ;; map of arguments, like
        ;; (Integer- {:kind 4 :dimensions []}
        (defn ~nym ;; like Integer-
@@ -1046,9 +1047,9 @@
                       ::dimensions (dimensions
                                     dimensions#)})]
            (if (s/invalid? cnf#) ~ivh, cnf#)))
-       ;; Define the full-sugar fns Integer, Real,
+       ;; Define the heavy-sugar fns Integer, Real,
        ;; Complex Logical, Character that require a
-       ;; full map of arguments, like
+       ;; full-form map of arguments, like
        ;; (Integer 4 []), (Integer 4), (Integer)
        (defn ~scp
          ([kindx# dimsx#] (~nym {:kind kindx# :dimensions dimsx#}))
@@ -1065,10 +1066,6 @@
 (def-ttype-and-head Complex)
 (def-ttype-and-head Logical)
 
-
-;; Define the full-sugar fns
-;; Integer, Real, Complex, Logical, Character
-
 (tests
  (s/valid? ::asr-ttype-head (Integer 4))    := true
  (s/valid? ::asr-ttype-head (Integer 42))   := false
@@ -1076,9 +1073,20 @@
  (s/valid? ::asr-ttype-head (Integer 4 [])) := true
  )
 
-(defn ttype [head]
-  {::term ::ttype,
-   ::asr-ttype-head head})
+
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  h e a v y   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-
+
+
+(defn ttype [it]
+  (let [cnf (s/conform
+             ::asr-term
+             {::term ::ttype,
+              ::asr-ttype-head it})]
+    (if (s/invalid? cnf)
+      ::invalid-ttype
+      cnf)))
 
 (tests
  (s/valid? ::asr-term (ttype (Integer 4)))                  := true
@@ -1090,6 +1098,8 @@
  (s/valid? ::asr-term (ttype (Logical 8 [])))               := false)
 
 ;; ttype
+;;     >>> Integer, Real, Complex, Logical are already done ...
+;;     >>> Here are the rest of the ttypes.
 ;;     | Character(int kind, int len, expr? len_expr, dimension* dims)
 ;;     | Set(ttype type)
 ;;     | List(ttype type)
@@ -1120,7 +1130,6 @@
 (s/def ::symbol-table map?)
 
 
-
 ;;  __ _ __ __ ___ ______
 ;; / _` / _/ _/ -_|_-<_-<
 ;; \__,_\__\__\___/__/__/
@@ -1129,6 +1138,7 @@
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 ;;  f u l l   f o r m   &   s u g a r
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;; automated via macro
 
 
 (enum-like access #{'Public 'Private})
@@ -1148,6 +1158,7 @@
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 ;;  f u l l   f o r m   &   s u g a r
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;; automated via macro
 
 
 (enum-like presence #{'Required 'Optional})
@@ -1166,6 +1177,13 @@
 
 (s/def ::value-attr ::bool)
 
+;; sugar
+(defn value-attr [it]
+  (let [cnf (s/conform ::value-attr it)]
+    (if (s/invalid? cnf)
+      ::invalid-value-attr
+      cnf)))
+
 
 ;;               _        _        _    _
 ;;  ____  _ _ __| |_ __ _| |__ ___(_)__| |
@@ -1175,6 +1193,13 @@
 
 
 (s/def ::symtab-id ::nat)
+
+;; sugar
+(defn symtab-id [it]
+  (let [cnf (s/conform ::symtab-id it)]
+    (if (s/invalid? cnf)
+      ::invalid-symtab-id
+      cnf)))
 
 
 ;; __   __        _      _    _
@@ -1211,12 +1236,47 @@
 ;;  .false.)})              ;   bool            value-attr
 
 
+;; __ ____ _ _ _ _ _ _  _ _ __
+;; \ V / _` | '_| ' \ || | '  \
+;;  \_/\__,_|_| |_||_\_, |_|_|_|
+;;                   |__/
+
+
 (s/def ::varnym ::identifier)
+
+
+;; sugar
+(defn varnym [it]
+  (let [cnf (s/conform ::varnym it)]
+    (if (s/invalid? cnf)
+      ::invalid-varnym
+      cnf)))
+
+
+;;     _                       _             _
+;;  __| |___ _ __  ___ _ _  __| |___ _ _  __(_)___ ___
+;; / _` / -_) '_ \/ -_) ' \/ _` / -_) ' \/ _| / -_|_-<
+;; \__,_\___| .__/\___|_||_\__,_\___|_||_\__|_\___/__/
+;;          |_|
 
 
 ;; TODO: check that dependencies are in the named table
 (s/def ::dependencies ::identifier-set)
 
+
+;; sugar
+(defn dependencies [it]
+  (let [cnf (s/conform ::dependencies it)]
+    (if (s/invalid? cnf)
+      ::invalid-dependencies
+      cnf)))
+
+(tests (s/conform ::dependencies ())         := #{}
+       (s/conform ::dependencies ['a 'b 'c]) := #{'a 'b 'c}
+       (s/conform ::dependencies ['a 'a 'c]) := #{'a 'c}
+       (dependencies ())                     := #{}
+       (dependencies ['a 'b 'c])             := #{'a 'b 'c}
+       (dependencies ['a 'a 'c])             := #{'a 'c})
 
 ;; TODO: there is ambiguity regarding identifier-sets and lists:
 (tests
@@ -1225,18 +1285,38 @@
  (s/valid? ::identifier-set (identifier-list ['a 'a 'c])) := true)
 
 
-;; TODO placeholder; needs sugar
+;;                _         _ _               _
+;;  ____  _ _ __ | |__  ___| (_)__  __ ____ _| |_  _ ___
+;; (_-< || | '  \| '_ \/ _ \ | / _| \ V / _` | | || / -_)
+;; /__/\_, |_|_|_|_.__/\___/_|_\__|  \_/\__,_|_|\_,_\___|
+;;     |__/
+
+
+;; TODO placeholder
 (s/def ::symbolic-value empty?)
 
 
-;; TODO placeholder; needs sugar
+;;           _
+;; __ ____ _| |_  _ ___
+;; \ V / _` | | || / -_)
+;;  \_/\__,_|_|\_,_\___|
+
+
+;; TODO placeholder
 (s/def ::value empty?)
+
+
+;;                _         _   _                _
+;;  ____  _ _ __ | |__  ___| | | |_  ___ __ _ __| |
+;; (_-< || | '  \| '_ \/ _ \ | | ' \/ -_) _` / _` |
+;; /__/\_, |_|_|_|_.__/\___/_| |_||_\___\__,_\__,_|
+;;     |__/
 
 
 ;; nested multi-spec
 (do (defmulti symbol-head ::symbol-head)
     (s/def ::asr-symbol-head
-      (s/multi-spec symbol-head ::symbolhead)))
+      (s/multi-spec symbol-head ::symbol-head)))
 
 
 ;; Employ the nested multi-spec:
@@ -1244,10 +1324,18 @@
   (s/keys :req [::term ::asr-symbol-head]))
 
 
+;;  _                       _        _               _   _
+;; | |_ _  _ _ __  ___   __| |___ __| |__ _ _ _ __ _| |_(_)___ _ _
+;; |  _| || | '_ \/ -_) / _` / -_) _| / _` | '_/ _` |  _| / _ \ ' \
+;;  \__|\_, | .__/\___| \__,_\___\__|_\__,_|_| \__,_|\__|_\___/_||_|
+;;      |__/|_|
+
+
 (s/def ::type-declaration
   (s/or :nil nil?
         :id  ::symtab-id))
 
+;; heavy sugar
 
 (defn type-declaration [ptr]
   (let [td (s/conform ::type-declaration ptr)]
@@ -1295,7 +1383,7 @@
              value-attr
              ]
       :or {type-declaration (type-declaration nil)
-           dependencies     (identifier-set ())
+           dependencies     (dependencies ())
            intent           (intent 'Local)
 
            symbolic-value   ()
@@ -1305,7 +1393,7 @@
            abi              (abi 'Source :external false)
            access           (access 'Public)
            presence         (presence 'Required)
-           value-attr       false}}]
+           value-attr       (value-attr false)}}]
   (let [a (s/conform
            ::asr-term
            {::term              ::symbol,
@@ -1331,7 +1419,7 @@
              }})]
     (if (s/invalid? a)
       ::invalid-variable
-      ;; special handling for s/or:
+      ;; special handling for nested s/or:
       (assoc-in a [::asr-symbol-head ::type-declaration]
                 (second type-declaration)))))
 
@@ -1339,7 +1427,7 @@
 (let [a-var-head {::symbol-head      ::Variable
 
                   ::symtab-id        (nat 2)
-                  ::varnym           (identifier 'x)
+                  ::varnym           (varnym 'x)
                   ::ttype            (ttype (Integer 4 []))
 
                   ::type-declaration (type-declaration nil)
@@ -1359,8 +1447,10 @@
              ::asr-symbol-head a-var-head}
       a-var-light (Variable- :varnym     (identifier 'x)
                              :symtab-id  2
-                             :ttype      (ttype (Integer 4)))]
-
+                             :ttype      (ttype (Integer 4)))
+      avl-2  (Variable- :varnym     (identifier 'x)
+                        :symtab-id  2
+                        :ttype      (ttype (Integer 42)))]
   (tests
    a-var-light :=
    ;; special handling for nested s/or:
@@ -1371,15 +1461,114 @@
    (s/valid? ::asr-symbol-head a-var-head)  := true
    (s/valid? ::asr-term        a-var)       := true
    (s/valid? ::asr-term        a-var-light) := true
+   (s/valid? ::asr-term        avl-2)       := true
    ))
 
 
-;; (def i32 (ttype (Integer 4 [])))
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  h e a v y   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-
 
 
-;; heavy sugar
+;; TODO
+(def symbolic-value identity)
+(def value          identity)
+(def value-attr     identity)
 
-;; (Variable 'x 2 i32)
+(defn Variable
+  "Parameters that collide with functions have trailing hyphens."
+  [symtab-id-,         varnym-,        ttype-,
+   type-declaration-,  dependencies-,  intent-,
+   symbolic-value-,    value-,         storage-type-,
+   abi-,               access-,        presence-,
+   value-attr-]
+  (let [cnf (s/conform
+             ::asr-term
+             {::term              ::symbol,
+              ::asr-symbol-head
+              {::symbol-head      ::Variable,
+
+               ::symtab-id        (symtab-id        symtab-id-),
+               ::varnym           (varnym           varnym-),
+               ::ttype            (ttype            ttype-),
+
+               ::type-declaration (type-declaration type-declaration-),
+               ::dependencies     (dependencies     dependencies-),
+               ::intent           (intent           intent-),
+
+               ::symbolic-value   (symbolic-value   symbolic-value-),
+               ::value            (value            value-),
+               ::storage-type     (storage-type     storage-type-),
+
+               ::abi              (abi              abi-),
+               ::access           (access           access-),
+               ::presence         (presence         presence-),
+               ::value-attr       (value-attr       value-attr-),
+               }})]
+    (if (s/invalid? cnf)
+      ::invalid-variable
+      (assoc-in cnf [::asr-symbol-head ::type-declaration]
+                (second (::type-declaration cnf))))))
+
+(tests
+ (s/valid?
+  ::asr-term
+  (Variable 2 'x (Integer 4)
+            nil [] 'Local
+            [] []  'Default
+            'Source 'Public 'Required
+            false))                     := true
+ ;; (s/valid?
+ ;;  ::asr-term
+ ;;  (Variable 2 'x (Integer 42424242)
+ ;;            nil [] 'Local
+ ;;            [] []  'Default
+ ;;            'Source 'Public 'Required
+ ;;            false))                     := false
+ )
+
+
+(s/conform ::asr-term
+           (Variable 2 'x (Integer 42424242)
+                     nil [] 'Local
+                     [] []  'Default
+                     'Source 'Public 'Required
+                     false))
+
+(def foo-variable-head {::symbol-head      ::Variable
+
+                        ::symtab-id        (nat 2)
+                        ::varnym           (varnym 'x)
+                        ::ttype            (ttype (Integer 42 []))
+
+                        ::type-declaration (type-declaration nil)
+                        ::dependencies     (identifier-set ())
+                        ::intent           (intent 'Local)
+
+                        ::symbolic-value   () ;; TODO sugar
+                        ::value            () ;; TODO sugar
+                        ::storage-type     (storage-type 'Default)
+
+                        ::abi              (abi 'Source :external false)
+                        ::access           (access 'Public)
+                        ::presence         (presence 'Required)
+                        ::value-attr       false ;; TODO sugar
+                        })
+
+(s/valid? ::asr-term (ttype (Integer 4 [])))
+(s/valid? ::asr-term (ttype (Integer 42 [])))
+
+(def foo-variable {::term ::symbol
+                   ::asr-symbol-head foo-variable-head})
+
+(s/valid? ::asr-term foo-variable)
+
+
+(Variable 2 'x (Integer 42424242)
+          nil [] 'Local
+          [] []  'Default
+          'Source 'Public 'Required
+          false)
 
 
 ;; TODO: Generate ASDL meta from full-form specs.
