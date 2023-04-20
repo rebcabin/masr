@@ -1279,58 +1279,19 @@
                 ::type-declaration
                 ]))
 
-(let [a-var {::symbol-head      ::Variable
 
-             ::symtab-id        (nat 2)
-             ::varnym           (identifier 'x)
-             ::dependencies     (identifier-set ())
-             ::intent           (intent 'Local)
-
-             ::symbolic-value   () ;; TODO sugar
-             ::value            () ;; TODO sugar
-             ::storage-type     (storage-type 'Default)
-             ::ttype            (ttype (Integer 4 []))
-
-             ::abi              (abi 'Source :external false)
-             ::access           (access 'Public)
-             ::presence         (presence 'Required)
-             ::value-attr       false ;; TODO sugar
-
-             ::type-declaration (type-declaration nil)
-             }]
-  ;; (pprint (s/conform ::asr-symbol-head a-var))
-  ;; (s/explain ::asr-symbol-head a-var)
-  (tests
-   (s/valid? ::asr-symbol-head a-var) := true
-   (s/valid? ::asr-term
-             {::term ::symbol
-              ::asr-symbol-head a-var}) := true)
-  )
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  l i g h t   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-
 
 
-;; -+-+-+-+-+-
-;;  s u g a r
-;; -+-+-+-+-+-
-
-
-(defn Variable
+(defn Variable-
   [& {:keys [ ;; required
-             symtab-id,
-             varnym,
-             ttype,
+             symtab-id,          varnym,         ttype,
              ;; defaulted
-             type-declaration
-             dependencies,
-             intent,
-
-             symbolic-value,
-             value,
-             storage-type,
-
-             abi,
-             access,
-             presence,
-
+             type-declaration,   dependencies,   intent,
+             symbolic-value,     value,          storage-type,
+             abi,                access,         presence,
              value-attr
              ]
       :or {type-declaration (type-declaration nil)
@@ -1344,15 +1305,73 @@
            abi              (abi 'Source :external false)
            access           (access 'Public)
            presence         (presence 'Required)
+           value-attr       false}}]
+  (let [a (s/conform
+           ::asr-term
+           {::term              ::symbol,
+            ::asr-symbol-head
+            {::symbol-head      ::Variable,
 
-           value-attr       false
-           }}])
+             ::symtab-id        symtab-id,
+             ::varnym           varnym,
+             ::ttype            ttype,
+
+             ::type-declaration type-declaration,
+             ::dependencies     dependencies,
+             ::intent           intent,
+
+             ::symbolic-value   symbolic-value,
+             ::value            value,
+             ::storage-type     storage-type,
+
+             ::abi              abi,
+             ::access           access,
+             ::presence         presence,
+             ::value-attr       value-attr,
+             }})]
+    (if (s/invalid? a)
+      ::invalid-variable
+      ;; special handling for s/or:
+      (assoc-in a [::asr-symbol-head ::type-declaration]
+                (second type-declaration)))))
 
 
-;; light sugar
-;; (Variable- :varnym     (identifier 'x)
-;;            :symtab-id  2
-;;            :ttype      (ttype (Integer 4)))
+(let [a-var-head {::symbol-head      ::Variable
+
+                  ::symtab-id        (nat 2)
+                  ::varnym           (identifier 'x)
+                  ::ttype            (ttype (Integer 4 []))
+
+                  ::type-declaration (type-declaration nil)
+                  ::dependencies     (identifier-set ())
+                  ::intent           (intent 'Local)
+
+                  ::symbolic-value   () ;; TODO sugar
+                  ::value            () ;; TODO sugar
+                  ::storage-type     (storage-type 'Default)
+
+                  ::abi              (abi 'Source :external false)
+                  ::access           (access 'Public)
+                  ::presence         (presence 'Required)
+                  ::value-attr       false ;; TODO sugar
+                  }
+      a-var {::term ::symbol
+             ::asr-symbol-head a-var-head}
+      a-var-light (Variable- :varnym     (identifier 'x)
+                             :symtab-id  2
+                             :ttype      (ttype (Integer 4)))]
+
+  (tests
+   a-var-light :=
+   ;; special handling for nested s/or:
+   (let [cnf (s/conform ::asr-term a-var)]
+     (assoc-in cnf
+               [::asr-symbol-head ::type-declaration]
+               (second (::type-declaration cnf))))
+   (s/valid? ::asr-symbol-head a-var-head)  := true
+   (s/valid? ::asr-term        a-var)       := true
+   (s/valid? ::asr-term        a-var-light) := true
+   ))
 
 
 ;; (def i32 (ttype (Integer 4 [])))
