@@ -1279,7 +1279,7 @@
                 ::type-declaration
                 ]))
 
-(let [a-var {::symbol-head ::Variable
+(let [a-var {::symbol-head      ::Variable
 
              ::symtab-id        (nat 2)
              ::varnym           (identifier 'x)
@@ -1314,33 +1314,58 @@
 
 
 (defn Variable
-  [& {:keys [;; required
+  [& {:keys [ ;; required
+             symtab-id,
              varnym,
              ttype,
-             symtab-id,
              ;; defaulted
+             type-declaration
              dependencies,
-             intent
-             symbolic-value,
+             intent,
 
+             symbolic-value,
              value,
              storage-type,
-             abi,
 
+             abi,
              access,
              presence,
-             value-attr
 
-             type-declaration
+             value-attr
              ]
-      :or {dependencies     (identifier-set ())
+      :or {type-declaration (type-declaration nil)
+           dependencies     (identifier-set ())
            intent           (intent 'Local)
+
            symbolic-value   ()
            value            ()
            storage-type     (storage-type 'Default)
+
            abi              (abi 'Source :external false)
            access           (access 'Public)
            presence         (presence 'Required)
+
            value-attr       false
-           type-declaration (type-declaration nil)}}]
-  )
+           }}])
+
+
+;; light sugar
+;; (Variable- :varnym     (identifier 'x)
+;;            :symtab-id  2
+;;            :ttype      (ttype (Integer 4)))
+
+
+;; (def i32 (ttype (Integer 4 [])))
+
+
+;; heavy sugar
+
+;; (Variable 'x 2 i32)
+
+
+;; TODO: Generate ASDL meta from full-form specs.
+;; (defn asdl-gen [variable-spec])
+
+
+;; TODO: integrate with libasr
+;; LASR

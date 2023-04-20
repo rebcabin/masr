@@ -172,10 +172,10 @@
 \clearpage
 * Abstract
 
-Abstract Semantics Representation (ASR) is an
-innovative intermediate representation[fn::
+Abstract Semantics Representation (ASR) is a novel
+intermediate representation[fn::
 https://en.wikipedia.org/wiki/Intermediate_representation]
-(IR) for multiple LCompilers.[fn:lcompilers:
+(IR) for LCompilers.[fn:lcompilers:
 https://github.com/lcompilers/libasr] ASR is
 independent of the particular programming language
 under compilation. Current compiler front-ends
@@ -188,28 +188,16 @@ https://webassembly.org/]
 
 Being agnostic means that it is easy to write new
 compilers, both at the front end and the back end.
-For example, LFortran predates LPython. When the
-need for a Python compiler arose, only a Python
-front end was necessary. Within a few days, a new
-end-to-end compiler, LPython, was created.
-
-LCompiler back ends are completely reusable because
-ASR eliminates all original language syntax from the
-IR, in sharp contrast to typical practice, which
-treat semantics as decorations on syntax trees.
+LCompiler back ends are reusable because ASR
+eliminates all original language syntax from the IR.
+For example. LFortran predates LPython. When the
+need for a Python compiler arose, only a front end
+was necessary. It took only a few days to create a
+new end-to-end compiler, LPython.
 
 In addition to being more flexible, LCompilers are
 faster than average because optimizers are not
 hampered by useless syntactic structure.
-
-# ASR-to-ASR
-# transformations are the magic of LCompilers.
-# Optimization, type-checking, partial evaluation,
-# abstract execution, and rewriting are examples of
-# such transformations.
-
-# ASR is a full programming language in its own
-# right, just one with no native syntax,
 
 Current specifications for ASR are written in
 ASDL,[fn::
@@ -223,13 +211,18 @@ https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]
 for ASR is parsed, and a library, libasr,[fn:libasr:
 https://github.com/lfortran/lfortran/tree/c648a8d824242b676512a038bf2257f3b28dad3b/src/libasr]
 in C++, is generated. Compiler front ends call
-functions in this library to transform and emit ASR
-trees.
+functions in this library to manipulate ASR trees
+and to feed them to the back ends.
 
 ASDL has several deficiencies, and MASR, [fn::
 pronounced "maser;" it is a Physics pun] described
-in this document, alleviates them. We aim to replace
-ASDL with MASR.
+in this document, alleviates them. Chief among the
+deficiencies is the lack of type-checking. MASR adds
+a meta-type system to ASR.
+
+We aim to replace ASDL with MASR and to integrate
+MASR with the LCompiler code base. When integrated
+in the future, MASR will be called LASR.
 
 This document is pedagogical, both explaining MASR
 and teaching how to extend and maintain its Clojure
@@ -241,13 +234,15 @@ replaces ASDL. The document mirrors an ASDL
 snapshot.[fn:grammar-snapshot]
 
 \clearpage
-* Cheat Sheet
+* Summary and Cheat Sheet
+
+** Tables
 
 The following tables summarize this document via
 conforming examples written via syntactic sugar.
-Every example has a full form as well as a sugared
-form. Sugared forms are shorter for common cases and
-thus recommended much of the time.
+Every type has a full form as well as one or more
+sugared form. Sugared forms are shorter and
+recommended much of the time.
 
 Equally important are non-conforming examples. See
 the body of this document, the =tests= in
@@ -259,45 +254,45 @@ example, =::nat= is short for =:masr.specs/nat=.
 
 #+caption: Atomic and Naked Specs (no sugar)
 #+label: {tbl:non-nestes-specs}
-| **Spec Name** | **Predicate** | **Example** |
-|---------------+---------------+-------------|
-| =::symtab-id= | =::nat=       | =42=        |
-| =::bool=      | =boolean?=    | =true=      |
-| =::float=     | =float?=      | =3.142=     |
-| =::int=       | =int?=        | =-1789=     |
+| **Spec Name** | **Predicate** | **link**  | **Example** |
+|---------------+---------------+-----------+-------------|
+| =::symtab-id= | =::nat=       | [[symtab-id]] | =42=        |
+| =::bool=      | =boolean?=    | [[atoms]]     | =true=      |
+| =::float=     | =float?=      | [[atoms]]     | =3.142=     |
+| =::int=       | =int?=        | [[atoms]]     | =-1789=     |
 
 #+caption: Top-Level non-/term/ Specs
 #+label: {tbl:non-nestes-specs}
-| **Spec or Multi-Spec** | **Sugared Conforming Example**     |
-|------------------------+------------------------------------|
-| =::nat=                | =(nat 42))=                        |
-| =::identifier=         | =(identifier 'boofar)=             |
-| =::identifier-set=     | =(identifier-set ['a 'a])=         |
-| =::identifier-list=    | =(identifier-list ['a 'a])=        |
-| =::identifier-suit=    | =(identifier-suit ['a 'b])=        |
-| =::dimensions=         | =(dimensions [[6 60] [1 42]])=     |
+| **Spec or Multi-Spec** | **link**    | **Sugared Conforming Example** |
+|------------------------+-------------+--------------------------------|
+| =::nat=                | [[nat]]         | =(nat 42))=                    |
+| =::identifier=         | [[identifier]]  | =(identifier 'boofar)=         |
+| =::identifier-set=     | [[identifiers]] | =(identifier-set ['a 'a])=     |
+| =::identifier-list=    | [[identifiers]] | =(identifier-list ['a 'a])=    |
+| =::identifier-suit=    | [[identifiers]] | =(identifier-suit ['a 'b])=    |
+| =::dimensions=         | [[dimensions]]  | =(dimensions [[6 60] [1 42]])= |
 
 #+caption: /term/ Multi-Specs
 #+label: {tbl:non-nestes-specs}
-| **Spec or Multi-Spec** | **term**         | **Sugared Conforming Example**     |
-|------------------------+------------------+------------------------------------|
-| =::asr-term=           | =::dimension=    | =(dimension [6 60])=               |
-| =::asr-term=           | =::intent=       | =(intent 'Local)=                  |
-| =::asr-term=           | =::storage-type= | =(storage-type 'Default)=          |
-| =::asr-term=           | =::abi=          | =(s/conform ::asr-term=            |
-|                        |                  | =(  abi 'Source :external false))= |
-| =::asr-term=           | =::access=       | =(access 'Public)=                 |
-| =::asr-term=           | =::presence=     | =(presence 'Required)=             |
+| **Spec or Multi-Spec** | **term**         | **link**     | **Sugared Conforming Example**     |
+|------------------------+------------------+--------------+------------------------------------|
+| =::asr-term=           | =::dimension=    | [[dimension]]    | =(dimension [6 60])=               |
+| =::asr-term=           | =::intent=       | [[intent]]       | =(intent 'Local)=                  |
+| =::asr-term=           | =::storage-type= | [[storage-type]] | =(storage-type 'Default)=          |
+| =::asr-term=           | =::abi=          | [[abi]]          | =(s/conform ::asr-term=            |
+|                        |                  |              | =(  abi 'Source :external false))= |
+| =::asr-term=           | =::access=       | [[access]]       | =(access 'Public)=                 |
+| =::asr-term=           | =::presence=     | [[presence]]     | =(presence 'Required)=             |
 
 #+caption: Nested /head/ Multi-Specs
 #+label: {tbl:non-nestes-specs}
-| **term**   | **head**     | **Sugared Conforming Example** |
-|------------+--------------+--------------------------------|
-| =::ttype=  | =::Integer=  | =(Integer 4 [[6 60] [1 42]])=  |
-| =::ttype=  | =::Real=     | =(Real    8 [[6 60] [1 42]])=  |
-| =::ttype=  | =::Complex=  | =(Complex 4 [[6 60] [1 42]])=  |
-| =::ttype=  | =::Logical=  | =(Logical 1 [[6 60] [1 42]])=  |
-| =::symbol= | =::Variable= | =(Variable :symtab-id 42 ...)= |
+| **term**   | **head**     | **link** | **Sugared Conforming Example** |
+|------------+--------------+----------+--------------------------------|
+| =::ttype=  | =::Integer=  | [[ttype]]    | =(Integer 4 [[6 60] [1 42]])=  |
+| =::ttype=  | =::Real=     | [[ttype]]    | =(Real    8 [[6 60] [1 42]])=  |
+| =::ttype=  | =::Complex=  | [[ttype]]    | =(Complex 4 [[6 60] [1 42]])=  |
+| =::ttype=  | =::Logical=  | [[ttype]]    | =(Logical 1 [[6 60] [1 42]])=  |
+| =::symbol= | =::Variable= | [[Variable]] | =(Variable :symtab-id 42 ...)= |
 
 
 \clearpage
@@ -440,8 +435,57 @@ abbreviated:
 #+end_src
 
 \clearpage
+** Light Sugar, Heavy Sugar
+<<sugar>>
+
+/Light-sugar/ forms are longer and more explicit
+than /heavy-sugar/ forms, but shorter than
+full-form. Heavy-sugar forms require positional
+arguments, and are thus more brittle, especially for
+long specifications with many arguments, where the
+risk of getting them out of order in hand-written
+code is high.
+
+Light-sugar specs have names with trailing hyphens.
+Light sugar typically has keyword arguments
+partitioned into required and
+optional-with-defaults. The keyword argument lists
+of light-sugar specs do not depend on order. For
+example:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (ttype (Integer- {:dimensions [], :kind 4}))
+  (ttype (Integer- {:kind 4, :dimensions []}))
+#+end_src
+
+Heavy-sugar specs have names without trailing
+hyphens. Heavy-sugar specs are compatible with
+current `libasr --show-asr` syntax. Heavy-sugar
+specs employ positional arguments that depend on
+order. Final arguments may have defaults. For
+example:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (ttype (Integer))
+  (ttype (Integer 4))
+  (ttype (Integer 2 []))
+  (ttype (Integer 8 [[6 60] [1 42]]))
+#+end_src
+
+\clearpage
 * Issues with ASDL
 <<issues>>
+
+Clojure solves the following issues with ASDL:
+
+** ASDL is not Type-Checked
+
+Type-checking for ASR instances is done in
+hand-written C++ code. This situation is brittle.
+It's much better to have a specification language
+for ASR that expresses a type system.
 
 ** ASDL is Moribund
 
@@ -508,13 +552,20 @@ expressive than ASDL.
 
 \clearpage
 * Clojure Solves ASDL Issues
+<<clojure>>
+
+** Clojure Is a Complete Fit for ASR
 
 ASR expressions, being trees, have a natural
 representation in S-Expressions.[fn::
 https://en.wikipedia.org/wiki/S-expression] Clojure,
 being a modern Lisp, natively handles S-Expressions.
 
+** Clojure is not Moribund
+
 Clojure is up-to-date, lively, and production-ready.
+
+** Clojure Has Type-Checking Tools
 
 Clojure.spec,[fn:clojure-spec:
 https://clojuredocs.org/clojure.spec.alpha] is a
@@ -535,6 +586,13 @@ https://rholang.io/]. In the short run, clojure.spec
 will make type constraints for ASDL explicit and
 manifest, and will relieve the burden on C++
 programmers to manage implicit constraints.
+
+** ASR in Clojure Solves Volatility
+
+We aim to replace ASDL with MASR in Clojure. When
+integrated with LCompilers in the future, MASR will
+be called LASR. There will be no gap or lag between
+ASR specs and their implementations.
 
 \clearpage
 * MASR Definitions
@@ -699,6 +757,7 @@ The specs in this section are the /atoms/ in the
 /term-like/ grouping in Table \ref{tbl:nodes}
 
 ** Atoms: =int=, =float=, =bool=, =nat=
+<<atoms>>
 
 The specs for =int=, =float=, and =bool= are straightforward:
 
@@ -710,6 +769,7 @@ The specs for =int=, =float=, and =bool= are straightforward:
 #+end_src
 
 *** Sugar
+<<nat>>
 
 We restrict the spec, =nat=, for natural numbers, to /int/,
 for practical reasons:
@@ -880,6 +940,7 @@ The following tests illustrate the sugar for
 
 \clearpage
 ** identifier  [\emph{sic}]
+<<identifier>>
 
 An ASR identifier is a C or Fortran identifier,
 which begins with an alphabetic glyph or an
@@ -951,6 +1012,7 @@ tests:
 
 \clearpage
 ** identifiers [\emph{sic}]
+<<identifiers>>
 
 ASDL =identifier*= is ambiguous. There are three
 kinds of identifier collections in MASR:[fn::
@@ -1507,13 +1569,17 @@ Use the macro like this:
 
 \clearpage
 ** TODO unit
+<<unit>>
 
 \clearpage
 ** TODO symbol
+<<symbol>>
 
 *** TODO Variable
+<<Variable>>
 
 ** storage_type
+<<storage-type>>
 
 The following tests illustrate conformance:
 
@@ -1538,7 +1604,8 @@ The implementation is covered in Section
 [[enum-like-macro]] on the enum-like macro.
 
 \clearpage
-** TODO access
+** access
+<<access>>
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1550,8 +1617,11 @@ The implementation is covered in Section
 #+end_src
 
 ** TODO deftype
+<<deftype>>
 
-** TODO presence
+\clearpage
+** presence
+<<presence>>
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1562,7 +1632,7 @@ The implementation is covered in Section
    (presence 'fubar) := ::invalid-presence)
 #+end_src
 
-\newpage
+\clearpage
 ** abi
 <<abi>>
 
@@ -1658,8 +1728,8 @@ Generate a few conforming samples:
 
 *** \colorbf{red}{Syntax Sugar}
 
-
-The sugar for /abi/ uses Clojure destructuring[fn::
+The light-sugar for /abi/ uses Clojure
+destructuring[fn::
 https://clojure.org/guides/destructuring][fn::
 https://gist.github.com/rebcabin/a3c24be3e17135f355348c834ab14141]
 for keyword arguments.
@@ -1723,16 +1793,22 @@ the destructuring technique:
         abi_)))
 #+end_src
 
+\clearpage
 ** TODO stmt
+<<stmt>>
+
+\clearpage
 ** TODO expr
+<<expr>>
 
 \clearpage
 ** ttype
 <<ttype>>
 
-Ttype [\emph{sic}] has a nested multi-spec. Ttype is
-an archetype for all function-like heads, just as
-/intent/ is an archetype for all enum-like heads.
+Ttype [\emph{sic}] features a nested multi-spec.
+Ttype is an archetype for all function-like heads,
+just as /intent/ is an archetype for all enum-like
+heads.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1766,9 +1842,10 @@ One may always write out ttype specs in full:
 *** Sugar for Integer, Real, Complex, Logical
 
 Sugar for ttypes comes in two varieties, /light
-sugar/ and /full sugar/. Names for light-sugar specs
-have trailing hyphens. Light sugar requires specs
-with keywords, as in:
+sugar/ and /heavy sugar/. See Section [[sugar]] for
+rationale.
+
+**** Light Sugar Examples
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1776,8 +1853,7 @@ with keywords, as in:
   (ttype (Integer- {:kind 4, :dimensions []}))
 #+end_src
 
-Names for full-sugar specs do not have trailing
-hyphens. Full sugar uses positional arguments, as in
+**** Heavy Sugar Examples
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1787,18 +1863,40 @@ hyphens. Full sugar uses positional arguments, as in
   (ttype (Integer 8 [[6 60] [1 42]]))
 #+end_src
 
-See the tests for many examples.
+See the tests for many more examples.
 
 *** TODO Character
 
 ** TODO restriction_arg
+<<restriction-arg>>
+
+\clearpage
 ** TODO binop
+<<binop>>
+
+\clearpage
 ** TODO logicalbinop
+<<logicalbinop>>
+
+\clearpage
 ** TODO cmpop
+<<cmpop>>
+
+\clearpage
 ** TODO integerboz
+<<integerboz>>
+
+\clearpage
 ** TODO arraybound
+<<arraybound>>
+
+\clearpage
 ** TODO arraystorage
+<<arraystorage>>
+
+\clearpage
 ** TODO cast_kind
+<<cast-kind>>
 
 \clearpage
 ** dimension
@@ -1914,16 +2012,44 @@ for /dimension/:
 
 \clearpage
 ** TODO alloc_arg
+<<alloc-arg>>
+
+\clearpage
 ** TODO attribute
+<<attribute>>
+
+\clearpage
 ** TODO attribute_arg
+<<attribute-arg>>
+
+\clearpage
 ** TODO call_arg
+<<call-arg>>
+
+\clearpage
 ** TODO tbind
+<<tbind>>
+
+\clearpage
 ** TODO array_index
+<<array-index>>
+
+\clearpage
 ** TODO do_loop_head
+<<do-loop-head>>
+
+\clearpage
 ** TODO case_stmt
+<<case-stmt>>
+
+\clearpage
 ** TODO type_stmt
+<<type-stmt>>
+
+\clearpage
 ** TODO enumtype
 
+\clearpage
 * Implicit Terms
 
 Terms used, explicitly or implicitly,  but not defined in ASDL.
@@ -1932,6 +2058,7 @@ Some items specified in ASDL as /symbol_table/ are actually
 /symtab_id/.
 
 ** symtab_id
+<<symtab-id>>
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1940,6 +2067,7 @@ Some items specified in ASDL as /symbol_table/ are actually
 
 \clearpage
 ** TODO symbol_table
+<<symbol-table>>
 
 \vskip 0.26cm
 #+begin_src clojure :eval never

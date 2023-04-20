@@ -560,15 +560,16 @@
 ;;  \ V / _` | '_| / _` | '_ \ / -_)
 ;;   \_/\__,_|_| |_\__,_|_.__/_\___|
 
-;; | Variable(symbol_table   parent_symtab,   ;; really an integer id
-;;            identifier     name,
-;;            identifier   * dependencies,    ;; vector of dependency
-;;            intent         intent,
-;;            expr         ? symbolic_value,  ;; lack specified by nil
-;;            expr         ? value,
-;;            storage_type   storage,
-;;            ttype          type,
-;;            abi            abi,
-;;            access         access,
-;;            presence       presence,
-;;            bool           value_attr)
+;; | Variable(symbol_table       parent_symtab,   ;; really an integer id
+;;            identifier         name,
+;;            identifier       * dependencies,    ;; vector of dependency
+;;            intent             intent,
+;;            expr             ? symbolic_value,  ;; lack specified by nil
+;;            expr             ? value,
+;;            storage_type       storage,
+;;            ttype              type,
+;;            type-declaration ? symbol_table,    ;; really an integer id
+;;            abi                abi,
+;;            access             access,
+;;            presence           presence,
+;;            bool               value_attr)
