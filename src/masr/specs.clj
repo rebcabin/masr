@@ -1502,8 +1502,7 @@
 
 
 (s/def ::type-declaration
-  (s/or :nil nil?
-        :id  ::symtab-id))
+  (s/nilable ::symtab-id))
 
 ;; heavy sugar
 
@@ -1511,8 +1510,7 @@
   (let [td (s/conform ::type-declaration ptr)]
     (if (s/invalid? td)
       ::invalid-type-declaration
-      ;; Unpack the s/or sigil :nil or :id
-      (second td))))
+      td)))
 
 
 (tests (s/valid? ::type-declaration
@@ -1607,9 +1605,7 @@
              }})]
     (if (s/invalid? a)
       ::invalid-variable
-      ;; special handling for nested s/or:
-      (assoc-in a [::asr-symbol-head ::type-declaration]
-                (second type-declaration)))))
+      a)))
 
 
 (let [a-var-head {::symbol-head      ::Variable
@@ -1641,11 +1637,8 @@
                         :ttype      (ttype (Integer 42)))]
   (tests
    a-var-light :=
-   ;; special handling for nested s/or:
-   (let [cnf (s/conform ::asr-term a-var)]
-     (assoc-in cnf
-               [::asr-symbol-head ::type-declaration]
-               (second (::type-declaration cnf))))
+   (s/conform ::asr-term a-var)
+
    (s/valid? ::asr-symbol-head a-var-head)  := true
    (s/valid? ::asr-term        a-var)       := true
    (s/valid? ::asr-term        a-var-light) := true
@@ -1695,8 +1688,7 @@
                }})]
     (if (s/invalid? cnf)
       ::invalid-variable
-      (assoc-in cnf [::asr-symbol-head ::type-declaration]
-                (second (::type-declaration cnf))))))
+      cnf)))
 
 (tests
  (s/valid?
