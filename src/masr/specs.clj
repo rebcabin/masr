@@ -1483,6 +1483,10 @@
 (s/def ::symbolic-value empty?)
 
 
+;; sugar
+(def symbolic-value identity)
+
+
 ;;           _
 ;; __ ____ _| |_  _ ___
 ;; \ V / _` | | || / -_)
@@ -1492,6 +1496,10 @@
 ;; TODO placeholder
 ;; entity-key
 (s/def ::value empty?)
+
+
+;; sugar
+(def value          identity)
 
 
 ;;  _                       _        _               _   _
@@ -1608,6 +1616,7 @@
       a)))
 
 
+;; tests
 (let [a-var-head {::symbol-head      ::Variable
 
                   ::symtab-id        (nat 2)
@@ -1636,13 +1645,18 @@
                         :symtab-id  2
                         :ttype      (ttype (Integer 42)))]
   (tests
-   a-var-light :=
-   (s/conform ::asr-term a-var)
+   a-var-light := (s/conform ::asr-term a-var)
+   a-var-light := (s/conform ::Variable a-var)
 
    (s/valid? ::asr-symbol-head a-var-head)  := true
-   (s/valid? ::asr-term        a-var)       := true
-   (s/valid? ::asr-term        a-var-light) := true
-   (s/valid? ::asr-term        avl-2)       := false
+
+   (s/valid? ::asr-term a-var)       := true
+   (s/valid? ::asr-term a-var-light) := true
+   (s/valid? ::asr-term avl-2)       := false
+
+   (s/valid? ::Variable a-var)       := true
+   (s/valid? ::Variable a-var-light) := true
+   (s/valid? ::Variable avl-2)       := false
    ))
 
 
@@ -1650,11 +1664,6 @@
 ;;  h e a v y   s u g a r
 ;; -+-+-+-+-+-+-+-+-+-+-+-
 
-
-;; TODO
-(def symbolic-value identity)
-(def value          identity)
-(def value-attr     identity)
 
 (defn Variable
   "Parameters that collide with functions have trailing hyphens."
@@ -1690,70 +1699,144 @@
       ::invalid-variable
       cnf)))
 
+
+;; entity key
+(s/def ::Variable
+  (s/and ::asr-term
+         #(= ::Variable (-> % ::asr-symbol-head ::symbol-head))))
+
+
+;; Test light sugar
 (tests
- (s/valid?
-  ::asr-term
-  (Variable 2 'x (Integer 4)
-            nil [] 'Local
-            [] []  'Default
-            'Source 'Public 'Required
-            false))                     := true
- ;; (s/valid?
- ;;  ::asr-term
- ;;  (Variable 2 'x (Integer 42424242)
- ;;            nil [] 'Local
- ;;            [] []  'Default
- ;;            'Source 'Public 'Required
- ;;            false))                     := false
+ (let [a-valid
+       (Variable- :symtab-id (symtab-id 2),
+                  :varnym    (varnym 'x),
+                  :ttype     (ttype (Integer 4 [[1 42]])))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (ttype (Integer 4 [[1 42]])))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (ttype (Integer 4 [[1 42]]))
+                  :abi       (abi 'Source :external false))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ ;; invalid examples
+ (let [a-inval
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (ttype (Integer 4 [[1 42]]))
+                  :abi       (abi 'Source :external true))]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
  )
 
 
-(s/conform ::asr-term
-           (Variable 2 'x (Integer 42424242)
-                     nil [] 'Local
-                     [] []  'Default
-                     'Source 'Public 'Required
-                     false))
+;; Test heavy sugar
+(tests
+ ;; valid examples
+  (let [a-valid (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid (Variable 2 'x (Integer 4)
+                         42 [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
 
-(def foo-variable-head {::symbol-head      ::Variable
-
-                        ::symtab-id        (nat 2)
-                        ::varnym           (varnym 'x)
-                        ::ttype            (ttype (Integer 42 []))
-
-                        ::type-declaration (type-declaration nil)
-                        ::dependencies     (identifier-set ())
-                        ::intent           (intent 'Local)
-
-                        ::symbolic-value   () ;; TODO sugar
-                        ::value            () ;; TODO sugar
-                        ::storage-type     (storage-type 'Default)
-
-                        ::abi              (abi 'Source :external false)
-                        ::access           (access 'Public)
-                        ::presence         (presence 'Required)
-                        ::value-attr       false ;; TODO sugar
-                        })
-
-(s/valid? ::asr-term (ttype (Integer 4 [])))
-(s/valid? ::asr-term (ttype (Integer 42 [])))
-
-(def foo-variable {::term ::symbol
-                   ::asr-symbol-head foo-variable-head})
-
-(s/valid? ::asr-term foo-variable)
-
-
-(Variable 2 'x (Integer 42424242)
-          nil [] 'Local
-          [] []  'Default
-          'Source 'Public 'Required
-          false)
-
-
-;; TODO: Generate ASDL meta from full-form specs.
-;; (defn asdl-gen [variable-spec])
-
-
-;; TODO: integrate with libasr
-;; LASR
+ ;; invalid examples
+ ;; Show that every entity key is checked.
+ (let [a-inval (Variable "foo" 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 "foo" (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 42424242)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 42424242)
+                         'FOOBAR [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'FOOBAR
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil ['x 'y "foo"] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'FOOBAR
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'FOOBAR
+                         'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source
+                         'FOOBAR 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source
+                         'Public 'FOOBAR
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source
+                         'Public 'Required
+                         'FOOBAR)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ )
