@@ -1273,6 +1273,7 @@
 
 
 ;; TODO: placeholder
+;; entity key
 (s/def ::symbol-table map?)
 
 
@@ -1289,9 +1290,17 @@
 
 (enum-like access #{'Public 'Private})
 
+
+;; entity key
+(s/def ::access
+  (s/and ::asr-term
+         #(= ::access (::term %))))
+
+
 (tests
  (let [public (access 'Public)]
-   (s/conform ::asr-term public) := public)
+   (s/conform ::asr-term public) := public
+   (s/conform ::access   public) := public)
  (access 'foobar) := ::invalid-access)
 
 
@@ -1309,9 +1318,17 @@
 
 (enum-like presence #{'Required 'Optional})
 
+
+;; entity key
+(s/def ::presence
+  (s/and ::asr-term
+         #(= ::presence (::term %))))
+
+
 (tests
  (let [required (presence 'Required)]
-   (s/conform ::asr-term required) := required)
+   (s/conform ::asr-term required) := required
+   (s/conform ::presence required) := required)
  (presence 'fubar) := ::invalid-presence)
 
 
@@ -1321,7 +1338,10 @@
 ;;  \_/\__,_|_|\_,_\___|   \__,_|\__|\__|_|
 
 
+;; not placeholder
+;; entity key
 (s/def ::value-attr ::bool)
+
 
 ;; sugar
 (defn value-attr [it]
@@ -1329,6 +1349,12 @@
     (if (s/invalid? cnf)
       ::invalid-value-attr
       cnf)))
+
+
+(tests
+ (value-attr true)  := true
+ (value-attr false) := false
+ (value-attr 'foo)  := ::invalid-value-attr)
 
 
 ;;               _        _        _    _
@@ -1346,6 +1372,12 @@
     (if (s/invalid? cnf)
       ::invalid-symtab-id
       cnf)))
+
+
+(tests
+ (symtab-id  42)  := 42
+ (symtab-id -42)  := ::invalid-symtab-id
+ (symtab-id 'foo) := ::invalid-symtab-id)
 
 
 ;; __   __        _      _    _
@@ -1399,6 +1431,11 @@
       cnf)))
 
 
+(tests
+ (varnym 'foo)   := 'foo
+ (varnym "foo")  := ::invalid-varnym)
+
+
 ;;     _                       _             _
 ;;  __| |___ _ __  ___ _ _  __| |___ _ _  __(_)___ ___
 ;; / _` / -_) '_ \/ -_) ' \/ _` / -_) ' \/ _| / -_|_-<
@@ -1407,6 +1444,7 @@
 
 
 ;; TODO: check that dependencies are in the named table
+;; entity keyword
 (s/def ::dependencies ::identifier-set)
 
 
@@ -1417,12 +1455,14 @@
       ::invalid-dependencies
       cnf)))
 
+
 (tests (s/conform ::dependencies ())         := #{}
        (s/conform ::dependencies ['a 'b 'c]) := #{'a 'b 'c}
        (s/conform ::dependencies ['a 'a 'c]) := #{'a 'c}
        (dependencies ())                     := #{}
        (dependencies ['a 'b 'c])             := #{'a 'b 'c}
        (dependencies ['a 'a 'c])             := #{'a 'c})
+
 
 ;; TODO: there is ambiguity regarding identifier-sets and lists:
 (tests
@@ -1439,6 +1479,7 @@
 
 
 ;; TODO placeholder
+;; entity-key
 (s/def ::symbolic-value empty?)
 
 
@@ -1449,25 +1490,8 @@
 
 
 ;; TODO placeholder
+;; entity-key
 (s/def ::value empty?)
-
-
-;;                _         _   _                _
-;;  ____  _ _ __ | |__  ___| | | |_  ___ __ _ __| |
-;; (_-< || | '  \| '_ \/ _ \ | | ' \/ -_) _` / _` |
-;; /__/\_, |_|_|_|_.__/\___/_| |_||_\___\__,_\__,_|
-;;     |__/
-
-
-;; nested multi-spec
-(do (defmulti symbol-head ::symbol-head)
-    (s/def ::asr-symbol-head
-      (s/multi-spec symbol-head ::symbol-head)))
-
-
-;; Employ the nested multi-spec:
-(defmethod term ::symbol [_]
-  (s/keys :req [::term ::asr-symbol-head]))
 
 
 ;;  _                       _        _               _   _
@@ -1497,6 +1521,24 @@
                  (type-declaration nil))    := true
        (s/valid? ::type-declaration
                  (type-declaration 42))     := true)
+
+
+;;                _         _   _                _
+;;  ____  _ _ __ | |__  ___| | | |_  ___ __ _ __| |
+;; (_-< || | '  \| '_ \/ _ \ | | ' \/ -_) _` / _` |
+;; /__/\_, |_|_|_|_.__/\___/_| |_||_\___\__,_\__,_|
+;;     |__/
+
+
+;; nested multi-spec
+(do (defmulti symbol-head ::symbol-head)
+    (s/def ::asr-symbol-head
+      (s/multi-spec symbol-head ::symbol-head)))
+
+
+;; Employ the nested multi-spec:
+(defmethod term ::symbol [_]
+  (s/keys :req [::term ::asr-symbol-head]))
 
 
 ;; -+-+-+-+-+-+-+-+-+-
