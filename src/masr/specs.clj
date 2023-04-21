@@ -57,7 +57,7 @@
 ;; 16 integerboz      = Binary | Hex | Octal
 ;; 17 arraybound      = LBound | UBound
 ;; 18 arraystorage    = RowMajor | ColMajor
-;; 19 cast_kind       = RealToInteger | IntegerToReal | ... | LogicalToCharacter
+;; 19 cast_kind       = RealToInteger | IntegerToReal | ... |
 ;; 20 dimension       = (expr? start, expr? length)
 ;; 21 alloc_arg       = (expr a, dimension* dims)
 ;; 22 attribute       = Attribute(identifier name, attribute_arg *args)
@@ -67,7 +67,7 @@
 ;; 26 array_index     = (expr? left, expr? right, expr? step)
 ;; 27 do_loop_head    = (expr? v, expr? start, expr? end, expr? increment)
 ;; 28 case_stmt       = CaseStmt(expr*, stmt*) | CaseStmt_Range( ... )
-;; 29 type_stmt       = TypeStmtName(symbol, stmt*) | TypeStmtType(ttype, stmt*)
+;; 29 type_stmt       = TypeStmtName(symbol, stmt*) | ...
 ;; 30 enumtype        = IntegerConsecutiveFromZero | ... | NonInteger
 
 
@@ -109,7 +109,8 @@
 
 
 ;; ================================================================
-;; See
+;; For quirks on Clojure literals versus Java
+;; literals, see
 ;; https://clojurians.slack.com/archives/C03S1KBA2/p1681690965585429.
 ;;
 ;; gist:
@@ -131,13 +132,14 @@
 
 
 (def biggest-int 9223372036854775807)
-(def biggest-hex 0x7fffffffffffffff)
+(def biggest-hex 0X7FFFFFFFFFFFFFFF)
 (def too-big-int 9223372036854775808)
 (def too-big-hex 0x8000000000000000)
 (def not-minus-1 0xFFFFFFFFFFFFFFFF)
 (def minus-1-int (unchecked-long 0xFFFFFFFFFFFFFFFF))
 
 (tests
+ minus-1-int           := -1
  (bigint? too-big-hex) := true
  (bigint? not-minus-1) := true
  (bigint? minus-1-int) := false)
@@ -182,6 +184,10 @@
  (s/valid? ::bignat too-big-hex) := true
  (s/valid? ::bignat biggest-hex) := false)
 
+
+;; Map "second" to strip conformed versions from
+;; results of s/sexercise:
+
 #_
 (->> ::bignat s/exercise (map second))
 ;; => (7 13 63 98225932 4572 28 31914670493 80 252 256185)
@@ -201,8 +207,9 @@
 
 ;; Allowing bigints causes problems with s/conform
 ;; (gotta map second over s/conforms with an s/or,
-;; and that mapping pollutes syntactic sugar and
-;; just doesn't work with gen/generate).
+;; and that mapping pollutes sugar functions.
+
+;; Here is the old design:
 
 ;; (s/def ::nat (s/or :nat-int  nat-int?,
 ;;                    :bignat  ::bignat))
@@ -235,7 +242,7 @@
  (s/valid? ::nat (nat 42))                    := true
  (s/valid? ::nat (nat -42))                   := false
  (s/valid? ::nat (nat 0))                     := true
- (s/valid? ::nat (nat 0xFFFFFFFFFFFFFFFF))    := false
+ (s/valid? ::nat (nat not-minus-1))           := false
  (s/valid? ::nat (nat -0xFFFFFFFFFFFFFFFF))   := false
  (s/valid?
   ::nat
@@ -254,41 +261,12 @@
 ;; => (1 0 240306 4284 0)
 
 
-;; ================================================================
-
-
-;;                  _
-;;  __ _ ____ _ ___| |_ ___ _ _ _ __
-;; / _` (_-< '_|___|  _/ -_) '_| '  \
-;; \__,_/__/_|      \__\___|_| |_|_|_|
-
-
-;; See multi-spec in https://clojure.org/guides/spec
-;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
-
-
-;; An asr-term is a map containing a ::term keyword,
-;; i.e., :masr.specs/term, or ::asr/term if
-;; masr.specs is aliased to asr, as in
-;; (:use [masr.specs :as asr]) in core_tests.clj.
-
-
-;; like ::intent, ::symbol, ::expr, ...
-(s/def ::term qualified-keyword?)
-
-
-;; ::term is a fn that picks the multi-spec dispatch value.
-(defmulti term ::term)
-
-
-;; Here is the multi-spec; see below for examples of its usage.
-(s/def ::asr-term (s/multi-spec term ::term))
-
-
 ;;  _    _         _   _  __ _
 ;; (_)__| |___ _ _| |_(_)/ _(_)___ _ _
 ;; | / _` / -_) ' \  _| |  _| / -_) '_|
 ;; |_\__,_\___|_||_\__|_|_| |_\___|_|
+
+;; not an asr-term
 
 
 ;; -+-+-+-+-+-+-+-+-+-
@@ -322,9 +300,9 @@
       (fn [] identifier-generator))))  ;; fn wrapping a macro
 
 (tests
- (s/valid? :masr.specs/identifier 'foobar)  := true
- (s/valid? :masr.specs/identifier '_f__547) := true
- (s/valid? :masr.specs/identifier '1234)    := false)
+ (s/valid? ::identifier 'foobar)  := true
+ (s/valid? ::identifier '_f__547) := true
+ (s/valid? ::identifier '1234)    := false)
 
 #_
 (gen/sample (s/gen :masr.specs/identifier))
@@ -353,7 +331,7 @@
 ;; | / _` / -_) ' \  _| |  _| / -_) '_(_-<
 ;; |_\__,_\___|_||_\__|_|_| |_\___|_| /__/
 
-;; not an ASDL term
+;; not an asr-term
 
 ;; for productions like identifier*;
 ;;
@@ -379,7 +357,9 @@
              :into #{})) ;; empty set
 
 (tests
- (every? set? (gen/sample (s/gen ::identifier-set))) := true)
+ (every?
+  set?
+  (gen/sample (s/gen ::identifier-set))) := true)
 
 
 ;; -+-+-+-+-+-
@@ -393,24 +373,24 @@
   (if (or (not (coll? it))
           (map? it))
     ::invalid-identifier-set
-    (let [idents-coll (map identifier it)
-          idents-conf (s/conform ::identifier-set idents-coll)]
-      (if (s/invalid? idents-conf)
+    (let [idents-coll (map identifier it),
+          cnf (s/conform ::identifier-set idents-coll)]
+      (if (s/invalid? cnf)
         ::invalid-identifier-set
-        idents-conf))))
+        cnf))))
 
 (tests
  (s/valid? ::identifier-set #{'a 'b}) := true
  (let [x (identifier-set ['a 'a])]
-   (s/valid? ::identifier-set x) := true
-   (set?  x)                     := true
-   (count x)                     := 1)
+   (s/valid? ::identifier-set x)      := true
+   (set?  x)                          := true
+   (count x)                          := 1)
  (let [x (identifier-set [])]
-   (s/valid? ::identifier-set x) := true
-   (set?  x)                     := true
-   (count x)                     := 0)
+   (s/valid? ::identifier-set x)      := true
+   (set?  x)                          := true
+   (count x)                          := 0)
  (let [x (identifier-set ['a '1])]
-   (s/valid? ::identifier-set x) := false
+   (s/valid? ::identifier-set x)      := false
    x := ::invalid-identifier-set))
 
 
@@ -426,7 +406,9 @@
              :into []))
 
 (tests
- (every? vector? (gen/sample (s/gen ::identifier-list))) := true)
+ (every?
+  vector?
+  (gen/sample (s/gen ::identifier-list))) := true)
 
 
 ;; -+-+-+-+-+-
@@ -443,23 +425,23 @@
           (map? it))
     ::invalid-identifier-list
     (let [idents-coll (map identifier it)
-          idents-conf (s/conform ::identifier-list idents-coll)]
-      (if (s/invalid? idents-conf)
+          cnf (s/conform ::identifier-list idents-coll)]
+      (if (s/invalid? cnf)
         ::invalid-identifier-list
-        idents-conf))))
+        cnf))))
 
 (tests
  (s/valid? ::identifier-list ['a 'a 'b]) := true
  (let [x (identifier-list ['a 'a])]
-   (s/valid? ::identifier-list x) := true
-   (vector? x)                    := true
-   (count   x)                    := 2)
+   (s/valid? ::identifier-list x)        := true
+   (vector? x)                           := true
+   (count   x)                           := 2)
  (let [x (identifier-list [])]
-   (s/valid? ::identifier-list x) := true
-   (vector? x)                    := true
-   (count   x)                    := 0)
+   (s/valid? ::identifier-list x)        := true
+   (vector? x)                           := true
+   (count   x)                           := 0)
  (let [x (identifier-list ['a '1])]
-   (s/valid? ::identifier-list x) := false
+   (s/valid? ::identifier-list x)        := false
    x := ::invalid-identifier-list))
 
 
@@ -493,10 +475,10 @@
           (not (= (count it) (count (set it)))))
     ::invalid-identifier-suit
     (let [idents-coll (map identifier it)
-          idents-conf (s/conform ::identifier-suit idents-coll)]
-      (if (s/invalid? idents-conf)
+          cnf (s/conform ::identifier-suit idents-coll)]
+      (if (s/invalid? cnf)
         ::invalid-identifier-suit
-        idents-conf))))
+        cnf))))
 
 (tests
  (let [x (identifier-suit ['a 'a])]
@@ -513,6 +495,42 @@
  (let [x (identifier-suit ['a '1])]
    (s/valid? ::identifier-suit x) := false
    x := ::invalid-identifier-suit))
+
+
+;; ================================================================
+;;                  _
+;;  __ _ ____ _ ___| |_ ___ _ _ _ __
+;; / _` (_-< '_|___|  _/ -_) '_| '  \
+;; \__,_/__/_|      \__\___|_| |_|_|_|
+
+
+;; -+-+-+-+-+-+-+-+-+-+-
+;;  m u l t i - s p e c
+;; -+-+-+-+-+-+-+-+-+-+-
+
+
+;; See multi-spec in https://clojure.org/guides/spec
+;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
+
+
+;; An asr-term is a map containing a ::term keyword,
+;; i.e., :masr.specs/term, or ::asr/term if
+;; masr.specs is aliased to asr, as in
+;; (:use [masr.specs :as asr]) in core_tests.clj.
+
+
+;; like ::intent, ::symbol, ::expr, ...
+(s/def ::term qualified-keyword?)
+
+
+;; ::term is a fn that picks the ::term value from a
+;; hash-map:
+(defmulti term ::term)
+
+
+;; Here is the multi-spec; see below for examples of
+;; its usage.
+(s/def ::asr-term (s/multi-spec term ::term))
 
 
 ;;     _ _                   _
@@ -547,6 +565,19 @@
   (s/keys :req [::term ::dimension-content]))
 
 
+;; -+-+-+-+-+-+-+-+-+-+-
+;;  e n t i t y   k e y
+;; -+-+-+-+-+-+-+-+-+-+-
+
+;; Necessary for recursive conformance in
+;; multi-specs.
+
+
+(s/def ::dimension
+  (s/and ::asr-term
+         #(= ::dimension (::term %))))
+
+
 (tests
  (s/valid? ::asr-term
            {::term ::dimension
@@ -556,10 +587,21 @@
             ::dimension-content [0]})    := false
  (s/valid? ::asr-term
            {::term ::dimension
+            ::dimension-content []})     := true
+
+ (s/valid? ::dimension
+           {::term ::dimension
+            ::dimension-content [6 60]}) := true
+ (s/valid? ::dimension
+           {::term ::dimension
+            ::dimension-content [0]})    := false
+ (s/valid? ::dimension
+           {::term ::dimension
             ::dimension-content []})     := true)
 
 
-;; TODO gen/sample for dimension
+;; TODO https://github.com/rebcabin/masr/issues/14
+#_(gen/sample (s/gen ::dimension) 3)
 
 
 ;; -+-+-+-+-+-
@@ -584,22 +626,35 @@
             {::term  ::dimension,
              ::dimension-content '(1 60)}) :=
  (dimension '(1 60))
- (s/valid? ::asr-term (dimension  60))             := false
- (s/valid? ::asr-term (dimension [[]]))            := false
- (s/valid? ::asr-term (dimension 'foobar))         := false
- (s/valid? ::asr-term (dimension ['foobar]))       := false
- ;; Arity throw! (s/valid? ::asr-term (dimension)) := false
- (s/valid? ::asr-term (dimension []))              := true
- (s/valid? ::asr-term (dimension [60]))            := false
- (s/valid? ::asr-term (dimension [0]))             := false
- (s/valid? ::asr-term (dimension '(1 60)))         := true
- (s/valid? ::asr-term (dimension '()))             := true)
+ (s/valid? ::asr-term  (dimension  60))             := false
+ (s/valid? ::asr-term  (dimension [[]]))            := false
+ (s/valid? ::asr-term  (dimension 'foobar))         := false
+ (s/valid? ::asr-term  (dimension ['foobar]))       := false
+ ;; Arity throw! (s/valid? ::asr-term  (dimension)) := false
+ (s/valid? ::asr-term  (dimension []))              := true
+ (s/valid? ::asr-term  (dimension [60]))            := false
+ (s/valid? ::asr-term  (dimension [0]))             := false
+ (s/valid? ::asr-term  (dimension '(1 60)))         := true
+ (s/valid? ::asr-term  (dimension '()))             := true
+
+ (s/valid? ::dimension (dimension  60))             := false
+ (s/valid? ::dimension (dimension [[]]))            := false
+ (s/valid? ::dimension (dimension 'foobar))         := false
+ (s/valid? ::dimension (dimension ['foobar]))       := false
+ (s/valid? ::dimension (dimension []))              := true
+ (s/valid? ::dimension (dimension [60]))            := false
+ (s/valid? ::dimension (dimension [0]))             := false
+ (s/valid? ::dimension (dimension '(1 60)))         := true
+ (s/valid? ::dimension (dimension '()))             := true
+ )
 
 
 ;;     _ _                   _
 ;;  __| (_)_ __  ___ _ _  __(_)___ _ _  ___
 ;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \(_-<
 ;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_/__/
+
+;; not an asr-term
 
 
 ;; -+-+-+-+-+-+-+-+-+-
@@ -634,49 +689,31 @@
         [{::term ::dimension,
           ::dimension-content [1 60]}
          {::term ::dimension,
-          ::dimension-content ()}])            := true)
+          ::dimension-content ()}])            := true
 
-;; -+-+-+-+-+-
-;;  s u g a r
-;; -+-+-+-+-+-
+       (s/valid?
+        ::dimensions
+        [(dimension [1 60]), (dimension [])])  := true)
 
 
 (tests
  (s/valid? ::dimensions [])                        := true
  (let [dims-example [(dimension '(1 60)) (dimension '())]]
-   (s/valid? ::dimensions dims-example)  := true
-   (s/conform ::dimensions dims-example) :=
+
+   (s/valid? ::dimensions dims-example)            := true
+
+   (s/conform ::dimensions dims-example)           :=
+   dims-example
+
+   (s/conform ::dimensions dims-example)           :=
    [#:masr.specs{:term :masr.specs/dimension,
                  :dimension-content [1 60]}
     #:masr.specs{:term :masr.specs/dimension,
                  :dimension-content ()}]))
 
 
-;; TODO
-#_
-(gen/sample (s/gen ::dimensions) 5)
-;; => ([]
-;;     [#:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (3093 25)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (1790998)}]
-;;     []
-;;     [#:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (0 57)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content ()}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (0 2051435)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (13 163)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (9 4)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (0 105)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (1 533036)}]
-;;     [#:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (0)}])
+;; TODO https://github.com/rebcabin/masr/issues/14
+#_(gen/sample (s/gen ::dimensions) 5)
 
 
 ;; -+-+-+-+-+-
@@ -700,38 +737,53 @@
           (map dimension dims-cont))))))
 
 (tests
- (dimensions [[6 60] []]) :=
+ (dimensions [[6 60] []])             :=
  [#:masr.specs{:term :masr.specs/dimension,
                :dimension-content [6 60]}
   #:masr.specs{:term :masr.specs/dimension,
                :dimension-content ()}]
- (dimensions []) := ())
+
+ (dimensions [[6 60] []])             :=
+ [(dimension [6 60]), (dimension [])]
+
+ (s/conform ::dimensions
+            (dimensions [[6 60] []])) :=
+ [(dimension [6 60]), (dimension [])]
+
+ (dimensions [])                      := ())
 
 
 ;; ================================================================
-
-
 ;;                        _ _ _
 ;;  ___ _ _ _  _ _ __ ___| (_) |_____
 ;; / -_) ' \ || | '  \___| | | / / -_)
 ;; \___|_||_\_,_|_|_|_|  |_|_|_\_\___|
 
+;; Convert a set, heads, of symbols into a multi-spec under
+;; ::asr-term, an entity-key spec like "::intent", and a
+;; sugar function like intent.
+
 
 (defmacro enum-like [term, heads]
   (let [ns "masr.specs"
-        tkw (keyword ns (str term))
-        tke (keyword ns (str term "-enum"))
+        trm (keyword ns "term")             ;; like ::term
+        art (keyword ns "asr-term")         ;; like ::asr-term
+        tkw (keyword ns (str term))         ;; like ::intent
+        tke (keyword ns (str term "-enum")) ;; like ::intent-enum
         tki (keyword ns (str "invalid-" term))]
     `(do
        (s/def ~tke ~heads)       ;; the set
-       (defmethod term ~tkw [_#] ;; the multi-spec
-         (s/keys :req [:masr.specs/term ~tke]))
+       (defmethod term ~tkw [_#] ;; for the multi-spec
+         (s/keys :req [~trm ~tke]))
+       ;; TODO the entity-key spec
+       #_(s/def ~tkw
+         (s/and :masr.specs/asr-term
+                (fn [it#] (= ~tkw (:masr.spsecs/term it#)))))
        (defn ~term [it#] ;; the sugar
-         (let [st# (s/conform
-                    :masr.specs/asr-term
-                    {:masr.specs/term ~tkw
+         (let [cnf# (s/conform ~art
+                    {~trm ~tkw
                      ~tke it#})
-               result# (if (s/invalid? st#) ~tki, st#)]
+               result# (if (s/invalid? cnf#) ~tki, cnf#)]
            result#
            )))))
 
@@ -752,17 +804,25 @@
 (enum-like intent #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 
 
+(s/def ::intent
+  (s/and ::asr-term
+         #(= ::intent (::term %))))
+
+
 (tests
- (s/valid?  ::intent-enum 'Local) := true
- (s/valid?  ::intent-enum 'fubar) := false
- (s/conform ::intent-enum 'Local) := 'Local
- (intent 'Local)                  :=
+ (s/valid?  ::intent-enum 'Local)     := true
+ (s/valid?  ::intent-enum 'fubar)     := false
+ (s/conform ::intent-enum 'Local)     := 'Local
+ (intent 'Local)                      :=
  #:masr.specs{:term :masr.specs/intent,
               :intent-enum 'Local}
- (intent 42) := :masr.specs/invalid-intent
- (let [intent-example (intent 'Local)]
-   (s/conform ::asr-term intent-example)
-                                  := intent-example))
+ (intent 42)                          := :masr.specs/invalid-intent
+
+ (s/valid?  ::intent (intent 'Local)) := true
+
+ (let [iex (intent 'Local)]
+   (s/conform ::asr-term iex)         := iex
+   (s/conform ::intent iex)           := iex))
 
 
 ;;     _                             _
@@ -781,17 +841,31 @@
 
 (enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
 
+
+;; entity-key spec
+
+(s/def ::storage-type
+  (s/and ::asr-term
+         #(= ::storage-type (::term %))))
+
+
 (tests
- (s/valid? ::storage-type-enum 'Default)       := true
- (s/valid? ::storage-type-enum 'foobar)        := false
+ (s/valid? ::storage-type-enum 'Default)           := true
+ (s/valid? ::storage-type-enum 'foobar)            := false
  (s/valid? ::asr-term
            {::term ::storage-type
-            ::storage-type-enum 'Default})     := true
- (s/valid? ::asr-term (storage-type 'Default)) := true
- (s/valid? ::asr-term (storage-type 'foobar))  := false
- (storage-type 'foobar) := ::invalid-storage-type
- (let [st-example (storage-type 'Default)]
-   (s/conform ::asr-term st-example)           := st-example))
+            ::storage-type-enum 'Default})         := true
+ (s/valid? ::asr-term (storage-type 'Default))     := true
+ (s/valid? ::asr-term (storage-type 'foobar))      := false
+ (s/valid? ::storage-type
+           {::term ::storage-type
+            ::storage-type-enum 'Default})         := true
+ (s/valid? ::storage-type (storage-type 'Default)) := true
+ (s/valid? ::storage-type (storage-type 'foobar))  := false
+ (storage-type 'foobar)                            := ::invalid-storage-type
+ (let [ste (storage-type 'Default)]
+   (s/conform ::storage-type ste)                  := ste
+   (s/conform ::asr-term ste)                      := ste))
 
 
 ;;       _    _
@@ -836,15 +910,46 @@
          ::abi-external (gen/return false))] ))))
 
 
-;; -+-+-+-+-+-
-;;  s u g a r
-;; -+-+-+-+-+-
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  h e a v y   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-
 
 
 (defn abi
-  "Destructure the keyword :external"
+
+  ([the-enum]
+   (let [abi_ (s/conform
+               ::asr-term
+               {::term         ::abi,
+                ::abi-enum     the-enum,
+                ::abi-external
+                (not (= the-enum 'Source))})]
+     (if (s/invalid? abi_)
+       ::invalid-abi
+       abi_)))
+
+  ([the-enum, crap]
+   ::invalid-abi)
+
+  ([the-enum, ext-kw, the-bool]
+   (cond
+     (not (= ext-kw :external)) ::invalid-abi
+     :else
+     (let [abi_ (s/conform
+                 ::asr-term
+                 {::term         ::abi,
+                  ::abi-enum     the-enum,
+                  ::abi-external the-bool})]
+       (if (s/invalid? abi_)
+         ::invalid-abi
+         abi_)))))
+
+
+#_(defn abi
   [the-abi-enum,
-   & {:keys [external]}]  ;; defaults to nil
+   & {:keys [external]
+      :or {external
+           (not (= the-abi-enum 'Source))}}]
   (let [abi_ (s/conform
               ::asr-term
               {::term         ::abi,
@@ -855,20 +960,34 @@
       abi_)))
 
 
-;; TODO simplify sugar to default the bool
+;; -+-+-+-+-+-+-+-+-+-+-
+;;  e n t i t y   k e y
+;; -+-+-+-+-+-+-+-+-+-+-
 
+
+(s/def ::abi
+  (s/and ::asr-term
+         #(= ::abi (::term %))))
+
+
+(s/valid? ::abi (abi 'Source 42))
 
 (tests
  (s/valid? ::asr-term
            {::term      ::abi
             ::abi-enum 'Source
-            ::abi-external false}) := true
- (let [abi-example (abi 'Source :external false)]
-   (s/conform ::asr-term abi-example) := abi-example)
- (abi 'Source)                 := ::invalid-abi
- (abi 'Source :external true)  := ::invalid-abi
- (abi 'Soruce :external false) := ::invalid-abi
- (abi 'Source :extrenal false) := ::invalid-abi)
+            ::abi-external false})    := true
+ (s/valid? ::abi
+           {::term      ::abi
+            ::abi-enum 'Source
+            ::abi-external false})    := true
+ (let [abe (abi 'Source :external false)]
+   (s/conform ::asr-term abe)         := abe
+   (abi 'Source)                      := abe
+   (abi 'Source :external true)       := ::invalid-abi
+   ;; misspellings
+   (abi 'Soruce :external false)      := ::invalid-abi
+   (abi 'Source :extrenal false)      := ::invalid-abi))
 
 
 ;;  _____ _
