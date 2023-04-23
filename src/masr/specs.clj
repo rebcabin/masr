@@ -57,7 +57,7 @@
 ;; 16 integerboz      = Binary | Hex | Octal
 ;; 17 arraybound      = LBound | UBound
 ;; 18 arraystorage    = RowMajor | ColMajor
-;; 19 cast_kind       = RealToInteger | IntegerToReal | ... | LogicalToCharacter
+;; 19 cast_kind       = RealToInteger | IntegerToReal | ... |
 ;; 20 dimension       = (expr? start, expr? length)
 ;; 21 alloc_arg       = (expr a, dimension* dims)
 ;; 22 attribute       = Attribute(identifier name, attribute_arg *args)
@@ -67,7 +67,7 @@
 ;; 26 array_index     = (expr? left, expr? right, expr? step)
 ;; 27 do_loop_head    = (expr? v, expr? start, expr? end, expr? increment)
 ;; 28 case_stmt       = CaseStmt(expr*, stmt*) | CaseStmt_Range( ... )
-;; 29 type_stmt       = TypeStmtName(symbol, stmt*) | TypeStmtType(ttype, stmt*)
+;; 29 type_stmt       = TypeStmtName(symbol, stmt*) | ...
 ;; 30 enumtype        = IntegerConsecutiveFromZero | ... | NonInteger
 
 
@@ -109,7 +109,8 @@
 
 
 ;; ================================================================
-;; See
+;; For quirks on Clojure literals versus Java
+;; literals, see
 ;; https://clojurians.slack.com/archives/C03S1KBA2/p1681690965585429.
 ;;
 ;; gist:
@@ -131,13 +132,14 @@
 
 
 (def biggest-int 9223372036854775807)
-(def biggest-hex 0x7fffffffffffffff)
+(def biggest-hex 0X7FFFFFFFFFFFFFFF)
 (def too-big-int 9223372036854775808)
 (def too-big-hex 0x8000000000000000)
 (def not-minus-1 0xFFFFFFFFFFFFFFFF)
 (def minus-1-int (unchecked-long 0xFFFFFFFFFFFFFFFF))
 
 (tests
+ minus-1-int           := -1
  (bigint? too-big-hex) := true
  (bigint? not-minus-1) := true
  (bigint? minus-1-int) := false)
@@ -182,6 +184,10 @@
  (s/valid? ::bignat too-big-hex) := true
  (s/valid? ::bignat biggest-hex) := false)
 
+
+;; Map "second" to strip conformed versions from
+;; results of s/sexercise:
+
 #_
 (->> ::bignat s/exercise (map second))
 ;; => (7 13 63 98225932 4572 28 31914670493 80 252 256185)
@@ -201,8 +207,9 @@
 
 ;; Allowing bigints causes problems with s/conform
 ;; (gotta map second over s/conforms with an s/or,
-;; and that mapping pollutes syntactic sugar and
-;; just doesn't work with gen/generate).
+;; and that mapping pollutes sugar functions.
+
+;; Here is the old design:
 
 ;; (s/def ::nat (s/or :nat-int  nat-int?,
 ;;                    :bignat  ::bignat))
@@ -235,7 +242,7 @@
  (s/valid? ::nat (nat 42))                    := true
  (s/valid? ::nat (nat -42))                   := false
  (s/valid? ::nat (nat 0))                     := true
- (s/valid? ::nat (nat 0xFFFFFFFFFFFFFFFF))    := false
+ (s/valid? ::nat (nat not-minus-1))           := false
  (s/valid? ::nat (nat -0xFFFFFFFFFFFFFFFF))   := false
  (s/valid?
   ::nat
@@ -254,41 +261,12 @@
 ;; => (1 0 240306 4284 0)
 
 
-;; ================================================================
-
-
-;;                  _
-;;  __ _ ____ _ ___| |_ ___ _ _ _ __
-;; / _` (_-< '_|___|  _/ -_) '_| '  \
-;; \__,_/__/_|      \__\___|_| |_|_|_|
-
-
-;; See multi-spec in https://clojure.org/guides/spec
-;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
-
-
-;; An asr-term is a map containing a ::term keyword,
-;; i.e., :masr.specs/term, or ::asr/term if
-;; masr.specs is aliased to asr, as in
-;; (:use [masr.specs :as asr]) in core_tests.clj.
-
-
-;; like ::intent, ::symbol, ::expr, ...
-(s/def ::term qualified-keyword?)
-
-
-;; ::term is a fn that picks the multi-spec dispatch value.
-(defmulti term ::term)
-
-
-;; Here is the multi-spec; see below for examples of its usage.
-(s/def ::asr-term (s/multi-spec term ::term))
-
-
 ;;  _    _         _   _  __ _
 ;; (_)__| |___ _ _| |_(_)/ _(_)___ _ _
 ;; | / _` / -_) ' \  _| |  _| / -_) '_|
 ;; |_\__,_\___|_||_\__|_|_| |_\___|_|
+
+;; not an asr-term
 
 
 ;; -+-+-+-+-+-+-+-+-+-
@@ -322,9 +300,9 @@
       (fn [] identifier-generator))))  ;; fn wrapping a macro
 
 (tests
- (s/valid? :masr.specs/identifier 'foobar)  := true
- (s/valid? :masr.specs/identifier '_f__547) := true
- (s/valid? :masr.specs/identifier '1234)    := false)
+ (s/valid? ::identifier 'foobar)  := true
+ (s/valid? ::identifier '_f__547) := true
+ (s/valid? ::identifier '1234)    := false)
 
 #_
 (gen/sample (s/gen :masr.specs/identifier))
@@ -353,7 +331,7 @@
 ;; | / _` / -_) ' \  _| |  _| / -_) '_(_-<
 ;; |_\__,_\___|_||_\__|_|_| |_\___|_| /__/
 
-;; not an ASDL term
+;; not an asr-term
 
 ;; for productions like identifier*;
 ;;
@@ -379,7 +357,9 @@
              :into #{})) ;; empty set
 
 (tests
- (every? set? (gen/sample (s/gen ::identifier-set))) := true)
+ (every?
+  set?
+  (gen/sample (s/gen ::identifier-set))) := true)
 
 
 ;; -+-+-+-+-+-
@@ -393,24 +373,24 @@
   (if (or (not (coll? it))
           (map? it))
     ::invalid-identifier-set
-    (let [idents-coll (map identifier it)
-          idents-conf (s/conform ::identifier-set idents-coll)]
-      (if (s/invalid? idents-conf)
+    (let [idents-coll (map identifier it),
+          cnf (s/conform ::identifier-set idents-coll)]
+      (if (s/invalid? cnf)
         ::invalid-identifier-set
-        idents-conf))))
+        cnf))))
 
 (tests
  (s/valid? ::identifier-set #{'a 'b}) := true
  (let [x (identifier-set ['a 'a])]
-   (s/valid? ::identifier-set x) := true
-   (set?  x)                     := true
-   (count x)                     := 1)
+   (s/valid? ::identifier-set x)      := true
+   (set?  x)                          := true
+   (count x)                          := 1)
  (let [x (identifier-set [])]
-   (s/valid? ::identifier-set x) := true
-   (set?  x)                     := true
-   (count x)                     := 0)
+   (s/valid? ::identifier-set x)      := true
+   (set?  x)                          := true
+   (count x)                          := 0)
  (let [x (identifier-set ['a '1])]
-   (s/valid? ::identifier-set x) := false
+   (s/valid? ::identifier-set x)      := false
    x := ::invalid-identifier-set))
 
 
@@ -426,7 +406,9 @@
              :into []))
 
 (tests
- (every? vector? (gen/sample (s/gen ::identifier-list))) := true)
+ (every?
+  vector?
+  (gen/sample (s/gen ::identifier-list))) := true)
 
 
 ;; -+-+-+-+-+-
@@ -443,23 +425,23 @@
           (map? it))
     ::invalid-identifier-list
     (let [idents-coll (map identifier it)
-          idents-conf (s/conform ::identifier-list idents-coll)]
-      (if (s/invalid? idents-conf)
+          cnf (s/conform ::identifier-list idents-coll)]
+      (if (s/invalid? cnf)
         ::invalid-identifier-list
-        idents-conf))))
+        cnf))))
 
 (tests
  (s/valid? ::identifier-list ['a 'a 'b]) := true
  (let [x (identifier-list ['a 'a])]
-   (s/valid? ::identifier-list x) := true
-   (vector? x)                    := true
-   (count   x)                    := 2)
+   (s/valid? ::identifier-list x)        := true
+   (vector? x)                           := true
+   (count   x)                           := 2)
  (let [x (identifier-list [])]
-   (s/valid? ::identifier-list x) := true
-   (vector? x)                    := true
-   (count   x)                    := 0)
+   (s/valid? ::identifier-list x)        := true
+   (vector? x)                           := true
+   (count   x)                           := 0)
  (let [x (identifier-list ['a '1])]
-   (s/valid? ::identifier-list x) := false
+   (s/valid? ::identifier-list x)        := false
    x := ::invalid-identifier-list))
 
 
@@ -493,10 +475,10 @@
           (not (= (count it) (count (set it)))))
     ::invalid-identifier-suit
     (let [idents-coll (map identifier it)
-          idents-conf (s/conform ::identifier-suit idents-coll)]
-      (if (s/invalid? idents-conf)
+          cnf (s/conform ::identifier-suit idents-coll)]
+      (if (s/invalid? cnf)
         ::invalid-identifier-suit
-        idents-conf))))
+        cnf))))
 
 (tests
  (let [x (identifier-suit ['a 'a])]
@@ -513,6 +495,62 @@
  (let [x (identifier-suit ['a '1])]
    (s/valid? ::identifier-suit x) := false
    x := ::invalid-identifier-suit))
+
+
+;; ================================================================
+;;                  _
+;;  __ _ ____ _ ___| |_ ___ _ _ _ __
+;; / _` (_-< '_|___|  _/ -_) '_| '  \
+;; \__,_/__/_|      \__\___|_| |_|_|_|
+
+
+;; -+-+-+-+-+-+-+-+-+-+-
+;;  m u l t i - s p e c
+;; -+-+-+-+-+-+-+-+-+-+-
+
+
+;; See multi-spec in https://clojure.org/guides/spec
+;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
+
+
+;; An asr-term is a map containing a ::term keyword,
+;; i.e., :masr.specs/term, or ::asr/term if
+;; masr.specs is aliased to asr, as in
+;; (:use [masr.specs :as asr]) in core_tests.clj.
+
+
+;; like ::intent, ::symbol, ::expr, ...
+(s/def ::term qualified-keyword?)
+
+
+;; ::term is a fn that picks the ::term value from a
+;; hash-map:
+(defmulti term ::term)
+
+
+;; Here is the multi-spec; see below for examples of
+;; its usage.
+(s/def ::asr-term (s/multi-spec term ::term))
+
+
+;; -+-+-+-+-+-+-+-+-+-+-
+;;  e n t i t y   k e y
+;; -+-+-+-+-+-+-+-+-+-+-
+
+;; Necessary for recursive conformance in
+;; multi-specs.
+
+
+(defn term-selector-spec [kwd]
+  (s/and ::asr-term
+         #(= kwd (::term %))))
+
+
+(defmacro def-term-entity-key [term]
+  (let [ns "masr.specs"
+        tkw (keyword ns (str term))]
+    `(s/def ~tkw    ;; like ::dimension
+       (term-selector-spec ~tkw))))
 
 
 ;;     _ _                   _
@@ -547,6 +585,9 @@
   (s/keys :req [::term ::dimension-content]))
 
 
+(def-term-entity-key dimension)
+
+
 (tests
  (s/valid? ::asr-term
            {::term ::dimension
@@ -556,10 +597,21 @@
             ::dimension-content [0]})    := false
  (s/valid? ::asr-term
            {::term ::dimension
+            ::dimension-content []})     := true
+
+ (s/valid? ::dimension
+           {::term ::dimension
+            ::dimension-content [6 60]}) := true
+ (s/valid? ::dimension
+           {::term ::dimension
+            ::dimension-content [0]})    := false
+ (s/valid? ::dimension
+           {::term ::dimension
             ::dimension-content []})     := true)
 
 
-;; TODO gen/sample for dimension
+;; TODO https://github.com/rebcabin/masr/issues/14
+#_(gen/sample (s/gen ::dimension) 3)
 
 
 ;; -+-+-+-+-+-
@@ -584,22 +636,35 @@
             {::term  ::dimension,
              ::dimension-content '(1 60)}) :=
  (dimension '(1 60))
- (s/valid? ::asr-term (dimension  60))             := false
- (s/valid? ::asr-term (dimension [[]]))            := false
- (s/valid? ::asr-term (dimension 'foobar))         := false
- (s/valid? ::asr-term (dimension ['foobar]))       := false
- ;; Arity throw! (s/valid? ::asr-term (dimension)) := false
- (s/valid? ::asr-term (dimension []))              := true
- (s/valid? ::asr-term (dimension [60]))            := false
- (s/valid? ::asr-term (dimension [0]))             := false
- (s/valid? ::asr-term (dimension '(1 60)))         := true
- (s/valid? ::asr-term (dimension '()))             := true)
+ (s/valid? ::asr-term  (dimension  60))             := false
+ (s/valid? ::asr-term  (dimension [[]]))            := false
+ (s/valid? ::asr-term  (dimension 'foobar))         := false
+ (s/valid? ::asr-term  (dimension ['foobar]))       := false
+ ;; Arity throw! (s/valid? ::asr-term  (dimension)) := false
+ (s/valid? ::asr-term  (dimension []))              := true
+ (s/valid? ::asr-term  (dimension [60]))            := false
+ (s/valid? ::asr-term  (dimension [0]))             := false
+ (s/valid? ::asr-term  (dimension '(1 60)))         := true
+ (s/valid? ::asr-term  (dimension '()))             := true
+
+ (s/valid? ::dimension (dimension  60))             := false
+ (s/valid? ::dimension (dimension [[]]))            := false
+ (s/valid? ::dimension (dimension 'foobar))         := false
+ (s/valid? ::dimension (dimension ['foobar]))       := false
+ (s/valid? ::dimension (dimension []))              := true
+ (s/valid? ::dimension (dimension [60]))            := false
+ (s/valid? ::dimension (dimension [0]))             := false
+ (s/valid? ::dimension (dimension '(1 60)))         := true
+ (s/valid? ::dimension (dimension '()))             := true
+ )
 
 
 ;;     _ _                   _
 ;;  __| (_)_ __  ___ _ _  __(_)___ _ _  ___
 ;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \(_-<
 ;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_/__/
+
+;; not an asr-term
 
 
 ;; -+-+-+-+-+-+-+-+-+-
@@ -609,11 +674,6 @@
 
 (def MIN-NUMBER-OF-DIMENSIONS 0)  ;; TODO: 1?
 (def MAX-NUMBER-OF-DIMENSIONS 9)
-
-
-(defn term-selector-spec [kwd]
-  (s/and ::asr-term
-         #(= kwd (::term %))))
 
 
 (s/def ::dimensions
@@ -634,49 +694,31 @@
         [{::term ::dimension,
           ::dimension-content [1 60]}
          {::term ::dimension,
-          ::dimension-content ()}])            := true)
+          ::dimension-content ()}])            := true
 
-;; -+-+-+-+-+-
-;;  s u g a r
-;; -+-+-+-+-+-
+       (s/valid?
+        ::dimensions
+        [(dimension [1 60]), (dimension [])])  := true)
 
 
 (tests
  (s/valid? ::dimensions [])                        := true
  (let [dims-example [(dimension '(1 60)) (dimension '())]]
-   (s/valid? ::dimensions dims-example)  := true
-   (s/conform ::dimensions dims-example) :=
+
+   (s/valid? ::dimensions dims-example)            := true
+
+   (s/conform ::dimensions dims-example)           :=
+   dims-example
+
+   (s/conform ::dimensions dims-example)           :=
    [#:masr.specs{:term :masr.specs/dimension,
                  :dimension-content [1 60]}
     #:masr.specs{:term :masr.specs/dimension,
                  :dimension-content ()}]))
 
 
-;; TODO
-#_
-(gen/sample (s/gen ::dimensions) 5)
-;; => ([]
-;;     [#:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (3093 25)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (1790998)}]
-;;     []
-;;     [#:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (0 57)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content ()}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (0 2051435)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (13 163)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (9 4)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (0 105)}
-;;      #:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (1 533036)}]
-;;     [#:masr.specs{:term :masr.specs/dimension,
-;;                   :dimension-content (0)}])
+;; TODO https://github.com/rebcabin/masr/issues/14
+#_(gen/sample (s/gen ::dimensions) 5)
 
 
 ;; -+-+-+-+-+-
@@ -700,38 +742,54 @@
           (map dimension dims-cont))))))
 
 (tests
- (dimensions [[6 60] []]) :=
+ (dimensions [[6 60] []])             :=
  [#:masr.specs{:term :masr.specs/dimension,
                :dimension-content [6 60]}
   #:masr.specs{:term :masr.specs/dimension,
                :dimension-content ()}]
- (dimensions []) := ())
+
+ (dimensions [[6 60] []])             :=
+ [(dimension [6 60]), (dimension [])]
+
+ (s/conform ::dimensions
+            (dimensions [[6 60] []])) :=
+ [(dimension [6 60]), (dimension [])]
+
+ (dimensions [])                      := ())
 
 
 ;; ================================================================
-
-
 ;;                        _ _ _
 ;;  ___ _ _ _  _ _ __ ___| (_) |_____
 ;; / -_) ' \ || | '  \___| | | / / -_)
 ;; \___|_||_\_,_|_|_|_|  |_|_|_\_\___|
 
+;; Convert a set, heads, of symbols into a multi-spec under
+;; ::asr-term, an entity-key spec like "::intent", and a
+;; sugar function like intent.
+
 
 (defmacro enum-like [term, heads]
   (let [ns "masr.specs"
-        tkw (keyword ns (str term))
-        tke (keyword ns (str term "-enum"))
+        trm (keyword ns "term")             ;; like ::term
+        art (keyword ns "asr-term")         ;; like ::asr-term
+        tkw (keyword ns (str term))         ;; like ::intent
+        tke (keyword ns (str term "-enum")) ;; like ::intent-enum
         tki (keyword ns (str "invalid-" term))]
     `(do
        (s/def ~tke ~heads)       ;; the set
-       (defmethod term ~tkw [_#] ;; the multi-spec
-         (s/keys :req [:masr.specs/term ~tke]))
+       (defmethod term ~tkw [_#] ;; for the multi-spec
+         (s/keys :req [~trm ~tke]))
+       ;; the entity-key spec
+       (s/def ~tkw   ;; like ::intent
+         (s/and ~art ;; like ::asr-term, i.e., the multi-spec
+                ;; like the predicate #(= ::intent (::term %))
+                (term-selector-spec ~tkw)))
        (defn ~term [it#] ;; the sugar
-         (let [st# (s/conform
-                    :masr.specs/asr-term
-                    {:masr.specs/term ~tkw
+         (let [cnf# (s/conform ~art
+                    {~trm ~tkw
                      ~tke it#})
-               result# (if (s/invalid? st#) ~tki, st#)]
+               result# (if (s/invalid? cnf#) ~tki, cnf#)]
            result#
            )))))
 
@@ -751,18 +809,20 @@
 
 (enum-like intent #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 
-
 (tests
- (s/valid?  ::intent-enum 'Local) := true
- (s/valid?  ::intent-enum 'fubar) := false
- (s/conform ::intent-enum 'Local) := 'Local
- (intent 'Local)                  :=
+ (s/valid?  ::intent-enum 'Local)     := true
+ (s/valid?  ::intent-enum 'fubar)     := false
+ (s/conform ::intent-enum 'Local)     := 'Local
+ (intent 'Local)                      :=
  #:masr.specs{:term :masr.specs/intent,
               :intent-enum 'Local}
- (intent 42) := :masr.specs/invalid-intent
- (let [intent-example (intent 'Local)]
-   (s/conform ::asr-term intent-example)
-                                  := intent-example))
+ (intent 42)                          := :masr.specs/invalid-intent
+
+ (s/valid?  ::intent (intent 'Local)) := true
+
+ (let [iex (intent 'Local)]
+   (s/conform ::asr-term iex)         := iex
+   (s/conform ::intent iex)           := iex))
 
 
 ;;     _                             _
@@ -782,16 +842,22 @@
 (enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
 
 (tests
- (s/valid? ::storage-type-enum 'Default)       := true
- (s/valid? ::storage-type-enum 'foobar)        := false
+ (s/valid? ::storage-type-enum 'Default)           := true
+ (s/valid? ::storage-type-enum 'foobar)            := false
  (s/valid? ::asr-term
            {::term ::storage-type
-            ::storage-type-enum 'Default})     := true
- (s/valid? ::asr-term (storage-type 'Default)) := true
- (s/valid? ::asr-term (storage-type 'foobar))  := false
- (storage-type 'foobar) := ::invalid-storage-type
- (let [st-example (storage-type 'Default)]
-   (s/conform ::asr-term st-example)           := st-example))
+            ::storage-type-enum 'Default})         := true
+ (s/valid? ::asr-term (storage-type 'Default))     := true
+ (s/valid? ::asr-term (storage-type 'foobar))      := false
+ (s/valid? ::storage-type
+           {::term ::storage-type
+            ::storage-type-enum 'Default})         := true
+ (s/valid? ::storage-type (storage-type 'Default)) := true
+ (s/valid? ::storage-type (storage-type 'foobar))  := false
+ (storage-type 'foobar)                            := ::invalid-storage-type
+ (let [ste (storage-type 'Default)]
+   (s/conform ::storage-type ste)                  := ste
+   (s/conform ::asr-term ste)                      := ste))
 
 
 ;;       _    _
@@ -842,40 +908,74 @@
 
 
 (defn abi
-  "Destructure the keyword :external"
-  [the-abi-enum,
-   & {:keys [external]}]  ;; defaults to nil
-  (let [abi_ (s/conform
-              ::asr-term
-              {::term         ::abi,
-               ::abi-enum     the-abi-enum,
-               ::abi-external external})]
-    (if (s/invalid? abi_)
-      ::invalid-abi
-      abi_)))
+  ;; arity 1 --- default "external"
+  ([the-enum]
+   (let [abi_ (s/conform
+               ::asr-term
+               {::term         ::abi,
+                ::abi-enum     the-enum,
+                ::abi-external
+                (not (= the-enum 'Source))})]
+     (if (s/invalid? abi_)
+       ::invalid-abi
+       abi_)))
+  ;; arity 2 --- invalid
+  ([the-enum, crap]
+   ::invalid-abi)
+  ;; arity 3 --- light sugar
+  ([the-enum, ext-kw, the-bool]
+   (cond
+     (not (= ext-kw :external)) ::invalid-abi
+     :else
+     (let [abi_ (s/conform
+                 ::asr-term
+                 {::term         ::abi,
+                  ::abi-enum     the-enum,
+                  ::abi-external the-bool})]
+       (if (s/invalid? abi_)
+         ::invalid-abi
+         abi_)))))
 
 
-;; TODO simplify sugar to default the bool
+(def-term-entity-key abi)
 
 
 (tests
  (s/valid? ::asr-term
            {::term      ::abi
             ::abi-enum 'Source
-            ::abi-external false}) := true
- (let [abi-example (abi 'Source :external false)]
-   (s/conform ::asr-term abi-example) := abi-example)
- (abi 'Source)                 := ::invalid-abi
- (abi 'Source :external true)  := ::invalid-abi
- (abi 'Soruce :external false) := ::invalid-abi
- (abi 'Source :extrenal false) := ::invalid-abi)
+            ::abi-external false})    := true
+ (s/valid? ::abi
+           {::term      ::abi
+            ::abi-enum 'Source
+            ::abi-external false})    := true
+ (let [abe (abi 'Source :external false)]
+   (s/conform ::asr-term abe)            := abe
+   ;; defaults to correct value
+   (abi 'Source)                         := abe
+   ;; missing keyword
+   (abi 'Source false)                   := ::invalid-abi
+   ;; wrong value
+   (abi 'Source :external true)          := ::invalid-abi
+   ;; misspellings
+   (abi 'Soruce :external false)         := ::invalid-abi
+   (abi 'Source :extrenal false)         := ::invalid-abi)
+ (let [abe (abi 'LFortranModule :external true)]
+   (s/conform ::asr-term abe)            := abe
+   ;; defaults to correct value
+   (abi 'LFortranModule)                 := abe
+   ;; missing keyword
+   (abi 'LFortranModule true)            := ::invalid-abi
+   ;; wrong value
+   (abi 'LFortranModule :external false) := ::invalid-abi
+))
 
 
-;;  _____ _
-;; |_   _| |_ _  _ _ __  ___
-;;   | | |  _| || | '_ \/ -_)
-;;   |_|  \__|\_, | .__/\___|
-;;            |__/|_|
+;;  _____ _______   ______  _____
+;; |_   _|_   _\ \ / /  _ \| ____|
+;;   | |   | |  \ V /| |_) |  _|
+;;   | |   | |   | | |  __/| |___
+;;   |_|   |_|   |_| |_|   |_____|
 
 
 ;; kind: The `kind` member selects the kind of a
@@ -913,7 +1013,7 @@
 
 ;; Here are the first four ttypes, which all follow
 ;; a common pattern captured in macros. There are
-;; more that don't follow that pattern.
+;; more ttypes later that don't follow that pattern.
 
 ;; ttype
 ;;     = Integer(int kind, dimension* dims)
@@ -927,13 +1027,14 @@
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
-;; All multi-specs begin with
-;; ::asr-<the_rest_of_the_name>, as in ::asr-term and
-;; ::asr-ttype-head.
+;; All multi-spec names in MASR begin with
+;; ::asr-<the_rest_of_the_name>, as in ::asr-term
+;; and ::asr-ttype-head.
 
 
 ;; nested multi-spec
 (do (defmulti ttype-head ::ttype-head)
+    ;;        ----------
     ;; name of this multi-spec
     ;; \                     /
     ;;  `---------.---------'
@@ -944,10 +1045,16 @@
       (s/multi-spec ttype-head ::ttype-head)))
 
 
-(defmacro def-ttype-head [it]
+(defmacro def-ttype-head
+  "Defmethods for defmulti ttype-head, requiring
+  entity keywords ::ttype-head and ::dimensions."
+  [it]
   (let [ns     "masr.specs"
+        ;; Like "integer"
         strit  (str it)
+        ;; Like ::Integer
         method (keyword ns (str/capitalize strit))
+        ;; Like ::integer-kind
         kind   (keyword ns (str (str/lower-case strit) "-kind"))]
     `(defmethod ttype-head ~method [_#]
         (s/keys :req [::ttype-head ~kind ::dimensions]))))
@@ -969,18 +1076,22 @@
            {::ttype-head ::Integer
             ::integer-kind 42
             ::dimensions []})                           := false
+
  (s/valid? ::asr-ttype-head
            {::ttype-head ::Integer
             ::integer-kind 4
             ::dimensions []})                           := true
+
  (s/valid? ::asr-ttype-head
            {::ttype-head ::Integer
             ::integer-kind 4
             ::dimensions (dimensions [[6 60] [1 42]])}) := true
+
  (let [a {::ttype-head   ::Integer
           ::integer-kind 4
           ::dimensions   (dimensions [[6 60] [1 42]])}]
    (s/conform ::asr-ttype-head a)                       := a)
+
  (let [a {::ttype-head   ::Real
           ::real-kind    8
           ::dimensions   (dimensions [[6 60] [1 42]])}]
@@ -989,9 +1100,10 @@
 
 ;;; Now, the asr-term defmethod spec for ttype.
 
-
 (defmethod term ::ttype [_]
   (s/keys :req [::term ::asr-ttype-head]))
+
+;; full-forms
 
 (tests
  (s/valid? ::asr-term
@@ -1000,12 +1112,21 @@
             {::ttype-head ::Real,
              ::real-kind  4
              ::dimensions []}})       := true
+
  (s/valid? ::asr-term
            {::term ::ttype,
             ::asr-ttype-head
             {::ttype-head ::Real,
              ::real-kind  2
              ::dimensions []}})       := false)
+
+
+;; -+-+-+-+-+-+-+-+-+-+-
+;;  e n t i t y   k e y
+;; -+-+-+-+-+-+-+-+-+-+-
+
+
+(def-term-entity-key ttype)
 
 
 ;; -+-+-+-+-+-
@@ -1016,13 +1137,14 @@
 (defmacro def-ttype-and-head [it]
   (let [ns  "masr.specs"
         cap (str/capitalize (str it)) ;; like "Integer"
-        scp (symbol cap)              ;; Like Integer
-        nym (symbol (str cap "-"))    ;; like Integer-
+        scp (symbol cap)              ;; Like Integer  (heavy sugar)
+        nym (symbol (str cap "-"))    ;; like Integer- (light sugar)
         tth (keyword ns cap)          ;; like ::Integer
         kdh (keyword ns (str/lower-case (str it "-kind")))
         ;; ... like ::integer-kind
-        ivh (keyword ns (str/lower-case (str "invalid-" it)))
-        ;; ... like ::invalid-integer
+        ivh (keyword ns (str/lower-case
+                         (str "invalid-" it "-ttype")))
+        ;; ... like ::invalid-integer-ttype
         dfk 4  ;; default kind
         dfd [] ;; default dimensions
         _   (case scp
@@ -1033,30 +1155,30 @@
               (throw (java.lang.IllegalArgumentException.
                       (f-str "Can't define sugar for {cap}."))))]
     `(do
-       ;; Define the light-sugar fns Integer-, Real-,
-       ;; Complex- Logical-, that require a full
-       ;; map of arguments, like
+       ;; Define the light-sugar fns Integer-,
+       ;; Real-, Complex- Logical-, that require a
+       ;; full map of arguments, like
        ;; (Integer- {:kind 4 :dimensions []}
        (defn ~nym ;; like Integer-
-         [{kind# :kind, dimensions# :dimensions}]
+         [{kind# :kind, dims# :dimensions}]
          (let [cnf# (s/conform
                      ::asr-ttype-head
-                     {::ttype-head ~tth,
-                      ~kdh         kind#,
-                      ::dimensions (dimensions
-                                    dimensions#)})]
+                     {::ttype-head ~tth,  ;; like ::Integer
+                      ~kdh         kind#, ;; like ::integer-kind
+                      ::dimensions (dimensions dims#)})]
            (if (s/invalid? cnf#) ~ivh, cnf#)))
-       ;; Define the full-sugar fns Integer, Real,
-       ;; Complex Logical, Character that require a
-       ;; full map of arguments, like
+       ;; Define the heavy-sugar fns Integer, Real,
+       ;; Complex Logical, Character that take
+       ;; positional arguments, like
        ;; (Integer 4 []), (Integer 4), (Integer)
-       (defn ~scp
+       (defn ~scp ;; like Integer
          ([kindx# dimsx#] (~nym {:kind kindx# :dimensions dimsx#}))
          ([kindy#]        (~nym {:kind kindy# :dimensions ~dfd}))
          ;; dfk = 4  is the default kinds for
          ;;          Integer, Real, Complex, Logical
          ;; dfd = [] is the default dimensions
          ([]              (~nym {:kind ~dfk   :dimensions ~dfd})))
+       ;; TODO ? entity keywords for ::Integer, ::Real, etc.
        )))
 
 
@@ -1065,31 +1187,58 @@
 (def-ttype-and-head Complex)
 (def-ttype-and-head Logical)
 
-
-;; Define the full-sugar fns
-;; Integer, Real, Complex, Logical, Character
-
 (tests
  (s/valid? ::asr-ttype-head (Integer 4))    := true
  (s/valid? ::asr-ttype-head (Integer 42))   := false
  (s/valid? ::asr-ttype-head (Integer))      := true
- (s/valid? ::asr-ttype-head (Integer 4 [])) := true
- )
+ (s/valid? ::asr-ttype-head (Integer 4 [])) := true)
 
-(defn ttype [head]
-  {::term ::ttype,
-   ::asr-ttype-head head})
+
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  h e a v y   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-
+
+
+(defn ttype [it]
+  (let [cnf (s/conform
+             ::asr-term
+             {::term ::ttype,
+              ::asr-ttype-head it})]
+    (if (s/invalid? cnf)
+      ::invalid-ttype
+      cnf)))
 
 (tests
  (s/valid? ::asr-term (ttype (Integer 4)))                  := true
  (s/valid? ::asr-term (ttype (Integer 4 [])))               := true
- (s/valid? ::asr-term (ttype (Integer 4  [[6 60] [1 42]]))) := true
+ (s/valid? ::asr-term (ttype (Integer 4 [[6 60] [1 42]])))  := true
  (s/valid? ::asr-term (ttype (Integer 4 ["foo"])))          := false
  (s/valid? ::asr-term (ttype (Integer 42 [])))              := false
  (s/valid? ::asr-term (ttype (Real  1 [])))                 := false
- (s/valid? ::asr-term (ttype (Logical 8 [])))               := false)
+ (s/valid? ::asr-term (ttype (Logical 8 [])))               := false
 
-;; ttype
+ (s/valid? ::ttype    (ttype (Integer 4)))                  := true
+ (s/valid? ::ttype    (ttype (Integer 4 [])))               := true
+ (s/valid? ::ttype    (ttype (Integer 4 [[6 60] [1 42]])))  := true
+ (s/valid? ::ttype    (ttype (Integer 4 ["foo"])))          := false
+ (s/valid? ::ttype    (ttype (Integer 42 [])))              := false
+ (s/valid? ::ttype    (ttype (Real  1 [])))                 := false
+ (s/valid? ::ttype    (ttype (Logical 8 [])))               := false
+
+ (s/valid? ::ttype (ttype
+                    (Integer- {:dimensions [], :kind 4})))  := true
+ (s/valid? ::ttype (ttype
+                    (Integer- {:kind 4, :dimensions []})))  := true
+ )
+
+
+;; Entity keys for heads like ::Integer, ::Real, ...
+;; are not necessary.
+
+
+;; TODO ttype
+;;     >>> Integer, Real, Complex, Logical are already done ...
+;;     >>> Here are the rest of the ttypes.
 ;;     | Character(int kind, int len, expr? len_expr, dimension* dims)
 ;;     | Set(ttype type)
 ;;     | List(ttype type)
@@ -1117,8 +1266,8 @@
 
 
 ;; TODO: placeholder
+;; entity key
 (s/def ::symbol-table map?)
-
 
 
 ;;  __ _ __ __ ___ ______
@@ -1129,13 +1278,15 @@
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 ;;  f u l l   f o r m   &   s u g a r
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;; automated via macro
 
 
 (enum-like access #{'Public 'Private})
 
 (tests
  (let [public (access 'Public)]
-   (s/conform ::asr-term public) := public)
+   (s/conform ::asr-term public) := public
+   (s/conform ::access   public) := public)
  (access 'foobar) := ::invalid-access)
 
 
@@ -1148,13 +1299,15 @@
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 ;;  f u l l   f o r m   &   s u g a r
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;; automated via macro
 
 
 (enum-like presence #{'Required 'Optional})
 
 (tests
  (let [required (presence 'Required)]
-   (s/conform ::asr-term required) := required)
+   (s/conform ::asr-term required) := required
+   (s/conform ::presence required) := required)
  (presence 'fubar) := ::invalid-presence)
 
 
@@ -1164,7 +1317,23 @@
 ;;  \_/\__,_|_|\_,_\___|   \__,_|\__|\__|_|
 
 
+;; not placeholder
+;; entity key
 (s/def ::value-attr ::bool)
+
+
+;; sugar
+(defn value-attr [it]
+  (let [cnf (s/conform ::value-attr it)]
+    (if (s/invalid? cnf)
+      ::invalid-value-attr
+      cnf)))
+
+
+(tests
+ (value-attr true)  := true
+ (value-attr false) := false
+ (value-attr 'foo)  := ::invalid-value-attr)
 
 
 ;;               _        _        _    _
@@ -1175,6 +1344,206 @@
 
 
 (s/def ::symtab-id ::nat)
+
+
+;; sugar
+(defn symtab-id [it]
+  (let [cnf (s/conform ::symtab-id it)]
+    (if (s/invalid? cnf)
+      ::invalid-symtab-id
+      cnf)))
+
+
+(tests
+ (symtab-id  42)                        := 42
+ (symtab-id -42)                        := ::invalid-symtab-id
+ (symtab-id 'foo)                       := ::invalid-symtab-id
+ (s/conform ::nat 42)                   := 42
+ (s/conform ::nat (nat 42))             := 42
+ (s/conform ::symtab-id 42)             := 42
+ (s/conform ::symtab-id (symtab-id 42)) := 42
+ (s/conform ::symtab-id (nat 42))       := 42)
+
+
+;;     _                       _             _
+;;  __| |___ _ __  ___ _ _  __| |___ _ _  __(_)___ ___
+;; / _` / -_) '_ \/ -_) ' \/ _` / -_) ' \/ _| / -_|_-<
+;; \__,_\___| .__/\___|_||_\__,_\___|_||_\__|_\___/__/
+;;          |_|
+
+
+;; TODO: check that dependencies are in the named table
+;; entity keyword
+(s/def ::dependencies ::identifier-set)
+
+
+;; sugar
+(defn dependencies [it]
+  (let [cnf (s/conform ::dependencies it)]
+    (if (s/invalid? cnf)
+      ::invalid-dependencies
+      cnf)))
+
+
+(tests (s/conform ::dependencies ())         := #{}
+       (s/conform ::dependencies ['a 'b 'c]) := #{'a 'b 'c}
+       (s/conform ::dependencies ['a 'a 'c]) := #{'a 'c}
+       (dependencies ())                     := #{}
+       (dependencies ['a 'b 'c])             := #{'a 'b 'c}
+       (dependencies ['a 'a 'c])             := #{'a 'c})
+
+
+;; TODO: there is ambiguity regarding identifier-sets and lists:
+(tests
+ (s/valid? ::dependencies   (identifier-list ())) := true
+ (s/valid? ::dependencies   (identifier-list ['a 'b 'c])) := true
+ (s/valid? ::identifier-set (identifier-list ['a 'a 'c])) := true)
+
+
+;;                _         _ _               _
+;;  ____  _ _ __ | |__  ___| (_)__  __ ____ _| |_  _ ___
+;; (_-< || | '  \| '_ \/ _ \ | / _| \ V / _` | | || / -_)
+;; /__/\_, |_|_|_|_.__/\___/_|_\__|  \_/\__,_|_|\_,_\___|
+;;     |__/
+
+
+;; TODO placeholder
+;; entity-key
+(s/def ::symbolic-value empty?)
+
+
+;; sugar
+(def symbolic-value identity)
+
+
+;;           _
+;; __ ____ _| |_  _ ___
+;; \ V / _` | | || / -_)
+;;  \_/\__,_|_|\_,_\___|
+
+
+;; TODO placeholder
+;; entity-key
+(s/def ::value empty?)
+
+
+;; sugar
+(def value          identity)
+
+
+;;  _                       _        _               _   _
+;; | |_ _  _ _ __  ___   __| |___ __| |__ _ _ _ __ _| |_(_)___ _ _
+;; |  _| || | '_ \/ -_) / _` / -_) _| / _` | '_/ _` |  _| / _ \ ' \
+;;  \__|\_, | .__/\___| \__,_\___\__|_\__,_|_| \__,_|\__|_\___/_||_|
+;;      |__/|_|
+
+
+(s/def ::type-declaration
+  (s/nilable ::symtab-id))
+
+;; heavy sugar
+
+(defn type-declaration [ptr]
+  (let [td (s/conform ::type-declaration ptr)]
+    (if (s/invalid? td)
+      ::invalid-type-declaration
+      td)))
+
+
+(tests (s/valid? ::type-declaration
+                 (type-declaration 'foo42)) := false
+       (s/valid? ::type-declaration
+                 (type-declaration nil))    := true
+       (s/valid? ::type-declaration
+                 (type-declaration 42))     := true)
+
+
+;;  ______   ____  __ ____   ___  _
+;; / ___\ \ / /  \/  | __ ) / _ \| |
+;; \___ \\ V /| |\/| |  _ \| | | | |
+;;  ___) || | | |  | | |_) | |_| | |___
+;; |____/ |_| |_|  |_|____/ \___/|_____|
+;;                _         _   _                _
+;;  ____  _ _ __ | |__  ___| | | |_  ___ __ _ __| |
+;; (_-< || | '  \| '_ \/ _ \ | | ' \/ -_) _` / _` |
+;; /__/\_, |_|_|_|_.__/\___/_| |_||_\___\__,_\__,_|
+;;     |__/
+
+
+;; nested multi-spec
+(do (defmulti symbol-head ::symbol-head)
+    (s/def ::asr-symbol-head
+      (s/multi-spec symbol-head ::symbol-head)))
+
+
+;; Employ the nested multi-spec:
+(defmethod term ::symbol [_]
+  (s/keys :req [::term ::asr-symbol-head]))
+
+
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
+
+
+(defmethod symbol-head ::Variable [_]
+  (s/keys :req [::symbol-head
+                ::symtab-id        ::varnym          ::dependencies
+                ::intent           ::symbolic-value  ::value
+                ::storage-type     ::ttype           ::abi
+                ::access           ::presence        ::value-attr
+                ::type-declaration
+                ]))
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  e n t i t y   k e y s   f o r   f u n c t i o n - l i k e   t e r m s
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+
+(defmacro def-term-head--entity-key
+  "Define entity key like ::Variable, which is an
+   ::asr-symbol-head by the nested head multi-spec.
+   From term = symbol and head = Variable
+   or   term = stmt   and head = Assignment,
+   generate an s/def like
+
+   (s/def ::Variable               ;; head entity key
+     (s/and ::asr-term             ;; top multi-spec
+       #(= ::Variable              ;; nested tag
+           (-> % ::asr-symbol-head ;; nested multi-spec
+                 ::symbol-head)))) ;; tag fetcher
+
+   or
+
+   (s/def ::Assignment             ;; head entity key
+     (s/and ::asr-term             ;; top multi-spec
+       #(= ::Assignment            ;; nested tag
+           (-> % ::asr-stmt-head   ;; nested multi-spec
+                 ::stmt-head       ;; tag fetcher
+  "
+  [term, ;; like symbol
+   head  ;; like Variable
+   ]
+  (let [ns "masr.specs"
+        trm (keyword ns "term")             ;; like ::term
+        art (keyword ns "asr-term")         ;; like ::asr-term
+        hkw (keyword ns
+             (str/capitalize (str head)))   ;; like ::Variable
+        tmh (keyword ns (str term "-head")) ;; like ::symbol-head
+        amh (keyword ns                     ;; for the multi-spec
+             (str "asr-" term "-head"))     ;; like ::asr-symbol-head
+        ]
+    `(s/def ~hkw
+       (s/and ~art #(= ~hkw (-> % ~amh ~tmh))))))
+
+
+(def-term-head--entity-key symbol Variable)
+
+;; Generates:
+#_(s/def ::Variable
+  (s/and ::asr-term
+         #(= ::Variable (-> % ::asr-symbol-head ::symbol-head))))
 
 
 ;; __   __        _      _    _
@@ -1211,61 +1580,314 @@
 ;;  .false.)})              ;   bool            value-attr
 
 
+;; __ ____ _ _ _ _ _ _  _ _ __
+;; \ V / _` | '_| ' \ || | '  \
+;;  \_/\__,_|_| |_||_\_, |_|_|_|
+;;                   |__/
+
+
 (s/def ::varnym ::identifier)
 
 
-;; TODO: check that dependencies are in the named table
-(s/def ::dependencies ::identifier-set)
+;; sugar
+(defn varnym [it]
+  (let [cnf (s/conform ::varnym it)]
+    (if (s/invalid? cnf)
+      ::invalid-varnym
+      cnf)))
 
 
-;; TODO placeholder; needs sugar
-(s/def ::symbolic-value empty?)
+(tests
+ (varnym 'foo)   := 'foo
+ (varnym "foo")  := ::invalid-varnym)
 
 
-;; TODO placeholder; needs sugar
-(s/def ::value empty?)
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  l i g h t   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-
 
 
-;; nested multi-spec
-(do (defmulti symbol-head ::symbol-head)
-    (s/def ::asr-symbol-head
-      (s/multi-spec symbol-head ::symbolhead)))
+(defn Variable-
+  [& {:keys [ ;; required
+             symtab-id,          varnym,         ttype,
+             ;; defaulted
+             type-declaration,   dependencies,   intent,
+             symbolic-value,     value,          storage-type,
+             abi,                access,         presence,
+             value-attr
+             ]
+      :or {type-declaration (type-declaration nil)
+           dependencies     (dependencies ())
+           intent           (intent 'Local)
+
+           symbolic-value   ()
+           value            ()
+           storage-type     (storage-type 'Default)
+
+           abi              (abi 'Source :external false)
+           access           (access 'Public)
+           presence         (presence 'Required)
+           value-attr       (value-attr false)}}]
+  (let [a (s/conform
+           ::asr-term
+           {::term              ::symbol,
+            ::asr-symbol-head
+            {::symbol-head      ::Variable,
+
+             ::symtab-id        symtab-id,
+             ::varnym           varnym,
+             ::ttype            ttype,
+
+             ::type-declaration type-declaration,
+             ::dependencies     dependencies,
+             ::intent           intent,
+
+             ::symbolic-value   symbolic-value,
+             ::value            value,
+             ::storage-type     storage-type,
+
+             ::abi              abi,
+             ::access           access,
+             ::presence         presence,
+             ::value-attr       value-attr,
+             }})]
+    (if (s/invalid? a)
+      ::invalid-variable
+      a)))
 
 
-(defmethod term ::symbol [_]
-  (s/keys :req [::term ::asr-symbol-head]))
+;; tests
+(let [a-var-head {::symbol-head      ::Variable
 
+                  ::symtab-id        (nat 2)
+                  ::varnym           (varnym 'x)
+                  ::ttype            (ttype (Integer 4 []))
 
-;; -+-+-+-+-+-+-+-+-+-
-;;  f u l l   f o r m
-;; -+-+-+-+-+-+-+-+-+-
+                  ::type-declaration (type-declaration nil)
+                  ::dependencies     (identifier-set ())
+                  ::intent           (intent 'Local)
 
+                  ::symbolic-value   () ;; TODO sugar
+                  ::value            () ;; TODO sugar
+                  ::storage-type     (storage-type 'Default)
 
-(defmethod symbol-head ::Variable [_]
-  (s/keys :req [::symbol-head
-                ::symtab-id    ::varnym          ::dependencies
-                ::intent       ::symbolic-value  ::value
-                ::storage-type ::ttype           ::abi
-                ::access       ::presence        ::value-attr]))
-
-(let [a-var {::symbol-head ::Variable
-
-             ::symtab-id      (nat 2)
-             ::varnym         (identifier 'x)
-             ::dependencies   (identifier-set ())
-             ::intent         (intent 'Local)
-
-             ::symbolic-value () ;; TODO sugar
-             ::value          () ;; TODO sugar
-             ::storage-type   (storage-type 'Default)
-             ::ttype          (ttype (Integer 4 []))
-
-             ::abi            (abi 'Source :external false)
-             ::access         (access 'Public)
-             ::presence       (presence 'Required)
-             ::value-attr false ;; TODO sugar
-             }]
+                  ::abi              (abi 'Source :external false)
+                  ::access           (access 'Public)
+                  ::presence         (presence 'Required)
+                  ::value-attr       false ;; TODO sugar
+                  }
+      a-var {::term ::symbol
+             ::asr-symbol-head a-var-head}
+      a-var-light (Variable- :varnym     (identifier 'x)
+                             :symtab-id  2
+                             :ttype      (ttype (Integer 4)))
+      avl-2  (Variable- :varnym     (identifier 'x)
+                        :symtab-id  2
+                        :ttype      (ttype (Integer 42)))]
   (tests
-   (s/valid? ::asr-symbol-head a-var) := true
-   (s/valid? ::asr-term {::term ::symbol
-                         ::asr-symbol-head a-var}) := true))
+   a-var-light := (s/conform ::asr-term a-var)
+   a-var-light := (s/conform ::Variable a-var)
+
+   (s/valid? ::asr-symbol-head a-var-head)  := true
+
+   (s/valid? ::asr-term a-var)       := true
+   (s/valid? ::asr-term a-var-light) := true
+   (s/valid? ::asr-term avl-2)       := false
+
+   (s/valid? ::Variable a-var)       := true
+   (s/valid? ::Variable a-var-light) := true
+   (s/valid? ::Variable avl-2)       := false
+   ))
+
+
+;; Entity-key for term ::symbol is not needed.
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  h e a v y   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-
+
+
+(defn Variable
+  "Parameters that collide with functions have trailing hyphens."
+  [symtab-id-,         varnym-,        ttype-,
+   type-declaration-,  dependencies-,  intent-,
+   symbolic-value-,    value-,         storage-type-,
+   abi-,               access-,        presence-,
+   value-attr-]
+  (let [cnf (s/conform
+             ::asr-term
+             {::term              ::symbol,
+              ::asr-symbol-head
+              {::symbol-head      ::Variable,
+
+               ::symtab-id        (symtab-id        symtab-id-),
+               ::varnym           (varnym           varnym-),
+               ::ttype            (ttype            ttype-),
+
+               ::type-declaration (type-declaration type-declaration-),
+               ::dependencies     (dependencies     dependencies-),
+               ::intent           (intent           intent-),
+
+               ::symbolic-value   (symbolic-value   symbolic-value-),
+               ::value            (value            value-),
+               ::storage-type     (storage-type     storage-type-),
+
+               ::abi              (abi              abi-),
+               ::access           (access           access-),
+               ::presence         (presence         presence-),
+               ::value-attr       (value-attr       value-attr-),
+               }})]
+    (if (s/invalid? cnf)
+      ::invalid-variable
+      cnf)))
+
+
+;; Test light sugar
+(tests
+ (let [a-valid
+       (Variable- :symtab-id (symtab-id 2),
+                  :varnym    (varnym 'x),
+                  :ttype     (ttype (Integer 4 [[1 42]])))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (ttype (Integer 4 [[1 42]])))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (ttype (Integer 4 [[1 42]]))
+                  :abi       (abi 'Source :external false))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ ;; invalid examples
+ (let [a-inval
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (ttype (Integer 4 [[1 42]]))
+                  :abi       (abi 'Source :external true))]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ )
+
+
+;; Test heavy sugar
+(tests
+ ;; valid examples
+  (let [a-valid (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid (Variable 2 'x (Integer 4)
+                         42 [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+
+ ;; invalid examples
+ ;; Show that every entity key is checked.
+ (let [a-inval (Variable "foo" 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 "foo" (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 42424242)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 42424242)
+                         'FOOBAR [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'FOOBAR
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil ['x 'y "foo"] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'FOOBAR
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'FOOBAR
+                         'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source
+                         'FOOBAR 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source
+                         'Public 'FOOBAR
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ (let [a-inval (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source
+                         'Public 'Required
+                         'FOOBAR)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::asr-term a-inval) := false)
+ )
+
+
+;;  _______  ______  ____
+;; | ____\ \/ /  _ \|  _ \
+;; |  _|  \  /| |_) | |_) |
+;; | |___ /  \|  __/|  _ <
+;; |_____/_/\_\_|   |_| \_\
+
+
+;;  ____ _____ __  __ _____
+;; / ___|_   _|  \/  |_   _|
+;; \___ \ | | | |\/| | | |
+;;  ___) || | | |  | | | |
+;; |____/ |_| |_|  |_| |_|

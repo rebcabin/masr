@@ -1,0 +1,723 @@
+#+TODO: TODO BACKLOGGED(!) SCHEDULED(!) STARTED(!) SUSPENDED(!) BLOCKED(!) DELEGATED(!) ABANDONED(!) DONE
+
+# FOR DOCUMENTATION OF THESE OPTIONS, see 12.2, Export Settings of the Org Info Manual
+
+#+OPTIONS: ':t                # export smart quotes
+#+OPTIONS: *:t                # export emphasized text
+#+OPTIONS: -:t                # conversion of special strings
+#+OPTIONS: ::t                # fixed-width sections
+#+OPTIONS: <:t                # time/date active/inactive stamps
+#+OPTIONS: \n:nil             # preserve line breaks
+#+OPTIONS: ^:nil              # TeX-like syntax for sub- and super-scripts
+#+OPTIONS: arch:headline      # archived trees
+#+OPTIONS: author:t           # toggle inclusion of author name on export
+#+OPTIONS: broken-links:mark  # ?
+#+OPTIONS: c:nil              # clock keywords
+#+OPTIONS: creator:nil        # other value is 'comment'
+
+# Exporting of drawers
+
+#+OPTIONS: d:t
+
+# Exporting of drawers to LaTeX is NOT WORKING as of 25 March 2020. The
+# workaround is to wrap the drawers in #+begin_example and #+end_example.
+
+# #+OPTIONS: d:("LOGBOOK")      # drawers to include or exclude
+
+#+OPTIONS: date:t             # ?
+#+OPTIONS: e:t                # entities
+#+OPTIONS: email:nil          # do or don't export my email
+#+OPTIONS: f:t                # footnotes
+#+OPTIONS: H:3                # number of headline levels to export
+#+OPTIONS: inline:t           # export inline tasks?
+#+OPTIONS: num:t              # section numbers
+#+OPTIONS: p:nil              # toggle export of planning information
+#+OPTIONS: pri:nil            # priority cookies
+#+OPTIONS: prop:("ATTACH_DIR" "Attachments")           # include property drawers? or list to include?
+#+OPTIONS: stat:t             # statistics cookies?
+#+OPTIONS: tags:t             # org-export-with-tags? (what's a "tag"?)
+#+OPTIONS: tasks:t            # include TODO items ("tasks" some complexity here)
+#+OPTIONS: tex:t              # exports inline LaTeX
+#+OPTIONS: timestamp:t        # creation timestamp in the exported file?
+#+OPTIONS: toc:2              # set level limit in TOC or nil to exclude
+#+OPTIONS: todo:t             # inclusion of actual TODO keyword
+#+OPTIONS: |:t                # include tables
+
+#+CREATOR: Emacs 26.2 of 2019-04-12, org version: 9.2.2
+
+#+LaTeX_HEADER: \usepackage{bm}
+#+LaTeX_HEADER: \usepackage[T1]{fontenc}
+#+LaTeX_HEADER: \usepackage{cmll}
+#+LaTeX_HEADER: \usepackage{amsmath}
+#+LaTeX_HEADER: \usepackage{amsthm}
+#+LaTeX_HEADER: \usepackage{amsthm}
+#+LaTeX_HEADER: \usepackage{amssymb}
+#+LaTeX_HEADER: \usepackage{interval}  % must install texlive-full
+#+LaTeX_HEADER: \usepackage{mathtools}
+#+LaTeX_HEADER: \usepackage{interval}  % must install texlive-full
+#+LaTeX_HEADER: \usepackage[shortcuts]{extdash}
+#+LaTeX_HEADER: \usepackage{tikz}
+#+LaTeX_HEADER: \usepackage[utf8]{inputenc}
+
+# #+LaTeX_HEADER: \usepackage[top=0.90in,bottom=0.55in,left=1.25in,right=1.25in,includefoot]{geometry}
+
+#+LaTeX_HEADER: \usepackage[top=1.25in,bottom=1.25in,left=1.75in,right=1.75in,includefoot]{geometry}
+
+#+LaTeX_HEADER: \usepackage{palatino}
+
+#+LaTeX_HEADER: \usepackage{siunitx}
+#+LaTeX_HEADER: \usepackage{braket}
+#+LaTeX_HEADER: \usepackage[euler-digits,euler-hat-accent]{eulervm}
+#+LATEX_HEADER: \usepackage{fancyhdr}
+#+LATEX_HEADER: \pagestyle{fancyplain}
+#+LATEX_HEADER: \lhead{}
+#+LATEX_HEADER: \chead{\textbf{(c) Brian Beckman, 2023; Creative Commons Attribution-ShareAlike CC-BY-SA}}
+#+LATEX_HEADER: \rhead{}
+#+LATEX_HEADER: \lfoot{(c) Brian Beckman, 2023; CC-BY-SA}
+#+LATEX_HEADER: \cfoot{\thepage}
+#+LATEX_HEADER: \rfoot{}
+#+LATEX_HEADER: \usepackage{lineno}
+#+LATEX_HEADER: \usepackage{minted}
+#+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \usepackage{tipa}
+
+# #+LATEX_HEADER: \linenumbers
+
+#+LATEX_HEADER: \usepackage{parskip}
+#+LATEX_HEADER: \setlength{\parindent}{15pt}
+#+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \usepackage{xcolor}
+#+LATEX_HEADER: \usepackage{textcomp}
+#+LATEX_HEADER: \usepackage[atend]{bookmark}
+#+LATEX_HEADER: \usepackage{mdframed}
+#+LATEX_HEADER: \usepackage[utf8]{inputenc} % usually not needed (loaded by default)
+#+LATEX_HEADER: \usepackage[T1]{fontenc}
+
+#+LATEX_HEADER_EXTRA: \BeforeBeginEnvironment{minted}{\begin{mdframed}}
+#+LATEX_HEADER_EXTRA: \AfterEndEnvironment{minted}{\end{mdframed}}
+#+LATEX_HEADER_EXTRA: \bookmarksetup{open, openlevel=2, numbered}
+#+LATEX_HEADER_EXTRA: \DeclareUnicodeCharacter{03BB}{$\lambda$}
+# The following doesn't work: just search replace literal ESC=27=1B with ^[ !
+# #+LATEX_HEADER_EXTRA: \DeclareUnicodeCharacter{001B}{xx}
+
+#                                                    _
+#  _ _  _____ __ __  __ ___ _ __  _ __  __ _ _ _  __| |___
+# | ' \/ -_) V  V / / _/ _ \ '  \| '  \/ _` | ' \/ _` (_-<
+# |_||_\___|\_/\_/  \__\___/_|_|_|_|_|_\__,_|_||_\__,_/__/
+
+#+LaTeX_HEADER: \newcommand\definedas{\stackrel{\text{\tiny def}}{=}}
+#+LaTeX_HEADER: \newcommand\belex{BELEX}
+#+LaTeX_HEADER: \newcommand\bleir{BLEIR}
+#+LaTeX_HEADER: \newcommand\llb{low-level \belex}
+#+LaTeX_HEADER: \newcommand\hlb{high-level \belex}
+#+LaTeX_HEADER: \newcommand{\Coloneqq}{\mathrel{\vcenter{\hbox{$:\,:\,=$}}{}}}
+
+#+LaTeX_HEADER: \theoremstyle{definition}
+#+LaTeX_HEADER: \newtheorem{definition}{Definition}
+
+#+LaTeX_HEADER: \theoremstyle{slogan}
+#+LaTeX_HEADER: \newtheorem{slogan}{Slogan}
+
+#+LaTeX_HEADER: \theoremstyle{warning}
+#+LaTeX_HEADER: \newtheorem{warning}{Warning}
+
+#+LaTeX_HEADER: \theoremstyle{remark}
+#+LaTeX_HEADER: \newtheorem{remark}{Remark}
+
+#+LaTeX_HEADER: \theoremstyle{premise}
+#+LaTeX_HEADER: \newtheorem{premise}{Premise}
+
+#+SELECT_TAGS: export
+#+STARTUP: indent
+
+#+LaTeX_CLASS_OPTIONS: [10pt,oneside,x11names]
+#+MACRO: color \textcolor{$1}{$2}
+# Doesn't work: #+MACRO: colorbf \textcolor{$1}{\textbf{$2}}
+# Use this instead:
+#+LaTeX_HEADER: \newcommand\colorbf[2]{\textcolor{#1}{\textbf{#2}}}
+
+#+LATEX: \setlength\parindent{0pt}
+
+# #+STARTUP: latexpreview inlineimages showall
+# #+STARTUP: showall
+
+#+TITLE:  MASR Summary
+#+AUTHOR: Brian Beckman
+#+DATE:   23 Apr 2023
+
+#+BEGIN_SRC elisp :exports none
+  (setq org-babel-python-command "python3")
+  (setq org-image-actual-width nil)
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-src-fontify-natively t)
+  (add-to-list 'org-latex-packages-alist '("" "listingsutf8"))
+  (setq org-export-latex-listings 'minted)
+  (setq org-latex-listings 'minted
+        org-latex-packages-alist '(("" "minted"))
+        org-latex-pdf-process
+        '("pdflatex --synctex=1 -shell-escape -interaction nonstopmode -output-directory %o %f"
+          "pdflatex --synctex=1 -shell-escape -interaction nonstopmode -output-directory %o %f"
+          "pdflatex --synctex=1 -shell-escape -interaction nonstopmode -output-directory %o %f"))
+  (org-babel-do-load-languages 'org-babel-load-languages
+   '((ditaa . t) (latex . t)))
+  (princ (concat (format "Emacs version: %s\n" (emacs-version))
+                 (format "org version: %s\n" (org-version))))
+#+END_SRC
+
+#+RESULTS:
+: Emacs version: GNU Emacs 28.2 (build 1, aarch64-apple-darwin21.1.0, NS appkit-2113.00 Version 12.0.1 (Build 21A559))
+:  of 2022-09-12
+: org version: 9.5.5
+
+\clearpage
+* Abstract
+
+Abstract Semantics Representation (ASR) is a novel
+intermediate representation (IR)[fn:ir:
+https://en.wikipedia.org/wiki/Intermediate_representation]
+for a new collection of LCompilers
+[\emph{sic}].[fn:lcompilers:
+https://github.com/lcompilers/libasr] ASR is
+agnostic to the particular programming language
+under compilation. Current compiler front-ends
+targeting ASR include LFortran[fn:lfortran:
+https://lfortran.org/] and LPython.[fn:lpython:
+https://lpython.org/] ASR is also agnostic to the
+back end. ASR currently targets LLVM, x86, C, and
+WASM[fn:wasm: https://webassembly.org/]
+
+Typical IRs encode semantics as decorations on the
+Abstract Syntax Tree, (AST)[fn:ast:
+https://en.wikipedia.org/wiki/Abstract_syntax_tree]
+ASR lifts /semantics/ to the top level and expunges
+the syntax of the surface language as early as
+possible. Free of syntactical baggage, ASR
+optimizers are cleaner and faster than average, and
+ASR back ends are completely reusable. If syntax
+information is ever necessary, as with
+semantical-feedback parsing, such information will
+be encoded as decorations on the ASR, rather than
+the other way around.
+
+Current specifications for ASR are written in
+ASDL,[fn:asdl:
+https://en.wikipedia.org/wiki/Abstract-Type_and_Scheme-Definition_Language]
+a metalanguage similar in spirit to yacc but less
+rich, by design.[fn:yacc:
+https://en.wikipedia.org/wiki/Yacc] To build an
+LCompiler like LFortran or LPython, the ASDL
+grammar[fn:grammar-snapshot:
+https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl]
+for ASR is parsed, and a library in C++,
+libasr,[fn:libasr:
+https://github.com/lfortran/lfortran/tree/c648a8d824242b676512a038bf2257f3b28dad3b/src/libasr]
+is generated. Compiler front ends call functions in
+this library to manipulate ASR and to emit code from
+the back ends.
+
+ASDL has several deficiencies, and MASR [fn::
+pronounced "maser;" it is a Physics pun] alleviates
+them. Chief among the deficiencies is the lack of
+type-checking. MASR adds a type system to ASR via
+Clojure /specs/.[fn:spec: https://clojure.org/guides/spec] MASR is a complete
+programming language in its own regard. It is, in
+fact, a Domain-Specific Language (DSL),[fn:dsl:
+https://en.wikipedia.org/wiki/Domain-specific_language]
+embedded in Clojure.[fn:clojure:
+https://en.wikipedia.org/wiki/Clojure]
+
+We aim to replace ASDL with MASR and to integrate
+MASR with the LCompiler code base. When so
+integrated in the future, MASR will be called LASR.
+
+This document is pedagogical, both explaining MASR
+and teaching how to extend and maintain its Clojure
+code.
+
+This document may lag the Clojure code. It may also
+lag libasr, at least until MASR replaces ASDL. The
+document mirrors an ASDL
+snapshot.[fn:grammar-snapshot]
+
+\clearpage
+* Summary and Cheat Sheet
+
+** Specs
+
+Clojure specs double as /types/, constituting ASR's
+type system.[fn:spec] The functions =s/valid?= and
+=s/conform= recursively check instances of a form
+against specs.
+
+** Namespace-Qualified Keywords
+
+Specs are named, defined, and registered via
+/namespace-qualified keywords/. All MASR spec
+keywords are registered in namespace =masr.specs=.
+The file \linebreak =specs.clj= defines the
+namespace =masr.specs=. In the file =specs.clj=, a
+double-colon shorthand is available. For example,
+=::nat= in the file =specs.clj= is short for
+=:masr.specs/nat=.
+
+** Three Kinds of Specs
+
+MASR has three kinds of registered specs:
+
+- simple specs :: --- registered via =s/def=, as in
+  =(s/def ::bool boolean?)=
+
+- entity specs :: --- registered via =s/keys=; have
+  required and optional attributes; examples below
+
+- multi-specs :: --- defined via =s/multi-spec=,
+  registered via =s/def=; multi-specs have a
+  distinguished /tag/ attribute like tagged unions
+  in C; examples below
+
+MASR multi-specs are tagged collections of entity
+specs.
+
+** Full-Form
+
+Full-form instances that are checked against specs
+are Clojure /hash-maps/:[fn:hash-map:
+https://clojuredocs.org/clojure.core/hash-map]
+collections of key-value pairs like Python
+dictionaries. For example,
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+  ;; key         value
+  {::term        ::intent,
+   ::intent-enum 'Local}
+#+end_src
+
+In MASR, all keys in all hash-maps are
+namespace-qualified keywords. Such keys may have
+specs registered for them, or not. When a spec is
+registered for a key, automatic recursive
+type-checking is invoked.
+
+** Sugar
+
+Every spec /qua/ type has a full form as well as
+several shorter sugared forms. Sugar is defined by
+functions like =Integer= and =Integer-= that return
+instances in full-form. Sugar comes in two flavors,
+/light/ and /heavy/. See Section [[sugar]].
+
+** Terms and Heads
+
+MASR defines /terms/ and /heads/ that describe the
+semantics of programs. Terms are top-most in the ASR
+grammar and heads are at the bottom level. There are
+only two levels.
+
+The following tables summarize this document via
+conforming examples, written in the recommended
+sugar form.
+
+Equally important are non-conforming examples. See
+the body of this document, =tests= in =specs.clj=,
+and =deftest= in =core_tests= for many
+non-conforming examples.
+
+#+caption: Atomic and Naked Specs: No Sugar
+#+label: tbl:atomic-specs
+| **Spec**      | **Predicate** | **Link**  | **Example** |
+|---------------+---------------+-----------+-------------|
+| =::bool=      | =boolean?=    | [[atoms]]     | =true=      |
+| =::float=     | =float?=      | [[atoms]]     | =3.142=     |
+| =::int=       | =int?=        | [[atoms]]     | =-1789=     |
+
+#+caption: Top-Level /term-like/ Specs, not in ASDL
+#+label: tbl:term-like-specs
+| **Spec**            | **Link**    | **Example**  |
+|---------------------+-------------+--------------------------------|
+| =::nat=             | [[nat]]         | =(nat 42)=                     |
+| =::identifier=      | [[identifier]]  | =(identifier 'boofar)=         |
+| =::identifier-set=  | [[identifiers]] | =(identifier-set ['a 'a])=     |
+| =::identifier-list= | [[identifiers]] | =(identifier-list ['a 'a])=    |
+| =::identifier-suit= | [[identifiers]] | =(identifier-suit ['a 'b])=    |
+| =::dimensions=      | [[dimensions]]  | =(dimensions [[6 60] [1 42]])= |
+
+#+caption: Higher-Order Specs, Defined in Terms of Other Specs
+#+label: tbl:higher-order-specs
+| **Spec**             | *Link or Spec*           | **Example**                 |
+| =::symtab-id=        | [[symtab-id]]                | =(symtab-id 42)=            |
+| =::value-attr=       | =::bool=                 | =(value-attr false)=        |
+| =::dependencies=     | =::identifier-set=       | =(dependencies ['a 'b 'c])= |
+| =::symbolic-value=   | TODO =empty?=            | =(symbolic-value ())=       |
+| =::value=            | TODO =empty?=            | =(value ())=                |
+| =::type-declaration= | TODO nilable =symtab-id= | =(type-declaration nil)=    |
+| =::varnym=           | =::identifier=           | =(varnym 'x)=               |
+
+#+caption: /Term/ Multi-Specs; Like Tagged Unions
+#+label: tbl:multi-specs
+| **Multi-Spec** | **Term**         | **Link**     | **Example**  |
+|----------------+------------------+--------------+--------------------------------|
+| =::asr-term=   | =::dimension=    | [[dimension]]    | =(dimension [6 60])=           |
+| =::asr-term=   | =::intent=       | [[intent]]       | =(intent 'Local)=              |
+| =::asr-term=   | =::storage-type= | [[storage-type]] | =(storage-type 'Default)=      |
+| =::asr-term=   | =::abi=          | [[abi]]          | =(abi 'Source)=                |
+| =::asr-term=   | =::access=       | [[access]]       | =(access 'Public)=             |
+| =::asr-term=   | =::presence=     | [[presence]]     | =(presence 'Required)=         |
+
+#+caption: =::asr-term= Specs with Nested /Head/ Multi-Specs
+#+label: tbl:nested-multi-specs
+| **Term**   | **Head**     | **Link** | **Example**     |
+|------------+--------------+----------+-----------------------------------|
+| =::ttype=  | =::Integer=  | [[ttype]]    | =(Integer 4 [[6 60] [1 42]])=     |
+| =::ttype=  | =::Real=     | [[ttype]]    | =(Real    8 [[6 60] [1 42]])=     |
+| =::ttype=  | =::Complex=  | [[ttype]]    | =(Complex 4 [[6 60] [1 42]])=     |
+| =::ttype=  | =::Logical=  | [[ttype]]    | =(Logical 1 [[6 60] [1 42]])=     |
+| =::symbol= | =::Variable= | [[Variable]] | =(Variable 42 'x (Integer 4)...)= |
+
+\clearpage
+** Multi-Specs
+<<multi-specs>>
+
+Instance hash-maps that conform to multi-spec
+=::asr-term= are polymorphic. They have a tag
+attribute, fetched via =::term=, that must match a
+term =defmethod=.[fn:defmulti:
+https://clojuredocs.org/clojure.core/defmulti] For
+instance, the following example is a valid
+=::asr-term= in full-form; its =::term= attribute is
+=::intent=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+  (s/valid? ::asr-term
+            {::term        ::intent, ;; matches a defmethod
+             ::intent-enum 'Local})  ;; specifies contents
+#+end_src
+
+where =::intent-enum= is a simple spec defined and
+registered via =s/def=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+  (s/def ::intent-enum ;; #{...} is a Clojure set.
+    #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+#+end_src
+
+Its =::term=, =::intent=, matches a term =defmethod=
+below. The keyword, =::term=, doubles as an
+attribute key in the instance and as a function for
+fetching the =::term= value from an instance.
+
+Here is another =::asr-term= in full-form, matching
+a term =defmethod= for =::abi=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+  (s/valid? ::asr-term
+            {::term         ::abi,  ;; matches a defmethod
+             ::abi-enum     'Source ;; specifies contents
+             ::abi-external false}) ;; specifies contents
+#+end_src
+
+where
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+(s/def ::abi-external ::bool)
+#+end_src
+
+Other =::asr-term= specs follow the obvious pattern.
+The =::term= attributes, \linebreak =::intent=,
+=::abi=, etc., each match a =term= =defmethod=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never  :exports both
+  (defmulti term ::term) ;; ::term fetches the tag-value
+  (defmethod term ::intent    [_]  ;; tag-value match
+    (s/keys :req [::term ::intent-enum])) ;; entity spec
+  (defmethod term ::dimension [_] ,,,) ;; tag-value match
+  (defmethod term ::abi       [_] ,,,) ;; tag-value match
+  (defmethod term ::ttype     [_] ,,,) ;; tag-value match
+  (defmethod term ::symbol    [_] ,,,) ;; tag-value match
+  ;; etc.
+#+end_src
+
+Finally, the multi-spec itself is named =::asr-term=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  ;;     name of the mult-spec    defmulti  tag fn
+  ;;     ------------------------   ----    ------
+  (s/def ::asr-term (s/multi-spec   term    ::term))
+#+end_src
+
+# =s/multi-spec= ties together the =defmulti=, a
+# =defmethod=, and the tag /qua/ key =::term=. Specs
+# that conform to =::asr-term= include all the
+# terms in the ASDL grammar.[fn:grammar-snapshot]
+
+** Nested Multi-Specs
+<<nested-multi-specs>>
+
+Contents of multi-specs can, themselves, be
+multi-specs. Such cases obtain when an =::asr-term=
+has multiple function-like heads. Examples include
+=::ttype=, =::symbol=, =::expr=, and =::stmt=.
+
+The names of all multi-specs in MASR, nested or not,
+begin with =::asr-= and end with either =term= or
+=<some-term>-head=. Examples: =::asr-term= and
+\linebreak =::asr-ttype-head=. There is only one
+level of nesting: terms above heads.
+
+Here is the =::asr-term= entity spec for =::ttype=.
+The /nested/ multi-spec is named \linebreak
+=::asr-type-head=.
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+(defmethod term ::ttype [_]
+  (s/keys :req [::term ::asr-ttype-head])) ;; entity spec
+#+end_src
+
+where
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defmulti ttype-head ::ttype-head)   ;; tag fetcher
+  (defmethod ttype-head ::Integer ,,,) ;; tag match
+  (defmethod ttype-head ::Real    ,,,) ,,,
+  (s/def ::asr-ttype-head ;; name of the multi-spec
+        ;; ties together a defmulti and a tag fetcher
+        ;;            defmulti   tag fetcher
+        ;;            ---------- ------------
+        (s/multi-spec ttype-head ::ttype-head))
+#+end_src
+
+Here is a conforming example in full-form:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/valid? ::asr-term
+            {::term ::ttype,
+             ::asr-ttype-head
+             {::ttype-head ::Real, ::real-kind 4,
+              ::dimensions [[6 60] [1 42]}})
+#+end_src
+
+Likewise, here is the =::asr-term= spec for
+=::symbol=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+(defmulti symbol-head ::symbol-head)
+(defmethod symbol-head ::Variable [_]
+  (s/keys :req [::symbol-head ::symtab-id ::varnym ,,,]))
+(defmethod symbol-head ::Module   [_] ,,,)
+(defmethod symbol-head ::Function [_] ,,,) ,,,
+(s/def ::asr-symbol-head
+      (s/multi-spec symbol-head ::symbolhead))
+#+end_src
+
+\newpage
+Here is a conforming example for =::Variable= in
+full-form, abbreviated:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/valid?
+   ::asr-term  {::term ::symbol,
+     ::asr-symbol-head
+     {::symbol-head ::Variable
+      ::symtab-id (nat 2)
+      ::varnym    (identifier 'x)
+      ::intent    (intent 'Local)
+      ::ttype     (ttype (Integer 4 [[0 42])) ,,, }})
+#+end_src
+
+** Light Sugar, Heavy Sugar
+<<sugar>>
+
+/Light-sugar/ forms are shorter than full-form, but
+longer and more explicit than /heavy-sugar/.
+Heavy-sugar require positional arguments, and are
+thus more brittle, especially for long
+specifications with many arguments, where the risk
+is high of getting arguments out of order in
+hand-written code.
+
+Light-sugar specs are returned by functions like
+=Integer-= whose names have trailing hyphens. Light
+sugar functions typically have keyword arguments,
+partitioned into required and
+optional-with-defaults. The keyword argument lists
+of light-sugar functions do not depend on order. The
+following two examples conform to both =::asr-term=
+and to =::ttype=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (ttype (Integer- {:dimensions [], :kind 4}))
+  (ttype (Integer- {:kind 4, :dimensions []}))
+#+end_src
+
+Heavy-sugar specs are returned by functions like
+=Integer= whose names do not have trailing hyphens.
+Heavy-sugar specs are compatible with current
+\linebreak =libasr --show-asr= syntax. Heavy-sugar
+functions employ positional arguments that depend on
+order. Final arguments may have defaults. For
+example, the following examples conform to both
+=::asr-term= and to =::ttype=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (ttype (Integer))
+  (ttype (Integer 4))
+  (ttype (Integer 2 []))
+  (ttype (Integer 8 [[6 60] [1 42]]))
+#+end_src
+
+Here is a conforming spec for =::Variable= in heavy
+sugar; it also conforms to =::asr-term=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (let [a-valid (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+#+end_src
+
+*** Term Entity-Key Specs
+
+For recursive type checking, as in =::Variable=, it
+is not convenient for terms to conform /only/ to
+=::asr-term=. Therefore, we define redundant
+/term-entity-key/ specs, like =::tterm=.
+
+Entity-key specs for asr-terms are defined as
+follows:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/def ::ttype
+    (s/and ::asr-term  ;; must conform to ::asr-term
+           ;; and have tag ::ttype
+           #(= ::ttype (::term %)))) ;; lambda shorthand
+#+end_src
+
+Because we have several such definitions, we write a
+helper function and a macro:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defn term-selector-spec [kwd]
+    (s/and ::asr-term
+           #(= kwd (::term %)))) ;; lambda shorthand
+  (defmacro def-term-entity-key [term]
+    (let [ns "masr.specs"
+          tkw (keyword ns (str term))]
+      `(s/def ~tkw    ;; like ::tterm
+         (term-selector-spec ~tkw))))
+#+end_src
+
+Here are some invocations of that macro:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (def-term-entity-key dimension)
+  (def-term-entity-key abi)
+  (def-term-entity-key ttype)
+#+end_src
+
+Here are some examples of extra conformance tests
+for sugared specs via term entity-key specs:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (s/valid? ::asr-term  (dimension []))        := true
+  (s/valid? ::asr-term  (dimension '(1 60)))   := true
+  (s/valid? ::asr-term  (dimension '()))       := true
+
+  (s/valid? ::dimension (dimension []))        := true
+  (s/valid? ::dimension (dimension '(1 60)))   := true
+  (s/valid? ::dimension (dimension '()))       := true
+
+  (s/valid? ::asr-term (ttype (Integer 4)))    := true
+  (s/valid? ::asr-term (ttype (Integer 4 []))) := true
+
+  (s/valid? ::ttype    (ttype (Integer 4)))    := true
+  (s/valid? ::ttype    (ttype (Integer 4 []))) := true
+
+#+end_src
+
+*** Enum-Like Specs
+
+Entity-key specs are defined automatically for all
+/enum-like/ terms via the \linebreak =enum-like=
+macro:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defmacro enum-like [term, heads]
+    (let [ns "masr.specs"
+          trm (keyword ns "term")     ;; like ::term
+          art (keyword ns "asr-term") ;; like ::asr-term
+          tkw (keyword ns (str term)) ;; like ::intent
+          ,,,]
+      `(do ,,,         ;; the entity-key spec
+         (s/def ~tkw   ;; like ::intent
+           (s/and ~art ;; like ::asr-term
+                  (term-selector-spec ~tkw)))
+         ,,, )))
+#+end_src
+
+Here are some examples of extra conformance tests
+for automatically defined term entity-keys for
+enum-like specs:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+ (s/valid?  ::intent (intent 'Local)) := true
+ (let [iex (intent 'Local)]
+   (s/conform ::asr-term iex)         := iex
+   (s/conform ::intent iex)           := iex)
+#+end_src
+
+*** Term-Head Entity-Key Specs
+
+For terms like =::symbol= and =::stmt= with multiple
+heads like =::Variable= and =::Assignment= it is
+convenient to define redundant entity-key specs like
+the following:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+   (s/def ::Variable               ;; head entity key
+     (s/and ::asr-term             ;; top multi-spec
+       #(= ::Variable              ;; nested tag
+           (-> % ::asr-symbol-head ;; nested multi-spec
+                 ::symbol-head)))) ;; tag fetcher
+   (s/def ::Assignment             ;; head entity key
+     (s/and ::asr-term             ;; top multi-spec
+       #(= ::Assignment            ;; nested tag
+           (-> % ::asr-stmt-head   ;; nested multi-spec
+                 ::stmt-head       ;; tag fetcher
+#+end_src
+
+We define these with another macro,
+=def-term-head--entity-key=. The definition of this
+macro is found in the file =specs.clj=. An example
+of conformance to =::Variable= is found above, in
+Section [[sugar]].
+
+We do not define term-head entity-key specs for
+every term, but only where convenient. For example,
+we don't define term-head entity-key specs for
+=::Integer=, =::Real=, =::Complex=, and =::Logical=
+ttypes. Conformance of such specs to =::ttype=
+suffice for recursive type-checking in heavy sugar.
