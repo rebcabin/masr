@@ -1355,9 +1355,14 @@
 
 
 (tests
- (symtab-id  42)  := 42
- (symtab-id -42)  := ::invalid-symtab-id
- (symtab-id 'foo) := ::invalid-symtab-id)
+ (symtab-id  42)                        := 42
+ (symtab-id -42)                        := ::invalid-symtab-id
+ (symtab-id 'foo)                       := ::invalid-symtab-id
+ (s/conform ::nat 42)                   := 42
+ (s/conform ::nat (nat 42))             := 42
+ (s/conform ::symtab-id 42)             := 42
+ (s/conform ::symtab-id (symtab-id 42)) := 42
+ (s/conform ::symtab-id (nat 42))       := 42)
 
 
 ;;     _                       _             _
