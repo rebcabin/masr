@@ -319,33 +319,33 @@ conforming examples, written in the recommended
 sugar form.
 
 Equally important are non-conforming examples. See
-the body of this document, =tests= in =specs.clj=,
-and =deftest= in =core_tests= for many
+the body of the reference document, =tests= in
+=specs.clj=, and =deftest= in =core_tests= for many
 non-conforming examples.
 
 #+caption: Atomic and Naked Specs: No Sugar
 #+label: tbl:atomic-specs
-| **Spec**      | **Predicate** | **Link**  | **Example** |
-|---------------+---------------+-----------+-------------|
-| =::bool=      | =boolean?=    | [[atoms]]     | =true=      |
-| =::float=     | =float?=      | [[atoms]]     | =3.142=     |
-| =::int=       | =int?=        | [[atoms]]     | =-1789=     |
+| **Spec**  | **Predicate** | **Example** |
+|-----------+---------------+-------------|
+| =::bool=  | =boolean?=    | =true=      |
+| =::float= | =float?=      | =3.142=     |
+| =::int=   | =int?=        | =-1789=     |
 
 #+caption: Top-Level /term-like/ Specs, not in ASDL
 #+label: tbl:term-like-specs
-| **Spec**            | **Link**    | **Example**  |
-|---------------------+-------------+--------------------------------|
-| =::nat=             | [[nat]]         | =(nat 42)=                     |
-| =::identifier=      | [[identifier]]  | =(identifier 'boofar)=         |
-| =::identifier-set=  | [[identifiers]] | =(identifier-set ['a 'a])=     |
-| =::identifier-list= | [[identifiers]] | =(identifier-list ['a 'a])=    |
-| =::identifier-suit= | [[identifiers]] | =(identifier-suit ['a 'b])=    |
-| =::dimensions=      | [[dimensions]]  | =(dimensions [[6 60] [1 42]])= |
+| **Spec**            | **Example**                    |
+|---------------------+--------------------------------|
+| =::nat=             | =(nat 42)=                     |
+| =::identifier=      | =(identifier 'boofar)=         |
+| =::identifier-set=  | =(identifier-set ['a 'a])=     |
+| =::identifier-list= | =(identifier-list ['a 'a])=    |
+| =::identifier-suit= | =(identifier-suit ['a 'b])=    |
+| =::dimensions=      | =(dimensions [[6 60] [1 42]])= |
 
 #+caption: Higher-Order Specs, Defined in Terms of Other Specs
 #+label: tbl:higher-order-specs
-| **Spec**             | *Link or Spec*           | **Example**                 |
-| =::symtab-id=        | [[symtab-id]]                | =(symtab-id 42)=            |
+| **Spec**             | **Predicate**            | **Example**                 |
+| =::symtab-id=        | [[=::nat=]]                  | =(symtab-id 42)=            |
 | =::value-attr=       | =::bool=                 | =(value-attr false)=        |
 | =::dependencies=     | =::identifier-set=       | =(dependencies ['a 'b 'c])= |
 | =::symbolic-value=   | TODO =empty?=            | =(symbolic-value ())=       |
@@ -355,24 +355,24 @@ non-conforming examples.
 
 #+caption: /Term/ Multi-Specs; Like Tagged Unions
 #+label: tbl:multi-specs
-| **Multi-Spec** | **Term**         | **Link**     | **Example**  |
-|----------------+------------------+--------------+--------------------------------|
-| =::asr-term=   | =::dimension=    | [[dimension]]    | =(dimension [6 60])=           |
-| =::asr-term=   | =::intent=       | [[intent]]       | =(intent 'Local)=              |
-| =::asr-term=   | =::storage-type= | [[storage-type]] | =(storage-type 'Default)=      |
-| =::asr-term=   | =::abi=          | [[abi]]          | =(abi 'Source)=                |
-| =::asr-term=   | =::access=       | [[access]]       | =(access 'Public)=             |
-| =::asr-term=   | =::presence=     | [[presence]]     | =(presence 'Required)=         |
+| **Multi-Spec** | **Term**         | **Example**               |
+|----------------+------------------+---------------------------|
+| =::asr-term=   | =::dimension=    | =(dimension [6 60])=      |
+| =::asr-term=   | =::intent=       | =(intent 'Local)=         |
+| =::asr-term=   | =::storage-type= | =(storage-type 'Default)= |
+| =::asr-term=   | =::abi=          | =(abi 'Source)=           |
+| =::asr-term=   | =::access=       | =(access 'Public)=        |
+| =::asr-term=   | =::presence=     | =(presence 'Required)=    |
 
 #+caption: =::asr-term= Specs with Nested /Head/ Multi-Specs
 #+label: tbl:nested-multi-specs
-| **Term**   | **Head**     | **Link** | **Example**     |
-|------------+--------------+----------+-----------------------------------|
-| =::ttype=  | =::Integer=  | [[ttype]]    | =(Integer 4 [[6 60] [1 42]])=     |
-| =::ttype=  | =::Real=     | [[ttype]]    | =(Real    8 [[6 60] [1 42]])=     |
-| =::ttype=  | =::Complex=  | [[ttype]]    | =(Complex 4 [[6 60] [1 42]])=     |
-| =::ttype=  | =::Logical=  | [[ttype]]    | =(Logical 1 [[6 60] [1 42]])=     |
-| =::symbol= | =::Variable= | [[Variable]] | =(Variable 42 'x (Integer 4)...)= |
+| **Term**   | **Head**     | **Example**                       |
+|------------+--------------+-----------------------------------|
+| =::ttype=  | =::Integer=  | =(Integer 4 [[6 60] [1 42]])=     |
+| =::ttype=  | =::Real=     | =(Real    8 [[6 60] [1 42]])=     |
+| =::ttype=  | =::Complex=  | =(Complex 4 [[6 60] [1 42]])=     |
+| =::ttype=  | =::Logical=  | =(Logical 1 [[6 60] [1 42]])=     |
+| =::symbol= | =::Variable= | =(Variable 42 'x (Integer 4)...)= |
 
 \clearpage
 ** Multi-Specs
