@@ -19,6 +19,6 @@ Radiation. Yes, it's a physics pun. We like physics puns.
 
 # Modify
 
-- `masr-summary.org`, `masr-summary`
+- `masr-summary.org`, `masr-summary.org`
 
 - Write Clojure code in `specs.clj` and `core_tests.clj`
