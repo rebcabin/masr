@@ -143,7 +143,7 @@
 
 #+TITLE:  MASR --- Meta Abstract Semantics Representation
 #+AUTHOR: Brian Beckman
-#+DATE:   10 Apr 2023
+#+DATE:   23 Apr 2023
 
 #+BEGIN_SRC elisp :exports none
   (setq org-babel-python-command "python3")
@@ -279,6 +279,7 @@ MASR multi-specs are tagged collections of entity
 specs.
 
 ** Full-Form
+<<full-form>>
 
 Full-form instances that are checked against specs
 are Clojure /hash-maps/:[fn:hash-map] collections of
@@ -307,6 +308,7 @@ instances in full-form. Sugar comes in two flavors,
 /light/ and /heavy/. See Section [[sugar]].
 
 ** Terms and Heads
+<<terms-and-heads>>
 
 MASR defines /terms/ and /heads/ that describe the
 semantics of programs. Terms are top-most in the ASR
@@ -591,7 +593,8 @@ sugar; it also conforms to =::asr-term=:
    (s/valid? ::Variable a-valid) := true)
 #+end_src
 
-*** Term Entity-Key Specs
+*** \colorbf{red}{Term Entity-Key Specs}
+<<term-entity-key-specs>>
 
 For recursive type checking, as in =::Variable=, it
 is not convenient for terms to conform /only/ to
@@ -633,6 +636,11 @@ Here are some invocations of that macro:
   (def-term-entity-key ttype)
 #+end_src
 
+Term-entity-key specs establish a partition on the
+set of asr-terms. Every /dimension/ is an asr-term.
+Every /abi/ is an asr-term. Every /ttype/ is an
+asr-term, and so on.
+
 Here are some examples of extra conformance tests
 for sugared specs via term entity-key specs:
 
@@ -651,10 +659,9 @@ for sugared specs via term entity-key specs:
 
   (s/valid? ::ttype    (ttype (Integer 4)))    := true
   (s/valid? ::ttype    (ttype (Integer 4 []))) := true
-
 #+end_src
 
-*** Enum-Like Specs
+*** \colorbf{red}{Enum-Like Specs}
 
 Entity-key specs are defined automatically for all
 /enum-like/ terms via the \linebreak =enum-like=
@@ -687,7 +694,9 @@ enum-like specs:
    (s/conform ::intent iex)           := iex)
 #+end_src
 
-*** Term-Head Entity-Key Specs
+\clearpage
+*** \colorbf{red}{Term-Head Entity-Key Specs}
+<<term-head-entity-key-specs>>
 
 For terms like =::symbol= and =::stmt= with multiple
 heads like =::Variable= and =::Assignment= it is
@@ -720,6 +729,12 @@ we don't define term-head entity-key specs for
 =::Integer=, =::Real=, =::Complex=, and =::Logical=
 ttypes. Conformance of such specs to =::ttype=
 suffice for recursive type-checking in heavy sugar.
+
+Because heads are unique in ASR,
+Term-head-entity-key specs establish a partition on
+the set of asr-terms, just like term-entity-key
+specs. See the section [[Variable]] on =Variable= for a
+test of the =::Variable= term-head-entity-key spec.
 
 \clearpage
 * Issues with ASDL
@@ -842,7 +857,8 @@ programmers to manage implicit constraints.
 We aim to replace ASDL with MASR in Clojure. When
 integrated with LCompilers in the future, MASR will
 be called LASR. There will be no gap or lag between
-ASR specs and their implementations.
+LASR specs and their implementations because the
+implementations will be generated at build time.
 
 \clearpage
 * MASR Definitions
@@ -866,26 +882,26 @@ like $\texttt{symbol}$ or $\texttt{dimension}$.
 \end{framed}
 
 Names of terms appear to the left of equals signs in
-the ASDL grammar.[fn:grammar-snapshot] Names of
-terms are generally in lower-case.
+the ASDL grammar snapshot.[fn:grammar-snapshot]
+Names of terms are generally in lower-case.
 
 Table \ref{tbl:nodes} exhibits terms, ambiguous
-types, and term-like types. Ambiguous types and
-term-like types are used but not defined in the ASDL
-grammar, but are explicitly defined in MASR.
+types, and term-like types, which are
+used-but-not-defined in the ASDL grammar. MASR
+explicitly defines them. Each term has a Clojure
+spec, various sugar functions, and term-entity key
+specs (Section [[term-entity-key-specs]]).
 
 The ambiguous types, =symbol_table= and =symtab_id=,
 are called out. The ASDL grammar conflates these
-two, having only =symbol_table= to mean either a
+two, having only =symbol_table=, which can either a
 full hash-map entity or an integer ID, depending on
-criteria hidden in hand-written C++ code. A primary
-objective of MASR is to remove this kind of
-ambiguity. This kind of ambiguity is not a
-deficiency of ASDL like that explained in Section
-[[asdl-is-ambiguous]]. Unlike the difference between a
-list and a set, ASDL can express the difference
-between a hash-map and an integer ID. The failure to
-do so is a design flaw in the current ASDL grammar.
+obscure criteria hidden in hand-written C++ code. A
+primary objective of MASR is to remove this kind of
+ambiguity, which is a design flaw in the current
+ASDL grammar rather than a deficiency of ASDL
+because ASDL can express the difference between a
+hash-map and an integer ID.
 
 The contents of Table \ref{tbl:nodes} have been
 greatly abbreviated and edited for presentation.
@@ -912,8 +928,10 @@ There are two kinds of heads:
 
 - /enum-like heads/ :: --- no parentheses, e.g., =Local=
 
-MASR has a Clojure spec and syntactic sugar for each
-head. There are about 250 heads by a recent count.
+MASR has a Clojure spec and sugar functions for each
+head. Most heads also have term-head entity-key
+specs (Section [[term-head-entity-key-specs]]). There
+are about 250 heads by a recent count.
 
 \begin{framed}
 \begin{definition}
@@ -976,28 +994,31 @@ head. There are about 250 heads by a recent count.
 \clearpage
 * MASR Tenets
 
-- Entity Hash-Maps :: --- ASR
-  entities[fn:spec:
+- Entity Hash-Maps :: --- ASR entities[fn:spec:
   https://clojure.org/guides/spec] in full-form
   shall be hash-maps with fully-qualified keywords
-  as keys (see Section [[intent]] for motivating
-  example).
+  as keys (see Section [[full-form]] for a summary and
+  Section [[intent]] for a motivating example,
+  /intent/).
+
+- Full-Form :: --- Every entity shall have a fully
+  explicit form in which all attributes are spelled
+  out. Full-form hash-maps shall contain all
+  necessary information, even at the cost of
+  verbosity.
 
 - Multi-Specs :: --- ASR entity hash-maps shall be
   recursively checked and generated via Clojure
-  multi-specs.[fn:spec]
-
-- Full-Form :: --- Every entity has a fully explicit
-  form in which all attributes are spelled out.
-  Full-form hash-maps shall contain all necessary
-  information, even at the cost of verbosity.
-  Defaults and optionals appear only sparingly
+  multi-specs. See Section [[multi-specs]] for
+  discussion and the body of this document for
+  examples.
 
 - Syntax Sugar :: --- Certain constructor functions
   may supply default entity-attribute values so as
   to shorten common-case expressions. See Section
-  [[ttype]] for an example and see Issue 3 on MASR's
-  GitHub repo.[fn:issue3:
+  [[sugar]] for discussion, Section [[ttype]] for an
+  example, and see Issue 3 on MASR's GitHub
+  repo.[fn:issue3:
   https://github.com/rebcabin/masr/issues/3]
 
 \clearpage
@@ -1019,7 +1040,7 @@ The specs for =int=, =float=, and =bool= are straightforward:
   (s/def ::bool  boolean?)
 #+end_src
 
-*** Sugar
+*** \colorbf{red}{Sugar}
 <<nat>>
 
 We restrict the spec, =nat=, for natural numbers, to /int/,
@@ -1059,12 +1080,12 @@ for practical reasons:
 A Clojure /int/ is a Java /Long/, with some peculiar
 behavior for hex literals.[fn::
 https://clojurians.slack.com/archives/C03S1KBA2/p1681690965585429]
-The gist is that hex literals for negative numbers
-in Clojure must have explicit minus signs, lest they
-become =clojure.lang.BigInt=, which we disallow for
-dimension ([[dimension]]) and dimensions ([[dimensions]]) in
-MASR. To get negative =java.lang.Long=, one
-employs Clojure's =unchecked-long=.
+Hex literals for negative numbers in Clojure must
+have explicit minus signs, lest they become
+=clojure.lang.BigInt=. MASR disallows BigInt for
+dimension ([[dimension]]) and dimensions ([[dimensions]]).
+To get negative =java.lang.Long= without explicit
+minus signs, one employs Clojure's =unchecked-long=.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1089,23 +1110,27 @@ namely =dimensions= (plural), =identifier=, and
 similarities with terms. Note carefully the
 singulars and plurals in the names of the specs.
 =dimension= (singular) is a term and covered in
-Section [[dimension]].
+Section [[dimension]], whereas =dimensions= (plural) is
+not a term. In the ASDL snapshot
+grammar,[fn:grammar-snapshot] the plural of
+=dimension= is denoted =dimension*=, with a Kleene
+star.
 
-** dimensions [\emph{sic}]
+** dimensions [\emph{plural}]
 <<dimensions>>
 
-A MASR /dimensions/ [\emph{sic}], =dimension*= in
+A MASR /dimensions/ [\emph{plural}], =dimension*= in
 ASDL, is a homogeneous ordered collection (list or
 vector) of zero or more dimension instances
 ([[dimension]]). Because \linebreak =::dimensions=
-[\emph{sic}] is not a term, we do not need nested
+[\emph{plural}] is not a term, we do not need nested
 multi-specs. However, because =::dimension=
-[\emph{sic}] is a term, the elements of a
+[\emph{singular}] is a term, the elements of a
 =dimensions*= must conform to =::dimension=, which
 is an =asr-term= multi-spec. We ensure such
 conformance with a general-purpose function that
 selects terms that match a given spec, =dimension=
-in this case. We may reuse that function in other
+in this case. MASR reuses that function in other
 specs that represent non-term collections.
 
 \vskip 0.26cm
@@ -1132,7 +1157,8 @@ specs that represent non-term collections.
 Here is the spec, =::dimensions=, for dimensions. We
 limit the number of dimensions to 9 for practical
 reasons. The meaning of an empty =::dimensions=
-instance is an open question (Issue 7[fn:issue7]).
+instance is an open question (Issue 7[fn:issue7:
+https://github.com/rebcabin/masr/issues/7]).
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1147,7 +1173,7 @@ instance is an open question (Issue 7[fn:issue7]).
 #+end_src
 
 \newpage
-*** FullForm
+*** \colorbf{red}{FullForm}
 
 The following tests show a couple of ways of writing
 out a =::dimensions= instance in full-form. The
@@ -1171,10 +1197,10 @@ say in =core_tests.clj=. The second can be used in
             ::dimension-content ()}])            := true)
 #+end_src
 
-*** Sugar
+*** \colorbf{red}{Sugar}
 
-The following tests illustrate the sugar for
-=::dimensions=:
+The following tests illustrate the sugar function,
+=dimensions=, for the spec, =::dimensions=:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1191,17 +1217,17 @@ The following tests illustrate the sugar for
 #+end_src
 
 \clearpage
-** identifier  [\emph{sic}]
+** identifier  [\emph{singular}]
 <<identifier>>
 
 An ASR identifier is a C or Fortran identifier,
 which begins with an alphabetic glyph or an
 underscore, and has alpha-numeric characters or
 underscores following. The only complication in the
-spec is the need to generate instances via
-=s/with-gen=. The spec solves the generation problem
-for identifiers, plus shows a pattern for other
-specs that need custom generators.
+spec is the need to generate instances. The spec
+solves the generation problem for identifiers, plus
+shows a pattern for other specs that need custom
+generators.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1244,11 +1270,10 @@ generation:
 #+end_src
 
 \newpage
-*** Sugar
+*** \colorbf{red}{Sugar}
 
-We define a simple function for creating conforming
-identifiers and illustrate it with a couple of
-tests:
+We define and illustrate the sugar function,
+=identifier= for creating identifiers:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1263,7 +1288,7 @@ tests:
 #+end_src
 
 \clearpage
-** identifiers [\emph{sic}]
+** identifiers [\emph{plural}]
 <<identifiers>>
 
 ASDL =identifier*= is ambiguous. There are three
@@ -1287,7 +1312,7 @@ identifiers to 99 for practical purposes:
   (def MAX-NUMBER-OF-IDENTIFIERS 99)
 #+end_src
 
-*** identifier-set
+*** \colorbf{red}{identifier-set}
 
 The spec for a set of identifiers is
 straightforward because of Clojure's literal syntax,
@@ -1303,7 +1328,7 @@ straightforward because of Clojure's literal syntax,
 #+end_src
 
 See the code for uninteresting details of the
-sugar-function, =identifier-set=. The following
+sugar function, =identifier-set=. The following
 tests show it at work:
 
 \vskip 0.26cm
@@ -1323,7 +1348,7 @@ tests show it at work:
 #+end_src
 
 \newpage
-*** identifier-list
+*** \colorbf{red}{identifier-list}
 
 The spec for a list of identifiers is almost the
 same as the spec for a set of identifiers. It
@@ -1342,7 +1367,7 @@ rather than into a set:
                     (s/gen ::identifier-list))) := true)
 #+end_src
 
-The implementation of the sugar-function for
+The implementation of the sugar function for
 identifier-list is uninteresting. The following
 tests show it at work:
 
@@ -1363,11 +1388,11 @@ tests show it at work:
 #+end_src
 
 \newpage
-*** identifier-suit
+*** \colorbf{red}{identifier-suit}
 
 The spec for an identifier-suit is almost the same
 as for identifier-list, only checking that there are
-no duplicate elements
+no duplicate elements:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1382,7 +1407,7 @@ no duplicate elements
 #+end_src
 
 Here are the tests for the (uninteresting)
-sugar-function:
+sugar function:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1409,7 +1434,7 @@ sugar-function:
 The following sections
 
 - summarize the Clojure specs for all ASR terms and
-  heads (see Tables \ref{tbl:multi-specs} and
+  heads \newline (see Tables \ref{tbl:multi-specs} and
   \ref{tbl:nested-multi-specs}).
 
 - pedagogically explain the architecture and
@@ -1419,13 +1444,14 @@ The following sections
 The architecture is the remainder from several
 experiments. For example, \linebreak =defrecord= and
 =defprotocol= for polymorphism were tried and
-discarded in favor of multi-specs.[fn:spec]
+discarded in favor of multi-specs.
 
 The tests in =core_test.clj= exhibit many examples
 that pass and, more importantly, fail the specs. We
 also keep lightweight, load-time tests inline to the
-source file for the specs, =specs.clj=. The balance
-between inline tests and separate tests is fluid.
+source file, =specs.clj=. We don't have strict
+criteria for whether a test should be inline,
+separate, or both.
 
 The best way to learn the code is to study the tests
 and to run them in the Clojure REPL or in the CIDER
@@ -1457,7 +1483,7 @@ $\texttt{(}\textit{function} \textit{args}\texttt{*)}$:
 
 If a candidate member is in a set, the result of
 calling the set like a function is the candidate
-member.
+member:
 
 \vskip 0.26cm
 #+begin_src clojure :exports both
@@ -1487,13 +1513,13 @@ members.
 The name of the spec is =::intent-enum=. The double
 colon in =::intent-enum= is shorthand. In the file
 =specs.clj=, double colon implicitly signifies that
-a keyword like =intent-enum= is in the namespace
+a keyword like =::intent-enum= is in the namespace
 =masr.specs=. In other files, like =core_test.clj=,
 the same keyword is spelled
 =:masr.specs/intent-enum=.
 
-The names of all Clojure specs must be
-fully qualified in namespaces.
+The names of all Clojure specs must be fully
+qualified in namespaces.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1594,14 +1620,17 @@ A multi-spec has three components:
   https://stackoverflow.com/questions/6915531]
 
 - =defmethod=[fn:defmethod: https://clojuredocs.org/clojure.core/defmethod] :: ---
-  individual specs, each implementing the interface;
-  in this case, if the =::term= of a hash-map
+  individual specs, each implementing the interface.
+  In this case, if the =::term= of a hash-map
   matches =::intent=, then the corresponding
   =defmethod= is invoked (see Section [[defmethod]] below).
 
-- =s/multi-spec= :: --- tying together the =defmulti= and,
-  redundantly, the tag-fetcher.[fn:: Multi-specs allow re-tagging,
-  but we do not need that level of generality.]
+- =s/multi-spec= :: --- tying together the
+  =defmulti= and, redundantly, the tag-fetcher.[fn::
+  Multi-specs allow re-tagging, where the tag named
+  in the multi-spec is different from the
+  tag-fetcher function. MASR does not need
+  re-tagging.]
 
 *** \colorbf{red}{Specs for All Terms}
 
@@ -1623,11 +1652,8 @@ keywords for more MASR types-/qua/-terms.
 namespace. The namespace is aliased to =s=.
 
 Next, specify the =defmulti= polymorphic interface,
-=term=, (no colons) for all term specs:
-# The name of the polymorphic
-# interface and also of all =defmethods= that
-# implement the interface is =term=, contrast to
-# =::term=, the tag-fetcher:
+=term=, (no colons) for all term specs, and bind it
+to the tag-fetcher, =::term=:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1635,18 +1661,19 @@ Next, specify the =defmulti= polymorphic interface,
 #+end_src
 
 This =defmulti= dispatches to a =defmethod= based on
-the results of applying the keyword-/qua/-function
-=::term= to a hash-map:
+the results of applying the
+keyword-/qua/-tag-fetcher function =::term= to a
+hash-map:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
   (::term {::term ::intent ...})
+  ;; => ::intent
 #+end_src
 
-equals =::intent=.
-
-The spec is named =::term= and the tag-fetcher is named =::term=.
-They don't need to be the same. They could have different names.
+The spec is named =::term= and the tag-fetcher is
+named =::term=. They don't need to be the same name,
+but they always are in MASR.
 
 *** \colorbf{red}{Spec for intent}
 <<defmethod>>
@@ -1663,8 +1690,9 @@ argument, =_=:
 #+end_src
 
 This spec states that an /intent/ is a Clojure
-hash-map with a =::term= keyword and an
-=::intent-enum= keyword.
+hash-map with a required =::term= keyword and a
+required =::intent-enum= keyword. This kind of spec
+is called an /entity spec/.[fn:spec]
 
 *** \colorbf{red}{The Multi-Spec Itself: ::asr-term}
 
@@ -1800,7 +1828,7 @@ macro pertains to all such enum-like multi-specs:
          (s/def ~tke ~heads)       ;; the set
          (defmethod term ~tkw [_#] ;; the multi-spec
            (s/keys :req [:masr.specs/term ~tke]))
-         (defn ~term [it#]        ;; the syntax
+         (defn ~term [it#]         ;; the sugar
            (let [st# (s/conform
                       :masr.specs/asr-term
                       {:masr.specs/term ~tkw
@@ -1820,6 +1848,40 @@ Use the macro like this:
    #{'Default, 'Save, 'Parameter, 'Allocatable})
 #+end_src
 
+*** \colorbf{red}{Term-Entity Keys}
+
+The actual =enum-like= macro also defines the
+/term-entity-key spec/ (Section
+[[term-entity-key-specs]]) for any enum-like.
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+   (s/def ~tkw   ;; like ::intent
+     (s/and ~art ;; like ::asr-term, i.e., the multi-spec
+            ;; like the predicate #(= ::intent (::term %))
+            (term-selector-spec ~tkw)))
+#+end_src
+
+In this case, the term-entity-key spec is
+=::intent=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (testing "term entity-key"
+    (is      (s/valid? ::asr/intent (intent 'Local)))
+    (is      (s/valid? ::asr/intent (intent 'Unspecified)))
+    (is (not (s/valid? ::asr/intent (intent 'foobar))))
+    (is (not (s/valid? ::asr/intent (intent []))))
+    (is (not (s/valid? ::asr/intent (intent ()))))
+    (is (not (s/valid? ::asr/intent (intent {}))))
+    (is (not (s/valid? ::asr/intent (intent #{}))))
+    (is (not (s/valid? ::asr/intent (intent "foobar"))))
+    (is (not (s/valid? ::asr/intent (intent ""))))
+    (is (not (s/valid? ::asr/intent (intent 42))))
+    (is (thrown? clojure.lang.ArityException
+    (intent))))
+#+end_src
+
 \clearpage
 ** TODO unit
 <<unit>>
@@ -1828,12 +1890,15 @@ Use the macro like this:
 ** TODO symbol
 <<symbol>>
 
-*** TODO Variable
+*** \colorbf{red}{Variable}
 <<Variable>>
 
 Here is an example of the full form for a
-=::Variable= with conforming instances in light
-sugar (Section [[sugar]]):
+=::Variable= with a conforming instance in light
+sugar (Section [[sugar]]). Note the term-head-entity-key
+spec =::Variable= (Section
+[[term-head-entity-key-specs]]). Any =::Variable= is
+also an =::asr-term=.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1873,62 +1938,101 @@ sugar (Section [[sugar]]):
    (s/valid? ::asr-term a-var-light) := true
 
    (s/valid? ::Variable a-var)       := true
-   (s/valid? ::Variable a-var-light) := true
-   ))
+   (s/valid? ::Variable a-var-light) := true))
 #+end_src
+
+\newpage
+Here is an example in heavy sugar:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (let [a-valid (Variable 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+#+end_src
+
+The source file, =specs.clj=, tests each of the 13
+positional arguments of the heavy-sugar function
+=Variable= for recursive conformance.
 
 \clearpage
 ** storage_type
 <<storage-type>>
 
-The following tests illustrate conformance:
+Storage-type is another enum-like, defined and
+registered via macro (Section [[enum-like-macro]]). The
+following tests of full-form and heavy sugar
+illustrate conformance to both =::asr-term= and the
+term-entity-key spec, =::storage-type= (Section
+[[term-entity-key-specs]]).
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
   (tests
-   (s/valid? ::storage-type-enum 'Default)       := true
-   (s/valid? ::storage-type-enum 'foobar)        := false
+   (s/valid? ::storage-type-enum 'Default)          := true
+   (s/valid? ::storage-type-enum 'foobar)           := false
    (s/valid? ::asr-term
              {::term ::storage-type
-              ::storage-type-enum 'Default})     := true
-   (s/valid? ::asr-term (storage-type 'Default)) := true
-   (s/valid? ::asr-term (storage-type 'foobar))  := false
-   (storage-type 'foobar)
-              := ::invalid-storage-type
-   (s/conform ::asr-term
-              (storage-type 'Default)
-              := (storage-type 'Default)))
-#+end_src
+              ::storage-type-enum 'Default})        := true
+   (s/valid? ::asr-term (storage-type 'Default))    := true
+   (s/valid? ::asr-term (storage-type 'foobar))     := false
+   (s/valid? ::storage-type
+             {::term ::storage-type
+              ::storage-type-enum 'Default})        := true
+   (s/valid? ::storage-type (storage-type 'Default)):= true
+   (s/valid? ::storage-type (storage-type 'foobar)) := false
+   (storage-type 'foobar)          := ::invalid-storage-type
+   (let [ste (storage-type 'Default)]
+     (s/conform ::storage-type ste)                 := ste
+     (s/conform ::asr-term ste)                     := ste))
 
-The implementation is covered in Section
-[[enum-like-macro]] on the enum-like macro.
+#+end_src
 
 \clearpage
 ** access
 <<access>>
 
+Access is another enum-like, defined and registered
+via macro (Section [[enum-like-macro]]). The following
+tests of heavy sugar illustrate conformance to both
+=::asr-term= and the term-entity-key spec,
+=::access= (Section [[term-entity-key-specs]]).
+
 \vskip 0.26cm
 #+begin_src clojure :eval never
   (enum-like access #{'Public 'Private})
+
   (tests
    (let [public (access 'Public)]
-     (s/conform ::asr-term public) := public)
+     (s/conform ::asr-term public) := public
+     (s/conform ::access   public) := public)
    (access 'foobar) := ::invalid-access)
 #+end_src
 
 ** TODO deftype
 <<deftype>>
 
-\clearpage
 ** presence
 <<presence>>
+
+Presence is another enum-like, defined and registered
+via macro (Section [[enum-like-macro]]). The following
+tests of heavy sugar illustrate conformance to both
+=::asr-term= and the term-entity-key spec,
+=::presence= (Section [[term-entity-key-specs]]).
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
   (enum-like presence #{'Required 'Optional})
+
   (tests
    (let [required (presence 'Required)]
-     (s/conform ::asr-term required) := required)
+     (s/conform ::asr-term required) := required
+     (s/conform ::presence required) := required)
    (presence 'fubar) := ::invalid-presence)
 #+end_src
 
@@ -1947,16 +2051,15 @@ Its heads include several /external-abis/:
       'BindC, 'Interactive, 'Intrisic})
 #+end_src
 
-and one /internal-abi/, specified as a Clojure set
-to get the membership-test functionality:
+and one /internal-abi/:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
   (def internal-abis #{'Source})
 #+end_src
 
-The /abi-enum/ spec for the contents of an /abi/
-term is the unions of these two sets:
+The /abi-enum/ contents spec for /abi/ is the
+union of these two sets:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1982,8 +2085,8 @@ Add a convenience function for logic:
 #+end_src
 
 Specify the =defmethod= for the /abi/ itself with a
-hand-written generator (clojure.spec is not quite
-strong enough to create the generator automatically):
+hand-written generator (clojure.spec is not strong
+enough to create the generator automatically):
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -2006,7 +2109,7 @@ strong enough to create the generator automatically):
 #+end_src
 
 \newpage
-Generate a few conforming samples:
+Generate a few conforming samples in full-form:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -2015,82 +2118,108 @@ Generate a few conforming samples:
                       #(= ::asr/abi (::asr/term %))))
               5)
   ;; => (#::asr{:term ::asr/abi,
-  ;;            :abi-enum Interactive, :abi-external true}
+  ;;      :abi-enum Interactive, :abi-external true}
   ;;     #::asr{:term ::asr/abi,
-  ;;            :abi-enum Source, :abi-external false}
+  ;;      :abi-enum Source, :abi-external false}
   ;;     #::asr{:term ::asr/abi,
-  ;;            :abi-enum Source, :abi-external false}
+  ;;      :abi-enum Source, :abi-external false}
   ;;     #::asr{:term ::asr/abi,
-  ;;            :abi-enum Source, :abi-external false}
+  ;;      :abi-enum Source, :abi-external false}
   ;;     #::asr{:term ::asr/abi,
-  ;;            :abi-enum Interactive, :abi-external true})
+  ;;      :abi-enum Interactive, :abi-external true})
 #+end_src
 
-*** \colorbf{red}{Syntax Sugar}
+The sugar for /abi/ is an exceptional case. We deem
+it better to default the =:external= Boolean to
+=false= in all cases except that for ='Source=, and
+to require an explicit =:external= keyword in other
+cases. That means that arity-1 usages like
 
-The light-sugar for /abi/ uses Clojure
-destructuring[fn:destructuring:
-https://clojure.org/guides/destructuring][fn::
-https://gist.github.com/rebcabin/a3c24be3e17135f355348c834ab14141]
-for keyword arguments.
+=(abi 'Source)=
 
-Conforming examples:
+and arity-3 usages like
 
-\vskip 0.26cm
-#+begin_src clojure :eval never
-  (abi 'Source         :external false)
-  (abi 'LFortranModule :external true)
-  (abi 'GFortranModule :external true)
-  (abi 'BindC          :external true)
-  (abi 'Interactive    :external true)
-  (abi 'Intrinsic      :external true)
-#+end_src
+=(abi 'Source :external false)=
 
-Non-conforming due to incorrect boolean:
+are valid, but arity-2 usages like
 
-\vskip 0.26cm
-#+begin_src clojure :eval never
-  (abi 'Source         :external true)
-  (abi 'LFortranModule :external false)
-  (abi 'GFortranModule :external false)
-  (abi 'BindC          :external false)
-  (abi 'Interactive    :external false)
-  (abi 'Intrinsic      :external false)
-#+end_src
+=(abi 'Source false)=
+
+are not valid.
 
 \newpage
-Non-conforming due to incorrect types or structure:
-
-\vskip 0.26cm
-#+begin_src clojure :eval never
-  (abi 'Source :external 42)    ;; types are not ::bool
-  (abi 'Source :external "foo") ;;  |
-  (abi 'Source :external 'foo)  ;; -=-
-  (abi 'Source false) ;; no :external keyword
-  (abi 'Source true)  ;;  |
-  (abi 'Source 42)    ;;  |
-  (abi 'foo true)     ;;  |
-  (abi 'foo false)    ;; -=-
-#+end_src
-
-We don't show tests of incorrect arity.
-
-Here is the implementation of the sugar, exhibiting
-the destructuring technique:
+The following sugar function effects this design:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
   (defn abi
-    "Destructure the keyword :external"
-    [the-abi-enum, & {:keys [external]}]
-    (let [abi_ (s/conform
-                ::asr-term
-                {::term ::abi,
-                 ::abi-enum the-abi-enum,
-                 ::abi-external external})]
-      (if (s/invalid? abi_)
-        ::invalid-abi
-        abi_)))
+    ;; arity 1 --- default "external"
+    ([the-enum]
+     (let [abi_ (s/conform
+                 ::asr-term
+                 {::term         ::abi,
+                  ::abi-enum     the-enum,
+                  ::abi-external
+                  (not (= the-enum 'Source))})]
+       (if (s/invalid? abi_)
+         ::invalid-abi
+         abi_)))
+    ;; arity 2 --- invalid
+    ([the-enum, crap]
+     ::invalid-abi)
+    ;; arity 3 --- light sugar
+    ([the-enum, ext-kw, the-bool]
+     (cond
+       (not (= ext-kw :external)) ::invalid-abi
+       :else
+       (let [abi_ (s/conform
+                   ::asr-term
+                   {::term         ::abi,
+                    ::abi-enum     the-enum,
+                    ::abi-external the-bool})]
+         (if (s/invalid? abi_)
+           ::invalid-abi
+           abi_)))))
+#+end_src
+
+Here is its term-entity key, =::abi=, for recursive
+checking (Section [[term-entity-key-specs]]):
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (def-term-entity-key abi)
+#+end_src
+
+\newpage
+Here are some conformance tests for full-form,
+sugar, against =::asr-term=, and against the
+term-entity key =::abi=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (tests
+   (s/valid? ::asr-term
+             {::term      ::abi
+              ::abi-enum 'Source
+              ::abi-external false})       := true
+   (let [abe (abi 'Source :external false)]
+     (s/conform ::abi      abe)            := abe
+     (s/conform ::asr-term abe)            := abe
+     ;; defaults to correct value
+     (abi 'Source)                         := abe
+     ;; missing keyword
+     (abi 'Source false)                   := ::invalid-abi
+     ;; wrong value
+     (abi 'Source :external true)          := ::invalid-abi)
+   (let [abe (abi 'LFortranModule :external true)]
+     (s/conform ::asr-term abe)            := abe
+     (s/conform ::abi      abe)            := abe
+     ;; defaults to correct value
+     (abi 'LFortranModule)                 := abe
+     ;; missing keyword
+     (abi 'LFortranModule true)            := ::invalid-abi
+     ;; wrong value
+     (abi 'LFortranModule :external false) := ::invalid-abi))
 #+end_src
 
 \clearpage
@@ -2125,7 +2254,7 @@ heads.
     (s/keys :req [::term ::asr-ttype-head]))
 #+end_src
 
-*** Full Form
+*** \colorbf{red}{Full Form}
 
 One may always write out ttype specs in full:
 
@@ -2139,13 +2268,13 @@ One may always write out ttype specs in full:
               ::dimensions [[6 60] [1 82]]}})
 #+end_src
 
-*** Sugar for Integer, Real, Complex, Logical
+*** \colorbf{red}{Sugar for Integer, Real, Complex, Logical}
 
 Sugar for ttypes comes in two varieties, /light
 sugar/ and /heavy sugar/. See Section [[sugar]] for
 rationale.
 
-**** Light Sugar Examples
+**** \colorbf{red}{Light Sugar Examples}
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -2153,7 +2282,7 @@ rationale.
   (ttype (Integer- {:kind 4, :dimensions []}))
 #+end_src
 
-**** Heavy Sugar Examples
+**** \colorbf{red}{Heavy Sugar Examples}
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -2165,7 +2294,7 @@ rationale.
 
 See the tests for many more examples.
 
-*** TODO Character
+*** \colorbf{red}{TODO Character}
 
 ** TODO restriction_arg
 <<restriction-arg>>
@@ -2202,8 +2331,8 @@ See the tests for many more examples.
 ** dimension
 <<dimension>>
 
-A /dimension/ is 0 or 2 nats in a Clojure list or
-vector:
+A /dimension/ [\emph{singular}] is 0 or 2 nats in a
+Clojure list or vector:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -2221,11 +2350,11 @@ If there are two nats, the first nat specifies the
 starting index of any array dimension that enjoys
 the instance, and the second nat specifies the
 length. For example, in the ttype
-=(Integer 4 [[6 60]])= ([[ttype]]), the one dimension in
-the dimensions [\emph{sic}] ([[dimensions]]) of the
-ttype is =[6 60]=. The ttype specifies a rank-1
-array of 60 4-byte integers with indices starting at
-6 and running through 65.
+=(Integer 4 [[6 60]])= ([[ttype]]), the one dimension
+[\emph{singular}] in the dimensions [\emph{plural}]
+([[dimensions]]) of the ttype is =[6 60]=. The ttype
+specifies a rank-1 array of 60 4-byte integers with
+indices starting at 6 and running through 65.
 
 If there are no nats, i.e., the array dimension of
 any array enjoying the instance is of zero length.
@@ -2233,21 +2362,19 @@ For an example, consider the ttype
 =(Integer 4 [[]])= ([[ttype]]). This meaning of this type is
 an open question.[fn:issue7]
 
-*** Empty Dimensions
+*** \colorbf{red}{Empty Dimensions}
 
-Empty dimensions [\emph{sic}],
-as in =(Integer 4 [])= specify non-array types.
-These are often called, loosely, /scalars/.
-Pedantically,  the term
-/scalar/ only pertains with respect to a vector
-space.
+Empty dimensions [\emph{plural}], as in
+=(Integer 4 [])= specify non-array types. These are
+often called, loosely, /scalars/. Pedantically,
+/scalars/ pertain only to a vector space.
 
 An empty dimension, as in =(Integer 4 [[]])=,
 specifies a rank-1 array of zero length. Such items
-are discussed further in Issue 7 and in Section
-[[dimensions]].
+are discussed further in Issue 7[fn:issue7] and in
+Section [[dimensions]].
 
-*** TODO: Issue 7: Zero Length
+*** \colorbf{red}{TODO: Issue 7: Zero Length}
 
 The following specs, in context of a ttype ([[ttype]])
 for convenience, are legal in the ASDL
@@ -2262,11 +2389,8 @@ is **unspecified**:
   (Integer 4 [[6 0]])
 #+end_src
 
-See Issue 7 in MASR's GitHub repo.[fn:issue7:
-https://github.com/rebcabin/masr/issues/7]
-
 \newpage
-*** FullForm
+*** \colorbf{red}{FullForm}
 
 The following tests illustrate the full form for
 /dimension/:
@@ -2285,9 +2409,10 @@ The following tests illustrate the full form for
               ::dimension-content []})     := true)
 #+end_src
 
-*** Sugar
+*** \colorbf{red}{Sugar}
 
-The following tests illustrate the syntactic sugar
+The following tests illustrate the sugar and the
+term-entity-key spec (Section [[term-entity-key-specs]])
 for /dimension/:
 
 \vskip 0.26cm
@@ -2306,7 +2431,17 @@ for /dimension/:
    (s/valid? ::asr-term (dimension [60]))           := false
    (s/valid? ::asr-term (dimension [0]))            := false
    (s/valid? ::asr-term (dimension '(1 60)))        := true
-   (s/valid? ::asr-term (dimension '()))            := true)
+   (s/valid? ::asr-term (dimension '()))            := true
+
+   (s/valid? ::dimension (dimension  60))           := false
+   (s/valid? ::dimension (dimension [[]]))          := false
+   (s/valid? ::dimension (dimension 'foobar))       := false
+   (s/valid? ::dimension (dimension ['foobar]))     := false
+   (s/valid? ::dimension (dimension []))            := true
+   (s/valid? ::dimension (dimension [60]))          := false
+   (s/valid? ::dimension (dimension [0]))           := false
+   (s/valid? ::dimension (dimension '(1 60)))       := true
+   (s/valid? ::dimension (dimension '()))           := true )
 #+end_src
 
 
@@ -2368,9 +2503,9 @@ Some items specified in ASDL as /symbol_table/ are actually
 \vskip 0.26cm
 #+begin_src clojure :eval never
 (tests
+ (symtab-id -42)       := ::invalid-symtab-id
+ (symtab-id 'foo)      := ::invalid-symtab-id
  (symtab-id  42)                        := 42
- (symtab-id -42)                        := ::invalid-symtab-id
- (symtab-id 'foo)                       := ::invalid-symtab-id
  (s/conform ::nat 42)                   := 42
  (s/conform ::nat (nat 42))             := 42
  (s/conform ::symtab-id 42)             := 42

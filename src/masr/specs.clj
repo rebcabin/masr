@@ -944,12 +944,13 @@
  (s/valid? ::asr-term
            {::term      ::abi
             ::abi-enum 'Source
-            ::abi-external false})    := true
+            ::abi-external false})       := true
  (s/valid? ::abi
            {::term      ::abi
             ::abi-enum 'Source
-            ::abi-external false})    := true
+            ::abi-external false})       := true
  (let [abe (abi 'Source :external false)]
+   (s/conform ::abi      abe)            := abe
    (s/conform ::asr-term abe)            := abe
    ;; defaults to correct value
    (abi 'Source)                         := abe
@@ -962,6 +963,7 @@
    (abi 'Source :extrenal false)         := ::invalid-abi)
  (let [abe (abi 'LFortranModule :external true)]
    (s/conform ::asr-term abe)            := abe
+   (s/conform ::abi      abe)            := abe
    ;; defaults to correct value
    (abi 'LFortranModule)                 := abe
    ;; missing keyword
@@ -1785,13 +1787,6 @@
                          false)]
    (s/valid? ::asr-term a-valid) := true
    (s/valid? ::Variable a-valid) := true)
- (let [a-valid (Variable 2 'x (Integer 4)
-                         42 [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
 
  ;; invalid examples
  ;; Show that every entity key is checked.
@@ -1876,18 +1871,19 @@
                          'FOOBAR)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
+
+
+
+ ;;  _______  ______  ____
+ ;; | ____\ \/ /  _ \|  _ \
+ ;; |  _|  \  /| |_) | |_) |
+ ;; | |___ /  \|  __/|  _ <
+ ;; |_____/_/\_\_|   |_| \_\
+
+
+ ;;  ____ _____ __  __ _____
+ ;; / ___|_   _|  \/  |_   _|
+ ;; \___ \ | | | |\/| | | |
+ ;;  ___) || | | |  | | | |
+ ;; |____/ |_| |_|  |_| |_|
  )
-
-
-;;  _______  ______  ____
-;; | ____\ \/ /  _ \|  _ \
-;; |  _|  \  /| |_) | |_) |
-;; | |___ /  \|  __/|  _ <
-;; |_____/_/\_\_|   |_| \_\
-
-
-;;  ____ _____ __  __ _____
-;; / ___|_   _|  \/  |_   _|
-;; \___ \ | | | |\/| | | |
-;;  ___) || | | |  | | | |
-;; |____/ |_| |_|  |_| |_|

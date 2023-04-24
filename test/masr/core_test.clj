@@ -375,6 +375,18 @@
     (is (not (s/valid? ::asr/asr-term (intent ""))))
     (is (not (s/valid? ::asr/asr-term (intent 42))))
     (is (thrown? clojure.lang.ArityException (intent))))
+  (testing "term entity-key"
+    (is      (s/valid? ::asr/intent (intent 'Local)))
+    (is      (s/valid? ::asr/intent (intent 'Unspecified)))
+    (is (not (s/valid? ::asr/intent (intent 'foobar))))
+    (is (not (s/valid? ::asr/intent (intent []))))
+    (is (not (s/valid? ::asr/intent (intent ()))))
+    (is (not (s/valid? ::asr/intent (intent {}))))
+    (is (not (s/valid? ::asr/intent (intent #{}))))
+    (is (not (s/valid? ::asr/intent (intent "foobar"))))
+    (is (not (s/valid? ::asr/intent (intent ""))))
+    (is (not (s/valid? ::asr/intent (intent 42))))
+    (is (thrown? clojure.lang.ArityException (intent))))
   (is (s/valid? ::asr/asr-term
                 {::asr/term        ::asr/intent,
                  ::asr/intent-enum 'Local}))
