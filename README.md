@@ -15,14 +15,10 @@ Radiation. Yes, it's a physics pun. We like physics puns.
 
 # Read
 
-`masr.pdf`
+`masr-summary.pdf`, `masr-reference.pdf`
 
 # Modify
 
-- `masr.org`
+- `masr-summary.org`, `masr-summary`
 
-Write Clojure code. Use
-
-https://github.com/rebcabin/asr-tester
-
-as a guide.
+- Write Clojure code in `specs.clj` and `core_tests.clj`
