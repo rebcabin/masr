@@ -831,6 +831,14 @@
 ;; sugar function like intent.
 
 
+(defmacro symbolate
+  "ASDL Back-Channel: create tickless constants such as Local for
+  'Local."
+  [a-set-sym]
+  (let [a-set (eval a-set-sym)
+        cmds (for [e a-set] (list 'def e `'~e))]
+    `(list ~@cmds)))
+
 (defmacro enum-like [term, heads]
   (let [ns "masr.specs"
         trm (keyword ns "term")             ;; like ::term
@@ -839,11 +847,7 @@
         tke (keyword ns (str term "-enum")) ;; like ::intent-enum
         tki (keyword ns (str "invalid-" term))]
     `(do
-       ;; ASDL Back-Channel -- unsolved
-       ;; https://clojurians.slack.com/archives/C03S1KBA2/p1682375371440109
-       ;; ~@(for [sym heads]
-       ;;     `(def ~sym (quote ~sym)))
-       ;; the set itself as a spec ...
+       (symbolate ~heads)
        (s/def ~tke ~heads)
        ;; for the multi-spec
        (defmethod term ~tkw [_#]
@@ -876,13 +880,6 @@
 
 
 (enum-like intent #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
-;; ASDL Back-Channel
-(def Local       'Local)
-(def In          'In)
-(def Out         'Out)
-(def InOut       'InOut)
-(def ReturnVar   'ReturnVar)
-(def Unspecified 'Unspecified)
 
 (tests
  (s/valid?  ::intent-enum 'Local)     := true
@@ -931,10 +928,6 @@
 
 
 (enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
-(def Default     'Default)
-(def Save        'Save)
-(def Parameter   'Parameter)
-(def Allocatable 'Allocatable)
 
 (tests
  (s/valid? ::storage-type-enum 'Default)           := true
@@ -1418,10 +1411,6 @@
 
 (enum-like access #{'Public 'Private})
 
-;; ASDL Back-Channel
-(def Public  'Public)
-(def Private 'Private)
-
 (tests
  (let [public (access 'Public)]
    (s/conform ::asr-term public) := public
@@ -1448,10 +1437,6 @@
 
 
 (enum-like presence #{'Required 'Optional})
-
-;; ASDL Back-Channel
-(def Required 'Required)
-(def Optional 'Optional)
 
 (tests
  (let [required (presence 'Required)]

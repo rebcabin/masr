@@ -775,15 +775,32 @@ easily accommodated as follows:
   (def Required 'Required)
 #+end_src
 
-and so on. A macro to automate these definitions for
-any enum-like is elusive.[fn::
-https://clojurians.slack.com/archives/C03S1KBA2/p1682375371440109
-]
+and so on.
 
 Similar definitions for non-constant symbols can be
 made, but collisions with extant definitions must be
 avoided. This problem is **unsolved**.
 
+\newpage
+A macro to automate these definitions for any
+enum-like follows.[fn:: It is not necessary to
+understand the implementation of this macro; it is
+non-trivial.
+https://clojurians.slack.com/archives/C03S1KBA2/p1682375371440109
+]
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (defmacro symbolate
+    "ASDL Back-Channel: create tickless constants
+    such as Local for 'Local."
+    [a-set-sym]
+    (let [a-set (eval a-set-sym)
+          cmds (for [e a-set] (list 'def e `'~e))]
+      `(list ~@cmds)))
+#+end_src
+
+\clearpage
 * Abstract Interpretation
 
 MASR is a full programming language in its own
