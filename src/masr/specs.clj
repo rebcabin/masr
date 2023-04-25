@@ -2056,6 +2056,22 @@
    Public Required false)))
 
 
+(tests
+ (s/valid?
+  :masr.specs/symbol-table
+  (SymbolTable
+   2 {:a
+      (Variable
+       2 a [] Local
+       () () Default (Logical 4 [])
+       Source Public Required false),
+      :b
+      (Variable
+       2 b [] Local
+       () () Default (Logical 4 [])
+       Source Public Required false)})))
+
+
 ;;  _______  ______  ____
 ;; | ____\ \/ /  _ \|  _ \
 ;; |  _|  \  /| |_) | |_) |
