@@ -1830,8 +1830,9 @@
 ;; -+-+-+-+-+-+-+-+-+-+-+-
 
 
-(defn Variable
-  "Parameters that collide with functions have trailing hyphens."
+(defn Variable--
+  "Heavy sugar; parameters that collide with functions
+  have trailing hyphens."
   [symtab-id-,         varnym-,        ttype-,
    type-declaration-,  dependencies-,  intent-,
    symbolic-value-,    value-,         storage-type-,
@@ -1900,7 +1901,7 @@
 ;; Test heavy sugar
 (tests
  ;; valid examples
-  (let [a-valid (Variable 2 'x (Integer 4)
+  (let [a-valid (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
@@ -1910,56 +1911,56 @@
 
  ;; invalid examples
  ;; Show that every entity key is checked.
- (let [a-inval (Variable "foo" 'x (Integer 4)
+ (let [a-inval (Variable-- "foo" 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
- (let [a-inval (Variable 2 "foo" (Integer 4)
+ (let [a-inval (Variable-- 2 "foo" (Integer 4)
                          nil [] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
- (let [a-inval (Variable 2 'x (Integer 42424242)
+ (let [a-inval (Variable-- 2 'x (Integer 42424242)
                          nil [] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
- (let [a-inval (Variable 2 'x (Integer 42424242)
+ (let [a-inval (Variable-- 2 'x (Integer 42424242)
                          'FOOBAR [] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
- (let [a-inval (Variable 2 'x (Integer 4)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'FOOBAR
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
- (let [a-inval (Variable 2 'x (Integer 4)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil ['x 'y "foo"] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
- (let [a-inval (Variable 2 'x (Integer 4)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'FOOBAR
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
- (let [a-inval (Variable 2 'x (Integer 4)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
                          'FOOBAR
@@ -1967,7 +1968,7 @@
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
- (let [a-inval (Variable 2 'x (Integer 4)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
                          'Source
@@ -1975,7 +1976,7 @@
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
- (let [a-inval (Variable 2 'x (Integer 4)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
                          'Source
@@ -1983,7 +1984,7 @@
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false)
- (let [a-inval (Variable 2 'x (Integer 4)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
                          'Source
@@ -1996,7 +1997,7 @@
 ;; ASDL Back-Channel
 (tests
  ;; valid examples
-  (let [a-valid (Variable 2 'x (Integer 4)
+  (let [a-valid (Variable-- 2 'x (Integer 4)
                          nil [] Local
                          [] []  Default
                          Source Public Required
@@ -2004,13 +2005,43 @@
    (s/valid? ::asr-term a-valid) := true
    (s/valid? ::Variable a-valid) := true)
   ;; See https://github.com/rebcabin/masr/issues/18
-  (let [a-valid (Variable 2 'x (Integer 4)
+  (let [a-valid (Variable-- 2 'x (Integer 4)
                           [] [] Local
                           [] []  Default
                           Source Public Required
                           false)]
     (s/valid? ::asr-term a-valid) := true
     (s/valid? ::Variable a-valid) := true))
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-
+;;  l e g a c y   m a c r o
+;; -+-+-+-+-+-+-+-+-+-+-+-+-
+
+
+(defmacro Variable
+  "Honor legacy parameter order of
+  lpython/src/libasr/ASR.asdl as of 25 April 2023.
+  Quote the varnym and pass along all other params."
+  [symtab-id-,     varnym-,          dependencies-,
+   intent-,        symbolic-value-,  value-,
+   storage-type-,  ttype-,           abi-,
+   access-,        presence-,        value-attr-]
+  `(Variable-- ~symtab-id-            '~varnym-       ~ttype-
+               (type-declaration nil)  ~dependencies- ~intent-
+               ~symbolic-value-        ~value-        ~storage-type-
+               ~abi-                   ~access-       ~presence-
+               ~value-attr-))
+
+(tests
+ (s/valid?
+  :masr.specs/Variable
+  (Variable
+   2 a []
+   Local () ()
+   Default (Logical 4 []) Source
+   Public Required false)))
+
 
 ;;  _______  ______  ____
 ;; | ____\ \/ /  _ \|  _ \
