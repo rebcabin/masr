@@ -2046,30 +2046,31 @@
                ~abi-                   ~access-       ~presence-
                ~value-attr-))
 
+
 (tests
- (s/valid?
-  :masr.specs/Variable
-  (Variable
-   2 a []
-   Local () ()
-   Default (Logical 4 []) Source
-   Public Required false)))
+ (let [v (Variable
+          2 a []
+          Local () ()
+          Default (Logical 4 []) Source
+          Public Required false)]
+   (s/valid? :masr.specs/Variable v) := true
+   (s/valid? :masr.specs/asr-term v) := true))
 
 
 (tests
- (s/valid?
-  :masr.specs/symbol-table
-  (SymbolTable
-   2 {:a
-      (Variable
-       2 a [] Local
-       () () Default (Logical 4 [])
-       Source Public Required false),
-      :b
-      (Variable
-       2 b [] Local
-       () () Default (Logical 4 [])
-       Source Public Required false)})))
+ (let [st (SymbolTable
+           2 {:a
+              (Variable
+               2 a [] Local
+               () () Default (Logical 4 [])
+               Source Public Required false),
+              :b
+              (Variable
+               2 b [] Local
+               () () Default (Logical 4 [])
+               Source Public Required false)})]
+   (s/valid? :masr.specs/symbol-table st) := true
+   (s/valid? :masr.specs/asr-term     st) := true))
 
 
 ;;  _______  ______  ____
