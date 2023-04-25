@@ -814,10 +814,6 @@
 
 (tests
  (s/valid? ::symbol-table
-           (SymbolTable 'foo {:main 'main})) := false)
-
-(tests
- (s/valid? ::symbol-table
            (SymbolTable 42 {:main 'main}))   := true
  (s/valid? ::symbol-table
            (SymbolTable 'foo {:main 'main})) := false
