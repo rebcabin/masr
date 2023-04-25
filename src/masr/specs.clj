@@ -2019,6 +2019,19 @@
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-
 
 
+;; It's a judgment call whether to introduce a
+;; legacy macro for a term or head. Legacy macros
+;; track the "current" state of ASR as it evolves
+;; toward the ideal of MASR.
+;;
+;; When a legacy macro exists, the heavy-sugar
+;; function will be named with two trailing hyphens,
+;; as in Variable--. Light-sugar functions will
+;; continue to have names with a single trailing
+;; hyphen, as in Variable-, and full form will
+;; continue to represent what we ultimately want.
+
+
 (defmacro Variable
   "Honor legacy parameter order of
   lpython/src/libasr/ASR.asdl as of 25 April 2023.
