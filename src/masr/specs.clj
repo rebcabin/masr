@@ -1556,7 +1556,9 @@
 ;; heavy sugar
 
 (defn type-declaration [ptr]
-  (let [td (s/conform ::type-declaration ptr)]
+  (let [td (s/conform ::type-declaration (if (seqable? ptr)
+                                           (seq ptr)
+                                           ptr))]
     (if (s/invalid? td)
       ::invalid-type-declaration
       td)))
@@ -1566,6 +1568,14 @@
                  (type-declaration 'foo42)) := false
        (s/valid? ::type-declaration
                  (type-declaration nil))    := true
+       (s/valid? ::type-declaration
+                 (type-declaration ()))     := true
+       (s/valid? ::type-declaration
+                 (type-declaration []))     := true
+       (s/valid? ::type-declaration
+                 (type-declaration '(42)))  := false
+       (s/valid? ::type-declaration
+                 (type-declaration [42]))   := false
        (s/valid? ::type-declaration
                  (type-declaration 42))     := true)
 
@@ -1999,8 +2009,8 @@
                           [] []  Default
                           Source Public Required
                           false)]
-    (s/valid? ::asr-term a-valid) := false
-    (s/valid? ::Variable a-valid) := false))
+    (s/valid? ::asr-term a-valid) := true
+    (s/valid? ::Variable a-valid) := true))
 
 ;;  _______  ______  ____
 ;; | ____\ \/ /  _ \|  _ \
