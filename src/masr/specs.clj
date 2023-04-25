@@ -777,8 +777,14 @@
         tke (keyword ns (str term "-enum")) ;; like ::intent-enum
         tki (keyword ns (str "invalid-" term))]
     `(do
-       (s/def ~tke ~heads)       ;; the set
-       (defmethod term ~tkw [_#] ;; for the multi-spec
+       ;; ASDL Back-Channel -- unsolved
+       ;; https://clojurians.slack.com/archives/C03S1KBA2/p1682375371440109
+       ;; ~@(for [sym heads]
+       ;;     `(def ~sym (quote ~sym)))
+       ;; the set itself as a spec ...
+       (s/def ~tke ~heads)
+       ;; for the multi-spec
+       (defmethod term ~tkw [_#]
          (s/keys :req [~trm ~tke]))
        ;; the entity-key spec
        (s/def ~tkw   ;; like ::intent
@@ -808,6 +814,13 @@
 
 
 (enum-like intent #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+;; ASDL Back-Channel
+(def Local       'Local)
+(def In          'In)
+(def Out         'Out)
+(def InOut       'InOut)
+(def ReturnVar   'ReturnVar)
+(def Unspecified 'Unspecified)
 
 (tests
  (s/valid?  ::intent-enum 'Local)     := true
@@ -823,6 +836,22 @@
  (let [iex (intent 'Local)]
    (s/conform ::asr-term iex)         := iex
    (s/conform ::intent iex)           := iex))
+
+;; ASDL Back-Channel
+(tests
+ (s/valid?  ::intent-enum Local)     := true
+ (s/valid?  ::intent-enum 'fubar)    := false
+ (s/conform ::intent-enum Local)     := Local
+ (intent Local)                      :=
+ #:masr.specs{:term :masr.specs/intent,
+              :intent-enum Local}
+ (intent 42)                         := :masr.specs/invalid-intent
+
+ (s/valid?  ::intent (intent Local)) := true
+
+ (let [iex (intent Local)]
+   (s/conform ::asr-term iex)        := iex
+   (s/conform ::intent iex)          := iex))
 
 
 ;;     _                             _
@@ -840,6 +869,10 @@
 
 
 (enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
+(def Default     'Default)
+(def Save        'Save)
+(def Parameter   'Parameter)
+(def Allocatable 'Allocatable)
 
 (tests
  (s/valid? ::storage-type-enum 'Default)           := true
@@ -859,6 +892,25 @@
    (s/conform ::storage-type ste)                  := ste
    (s/conform ::asr-term ste)                      := ste))
 
+;; ASDL Back-Channel
+(tests
+ (s/valid? ::storage-type-enum Default)           := true
+ (s/valid? ::storage-type-enum 'foobar)            := false
+ (s/valid? ::asr-term
+           {::term ::storage-type
+            ::storage-type-enum Default})         := true
+ (s/valid? ::asr-term (storage-type 'Default))     := true
+ (s/valid? ::asr-term (storage-type 'foobar))      := false
+ (s/valid? ::storage-type
+           {::term ::storage-type
+            ::storage-type-enum Default})         := true
+ (s/valid? ::storage-type (storage-type Default)) := true
+ (s/valid? ::storage-type (storage-type 'foobar))  := false
+ (storage-type 'foobar)                            := ::invalid-storage-type
+ (let [ste (storage-type Default)]
+   (s/conform ::storage-type ste)                  := ste
+   (s/conform ::asr-term ste)                      := ste))
+
 
 ;;       _    _
 ;;  __ _| |__(_)
@@ -875,8 +927,15 @@
   #{'LFortranModule, 'GFortranModule,
     'BindC, 'Interactive, 'Intrinsic})
 
+(def LFortranModule 'LFortranModule)
+(def GFortranModule 'GFortranModule)
+(def BindC          'BindC)
+(def Interactive    'Interactive)
+(def Intrinsic      'Intrinsic)
 
 (def internal-abis #{'Source})
+
+(def Source 'Source)
 
 
 (s/def ::abi-enum (set/union external-abis internal-abis))
@@ -1284,6 +1343,8 @@
 
 
 (enum-like access #{'Public 'Private})
+(def Public  'Public)
+(def Private 'Private)
 
 (tests
  (let [public (access 'Public)]
@@ -1291,6 +1352,12 @@
    (s/conform ::access   public) := public)
  (access 'foobar) := ::invalid-access)
 
+;; ASDL Back-Channel
+(tests
+ (let [public (access Public)]
+   (s/conform ::asr-term public) := public
+   (s/conform ::access   public) := public)
+ (access 'foobar) := ::invalid-access)
 
 ;;  _ __ _ _ ___ ___ ___ _ _  __ ___
 ;; | '_ \ '_/ -_|_-</ -_) ' \/ _/ -_)
@@ -1305,6 +1372,8 @@
 
 
 (enum-like presence #{'Required 'Optional})
+(def Required 'Required)
+(def Optional 'Optional)
 
 (tests
  (let [required (presence 'Required)]
@@ -1312,6 +1381,12 @@
    (s/conform ::presence required) := required)
  (presence 'fubar) := ::invalid-presence)
 
+;; ASDL Back-Channel
+(tests
+ (let [required (presence Required)]
+   (s/conform ::asr-term required) := required
+   (s/conform ::presence required) := required)
+ (presence 'fubar) := ::invalid-presence)
 
 ;;           _                   _   _
 ;; __ ____ _| |_  _ ___ ___ __ _| |_| |_ _ _
@@ -1870,20 +1945,29 @@
                          'Public 'Required
                          'FOOBAR)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::asr-term a-inval) := false))
 
 
+;; ASDL Back-Channel
+(tests
+ ;; valid examples
+  (let [a-valid (Variable 2 'x (Integer 4)
+                         nil [] Local
+                         [] []  Default
+                         Source Public Required
+                         false)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true))
 
- ;;  _______  ______  ____
- ;; | ____\ \/ /  _ \|  _ \
- ;; |  _|  \  /| |_) | |_) |
- ;; | |___ /  \|  __/|  _ <
- ;; |_____/_/\_\_|   |_| \_\
+;;  _______  ______  ____
+;; | ____\ \/ /  _ \|  _ \
+;; |  _|  \  /| |_) | |_) |
+;; | |___ /  \|  __/|  _ <
+;; |_____/_/\_\_|   |_| \_\
 
 
- ;;  ____ _____ __  __ _____
- ;; / ___|_   _|  \/  |_   _|
- ;; \___ \ | | | |\/| | | |
- ;;  ___) || | | |  | | | |
- ;; |____/ |_| |_|  |_| |_|
- )
+;;  ____ _____ __  __ _____
+;; / ___|_   _|  \/  |_   _|
+;; \___ \ | | | |\/| | | |
+;;  ___) || | | |  | | | |
+;; |____/ |_| |_|  |_| |_|
