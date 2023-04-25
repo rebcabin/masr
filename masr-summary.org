@@ -775,11 +775,15 @@ easily accommodated as follows:
   (def Required 'Required)
 #+end_src
 
-and so on.
+and so on. This works because all heads in ASR,
+including enum-likes, are unique at top level,
+despite being categorized under terms. No two terms
+have any heads that are alike.
 
-Similar definitions for non-constant symbols can be
-made, but collisions with extant definitions must be
-avoided. This problem is **unsolved**.
+TODO: Similar definitions for non-constant symbols
+like =x= can be made, but collisions with extant
+definitions must be avoided. This problem of
+collisions is **unsolved**.
 
 \newpage
 A macro to automate these definitions for any
