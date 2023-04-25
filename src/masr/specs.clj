@@ -796,15 +796,15 @@
 
 (s/def ::hash-map map?)
 
-(defmethod term ::symbol-table [_]
+(defmethod term ::SymbolTable [_]
   (s/keys :req [::term
                 ::symtab-id
                 ::hash-map]))
 
-(def-term-entity-key symbol-table)
+(def-term-entity-key SymbolTable)
 
 (defn SymbolTable [id, hash-map]
-  (let [st {::term      ::symbol-table
+  (let [st {::term      ::SymbolTable
             ::symtab-id id
             ::hash-map  hash-map}]
     (if (s/invalid? st)
@@ -813,11 +813,11 @@
 
 
 (tests
- (s/valid? ::symbol-table
+ (s/valid? ::SymbolTable
            (SymbolTable 42 {:main 'main}))   := true
- (s/valid? ::symbol-table
+ (s/valid? ::SymbolTable
            (SymbolTable 'foo {:main 'main})) := false
- (s/valid? ::symbol-table
+ (s/valid? ::SymbolTable
            (SymbolTable 42 [:main 'main]))   := false)
 
 ;; ================================================================
@@ -2069,8 +2069,8 @@
                2 b [] Local
                () () Default (Logical 4 [])
                Source Public Required false)})]
-   (s/valid? :masr.specs/symbol-table st) := true
-   (s/valid? :masr.specs/asr-term     st) := true))
+   (s/valid? :masr.specs/SymbolTable st) := true
+   (s/valid? :masr.specs/asr-term    st) := true))
 
 
 ;;  _______  ______  ____
