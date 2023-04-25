@@ -22,18 +22,17 @@
                  Source Public Required false)})
             test_boolOp
             (FunctionType
-             [] () Source Implementation
-             () false false false
-             false false [] []
-             false)
+             [] () Source
+             Implementation () false
+             false false false
+             false [] [] false)
             [] []
             [(= (Var 2 a)
-              (LogicalConstant
-               false (Logical 4 [])) ())
+              (LogicalConstant false (Logical 4 []))
+              ())
              (= (Var 2 b)
-              (LogicalConstant
-               true
-               (Logical 4 [])) ())
+              (LogicalConstant true (Logical 4 []))
+              ())
              (= (Var 2 a)
               (LogicalBinOp
                (Var 2 a)
@@ -44,9 +43,7 @@
               (LogicalBinOp
                (Var 2 a)
                Or
-               (LogicalConstant
-                true
-                (Logical 4 []))
+               (LogicalConstant true (Logical 4 []))
                (Logical 4 []) ()) ())
              (= (Var 2 a)
               (LogicalBinOp

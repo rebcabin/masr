@@ -119,6 +119,7 @@
 ;; literals as non-negative. unchecked-long is
 ;; the way to sanity.
 
+
 (tests (unchecked-long 0x8000000000000000)  := -9223372036854775808
        (unchecked-long 0xFFFFFFFFFFFFFFFF)  := -1
        (unchecked-long 0x8000000000000000)  := -0x8000000000000000
@@ -137,6 +138,7 @@
 (def too-big-hex 0x8000000000000000)
 (def not-minus-1 0xFFFFFFFFFFFFFFFF)
 (def minus-1-int (unchecked-long 0xFFFFFFFFFFFFFFFF))
+
 
 (tests
  minus-1-int           := -1
@@ -177,6 +179,7 @@
     (s/and bigint? #(>= % 0))
     ;; size-bounded-bignat is not public, else I would call it
     (fn [] tgen/size-bounded-bigint)))
+
 
 (tests
  (s/valid? ::bignat minus-1-int) := false
@@ -222,6 +225,7 @@
 
 (s/def ::nat nat-int?)
 
+
 (tests
  (nat-int? biggest-int) := true
  (nat-int? too-big-hex) := false)
@@ -237,6 +241,7 @@
     (if (s/invalid? cit)
       ::invalid-nat
       cit)))
+
 
 (tests
  (s/valid? ::nat (nat 42))                    := true
@@ -299,6 +304,7 @@
       identifier?
       (fn [] identifier-generator))))  ;; fn wrapping a macro
 
+
 (tests
  (s/valid? ::identifier 'foobar)  := true
  (s/valid? ::identifier '_f__547) := true
@@ -320,6 +326,7 @@
     (if (s/invalid? csym)
       ::invalid-identifier
       csym)))
+
 
 (tests
  (identifier 'foo) := 'foo
@@ -356,6 +363,7 @@
              :max-count MAX-NUMBER-OF-IDENTIFIERS,
              :into #{})) ;; empty set
 
+
 (tests
  (every?
   set?
@@ -378,6 +386,7 @@
       (if (s/invalid? cnf)
         ::invalid-identifier-set
         cnf))))
+
 
 (tests
  (s/valid? ::identifier-set #{'a 'b}) := true
@@ -405,6 +414,7 @@
              :max-count MAX-NUMBER-OF-IDENTIFIERS,
              :into []))
 
+
 (tests
  (every?
   vector?
@@ -429,6 +439,7 @@
       (if (s/invalid? cnf)
         ::invalid-identifier-list
         cnf))))
+
 
 (tests
  (s/valid? ::identifier-list ['a 'a 'b]) := true
@@ -480,6 +491,7 @@
         ::invalid-identifier-suit
         cnf))))
 
+
 (tests
  (let [x (identifier-suit ['a 'a])]
    (s/valid? ::identifier-suit x) := false
@@ -498,10 +510,11 @@
 
 
 ;; ================================================================
-;;                  _
-;;  __ _ ____ _ ___| |_ ___ _ _ _ __
-;; / _` (_-< '_|___|  _/ -_) '_| '  \
-;; \__,_/__/_|      \__\___|_| |_|_|_|
+;;     _    ____  ____     _____ _____ ____  __  __
+;;    / \  / ___||  _ \   |_   _| ____|  _ \|  \/  |
+;;   / _ \ \___ \| |_) |____| | |  _| | |_) | |\/| |
+;;  / ___ \ ___) |  _ <_____| | | |___|  _ <| |  | |
+;; /_/   \_\____/|_| \_\    |_| |_____|_| \_\_|  |_|
 
 
 ;; -+-+-+-+-+-+-+-+-+-+-
@@ -533,9 +546,9 @@
 (s/def ::asr-term (s/multi-spec term ::term))
 
 
-;; -+-+-+-+-+-+-+-+-+-+-
-;;  e n t i t y   k e y
-;; -+-+-+-+-+-+-+-+-+-+-
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  t e r m   e n t i t y   k e y
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 ;; Necessary for recursive conformance in
 ;; multi-specs.
@@ -630,6 +643,7 @@
         {::term ::dimension,
          ::dimension-content
          (::dimension-content conf)}))))
+
 
 (tests
  (s/conform ::asr-term
@@ -740,6 +754,7 @@
                          dims-conf)]
           (map dimension dims-cont))))))
 
+
 (tests
  (dimensions [[6 60] []])             :=
  [#:masr.specs{:term :masr.specs/dimension,
@@ -796,12 +811,15 @@
 
 (s/def ::hash-map map?)
 
+
 (defmethod term ::SymbolTable [_]
   (s/keys :req [::term
                 ::symtab-id
                 ::hash-map]))
 
+
 (def-term-entity-key SymbolTable)
+
 
 (defn SymbolTable [id, hash-map]
   (let [st {::term      ::SymbolTable
@@ -819,6 +837,7 @@
            (SymbolTable 'foo {:main 'main})) := false
  (s/valid? ::SymbolTable
            (SymbolTable 42 [:main 'main]))   := false)
+
 
 ;; ================================================================
 ;;                        _ _ _
@@ -838,6 +857,7 @@
   (let [a-set (eval a-set-sym)
         cmds (for [e a-set] (list 'def e `'~e))]
     `(list ~@cmds)))
+
 
 (defmacro enum-like [term, heads]
   (let [ns "masr.specs"
@@ -880,6 +900,7 @@
 
 
 (enum-like intent #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+
 
 (tests
  (s/valid?  ::intent-enum 'Local)     := true
@@ -928,6 +949,7 @@
 
 
 (enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
+
 
 (tests
  (s/valid? ::storage-type-enum 'Default)           := true
@@ -982,12 +1004,14 @@
   #{'LFortranModule, 'GFortranModule,
     'BindC, 'Interactive, 'Intrinsic})
 
+
 ;; ASDL Back-Channel
 (def LFortranModule 'LFortranModule)
 (def GFortranModule 'GFortranModule)
 (def BindC          'BindC)
 (def Interactive    'Interactive)
 (def Intrinsic      'Intrinsic)
+
 
 (def internal-abis #{'Source})
 
@@ -1024,6 +1048,7 @@
 
 
 (def-term-entity-key abi)
+
 
 (defn abi
   ;; arity 1 --- default "external"
@@ -1143,6 +1168,7 @@
 (s/def ::logical-kind   #{1 2 4})
 (s/def ::character-kind #{1})
 
+
 (tests (s/valid? ::integer-kind 42) := false)
 
 
@@ -1211,6 +1237,7 @@
 (def-ttype-head Logical)
 (def-ttype-head Character)
 
+
 (tests
  (s/valid? ::asr-ttype-head
            {::ttype-head ::Integer
@@ -1244,7 +1271,6 @@
   (s/keys :req [::term ::asr-ttype-head]))
 
 ;; full-forms
-
 (tests
  (s/valid? ::asr-term
            {::term ::ttype,
@@ -1261,9 +1287,9 @@
              ::dimensions []}})       := false)
 
 
-;; -+-+-+-+-+-+-+-+-+-+-
-;;  e n t i t y   k e y
-;; -+-+-+-+-+-+-+-+-+-+-
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  t e r m   e n t i t y   k e y
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
 (def-term-entity-key ttype)
@@ -1327,6 +1353,7 @@
 (def-ttype-and-head Complex)
 (def-ttype-and-head Logical)
 
+
 (tests
  (s/valid? ::asr-ttype-head (Integer 4))    := true
  (s/valid? ::asr-ttype-head (Integer 42))   := false
@@ -1347,6 +1374,7 @@
     (if (s/invalid? cnf)
       ::invalid-ttype
       cnf)))
+
 
 (tests
  (s/valid? ::asr-term (ttype (Integer 4)))                  := true
@@ -1411,6 +1439,7 @@
 
 (enum-like access #{'Public 'Private})
 
+
 (tests
  (let [public (access 'Public)]
    (s/conform ::asr-term public) := public
@@ -1423,6 +1452,7 @@
    (s/conform ::asr-term public) := public
    (s/conform ::access   public) := public)
  (access 'foobar) := ::invalid-access)
+
 
 ;;  _ __ _ _ ___ ___ ___ _ _  __ ___
 ;; | '_ \ '_/ -_|_-</ -_) ' \/ _/ -_)
@@ -1438,6 +1468,7 @@
 
 (enum-like presence #{'Required 'Optional})
 
+
 (tests
  (let [required (presence 'Required)]
    (s/conform ::asr-term required) := required
@@ -1451,6 +1482,7 @@
    (s/conform ::presence required) := required)
  (presence 'fubar) := ::invalid-presence)
 
+
 ;;           _                   _   _
 ;; __ ____ _| |_  _ ___ ___ __ _| |_| |_ _ _
 ;; \ V / _` | | || / -_)___/ _` |  _|  _| '_|
@@ -1460,7 +1492,6 @@
 ;; not placeholder
 ;; entity key
 (s/def ::value-attr ::bool)
-
 
 ;; sugar
 (defn value-attr [it]
@@ -1487,7 +1518,6 @@
 ;; entity keyword
 (s/def ::dependencies ::identifier-set)
 
-
 ;; sugar
 (defn dependencies [it]
   (let [cnf (s/conform ::dependencies it)]
@@ -1502,7 +1532,6 @@
        (dependencies ())                     := #{}
        (dependencies ['a 'b 'c])             := #{'a 'b 'c}
        (dependencies ['a 'a 'c])             := #{'a 'c})
-
 
 ;; TODO: there is ambiguity regarding identifier-sets and lists:
 (tests
@@ -1522,7 +1551,6 @@
 ;; entity-key
 (s/def ::symbolic-value empty?)
 
-
 ;; sugar
 (def symbolic-value identity)
 
@@ -1536,7 +1564,6 @@
 ;; TODO placeholder
 ;; entity-key
 (s/def ::value empty?)
-
 
 ;; sugar
 (def value          identity)
@@ -1552,9 +1579,7 @@
 (s/def ::type-declaration
   (s/nilable ::symtab-id))
 
-
 ;; heavy sugar
-
 (defn type-declaration [ptr]
   (let [td (s/conform ::type-declaration (if (seqable? ptr)
                                            (seq ptr)
@@ -1580,6 +1605,27 @@
                  (type-declaration 42))     := true)
 
 
+;; __ ____ _ _ _ _ _ _  _ _ __
+;; \ V / _` | '_| ' \ || | '  \
+;;  \_/\__,_|_| |_||_\_, |_|_|_|
+;;                   |__/
+
+
+(s/def ::varnym ::identifier)
+
+;; sugar
+(defn varnym [it]
+  (let [cnf (s/conform ::varnym it)]
+    (if (s/invalid? cnf)
+      ::invalid-varnym
+      cnf)))
+
+
+(tests
+ (varnym 'foo)   := 'foo
+ (varnym "foo")  := ::invalid-varnym)
+
+
 ;;  ______   ____  __ ____   ___  _
 ;; / ___\ \ / /  \/  | __ ) / _ \| |
 ;; \___ \\ V /| |\/| |  _ \| | | | |
@@ -1596,7 +1642,6 @@
 (do (defmulti symbol-head ::symbol-head)
     (s/def ::asr-symbol-head
       (s/multi-spec symbol-head ::symbol-head)))
-
 
 ;; Employ the nested multi-spec:
 (defmethod term ::symbol [_]
@@ -1618,9 +1663,9 @@
                 ]))
 
 
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-;;  e n t i t y   k e y s   f o r   f u n c t i o n - l i k e   t e r m s
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  t e r m   h e a d   e n t i t y   k e y
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
 (defmacro def-term-head--entity-key
@@ -1700,28 +1745,6 @@
 ;;  Public                  ;   access          access
 ;;  Required                ;   presence        presence
 ;;  .false.)})              ;   bool            value-attr
-
-
-;; __ ____ _ _ _ _ _ _  _ _ __
-;; \ V / _` | '_| ' \ || | '  \
-;;  \_/\__,_|_| |_||_\_, |_|_|_|
-;;                   |__/
-
-
-(s/def ::varnym ::identifier)
-
-
-;; sugar
-(defn varnym [it]
-  (let [cnf (s/conform ::varnym it)]
-    (if (s/invalid? cnf)
-      ::invalid-varnym
-      cnf)))
-
-
-(tests
- (varnym 'foo)   := 'foo
- (varnym "foo")  := ::invalid-varnym)
 
 
 ;; -+-+-+-+-+-+-+-+-+-+-+-
@@ -1865,7 +1888,6 @@
       ::invalid-variable
       cnf)))
 
-
 ;; Test light sugar
 (tests
  (let [a-valid
@@ -1896,7 +1918,6 @@
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::Variable a-inval) := false)
  )
-
 
 ;; Test heavy sugar
 (tests
@@ -1992,7 +2013,6 @@
                          'FOOBAR)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::asr-term a-inval) := false))
-
 
 ;; ASDL Back-Channel
 (tests
