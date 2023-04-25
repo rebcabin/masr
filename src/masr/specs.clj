@@ -655,8 +655,7 @@
  (s/valid? ::dimension (dimension [60]))            := false
  (s/valid? ::dimension (dimension [0]))             := false
  (s/valid? ::dimension (dimension '(1 60)))         := true
- (s/valid? ::dimension (dimension '()))             := true
- )
+ (s/valid? ::dimension (dimension '()))             := true)
 
 
 ;;     _ _                   _
@@ -757,6 +756,73 @@
 
  (dimensions [])                      := ())
 
+
+;; ================================================================
+;;               _        _        _    _
+;;  ____  _ _ __| |_ __ _| |__ ___(_)__| |
+;; (_-< || | '  \  _/ _` | '_ \___| / _` |
+;; /__/\_, |_|_|_\__\__,_|_.__/   |_\__,_|
+;;     |__/
+
+
+(s/def ::symtab-id ::nat)
+
+
+;; sugar
+(defn symtab-id [it]
+  (let [cnf (s/conform ::symtab-id it)]
+    (if (s/invalid? cnf)
+      ::invalid-symtab-id
+      cnf)))
+
+
+(tests
+ (symtab-id  42)                        := 42
+ (symtab-id -42)                        := ::invalid-symtab-id
+ (symtab-id 'foo)                       := ::invalid-symtab-id
+ (s/conform ::nat 42)                   := 42
+ (s/conform ::nat (nat 42))             := 42
+ (s/conform ::symtab-id 42)             := 42
+ (s/conform ::symtab-id (symtab-id 42)) := 42
+ (s/conform ::symtab-id (nat 42))       := 42)
+
+
+;;                _         _  _        _    _
+;;  ____  _ _ __ | |__  ___| || |_ __ _| |__| |___
+;; (_-< || | '  \| '_ \/ _ \ ||  _/ _` | '_ \ / -_)
+;; /__/\_, |_|_|_|_.__/\___/_|_\__\__,_|_.__/_\___|
+;;     |__/                 |___|
+
+
+(s/def ::hash-map map?)
+
+(defmethod term ::symbol-table [_]
+  (s/keys :req [::term
+                ::symtab-id
+                ::hash-map]))
+
+(def-term-entity-key symbol-table)
+
+(defn SymbolTable [id, hash-map]
+  (let [st {::term      ::symbol-table
+            ::symtab-id id
+            ::hash-map  hash-map}]
+    (if (s/invalid? st)
+      ::invalid-symbol-table
+      st)))
+
+
+(tests
+ (s/valid? ::symbol-table
+           (SymbolTable 'foo {:main 'main})) := false)
+
+(tests
+ (s/valid? ::symbol-table
+           (SymbolTable 42 {:main 'main}))   := true
+ (s/valid? ::symbol-table
+           (SymbolTable 'foo {:main 'main})) := false
+ (s/valid? ::symbol-table
+           (SymbolTable 42 [:main 'main]))   := false)
 
 ;; ================================================================
 ;;                        _ _ _
@@ -927,6 +993,7 @@
   #{'LFortranModule, 'GFortranModule,
     'BindC, 'Interactive, 'Intrinsic})
 
+;; ASDL Back-Channel
 (def LFortranModule 'LFortranModule)
 (def GFortranModule 'GFortranModule)
 (def BindC          'BindC)
@@ -935,6 +1002,7 @@
 
 (def internal-abis #{'Source})
 
+;; ASDL Back-Channel
 (def Source 'Source)
 
 
@@ -966,11 +1034,13 @@
 ;; -+-+-+-+-+-
 
 
+(def-term-entity-key abi)
+
 (defn abi
   ;; arity 1 --- default "external"
   ([the-enum]
    (let [abi_ (s/conform
-               ::asr-term
+               ::abi
                {::term         ::abi,
                 ::abi-enum     the-enum,
                 ::abi-external
@@ -987,16 +1057,13 @@
      (not (= ext-kw :external)) ::invalid-abi
      :else
      (let [abi_ (s/conform
-                 ::asr-term
+                 ::abi
                  {::term         ::abi,
                   ::abi-enum     the-enum,
                   ::abi-external the-bool})]
        (if (s/invalid? abi_)
          ::invalid-abi
          abi_)))))
-
-
-(def-term-entity-key abi)
 
 
 (tests
@@ -1030,6 +1097,29 @@
    ;; wrong value
    (abi 'LFortranModule :external false) := ::invalid-abi
 ))
+
+;; ASDL Back-Channel
+(tests
+ (s/valid? ::asr-term
+           {::term      ::abi
+            ::abi-enum Source
+            ::abi-external false})      := true
+ (s/valid? ::abi
+           {::term      ::abi
+            ::abi-enum Source
+            ::abi-external false})      := true
+ (let [abe (abi Source :external false)]
+   (s/conform ::abi      abe)           := abe
+   (s/conform ::asr-term abe)           := abe
+   (abi Source)                         := abe
+   (abi Source false)                   := ::invalid-abi
+   (abi Source :external true)          := ::invalid-abi)
+ (let [abe (abi LFortranModule :external true)]
+   (s/conform ::asr-term abe)           := abe
+   (s/conform ::abi      abe)           := abe
+   (abi LFortranModule)                 := abe
+   (abi LFortranModule true)            := ::invalid-abi
+   (abi LFortranModule :external false) := ::invalid-abi))
 
 
 ;;  _____ _______   ______  _____
@@ -1319,18 +1409,6 @@
 ;;         ttype* type_params, symbol* restrictions, bool is_restriction)
 
 
-;;                _         _  _        _    _
-;;  ____  _ _ __ | |__  ___| || |_ __ _| |__| |___
-;; (_-< || | '  \| '_ \/ _ \ ||  _/ _` | '_ \ / -_)
-;; /__/\_, |_|_|_|_.__/\___/_|_\__\__,_|_.__/_\___|
-;;     |__/                 |___|
-
-
-;; TODO: placeholder
-;; entity key
-(s/def ::symbol-table map?)
-
-
 ;;  __ _ __ __ ___ ______
 ;; / _` / _/ _/ -_|_-<_-<
 ;; \__,_\__\__\___/__/__/
@@ -1343,6 +1421,8 @@
 
 
 (enum-like access #{'Public 'Private})
+
+;; ASDL Back-Channel
 (def Public  'Public)
 (def Private 'Private)
 
@@ -1372,6 +1452,8 @@
 
 
 (enum-like presence #{'Required 'Optional})
+
+;; ASDL Back-Channel
 (def Required 'Required)
 (def Optional 'Optional)
 
@@ -1411,35 +1493,6 @@
  (value-attr true)  := true
  (value-attr false) := false
  (value-attr 'foo)  := ::invalid-value-attr)
-
-
-;;               _        _        _    _
-;;  ____  _ _ __| |_ __ _| |__ ___(_)__| |
-;; (_-< || | '  \  _/ _` | '_ \___| / _` |
-;; /__/\_, |_|_|_\__\__,_|_.__/   |_\__,_|
-;;     |__/
-
-
-(s/def ::symtab-id ::nat)
-
-
-;; sugar
-(defn symtab-id [it]
-  (let [cnf (s/conform ::symtab-id it)]
-    (if (s/invalid? cnf)
-      ::invalid-symtab-id
-      cnf)))
-
-
-(tests
- (symtab-id  42)                        := 42
- (symtab-id -42)                        := ::invalid-symtab-id
- (symtab-id 'foo)                       := ::invalid-symtab-id
- (s/conform ::nat 42)                   := 42
- (s/conform ::nat (nat 42))             := 42
- (s/conform ::symtab-id 42)             := 42
- (s/conform ::symtab-id (symtab-id 42)) := 42
- (s/conform ::symtab-id (nat 42))       := 42)
 
 
 ;;     _                       _             _
@@ -1517,6 +1570,7 @@
 
 (s/def ::type-declaration
   (s/nilable ::symtab-id))
+
 
 ;; heavy sugar
 
@@ -1957,7 +2011,15 @@
                          Source Public Required
                          false)]
    (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::Variable a-valid) := true))
+   (s/valid? ::Variable a-valid) := true)
+  ;; See https://github.com/rebcabin/masr/issues/18
+  (let [a-valid (Variable 2 'x (Integer 4)
+                          [] [] Local
+                          [] []  Default
+                          Source Public Required
+                          false)]
+    (s/valid? ::asr-term a-valid) := false
+    (s/valid? ::Variable a-valid) := false))
 
 ;;  _______  ______  ____
 ;; | ____\ \/ /  _ \|  _ \
