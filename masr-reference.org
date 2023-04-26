@@ -723,12 +723,12 @@ macro is found in the file =specs.clj=. An example
 of conformance to =::Variable= is found above, in
 Section [[sugar]].
 
-We do not define term-head entity-key specs for
-every term, but only where convenient. For example,
-we don't define term-head entity-key specs for
-=::Integer=, =::Real=, =::Complex=, and =::Logical=
-ttypes. Conformance of such specs to =::ttype=
-suffice for recursive type-checking in heavy sugar.
+# We do not define term-head entity-key specs for
+# every term, but only where convenient. For example,
+# we don't define term-head entity-key specs for
+# =::Integer=, =::Real=, =::Complex=, and =::Logical=
+# ttypes. Conformance of such specs to =::ttype=
+# suffice for recursive type-checking in heavy sugar.
 
 Because heads are unique in ASR,
 Term-head-entity-key specs establish a partition on

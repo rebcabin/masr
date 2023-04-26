@@ -84,12 +84,11 @@
 
 
 ;; ================================================================
-
-
-;;       _
-;;  __ _| |_ ___ _ __  ___
-;; / _` |  _/ _ \ '  \(_-<
-;; \__,_|\__\___/_|_|_/__/
+;;     _  _____ ___  __  __ ____
+;;    / \|_   _/ _ \|  \/  / ___|
+;;   / _ \ | || | | | |\/| \___ \
+;;  / ___ \| || |_| | |  | |___) |
+;; /_/   \_\_| \___/|_|  |_|____/
 
 ;; not terms in the grammar:
 
@@ -546,9 +545,11 @@
 (s/def ::asr-term (s/multi-spec term ::term))
 
 
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-;;  t e r m   e n t i t y   k e y
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  _                           _   _ _          _
+;; | |_ ___ _ _ _ __    ___ _ _| |_(_) |_ _  _  | |_____ _  _
+;; |  _/ -_) '_| '  \  / -_) ' \  _| |  _| || | | / / -_) || |
+;;  \__\___|_| |_|_|_| \___|_||_\__|_|\__|\_, | |_\_\___|\_, |
+;;                                        |__/           |__/
 
 ;; Necessary for recursive conformance in
 ;; multi-specs.
@@ -564,6 +565,54 @@
         tkw (keyword ns (str term))]
     `(s/def ~tkw    ;; like ::dimension
        (term-selector-spec ~tkw))))
+
+
+;;  _                   _                _
+;; | |_ ___ _ _ _ __   | |_  ___ __ _ __| |
+;; |  _/ -_) '_| '  \  | ' \/ -_) _` / _` |
+;;  \__\___|_| |_|_|_| |_||_\___\__,_\__,_|
+;;          _   _ _          _
+;;  ___ _ _| |_(_) |_ _  _  | |_____ _  _
+;; / -_) ' \  _| |  _| || | | / / -_) || |
+;; \___|_||_\__|_|\__|\_, | |_\_\___|\_, |
+;;                    |__/           |__/
+
+
+(defmacro def-term-head--entity-key
+  "Define entity key like ::Variable, which is an
+   ::asr-symbol-head by the nested head multi-spec.
+   From term = symbol and head = Variable
+   or   term = stmt   and head = Assignment,
+   generate an s/def like
+
+   (s/def ::Variable               ;; head entity key
+     (s/and ::asr-term             ;; top multi-spec
+       #(= ::Variable              ;; nested tag
+           (-> % ::asr-symbol-head ;; nested multi-spec
+                 ::symbol-head)))) ;; tag fetcher
+
+   or
+
+   (s/def ::Assignment             ;; head entity key
+     (s/and ::asr-term             ;; top multi-spec
+       #(= ::Assignment            ;; nested tag
+           (-> % ::asr-stmt-head   ;; nested multi-spec
+                 ::stmt-head       ;; tag fetcher
+  "
+  [term, ;; like symbol
+   head  ;; like Variable
+   ]
+  (let [ns "masr.specs"
+        trm (keyword ns "term")             ;; like ::term
+        art (keyword ns "asr-term")         ;; like ::asr-term
+        hkw (keyword ns
+             (str/capitalize (str head)))   ;; like ::Variable
+        tmh (keyword ns (str term "-head")) ;; like ::symbol-head
+        amh (keyword ns                     ;; for the multi-spec
+             (str "asr-" term "-head"))     ;; like ::asr-symbol-head
+        ]
+    `(s/def ~hkw
+       (s/and ~art #(= ~hkw (-> % ~amh ~tmh))))))
 
 
 ;;     _ _                   _
@@ -1136,6 +1185,7 @@
    (abi LFortranModule :external false) := ::invalid-abi))
 
 
+;; ================================================================
 ;;  _____ _______   ______  _____
 ;; |_   _|_   _\ \ / /  _ \| ____|
 ;;   | |   | |  \ V /| |_) |  _|
@@ -1304,7 +1354,7 @@
   (let [ns  "masr.specs"
         cap (str/capitalize (str it)) ;; like "Integer"
         scp (symbol cap)              ;; Like Integer  (heavy sugar)
-        nym (symbol (str cap "-"))    ;; like Integer- (light sugar)
+        lcp (symbol (str cap "-"))    ;; like Integer- (light sugar)
         tth (keyword ns cap)          ;; like ::Integer
         kdh (keyword ns (str/lower-case (str it "-kind")))
         ;; ... like ::integer-kind
@@ -1325,7 +1375,7 @@
        ;; Real-, Complex- Logical-, that require a
        ;; full map of arguments, like
        ;; (Integer- {:kind 4 :dimensions []}
-       (defn ~nym ;; like Integer-
+       (defn ~lcp ;; like Integer-
          [{kind# :kind, dims# :dimensions}]
          (let [cnf# (s/conform
                      ::asr-ttype-head
@@ -1338,12 +1388,12 @@
        ;; positional arguments, like
        ;; (Integer 4 []), (Integer 4), (Integer)
        (defn ~scp ;; like Integer
-         ([kindx# dimsx#] (~nym {:kind kindx# :dimensions dimsx#}))
-         ([kindy#]        (~nym {:kind kindy# :dimensions ~dfd}))
+         ([kindx# dimsx#] (~lcp {:kind kindx# :dimensions dimsx#}))
+         ([kindy#]        (~lcp {:kind kindy# :dimensions ~dfd}))
          ;; dfk = 4  is the default kinds for
          ;;          Integer, Real, Complex, Logical
          ;; dfd = [] is the default dimensions
-         ([]              (~nym {:kind ~dfk   :dimensions ~dfd})))
+         ([]              (~lcp {:kind ~dfk   :dimensions ~dfd})))
        ;; TODO ? entity keywords for ::Integer, ::Real, etc.
        )))
 
@@ -1400,8 +1450,10 @@
  )
 
 
-;; Entity keys for heads like ::Integer, ::Real, ...
-;; are not necessary.
+(def-term-head--entity-key ttype Integer)
+(def-term-head--entity-key ttype Real)
+(def-term-head--entity-key ttype Complex)
+(def-term-head--entity-key ttype Logical)
 
 
 ;; TODO ttype
@@ -1626,6 +1678,7 @@
  (varnym "foo")  := ::invalid-varnym)
 
 
+;; ================================================================
 ;;  ______   ____  __ ____   ___  _
 ;; / ___\ \ / /  \/  | __ ) / _ \| |
 ;; \___ \\ V /| |\/| |  _ \| | | | |
@@ -1661,48 +1714,6 @@
                 ::access           ::presence        ::value-attr
                 ::type-declaration
                 ]))
-
-
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-;;  t e r m   h e a d   e n t i t y   k e y
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-
-
-(defmacro def-term-head--entity-key
-  "Define entity key like ::Variable, which is an
-   ::asr-symbol-head by the nested head multi-spec.
-   From term = symbol and head = Variable
-   or   term = stmt   and head = Assignment,
-   generate an s/def like
-
-   (s/def ::Variable               ;; head entity key
-     (s/and ::asr-term             ;; top multi-spec
-       #(= ::Variable              ;; nested tag
-           (-> % ::asr-symbol-head ;; nested multi-spec
-                 ::symbol-head)))) ;; tag fetcher
-
-   or
-
-   (s/def ::Assignment             ;; head entity key
-     (s/and ::asr-term             ;; top multi-spec
-       #(= ::Assignment            ;; nested tag
-           (-> % ::asr-stmt-head   ;; nested multi-spec
-                 ::stmt-head       ;; tag fetcher
-  "
-  [term, ;; like symbol
-   head  ;; like Variable
-   ]
-  (let [ns "masr.specs"
-        trm (keyword ns "term")             ;; like ::term
-        art (keyword ns "asr-term")         ;; like ::asr-term
-        hkw (keyword ns
-             (str/capitalize (str head)))   ;; like ::Variable
-        tmh (keyword ns (str term "-head")) ;; like ::symbol-head
-        amh (keyword ns                     ;; for the multi-spec
-             (str "asr-" term "-head"))     ;; like ::asr-symbol-head
-        ]
-    `(s/def ~hkw
-       (s/and ~art #(= ~hkw (-> % ~amh ~tmh))))))
 
 
 (def-term-head--entity-key symbol Variable)
@@ -2093,6 +2104,7 @@
    (s/valid? :masr.specs/asr-term    st) := true))
 
 
+;; ================================================================
 ;;  _______  ______  ____
 ;; | ____\ \/ /  _ \|  _ \
 ;; |  _|  \  /| |_) | |_) |
@@ -2100,6 +2112,49 @@
 ;; |_____/_/\_\_|   |_| \_\
 
 
+;; nested multi-spec
+(do (defmulti expr-head ::expr-head)
+    (s/def ::asr-expr-head
+      (s/multi-spec expr-head ::expr-head)))
+
+;; Employ the nested multi-spec:
+(defmethod term ::expr [_]
+  (s/keys :req [::term ::asr-expr-head]))
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  L o g i c a l C o n s t a n t
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+
+;; (LogicalConstant true (Logical 4 []))
+
+
+(defmethod expr-head ::LogicalConstant [_]
+  (s/keys :req [::expr-head
+                ::bool
+                ::Logical]))
+
+
+(tests
+ (let [alv {::term ::expr,
+            ::asr-expr-head
+            {::expr-head ::LogicalConstant
+             ::bool      true
+             ::Logical   (ttype (Logical))}}]
+   (s/valid? ::asr-term alv) := true))
+
+
+(tests
+ (let [alv {::term ::expr,
+            ::asr-expr-head
+            {::expr-head ::LogicalConstant
+             ::bool      true
+             ::Logical   (ttype (Integer))}}]
+   (s/valid? ::asr-term alv) := false))
+
+
+;; ================================================================
 ;;  ____ _____ __  __ _____
 ;; / ___|_   _|  \/  |_   _|
 ;; \___ \ | | | |\/| | | |
