@@ -1143,10 +1143,13 @@
    (s/conform ::asr-term abe)            := abe
    ;; defaults to correct value
    (abi 'Source)                         := abe
+   (abi Source)                          := abe
    ;; missing keyword
    (abi 'Source false)                   := ::invalid-abi
+   (abi Source false)                    := ::invalid-abi
    ;; wrong value
    (abi 'Source :external true)          := ::invalid-abi
+   (abi Source :external true)           := ::invalid-abi
    ;; misspellings
    (abi 'Soruce :external false)         := ::invalid-abi
    (abi 'Source :extrenal false)         := ::invalid-abi)
@@ -1155,10 +1158,13 @@
    (s/conform ::abi      abe)            := abe
    ;; defaults to correct value
    (abi 'LFortranModule)                 := abe
+   (abi LFortranModule)                  := abe
    ;; missing keyword
    (abi 'LFortranModule true)            := ::invalid-abi
+   (abi LFortranModule true)             := ::invalid-abi
    ;; wrong value
    (abi 'LFortranModule :external false) := ::invalid-abi
+   (abi LFortranModule :external false)  := ::invalid-abi
 ))
 
 ;; ASDL Back-Channel
@@ -1238,14 +1244,22 @@
 ;;     | Logical(int kind, dimension* dims)
 
 
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-;;  N e s t e d   m u l t i - s p e c
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;              _          _             _ _   _
+;;  _ _  ___ __| |_ ___ __| |  _ __ _  _| | |_(_)___ ____ __  ___ __
+;; | ' \/ -_|_-<  _/ -_) _` | | '  \ || | |  _| |___(_-< '_ \/ -_) _|
+;; |_||_\___/__/\__\___\__,_| |_|_|_\_,_|_|\__|_|   /__/ .__/\___\__|
+;;                                                     |_|
 
 
-;; All multi-spec names in MASR begin with
-;; ::asr-<the_rest_of_the_name>, as in ::asr-term
-;; and ::asr-ttype-head.
+;; All multi-spec names in MASR, nested or not,
+;; begin with
+;; ::asr-<the_rest_of_the_name>, as
+;; in ::asr-term (not nested)
+;; and ::asr-ttype-head (nested in ttypes).
+
+
+;; At first, a multi-spec needs a dispatcher,
+;; ttype-head in this case:
 
 
 ;; nested multi-spec
@@ -1261,6 +1275,13 @@
       (s/multi-spec ttype-head ::ttype-head)))
 
 
+;; Then, we need functions-to-dispatch-to, i.e.,
+;; methods or defmethods. The next macro eliminates
+;; the repetitive syntax in writing out defmethods
+;; for Integer, Real, Complex, Logical, and
+;; Character.
+
+
 (defmacro def-ttype-head
   "Defmethods for defmulti ttype-head, requiring
   entity keywords ::ttype-head and ::dimensions."
@@ -1273,12 +1294,7 @@
         ;; Like ::integer-kind
         kind   (keyword ns (str (str/lower-case strit) "-kind"))]
     `(defmethod ttype-head ~method [_#]
-        (s/keys :req [::ttype-head ~kind ::dimensions]))))
-
-
-;; -+-+-+-+-+-+-+-+-+-
-;;  f u l l   f o r m
-;; -+-+-+-+-+-+-+-+-+-
+       (s/keys :req [::ttype-head ~kind ::dimensions]))))
 
 
 (def-ttype-head Integer)
@@ -1288,10 +1304,15 @@
 (def-ttype-head Character)
 
 
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
+;;
+;; just for the nested multi-spec, ::asr-type-head:
 (tests
  (s/valid? ::asr-ttype-head
            {::ttype-head ::Integer
-            ::integer-kind 42
+            ::integer-kind 42  ;; wrong kind
             ::dimensions []})                           := false
 
  (s/valid? ::asr-ttype-head
@@ -1304,11 +1325,13 @@
             ::integer-kind 4
             ::dimensions (dimensions [[6 60] [1 42]])}) := true
 
+ ;; Check a conformed one.
  (let [a {::ttype-head   ::Integer
           ::integer-kind 4
           ::dimensions   (dimensions [[6 60] [1 42]])}]
    (s/conform ::asr-ttype-head a)                       := a)
 
+ ;; Check a Real instead of an Integer.
  (let [a {::ttype-head   ::Real
           ::real-kind    8
           ::dimensions   (dimensions [[6 60] [1 42]])}]
@@ -1316,7 +1339,6 @@
 
 
 ;;; Now, the asr-term defmethod spec for ttype.
-
 (defmethod term ::ttype [_]
   (s/keys :req [::term ::asr-ttype-head]))
 
@@ -1333,7 +1355,7 @@
            {::term ::ttype,
             ::asr-ttype-head
             {::ttype-head ::Real,
-             ::real-kind  2
+             ::real-kind  2  ;; wrong kind
              ::dimensions []}})       := false)
 
 
@@ -1348,6 +1370,16 @@
 ;; -+-+-+-+-+-
 ;;  s u g a r
 ;; -+-+-+-+-+-
+
+
+(defn ttype [it]
+  (let [cnf (s/conform
+             ::asr-term
+             {::term ::ttype,
+              ::asr-ttype-head it})]
+    (if (s/invalid? cnf)
+      ::invalid-ttype
+      cnf)))
 
 
 (defmacro def-ttype-and-head [it]
@@ -1371,7 +1403,7 @@
               (throw (java.lang.IllegalArgumentException.
                       (f-str "Can't define sugar for {cap}."))))]
     `(do
-       ;; Define the light-sugar fns Integer-,
+       ;; Define the LIGHT-SUGAR fns Integer-,
        ;; Real-, Complex- Logical-, that require a
        ;; full map of arguments, like
        ;; (Integer- {:kind 4 :dimensions []}
@@ -1382,18 +1414,24 @@
                      {::ttype-head ~tth,  ;; like ::Integer
                       ~kdh         kind#, ;; like ::integer-kind
                       ::dimensions (dimensions dims#)})]
-           (if (s/invalid? cnf#) ~ivh, cnf#)))
-       ;; Define the heavy-sugar fns Integer, Real,
+           (if (s/invalid? cnf#) ~ivh, (ttype cnf#))))
+       ;; Define the HEAVY-SUGAR fns Integer, Real,
        ;; Complex Logical, Character that take
        ;; positional arguments, like
        ;; (Integer 4 []), (Integer 4), (Integer)
        (defn ~scp ;; like Integer
-         ([kindx# dimsx#] (~lcp {:kind kindx# :dimensions dimsx#}))
-         ([kindy#]        (~lcp {:kind kindy# :dimensions ~dfd}))
+         ;; arity-2
+         ([kindx# dimsx#]
+          (~lcp {:kind kindx# :dimensions dimsx#}))
+         ;; arity-1
+         ([kindy#]
+          (~lcp {:kind kindy# :dimensions ~dfd}))
          ;; dfk = 4  is the default kinds for
          ;;          Integer, Real, Complex, Logical
          ;; dfd = [] is the default dimensions
-         ([]              (~lcp {:kind ~dfk   :dimensions ~dfd})))
+         ;; arity-0
+         ([]
+          (~lcp {:kind ~dfk   :dimensions ~dfd})))
        ;; TODO ? entity keywords for ::Integer, ::Real, etc.
        )))
 
@@ -1405,48 +1443,33 @@
 
 
 (tests
- (s/valid? ::asr-ttype-head (Integer 4))    := true
- (s/valid? ::asr-ttype-head (Integer 42))   := false
- (s/valid? ::asr-ttype-head (Integer))      := true
- (s/valid? ::asr-ttype-head (Integer 4 [])) := true)
-
-
-;; -+-+-+-+-+-+-+-+-+-+-+-
-;;  h e a v y   s u g a r
-;; -+-+-+-+-+-+-+-+-+-+-+-
-
-
-(defn ttype [it]
-  (let [cnf (s/conform
-             ::asr-term
-             {::term ::ttype,
-              ::asr-ttype-head it})]
-    (if (s/invalid? cnf)
-      ::invalid-ttype
-      cnf)))
+ (s/valid? ::asr-ttype-head (::asr-ttype-head (Integer 4)))    := true
+ (s/valid? ::asr-ttype-head (::asr-ttype-head (Integer 42)))   := false
+ (s/valid? ::asr-ttype-head (::asr-ttype-head (Integer)))      := true
+ (s/valid? ::asr-ttype-head (::asr-ttype-head (Integer 4 []))) := true)
 
 
 (tests
- (s/valid? ::asr-term (ttype (Integer 4)))                  := true
- (s/valid? ::asr-term (ttype (Integer 4 [])))               := true
- (s/valid? ::asr-term (ttype (Integer 4 [[6 60] [1 42]])))  := true
- (s/valid? ::asr-term (ttype (Integer 4 ["foo"])))          := false
- (s/valid? ::asr-term (ttype (Integer 42 [])))              := false
- (s/valid? ::asr-term (ttype (Real  1 [])))                 := false
- (s/valid? ::asr-term (ttype (Logical 8 [])))               := false
+ (s/valid? ::asr-term (Integer 4))                  := true
+ (s/valid? ::asr-term (Integer 4 []))               := true
+ (s/valid? ::asr-term (Integer 4 [[6 60] [1 42]]))  := true
+ (s/valid? ::asr-term (Integer 4 ["foo"]))          := false
+ (s/valid? ::asr-term (Integer 42 []))              := false
+ (s/valid? ::asr-term (Real  1 []))                 := false
+ (s/valid? ::asr-term (Logical 8 []))               := false
 
- (s/valid? ::ttype    (ttype (Integer 4)))                  := true
- (s/valid? ::ttype    (ttype (Integer 4 [])))               := true
- (s/valid? ::ttype    (ttype (Integer 4 [[6 60] [1 42]])))  := true
- (s/valid? ::ttype    (ttype (Integer 4 ["foo"])))          := false
- (s/valid? ::ttype    (ttype (Integer 42 [])))              := false
- (s/valid? ::ttype    (ttype (Real  1 [])))                 := false
- (s/valid? ::ttype    (ttype (Logical 8 [])))               := false
+ (s/valid? ::ttype    (Integer 4))                  := true
+ (s/valid? ::ttype    (Integer 4 []))               := true
+ (s/valid? ::ttype    (Integer 4 [[6 60] [1 42]]))  := true
+ (s/valid? ::ttype    (Integer 4 ["foo"]))          := false
+ (s/valid? ::ttype    (Integer 42 []))              := false
+ (s/valid? ::ttype    (Real  1 []))                 := false
+ (s/valid? ::ttype    (Logical 8 []))               := false
 
- (s/valid? ::ttype (ttype
-                    (Integer- {:dimensions [], :kind 4})))  := true
- (s/valid? ::ttype (ttype
-                    (Integer- {:kind 4, :dimensions []})))  := true
+ (s/valid? ::ttype
+           (Integer- {:dimensions [], :kind 4}))    := true
+ (s/valid? ::ttype
+           (Integer- {:kind 4, :dimensions []}))    := true
  )
 
 
@@ -1456,7 +1479,7 @@
 (def-term-head--entity-key ttype Logical)
 
 
-;; TODO ttype
+;; TODO the rest of the ttypes
 ;;     >>> Integer, Real, Complex, Logical are already done ...
 ;;     >>> Here are the rest of the ttypes.
 ;;     | Character(int kind, int len, expr? len_expr, dimension* dims)
@@ -1817,7 +1840,7 @@
 
                   ::symtab-id        (nat 2)
                   ::varnym           (varnym 'x)
-                  ::ttype            (ttype (Integer 4 []))
+                  ::ttype            (Integer 4 [])
 
                   ::type-declaration (type-declaration nil)
                   ::dependencies     (identifier-set ())
@@ -1836,24 +1859,27 @@
              ::asr-symbol-head a-var-head}
       a-var-light (Variable- :varnym     (identifier 'x)
                              :symtab-id  2
-                             :ttype      (ttype (Integer 4)))
+                             :ttype      (Integer 4))
       avl-2  (Variable- :varnym     (identifier 'x)
                         :symtab-id  2
-                        :ttype      (ttype (Integer 42)))]
+                        :ttype      (Integer 42))]
   (tests
    a-var-light := (s/conform ::asr-term a-var)
    a-var-light := (s/conform ::Variable a-var)
 
-   (s/valid? ::asr-symbol-head a-var-head)  := true
+   (s/valid? ::asr-symbol-head a-var-head) := true
 
-   (s/valid? ::asr-term a-var)       := true
-   (s/valid? ::asr-term a-var-light) := true
-   (s/valid? ::asr-term avl-2)       := false
+   (s/valid? ::asr-term a-var)             := true
+   (s/valid? ::asr-term a-var-light)       := true
+   (s/valid? ::asr-term avl-2)             := false
 
-   (s/valid? ::Variable a-var)       := true
-   (s/valid? ::Variable a-var-light) := true
-   (s/valid? ::Variable avl-2)       := false
+   (s/valid? ::Variable a-var)             := true
+   (s/valid? ::Variable a-var-light)       := true
+   (s/valid? ::Variable avl-2)             := false
    ))
+
+
+
 
 
 ;; Entity-key for term ::symbol is not needed.
@@ -1880,7 +1906,7 @@
 
                ::symtab-id        (symtab-id        symtab-id-),
                ::varnym           (varnym           varnym-),
-               ::ttype            (ttype            ttype-),
+               ::ttype            ttype-, ;; already wrapped!
 
                ::type-declaration (type-declaration type-declaration-),
                ::dependencies     (dependencies     dependencies-),
@@ -1904,28 +1930,35 @@
  (let [a-valid
        (Variable- :symtab-id (symtab-id 2),
                   :varnym    (varnym 'x),
-                  :ttype     (ttype (Integer 4 [[1 42]])))]
+                  :ttype     (Integer 4 [[1 42]]))]
    (s/valid? ::asr-term a-valid) := true
    (s/valid? ::Variable a-valid) := true)
  (let [a-valid
        (Variable- :symtab-id 2,
                   :varnym    'x,
-                  :ttype     (ttype (Integer 4 [[1 42]])))]
+                  :ttype     (Integer 4 [[1 42]]))]
    (s/valid? ::asr-term a-valid) := true
    (s/valid? ::Variable a-valid) := true)
  (let [a-valid
        (Variable- :symtab-id 2,
                   :varnym    'x,
-                  :ttype     (ttype (Integer 4 [[1 42]]))
-                  :abi       (abi 'Source :external false))]
+                  :ttype     (Integer 4 [[1 42]])
+                  :abi       (abi Source :external false))]
    (s/valid? ::asr-term a-valid) := true
    (s/valid? ::Variable a-valid) := true)
- ;; invalid examples
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (Integer 4 [[1 42]])
+                  :abi       (abi Source))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true) ;; invalid examples
  (let [a-inval
        (Variable- :symtab-id 2,
                   :varnym    'x,
-                  :ttype     (ttype (Integer 4 [[1 42]]))
-                  :abi       (abi 'Source :external true))]
+                  :ttype     (Integer 4 [[1 42]])
+                  ;; wrong abi
+                  :abi       (abi Source :external true))]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::Variable a-inval) := false)
  )
@@ -2141,7 +2174,7 @@
             ::asr-expr-head
             {::expr-head ::LogicalConstant
              ::bool      true
-             ::Logical   (ttype (Logical))}}]
+             ::Logical   (Logical)}}]
    (s/valid? ::asr-term alv) := true))
 
 
@@ -2150,7 +2183,7 @@
             ::asr-expr-head
             {::expr-head ::LogicalConstant
              ::bool      true
-             ::Logical   (ttype (Integer))}}]
+             ::Logical   (Integer)}}]
    (s/valid? ::asr-term alv) := false))
 
 
