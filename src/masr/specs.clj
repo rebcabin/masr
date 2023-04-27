@@ -606,7 +606,9 @@
         trm (keyword ns "term")             ;; like ::term
         art (keyword ns "asr-term")         ;; like ::asr-term
         hkw (keyword ns
-             (str/capitalize (str head)))   ;; like ::Variable
+             ;; BUG: breaks "LogicalConstant", etc.
+             ;; (str/capitalize (str head))
+             (str head))                    ;; like ::Variable
         tmh (keyword ns (str term "-head")) ;; like ::symbol-head
         amh (keyword ns                     ;; for the multi-spec
              (str "asr-" term "-head"))     ;; like ::asr-symbol-head
@@ -1855,6 +1857,7 @@
                   ::presence         (presence 'Required)
                   ::value-attr       false ;; TODO sugar
                   }
+      ;; nested
       a-var {::term ::symbol
              ::asr-symbol-head a-var-head}
       a-var-light (Variable- :varnym     (identifier 'x)
@@ -1877,9 +1880,6 @@
    (s/valid? ::Variable a-var-light)       := true
    (s/valid? ::Variable avl-2)             := false
    ))
-
-
-
 
 
 ;; Entity-key for term ::symbol is not needed.
@@ -1982,49 +1982,49 @@
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 "foo" (Integer 4)
                          nil [] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 42424242)
                          nil [] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 42424242)
                          'FOOBAR [] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'FOOBAR
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil ['x 'y "foo"] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'FOOBAR
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
@@ -2032,7 +2032,7 @@
                          'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
@@ -2040,7 +2040,7 @@
                          'FOOBAR 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
@@ -2048,7 +2048,7 @@
                          'Public 'FOOBAR
                          false)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false)
+   (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
@@ -2056,7 +2056,7 @@
                          'Public 'Required
                          'FOOBAR)]
    (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::asr-term a-inval) := false))
+   (s/valid? ::Variable a-inval) := false))
 
 ;; ASDL Back-Channel
 (tests
@@ -2179,13 +2179,18 @@
                 ::Logical]))
 
 
+(def-term-head--entity-key expr LogicalConstant)
+
+
 (tests
  (let [alv {::term ::expr,
             ::asr-expr-head
             {::expr-head ::LogicalConstant
              ::bool      true
              ::Logical   (Logical)}}]
-   (s/valid? ::asr-term alv) := true))
+   (s/valid? ::asr-term        alv) := true
+   (s/valid? ::LogicalConstant alv) := true
+   ))
 
 
 (tests
@@ -2195,6 +2200,53 @@
              ::bool      true
              ::Logical   (Integer)}}]
    (s/valid? ::asr-term alv) := false))
+
+
+;; -+-+-+-
+;;  V a r
+;; -+-+-+-
+;;
+;; Workaround; See Issue #23
+;;
+;; https://github.com/rebcabin/masr/issues/23
+
+;; Var(symbol v)
+
+;; from ASR.asdl doesn't match the instance. Instead,
+;; we probably need something like:
+
+;; Var(symtab_id stid, identifier it)
+
+
+(defmethod expr-head ::Var [_]
+  (s/keys :req [::expr-head
+                ::symtab-id
+                ::identifier]))
+
+
+(tests
+ (let [vlv {::term ::expr,
+            ::asr-expr-head
+            {::expr-head  ::Var
+             ::symtab-id  2
+             ::identifier 'x
+             }}]
+   (s/valid? ::asr-term vlv) := true))
+
+
+;; -+-+-+-+-+-+-
+;;  E q u a l s
+;; -+-+-+-+-+-+-
+;;
+;; Workaround; See Issues #21 and #22
+;; https://github.com/rebcabin/masr/issues/21
+;; https://github.com/rebcabin/masr/issues/22
+
+
+;; meant to handle expressions like
+;; (= (Var 2 a)
+;;    (LogicalConstant false (Logical 4 []))
+;;    ())
 
 
 ;; ================================================================
