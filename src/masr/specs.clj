@@ -2165,6 +2165,13 @@
   (s/keys :req [::term ::asr-expr-head]))
 
 
+;; To add a new head to term expr, create a
+;; defmethod and a term-head entity key according to
+;; the patterns obvious in the examples below. Also
+;; add sugar functions like LogicalConstant-,
+;; LogicalConstant--, LogicalConstant, to taste.
+
+
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 ;;  L o g i c a l C o n s t a n t
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
@@ -2181,6 +2188,19 @@
 
 (def-term-head--entity-key expr LogicalConstant)
 
+;; heavy sugar
+(defn LogicalConstant
+  ;; arity-2
+  ([a-bool, a-ttype]
+   {::term ::expr,
+    ::asr-expr-head
+    {::expr-head ::LogicalConstant
+     ::bool      a-bool
+     ::Logical   a-ttype}})
+  ;; arity-1
+  ([a-bool]
+   (LogicalConstant a-bool (Logical))))
+
 
 (tests
  (let [alv {::term ::expr,
@@ -2190,6 +2210,10 @@
              ::Logical   (Logical)}}]
    (s/valid? ::asr-term        alv) := true
    (s/valid? ::LogicalConstant alv) := true
+   (alv := (LogicalConstant true))
+   (alv := (LogicalConstant true (Logical 4 [])))
+   (alv := (LogicalConstant true (Logical 4)))
+   (alv := (LogicalConstant true (Logical)))
    ))
 
 
