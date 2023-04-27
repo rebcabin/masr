@@ -304,7 +304,7 @@ dictionaries. For example,
 #+begin_src clojure :eval never  :exports both
   ;; key         value
   {::term        ::intent,
-   ::intent-enum Local} ;; ASDL back-channel def
+   ::intent-enum 'Local}
 #+end_src
 
 In MASR, all keys in all hash-maps are
@@ -313,21 +313,14 @@ specs registered for them, or not. When a spec is
 registered for a key, automatic recursive
 type-checking is invoked.
 
-The /ASDL back-channel/ definition, =Local=, is no
-more than a "tickless" version of ='Local=, for
-compatibility with legacy ASDL printouts via
-=--show-asr=. Several "back-channel" facilities
-exist in the current code-base and will be
-deprecated long-term when MASR is integrated with
-LCompilers.
-
 ** Sugar
 
-Every spec /qua/ type has a full form as well as
-several shorter sugared forms. Sugar is defined by
-functions like =Integer= and =Integer-= that return
-instances in full-form. Sugar comes in two flavors,
-/light/ and /heavy/. See Section [[sugar]].
+In addition to the full form for every type, there
+are several shorter sugared forms. Sugar is defined
+by functions like =Integer= and =Integer-= that
+return instances in full-form. Sugar comes in three
+flavors, /light/, /heavy/, and /legacy/. See Section
+[[sugar]].
 
 ** Terms and Heads
 
@@ -339,7 +332,7 @@ level --- /vbar/-separated alternatives to the right
 of equals signs. There are only two levels.
 
 The following tables summarize MASR via conforming
-examples, written in the recommended sugar form.
+examples, written in heavy sugar or legacy form.
 
 Equally important are non-conforming examples. See
 (1) the body of the reference document, (2) =tests=
@@ -381,11 +374,11 @@ for many non-conforming examples.
 | **Multi-Spec** | **Term**         | **Example**               |
 |----------------+------------------+---------------------------|
 | =::asr-term=   | =::dimension=    | =(dimension [6 60])=      |
-| =::asr-term=   | =::intent=       | =(intent Local)=          |
-| =::asr-term=   | =::storage-type= | =(storage-type Default)=  |
-| =::asr-term=   | =::abi=          | =(abi Source)=            |
-| =::asr-term=   | =::access=       | =(access Public)=         |
-| =::asr-term=   | =::presence=     | =(presence Required)=     |
+| =::asr-term=   | =::intent=       | =(intent 'Local)=         |
+| =::asr-term=   | =::storage-type= | =(storage-type 'Default)= |
+| =::asr-term=   | =::abi=          | =(abi 'Source)=           |
+| =::asr-term=   | =::access=       | =(access 'Public)=        |
+| =::asr-term=   | =::presence=     | =(presence 'Required)=    |
 
 #+caption: =::asr-term= Specs with Nested /Head/ Multi-Specs
 #+label: tbl:nested-multi-specs
@@ -559,10 +552,10 @@ full-form, abbreviated:
       ::symtab-id (nat 2)
       ::varnym    (identifier 'x)
       ::intent    (intent 'Local)
-      ::ttype     (ttype (Integer 4 [[0 42])) ,,, }})
+      ::ttype     (Integer 4 [[0 42])) ,,, }}
 #+end_src
 
-** Light Sugar, Heavy Sugar
+** Light Sugar, Heavy Sugar, Legacy Sugar
 <<sugar>>
 
 /Light-sugar/ forms are shorter than full-form, but
@@ -573,7 +566,10 @@ positional arguments and defaults only at the end of
 an argument list. Heavy-sugar functions are thus
 more brittle, especially for long specs with many
 arguments, with high risk of writing arguments out
-of order.
+of order. /Legacy sugar/ is order-dependent and
+compatible with =--show-asr= output from current
+LCompilers. It will be deprecated when MASR is
+integrated with LCompilers.
 
 The names of light-sugar functions, like =Integer-=,
 have a single trailing hyphen. The keyword arguments
@@ -591,12 +587,13 @@ conform to =::asr-term= and to =::ttype=:
 
 The names of heavy-sugar functions, like =Integer=
 or =Variable--=, have either zero or two trailing
-hyphens. The difference concerns legacy ASDL. In
-addition to heavy sugar =Variable--=, MASR exports
-=Variable=, a macro that supports legacy
+hyphens. The difference concerns legacy. In addition
+to heavy sugar =Variable--=, MASR exports
+=Variable=, a macro for legacy \linebreak
 =libasr --show-asr= syntax. Both produce identical
 full-forms.
 
+\newpage
 For example, The following is heavy sugar for a
 /Variable/, representing the more progressive,
 desired form:
@@ -640,20 +637,7 @@ conform to both =::asr-term= and to =::ttype=:
   (Integer 8 [[6 60] [1 42]])
 #+end_src
 
-# Here is a conforming spec for =::Variable= in heavy
-# sugar; it also conforms to =::asr-term=:
-
-# \vskip 0.26cm
-# #+begin_src clojure :eval never
-#   (let [a-valid (Variable-- 2 'x (Integer 4)
-#                             nil [] Local
-#                             [] []  Default
-#                             Source Public Required
-#                             false)]
-#     (s/valid? ::asr-term a-valid) := true
-#     (s/valid? ::Variable a-valid) := true)
-# #+end_src
-
+\clearpage
 *** \color{red}{Term Entity-Key Specs}
 <<entity-key-specs>>
 
@@ -703,7 +687,7 @@ Here are some invocations of that macro:
 
 \newpage
 Here are some examples of extra conformance tests
-for sugared specs via term entity-key specs:
+for sugared instances via term entity-key specs:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
