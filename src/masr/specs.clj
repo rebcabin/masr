@@ -2117,6 +2117,16 @@
           Local () ()
           Default (Logical 4 []) Source
           Public Required false)]
+   v := (Variable-- 2 'a (Logical 4)
+                    nil [] Local
+                    [] [] Default
+                    Source Public Required
+                    false)
+   v := (Variable-- 2 'a (Logical 4)
+                    nil [] 'Local
+                    [] [] 'Default
+                    'Source 'Public 'Required
+                    false)
    (s/valid? :masr.specs/Variable v) := true
    (s/valid? :masr.specs/asr-term v) := true))
 
