@@ -902,8 +902,8 @@
 
 
 (defmacro symbolate
-  "ASDL Back-Channel: create tickless constants such as Local for
-  'Local."
+  "ASDL Back-Channel: create unquoted constants such as
+  Local for 'Local."
   [a-set-syms]
   (let [a-set (eval a-set-syms)
         cmds (for [e a-set] (list 'def e `'~e))]
@@ -2136,7 +2136,7 @@
 ;; hyphen, as in Variable-, and full form will
 ;; continue to represent what we ultimately want.
 
-
+;; legacy sugar
 (defmacro Variable
   "Honor legacy parameter order of
   lpython/src/libasr/ASR.asdl as of 25 April 2023.
@@ -2242,7 +2242,7 @@
   ([a-bool]
    (LogicalConstant a-bool (Logical))))
 
-
+;; valid
 (tests
  (let [alv {::term ::expr,
             ::asr-expr-head
@@ -2257,7 +2257,7 @@
    (alv := (LogicalConstant true (Logical)))
    ))
 
-
+;; invalid
 (tests
  (let [alv {::term ::expr,
             ::asr-expr-head
@@ -2291,7 +2291,20 @@
 
 (def-term-head--entity-key expr Var)
 
+;; heavy sugar
+(defn Var-- [stid, ident]
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head  ::Var
+    ::symtab-id  stid
+    ::identifier ident
+    }})
 
+;; legacy sugar
+(defmacro Var [stid, unquoted-ident]
+  `(Var-- ~stid '~unquoted-ident))
+
+;; valid
 (tests
  (let [vlv {::term ::expr,
             ::asr-expr-head
@@ -2299,8 +2312,14 @@
              ::symtab-id  2
              ::identifier 'x
              }}]
+   (Var-- 2 'x)              := vlv
+   (Var   2  x)              := vlv
    (s/valid? ::asr-term vlv) := true
    (s/valid? ::Var      vlv) := true))
+
+
+;; TODO: make it look up a value in the
+;; symbol-table! That's part of abstract execution.
 
 
 ;; -+-+-+-+-+-+-
@@ -2316,6 +2335,38 @@
 ;; (= (Var 2 a)
 ;;    (LogicalConstant false (Logical 4 []))
 ;;    ())
+
+
+(s/def ::unknown-operand empty?)
+
+
+(defmethod expr-head ::Equals [_]
+  (s/keys :req [::expr-head
+                ::left-hand-side
+                ::right-hand-side
+                ::unknown-operand]))
+
+
+(def-term-head--entity-key expr Equals)
+
+;; heavy sugar
+(defn Equals [lhs, rhs, unk]
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head       ::Equals
+    ::left-hand-side  lhs
+    ::right-hand-side rhs
+    ::unknown-operand unk}})
+
+;;
+(tests
+ (s/valid? ::Equals
+           (Equals (Var 2 a)
+                   (LogicalConstant false (Logical 4 []))
+                   ())) := true)
+
+;; legacy sugar
+
 
 
 ;; ================================================================
