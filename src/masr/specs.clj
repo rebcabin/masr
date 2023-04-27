@@ -2224,6 +2224,9 @@
                 ::identifier]))
 
 
+(def-term-head--entity-key expr Var)
+
+
 (tests
  (let [vlv {::term ::expr,
             ::asr-expr-head
@@ -2231,7 +2234,8 @@
              ::symtab-id  2
              ::identifier 'x
              }}]
-   (s/valid? ::asr-term vlv) := true))
+   (s/valid? ::asr-term vlv) := true
+   (s/valid? ::Var      vlv) := true))
 
 
 ;; -+-+-+-+-+-+-
