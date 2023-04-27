@@ -1638,9 +1638,9 @@
 
 ;; heavy sugar
 (defn type-declaration [ptr]
-  (let [td (s/conform ::type-declaration (if (seqable? ptr)
-                                           (seq ptr)
-                                           ptr))]
+  (let [td (s/conform
+            ::type-declaration
+            (if (seqable? ptr) (seq ptr) ptr))]
     (if (s/invalid? td)
       ::invalid-type-declaration
       td)))
@@ -1810,6 +1810,7 @@
              ::abi              abi,
              ::access           access,
              ::presence         presence,
+
              ::value-attr       value-attr,
              }})]
     (if (s/invalid? a)
@@ -1862,21 +1863,46 @@
 
 ;; Test light sugar:
 (tests
+ ;; fully spec'ced, order does not matter
+ (let [a-valid
+       (Variable- :symtab-id        2
+                  :varnym           'x
+                  :intent           Local ;; ASDL back-channel
+
+                  :ttype            (Integer)
+                  :access           Private
+                  :presence         Required
+
+                  :abi              Source
+                  :type-declaration nil
+                  :value-attr       false
+
+                  :symbolic-value   []
+                  :value            []
+                  :storage-type     Default
+
+                  :dependencies     ['y 'z]
+                  )]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true))
+
+
+(tests
  (let [a-valid
        (Variable- :symtab-id 2,
                   :varnym    'x,
-                  :intent    (intent 'Local)
+                  :intent    (intent 'Local) ;; explicit
                   :ttype     (Integer 4 [[1 42]]))]
    (s/valid? ::asr-term a-valid) := true
    (s/valid? ::Variable a-valid) := true)
  (let [a-valid
        (Variable- :symtab-id 2,
                   :varnym    'x,
-                  :intent    Local
+                  :intent    Local ;; ASDL back-channel
                   :ttype     (Integer 4 [[1 42]]))]
    (s/valid? ::asr-term a-valid) := true
    (s/valid? ::Variable a-valid) := true)
- (let [a-valid
+ (let [a-valid ;; default intent
        (Variable- :symtab-id 2,
                   :varnym    'x,
                   :ttype     (Integer 4 [[1 42]]))]
@@ -1898,6 +1924,7 @@
        (Variable- :symtab-id 2,
                   :varnym    'x,
                   :ttype     (Integer 4 [[1 42]])
+                  ;; explicit abi
                   :abi       (abi 'Source :external false))]
    (s/valid? ::asr-term a-valid) := true
    (s/valid? ::Variable a-valid) := true)
@@ -1905,6 +1932,7 @@
        (Variable- :symtab-id 2,
                   :varnym    'x,
                   :ttype     (Integer 4 [[1 42]])
+                  ;; explicit defaulted abi
                   :abi       (abi 'Source))]
    (s/valid? ::asr-term a-valid) := true
    (s/valid? ::Variable a-valid) := true) ;; invalid examples
@@ -1912,6 +1940,7 @@
        (Variable- :symtab-id 2,
                   :varnym    'x,
                   :ttype     (Integer 4 [[1 42]])
+                  ;; explicit ASDL back-channel abi
                   :abi       Source)]
    (s/valid? ::asr-term a-valid) := true
    (s/valid? ::Variable a-valid) := true)
@@ -2000,14 +2029,21 @@
 
  ;; invalid examples
  ;; Show that every entity key is checked.
- (let [a-inval (Variable-- "foo" 'x (Integer 4)
+ (let [a-inval (Variable-- "foo" 'x (Integer 4) ;; bad symtab-id
                          nil [] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 "foo" (Integer 4)
+ (let [a-inval (Variable-- 2 "foo" (Integer 4) ;; bad varnym
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 42424242) ;; bad ttupe
                          nil [] 'Local
                          [] []  'Default
                          'Source 'Public 'Required
@@ -2015,28 +2051,21 @@
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 42424242)
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 42424242)
-                         'FOOBAR [] 'Local
+                         'FOOBAR [] 'Local ;; bad dependencies
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'FOOBAR
+                         nil [] 'FOOBAR ;; bad intent
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil ['x 'y "foo"] 'Local
+                         nil ['x 'y "foo"] 'Local ;; bad dependencies
                          [] []  'Default
                          'Source 'Public 'Required
                          false)]
@@ -2044,7 +2073,7 @@
    (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
-                         [] []  'FOOBAR
+                         [] []  'FOOBAR ;; bad storage-type
                          'Source 'Public 'Required
                          false)]
    (s/valid? ::asr-term a-inval) := false
@@ -2052,33 +2081,29 @@
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
-                         'FOOBAR
-                         'Public 'Required
+                         'FOOBAR 'Public 'Required ;; bad abi
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
-                         'Source
-                         'FOOBAR 'Required
+                         'Source 'FOOBAR 'Required ;; bad access
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
-                         'Source
-                         'Public 'FOOBAR
+                         'Source 'Public 'FOOBAR ;; bad presence
                          false)]
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::Variable a-inval) := false)
  (let [a-inval (Variable-- 2 'x (Integer 4)
                          nil [] 'Local
                          [] []  'Default
-                         'Source
-                         'Public 'Required
-                         'FOOBAR)]
+                         'Source 'Public 'Required
+                         'FOOBAR)] ;; bad value-attr
    (s/valid? ::asr-term a-inval) := false
    (s/valid? ::Variable a-inval) := false))
 
@@ -2091,15 +2116,7 @@
                          Source Public Required
                          false)]
    (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
-  ;; See https://github.com/rebcabin/masr/issues/18
-  (let [a-valid (Variable-- 2 'x (Integer 4)
-                          [] [] Local
-                          [] []  Default
-                          Source Public Required
-                          false)]
-    (s/valid? ::asr-term a-valid) := true
-    (s/valid? ::Variable a-valid) := true))
+   (s/valid? ::Variable a-valid) := true))
 
 
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-
@@ -2153,7 +2170,6 @@
                     false)
    (s/valid? :masr.specs/Variable v) := true
    (s/valid? :masr.specs/asr-term v) := true))
-
 
 ;; Test SymbolTable with Variable:
 (tests
