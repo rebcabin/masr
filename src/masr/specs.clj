@@ -1057,18 +1057,7 @@
     'BindC, 'Interactive, 'Intrinsic})
 
 
-;; ASDL Back-Channel
-(def LFortranModule (abi 'LFortranModule :external true))
-(def GFortranModule (abi 'GFortranModule :external true))
-(def BindC          (abi 'BindC          :external true))
-(def Interactive    (abi 'Interactive    :external true))
-(def Intrinsic      (abi 'Intrinsic      :external true))
-
-
 (def internal-abis #{'Source})
-
-;; ASDL Back-Channel
-(def Source (abi 'Source))
 
 
 (s/def ::abi-enum (set/union external-abis internal-abis))
@@ -1123,6 +1112,15 @@
        (if (s/invalid? abi_)
          ::invalid-abi
          abi_)))))
+
+;; ASDL Back-Channel
+(def LFortranModule (abi 'LFortranModule :external true))
+(def GFortranModule (abi 'GFortranModule :external true))
+(def BindC          (abi 'BindC          :external true))
+(def Interactive    (abi 'Interactive    :external true))
+(def Intrinsic      (abi 'Intrinsic      :external true))
+
+(def Source (abi 'Source))
 
 
 (tests
