@@ -1104,15 +1104,8 @@
 (defn abi
   ;; arity 1 --- default "external"
   ([the-enum]
-   (let [abi_ (s/conform
-               ::abi
-               {::term         ::abi,
-                ::abi-enum     the-enum,
-                ::abi-external
-                (not (= the-enum 'Source))})]
-     (if (s/invalid? abi_)
-       ::invalid-abi
-       abi_)))
+   (abi the-enum
+        :external (not (= the-enum 'Source))))
   ;; arity 2 --- invalid
   ([the-enum, crap]
    ::invalid-abi)
