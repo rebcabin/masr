@@ -393,8 +393,8 @@ types, and term-like types, which are
 used-but-not-defined in the ASDL grammar. MASR
 explicitly defines them. Each term has a Clojure
 spec, various sugar functions, and term-entity key
-specs (see the companion document,
-=masr.summary.pdf=).
+specs.[fn:summary: See the companion document,
+=masr.summary.pdf=.]
 
 The ambiguous types, =symbol_table= and =symtab_id=,
 are called out. The ASDL grammar conflates these
@@ -434,8 +434,7 @@ There are two kinds of heads:
 
 MASR has a Clojure spec and sugar functions for each
 head. Most heads also have term-head entity-key
-specs (see the companion document,
-=masr-summary.pdf=). There are about 250 heads by a
+specs.[fn:summary] There are about 250 heads by a
 recent count.
 
 \begin{framed}
@@ -1358,8 +1357,7 @@ Use the macro like this:
 *** \colorbf{red}{Term-Entity Keys}
 
 The actual =enum-like= macro also defines the
-/term-entity-key spec/ for any enum-like (see the
-companion document, =masr-summary.pdf=)
+/term-entity-key spec/ for any enum-like.[fn:summary]
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1402,10 +1400,8 @@ In this case, the term-entity-key spec is
 
 Here is an example of the full form for a
 =::Variable= with a conforming instance in light
-sugar (see the companion document,
-=masr-summary.pdf=). Note the term-head-entity-key
-spec (see the companion document,
-=masr-summary.pdf=), =::Variable= . Any =::Variable=
+sugar.[fn:summary] Note the term-head-entity-key
+spec,.[fn:summary] =::Variable= . Any =::Variable=
 is also an =::asr-term=.
 
 \vskip 0.26cm
@@ -1480,8 +1476,7 @@ Storage-type is another enum-like, defined and
 registered via macro (Section [[enum-like-macro]]). The
 following tests of full-form and heavy sugar
 illustrate conformance to both =::asr-term= and the
-term-entity-key spec, (see the companion document,
-=masr-summary.pdf=), =::storage-type=:
+term-entity-key spec,[fn:summary], =::storage-type=:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1512,8 +1507,7 @@ term-entity-key spec, (see the companion document,
 Access is another enum-like, defined and registered
 via macro (Section [[enum-like-macro]]). The following
 tests of heavy sugar illustrate conformance to both
-=::asr-term= and the term-entity-key spec (see the
-companion document, =masr-summary.pdf=), =::access=.
+=::asr-term= and the term-entity-key spec,[fn:summary] =::access=.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1532,12 +1526,11 @@ companion document, =masr-summary.pdf=), =::access=.
 ** presence
 <<presence>>
 
-Presence is another enum-like, defined and registered
-via macro (Section [[enum-like-macro]]). The following
-tests of heavy sugar illustrate conformance to both
-=::asr-term= and the term-entity-key spec (see the
-companion document, =masr-summary.pdf=),
-=::presence=.
+Presence is another enum-like, defined and
+registered via macro (Section [[enum-like-macro]]). The
+following tests of heavy sugar illustrate
+conformance to both =::asr-term= and the
+term-entity-key spec,[fn:summary] =::presence=.
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1696,9 +1689,8 @@ The following sugar function effects this design:
            abi_)))))
 #+end_src
 
-Here is its term-entity key (see the companion
-document, =masr-summary.pdf=), =::abi=, for
-recursive checking:
+Here is its term-entity key,[fn:summary] =::abi=,
+for recursive checking:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -1786,8 +1778,7 @@ One may always write out ttype specs in full:
 *** \colorbf{red}{Sugar for Integer, Real, Complex, Logical}
 
 Sugar for ttypes comes in two varieties, /light
-sugar/ and /heavy sugar/ (see the companion
-document, =masr-summary.pdf=).
+sugar/ and /heavy sugar/.[fn:summary]
 
 **** \colorbf{red}{Light Sugar Examples}
 
@@ -1927,8 +1918,7 @@ The following tests illustrate the full form for
 *** \colorbf{red}{Sugar}
 
 The following tests illustrate the sugar and the
-term-entity-key spec (see the companion document,
-=masr-summary.pdf=) for /dimension/:
+term-entity-key spec[fn:summary] for /dimension/:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
