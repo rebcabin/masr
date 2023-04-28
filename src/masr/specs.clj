@@ -1014,7 +1014,19 @@
 ;; https://github.com/rebcabin/masr/issues/24
 
 
-(enum-like logicalbinop #{'And 'Or 'Xor 'NEqv 'Eqv})
+(enum-like logicalbinop #{'And  'Or  'Xor  'NEqv  'Eqv})
+
+
+;;  __ _ __  _ __  ___ _ __
+;; / _| '  \| '_ \/ _ \ '_ \
+;; \__|_|_|_| .__/\___/ .__/
+;;          |_|       |_|
+;;
+;; Not every one is applicable to every type, e.g.,
+;; what does 'Gt mean for Logicals?
+
+
+(enum-like cmpop #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
 
 
 ;;  _     _           _
@@ -2384,6 +2396,23 @@
    (s/valid? :masr.specs/asr-term    st) := true))
 
 
+;;  ___             _   _
+;; | __|  _ _ _  __| |_(_)___ _ _
+;; | _| || | ' \/ _|  _| / _ \ ' \
+;; |_| \_,_|_||_\__|\__|_\___/_||_|
+
+;; | Function(symbol_table symtab,
+;;            identifier   name,
+;;            ttype        function_signature,
+;;            identifier*  dependencies,
+;;            expr*        args,
+;;            stmt*        body,
+;;            expr?        return_var,
+;;            access       access,
+;;            bool         deterministic,
+;;            bool         side_effect_free)
+
+
 ;; ================================================================
 ;;  _______  ______  ____
 ;; | ____\ \/ /  _ \|  _ \
@@ -2567,11 +2596,6 @@
 (s/def ::expr-left  ::expr)
 (s/def ::expr-right ::expr)
 
-
-(tests
- (s/valid? ::expr (LogicalConstant true (Logical 4 []))) := true
- (s/valid? ::expr (Var 2 a))                             := true)
-
 ;; heavy sugar
 (defn LogicalBinOp [left- lbo- right- tt- val-]
   {::term ::expr,
@@ -2593,6 +2617,59 @@
             (Var 2 b)
             (Logical 4 [])
             ()))             := true)
+
+
+;;  _              _         _  ___
+;; | |   ___  __ _(_)__ __ _| |/ __|___ _ __  _ __  __ _ _ _ ___
+;; | |__/ _ \/ _` | / _/ _` | | (__/ _ \ '  \| '_ \/ _` | '_/ -_)
+;; |____\___/\__, |_\__\__,_|_|\___\___/_|_|_| .__/\__,_|_| \___|
+;;           |___/                           |_|
+
+;;  (LogicalCompare
+;;   (Var 2 b)
+;;   Eq
+;;   (Var 2 b)
+;;   (Logical 4 []) ())
+
+;; | LogicalCompare(expr left,   ;; must have type ::Logical
+;;                  cmpop op,    ;; not all cmpop, only Eq and NotEq
+;;                  expr right,  ;; must have type ::Logical
+;;                  ttype type,
+;;                  expr? value)
+
+
+(enum-like logicalcmpop #{'Eq 'NotEq})
+
+
+(defmethod expr-head ::LogicalCompare [_]
+  (s/keys :req [::expr-head
+                ::expr-left
+                ::logicalcmpop
+                ::Logical
+                ::value]))
+
+
+(def-term-head--entity-key expr LogicalCompare)
+
+;; heavy sugar
+(defn LogicalCompare [l- cmp- r- tt- val-]
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head    ::LogicalCompare
+    ::expr-left    l-
+    ::logicalcmpop cmp-
+    ::expr-right   r-
+    ::Logical      tt-
+    ::value        val-}})
+
+;; heavy sugar
+(tests
+ (s/valid? ::LogicalCompare
+           (LogicalCompare
+            (Var 2 b)
+            Eq
+            (Var 2 b)
+            (Logical 4 []) ()))    := true)
 
 
 ;;  ___                _
@@ -2650,7 +2727,38 @@
  (s/valid? ::Equals
            (legacy (= (Var 2 a)
                       (LogicalConstant false (Logical 4 []))
-                      ())))                  := true)
+                      ())))                  := true
+ (let [e (legacy (= (Var 2 a)
+                    (LogicalBinOp
+                     (Var 2 a)
+                     And
+                     (LogicalCompare
+                      (Var 2 b)
+                      Eq
+                      (Var 2 b)
+                      (Logical 4 []) ())
+                     (Logical 4 []) ()) ()))]
+   (s/valid? ::Equals   e) := true
+   (s/valid? ::expr     e) := true
+   (s/valid? ::asr-term e) := true)
+ (s/valid? ::Equals
+           (legacy (= (Var 2 a)
+                      (LogicalBinOp
+                       (Var 2 a)
+                       And
+                       (LogicalCompare
+                        (Var 2 b)
+                        NotEq
+                        (Var 2 b)
+                        (Logical 4 []) ())
+                       (Logical 4 []) ()) ()))) := true
+ (s/valid? ::Equals
+           (legacy (= (Var 2 a)
+                      (LogicalBinOp
+                       (Var 2 b)
+                       Or
+                       (Var 2 b)
+                       (Logical 4 []) ()) ()))) := true)
 
 ;; back-tests
 (tests
@@ -2659,12 +2767,14 @@
                      [] [] 'Default
                      'Source 'Public 'Required
                      false)]
-   (s/valid? ::LogicalBinOp v )              := false
-   (s/valid? ::LogicalConstant v )           := false
-   (s/valid? ::Logical v)                    := false
-   (s/valid? ::expr v )                      := false
-   (s/valid? ::Equals v )                    := false
+   (s/valid? ::LogicalBinOp    v) := false
+   (s/valid? ::LogicalConstant v) := false
+   (s/valid? ::Logical         v) := false
+   (s/valid? ::expr            v) := false
+   (s/valid? ::Equals          v) := false
    ))
+
+
 
 
 ;; ================================================================
