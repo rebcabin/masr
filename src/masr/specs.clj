@@ -932,7 +932,7 @@
 (defn rewrite-=
   [it]
   (prewalk (fn [x] (if (coll? x)
-                     (replace {'= 'Equals--} x)
+                     (replace {'= 'Assignment--} x)
                      x))
            it))
 
@@ -2349,9 +2349,15 @@
     ~ttype-    ;; moved up from between storage type and abi
     (type-declaration nil) ;; legacy doesn't have this
     ~dependencies-
-    ~intent-         ~symbolic-value-   ~value-
-    ~storage-type-                      ~abi-
-    ~access-         ~presence-         ~value-attr-))
+    ~intent-
+    ~symbolic-value-
+    ~value-
+    ~storage-type-
+    ;; ttype goes here in legacy
+    ~abi-
+    ~access-
+    ~presence-
+    ~value-attr-))
 
 ;; Test legacy macro:
 (tests
@@ -2413,8 +2419,22 @@
 (defmethod term ::expr [_]
   (s/keys :req [::term ::asr-expr-head]))
 
-;;
+
 (def-term-entity-key expr)
+
+
+(def MIN-NUMBER-OF-EXPRS    0)
+(def MAX-NUMBER-OF-EXPRS 1024)
+
+
+(s/def ::exprs (s/coll-of ::expr
+                          :min-count MIN-NUMBER-OF-EXPRS
+                          :max-count MAX-NUMBER-OF-EXPRS))
+
+
+(s/def ::exprq (s/coll-of ::expr
+                          :min-count 0
+                          :max-count 1))
 
 
 ;; To add a new head to term expr, create a
@@ -2655,59 +2675,96 @@
             (Logical 4 []) ()))    := true)
 
 
-;;  ___                _
-;; | __|__ _ _  _ __ _| |___
-;; | _|/ _` | || / _` | (_-<
-;; |___\__, |\_,_\__,_|_/__/
-;;        |_|
+;; ================================================================
+;;  ____ _____ __  __ _____
+;; / ___|_   _|  \/  |_   _|
+;; \___ \ | | | |\/| | | |
+;;  ___) || | | |  | | | |
+;; |____/ |_| |_|  |_| |_|
+
+
+;; nested multi-spec
+(do (defmulti stmt-head ::stmt-head)
+    (s/def ::asr-stmt-head
+      (s/multi-spec stmt-head ::stmt-head)))
+
+;; Employ the nested multi-spec:
+(defmethod term ::stmt [_]
+  (s/keys :req [::term ::asr-stmt-head]))
+
+
+(def-term-entity-key stmt)
+
+
+(def MIN-NUMBER-OF-STMTS    0)
+(def MAX-NUMBER-OF-STMTS 1024)
+
+
+(s/def ::stmts (s/coll-of ::stmt
+                          :min-count MIN-NUMBER-OF-STMTS
+                          :max-count MAX-NUMBER-OF-STMTS))
+
+
+(s/def ::stmtq (s/coll-of ::stmt
+                          :min-count 0
+                          :max-count 1))
+
+
+;;    _          _                         _
+;;   /_\   _____(_)__ _ _ _  _ __  ___ _ _| |_
+;;  / _ \ (_-<_-< / _` | ' \| '  \/ -_) ' \  _|
+;; /_/ \_\/__/__/_\__, |_||_|_|_|_\___|_||_\__|
+;;                |___/
+
+;; | Assignment(expr target, expr value, stmt? overloaded)
+;;          --- Var ---
+
+;; See Issues
 ;;
-;; Workaround; See Issues
-;;
-;; Meaning of = in --show-asr? #21
 ;; https://github.com/rebcabin/masr/issues/21
-;;
-;; Request unambiguous and explicit outputs in
-;; --show-asr #22
 ;; https://github.com/rebcabin/masr/issues/22
+;; https://github.com/rebcabin/masr/issues/26
 
 
-;; meant to handle expressions like
+;; meant to handle statements like
 ;; (= (Var 2 a)
 ;;    (LogicalConstant false (Logical 4 []))
 ;;    ())
 
 
-(s/def ::unknown-operand empty?)
+(s/def ::lvalue     ::Var)
+(s/def ::rvalue     ::expr)
+(s/def ::overloaded ::stmtq)
 
 
-(defmethod expr-head ::Equals [_]
-  (s/keys :req [::expr-head
-                ::left-hand-side
-                ::right-hand-side
-                ::unknown-operand]))
+(defmethod stmt-head ::Assignment [_]
+  (s/keys :req [::stmt-head
+                ::lvalue
+                ::rvalue
+                ::overloaded]))
 
 
-(def-term-head--entity-key expr Equals)
+(def-term-head--entity-key stmt Assignment)
 
 ;; heavy sugar
-(defn Equals-- [lhs, rhs, unk]
-  {::term ::expr,
-   ::asr-expr-head
-   {::expr-head       ::Equals
-    ::left-hand-side  lhs
-    ::right-hand-side rhs
-    ::unknown-operand unk}})
+(defn Assignment-- [lhs, rhs, unk]
+  {::term ::stmt,
+   ::asr-stmt-head
+   {::stmt-head   ::Assignment
+    ::lvalue      lhs
+    ::rvalue      rhs
+    ::overloaded  unk}})
 
 ;;
 (tests
- (s/valid? ::Equals
-           (Equals-- (Var 2 a)
+ (s/valid? ::Assignment
+           (Assignment-- (Var 2 a)
                      (LogicalConstant false (Logical 4 []))
                      ()))                    := true)
 
 ;; legacy sugar
 (tests
- (s/valid? ::Equals
+ (s/valid? ::Assignment
            (legacy (= (Var 2 a)
                       (LogicalConstant false (Logical 4 []))
                       ())))                  := true
@@ -2721,10 +2778,10 @@
                       (Var 2 b)
                       (Logical 4 []) ())
                      (Logical 4 []) ()) ()))]
-   (s/valid? ::Equals   e) := true
-   (s/valid? ::expr     e) := true
-   (s/valid? ::asr-term e) := true)
- (s/valid? ::Equals
+   (s/valid? ::Assignment e) := true
+   (s/valid? ::stmt       e) := true
+   (s/valid? ::asr-term   e) := true)
+ (s/valid? ::Assignment
            (legacy (= (Var 2 a)
                       (LogicalBinOp
                        (Var 2 a)
@@ -2735,7 +2792,7 @@
                         (Var 2 b)
                         (Logical 4 []) ())
                        (Logical 4 []) ()) ()))) := true
- (s/valid? ::Equals
+ (s/valid? ::Assignment
            (legacy (= (Var 2 a)
                       (LogicalBinOp
                        (Var 2 b)
@@ -2753,19 +2810,9 @@
    (s/valid? ::LogicalBinOp    v) := false
    (s/valid? ::LogicalConstant v) := false
    (s/valid? ::Logical         v) := false
-   (s/valid? ::expr            v) := false
-   (s/valid? ::Equals          v) := false
+   (s/valid? ::stmt            v) := false
+   (s/valid? ::Assignment      v) := false
    ))
-
-
-
-
-;; ================================================================
-;;  ____ _____ __  __ _____
-;; / ___|_   _|  \/  |_   _|
-;; \___ \ | | | |\/| | | |
-;;  ___) || | | |  | | | |
-;; |____/ |_| |_|  |_| |_|
 
 
 ;;  ___             _   _
@@ -2783,41 +2830,6 @@
 ;;            access       access,
 ;;            bool         deterministic,
 ;;            bool         side_effect_free)
-
-
-;;            _ _   _      _ _    _ _   _
-;;  _ __ _  _| | |_(_)_ __| (_)__(_) |_(_)___ ___
-;; | '  \ || | |  _| | '_ \ | / _| |  _| / -_|_-<
-;; |_|_|_\_,_|_|\__|_| .__/_|_\__|_|\__|_\___/__/
-;;                   |_|
-
-
-(def MIN-NUMBER-OF-EXPRS    0)
-(def MAX-NUMBER-OF-EXPRS 1024)
-
-
-(s/def ::exprs (s/coll-of ::expr
-                          :min-count MIN-NUMBER-OF-EXPRS
-                          :max-count MAX-NUMBER-OF-EXPRS))
-
-
-(s/def ::exprq (s/coll-of ::expr
-                          :min-count 0
-                          :max-count 1))
-
-
-(def MIN-NUMBER-OF-STMTS    0)
-(def MAX-NUMBER-OF-STMTS 1024)
-
-
-(s/def ::stmts (s/coll-of ::stmt
-                          :min-count MIN-NUMBER-OF-STMTS
-                          :max-count MAX-NUMBER-OF-STMTS))
-
-
-(s/def ::stmtq (s/coll-of ::stmt
-                          :min-count 0
-                          :max-count 1))
 
 
 ;;  _ __  __ _ _ _ __ _ _ __  ___
