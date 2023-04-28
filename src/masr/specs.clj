@@ -911,6 +911,8 @@
 
 
 (tests
+ (s/valid? ::asr-term
+           (SymbolTable 42 {:main 'main}))   := true
  (s/valid? ::SymbolTable
            (SymbolTable 42 {:main 'main}))   := true
  (s/valid? ::SymbolTable
@@ -933,7 +935,7 @@
 ;; we must apply "legacy" anyway.
 (defn rewrite-=
   [it]
-  (prewalk (fn [x] (if (coll? x)
+  (prewalk (fn [x] (if (list? x)
                      (replace {'= 'Assignment--} x)
                      x))
            it))
@@ -2950,79 +2952,47 @@
 ;; |_| \_,_|_||_\__|\__|_\___/_||_|
 
 ;; | Function(symbol_table symtab,
+
 ;;            identifier   name,
 ;;            ttype        function_signature,
 ;;            identifier*  dependencies,
+
 ;;            expr*        args,              ;; rename ::params
 ;;            stmt*        body,
 ;;            expr?        return_var,
+
 ;;            access       access,
 ;;            bool         deterministic,
 ;;            bool         side_effect_free)
 
 
-;;  _ __  __ _ _ _ __ _ _ __  ___
-;; | '_ \/ _` | '_/ _` | '  \(_-<
-;; | .__/\__,_|_| \__,_|_|_|_/__/
-;; |_|
+;; SymbolTable is already defined
 
+(s/def ::function-name      ::identifier)
+(s/def ::function-signature ::FunctionType)
+;; dependencies is already defined
 
-(s/def ::params ::exprs)
+(s/def ::params             ::exprs) ;; renamed from args
+(s/def ::body               ::stmts)
+(s/def ::return-var         ::exprq)
 
-
-;;  _             _
-;; | |__  ___  __| |_  _
-;; | '_ \/ _ \/ _` | || |
-;; |_.__/\___/\__,_|\_, |
-;;                  |__/
-
-
-(s/def ::body ::stmts)
-
-
-;;          _
-;;  _ _ ___| |_ _  _ _ _ _ _   __ ____ _ _ _
-;; | '_/ -_)  _| || | '_| ' \  \ V / _` | '_|
-;; |_| \___|\__|\_,_|_| |_||_|  \_/\__,_|_|
-
-
-(s/def ::return-var ::exprq)
-
-
-;;     _     _                 _      _    _   _
-;;  __| |___| |_ ___ _ _ _ __ (_)_ _ (_)__| |_(_)__
-;; / _` / -_)  _/ -_) '_| '  \| | ' \| (_-<  _| / _|
-;; \__,_\___|\__\___|_| |_|_|_|_|_||_|_/__/\__|_\__|
-
-
-(s/def ::deterministic ::bool)
-
-
-;;     _    _              __  __        _        __
-;;  __(_)__| |___ ___ ___ / _|/ _|___ __| |_ ___ / _|_ _ ___ ___
-;; (_-< / _` / -_)___/ -_)  _|  _/ -_) _|  _|___|  _| '_/ -_) -_)
-;; /__/_\__,_\___|   \___|_| |_| \___\__|\__|   |_| |_| \___\___|
-
-
-(s/def ::side-effect-free ::bool)
-
-
-;;   __              _   _
-;;  / _|_  _ _ _  __| |_(_)___ _ _ ___ _ _  __ _ _ __  ___
-;; |  _| || | ' \/ _|  _| / _ \ ' \___| ' \/ _` | '  \/ -_)
-;; |_|  \_,_|_||_\__|\__|_\___/_||_|  |_||_\__,_|_|_|_\___|
-
-
-(s/def function-name ::identifier)
-
+;; access is already defined
+(s/def ::deterministic      ::bool)
+(s/def ::side-effect-free   ::bool)
 
 (defmethod symbol-head ::Function [_]
   (s/keys :req [::symbol-head
+
+                ::SymbolTable  ;; not a symtab-id!
+
                 ::function-name
                 ::function-signature
+                ::dependencies
+
                 ::params
                 ::body
                 ::return-var
+
                 ::access
                 ::deterministic
                 ::side-effect-free
@@ -3030,3 +3000,119 @@
 
 
 (def-term-head--entity-key symbol Function)
+
+
+;;heavy sugar
+(defn Function [symtab,
+                fnnym,   fnsig,  deps,
+                params-, body-,  retvar,
+                access-, determ, sefree]
+  {::term ::symbol
+   ::asr-symbol-head
+   {::symbol-head ::Function
+
+    ::SymbolTable         symtab
+
+    ::function-name       fnnym
+    ::function-signature  fnsig
+    ::dependencies        deps
+
+    ::params              params-
+    ::body                body-
+    ::return-var          retvar
+
+    ::access              access-
+    ::deterministic       determ
+    ::side-effect-free    sefree
+    }})
+
+
+(tests
+ (let [ft (FunctionType
+           [] () Source
+           Implementation () false
+           false false false
+           false [] [] false)
+       afn (Function
+            (SymbolTable 42 {})
+            'test_boolOp ft []
+            [] [] ()
+            Public false false)]
+   (s/valid? ::asr-term afn)  := true
+   (s/valid? ::symbol   afn)  := true
+   (s/valid? ::Function afn)  := true
+   )
+ (let [afn (legacy (Function
+                      (SymbolTable
+                       2 {:a
+                          (Variable
+                           2 a [] Local
+                           () () Default (Logical 4 [])
+                           Source Public Required false),
+                          :b
+                          (Variable
+                           2 b [] Local
+                           () () Default (Logical 4 [])
+                           Source Public Required false)})
+                      'test_boolOp
+                      (FunctionType
+                       [] () Source
+                       Implementation () false
+                       false false false
+                       false [] [] false)
+                      [] []
+                      [(= (Var 2 a)
+                          (LogicalConstant false (Logical 4 []))
+                          ())
+                       (= (Var 2 b)
+                          (LogicalConstant true (Logical 4 []))
+                          ())
+                       (= (Var 2 a)
+                          (LogicalBinOp
+                           (Var 2 a)
+                           And
+                           (Var 2 b)
+                           (Logical 4 []) ()) ())
+                       (= (Var 2 b)
+                          (LogicalBinOp
+                           (Var 2 a)
+                           Or
+                           (LogicalConstant true (Logical 4 []))
+                           (Logical 4 []) ()) ())
+                       (= (Var 2 a)
+                          (LogicalBinOp
+                           (Var 2 a)
+                           Or
+                           (Var 2 b)
+                           (Logical 4 []) ()) ())
+                       (= (Var 2 a)
+                          (LogicalBinOp
+                           (Var 2 a)
+                           And
+                           (LogicalCompare
+                            (Var 2 b)
+                            Eq
+                            (Var 2 b)
+                            (Logical 4 []) ())
+                           (Logical 4 []) ()) ())
+                       (= (Var 2 a)
+                          (LogicalBinOp
+                           (Var 2 a)
+                           And
+                           (LogicalCompare
+                            (Var 2 b)
+                            NotEq
+                            (Var 2 b)
+                            (Logical 4 []) ())
+                           (Logical 4 []) ()) ())
+                       (= (Var 2 a)
+                          (LogicalBinOp
+                           (Var 2 b)
+                           Or
+                           (Var 2 b)
+                           (Logical 4 []) ()) ())]
+                      () Public false false))]
+     (s/valid? ::asr-term afn)  :=  true
+     (s/valid? ::symbol   afn)  :=  true
+     (s/valid? ::Function afn)  :=  true
+     ))
