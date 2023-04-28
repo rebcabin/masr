@@ -22,10 +22,12 @@
 ;; those symbols in ttypes. Access the originals
 ;; via "java.lang.Integer" "java.lang.Character."
 ;; Lein test and lein run produce unmaskable
-;; warnings.
+;; warnings. Access original "deftype"
+;; as "clojure.core/deftype".
 
 (ns-unmap *ns* 'Integer)
 (ns-unmap *ns* 'Character)
+(ns-unmap *ns* 'deftype)
 
 
 ;; ASDL tuples like `(1 2)` are Clojure lists.
@@ -1302,46 +1304,6 @@
 ;;   |_|   |_|   |_| |_|   |_____|
 
 
-;; kind: The `kind` member selects the kind of a
-;; given type. We currently support the following:
-;;
-;; Integer kinds: 1 (i8), 2 (i16), 4 (i32), 8 (i64)
-;; Real kinds: 4 (f32), 8 (f64)
-;; Complex kinds: 4 (c32), 8 (c64)
-;; Character kinds: 1 (utf8 string)
-;; Logical kinds: 1, 2, 4: (boolean represented by
-;;     1, 2, 4 bytes; the default kind is 4, just
-;;     like the default integer kind, consistent
-;;     with Python and Fortran: in Python "Booleans
-;;     in Python are implemented as a subclass of
-;;     integers", in Fortran the "default logical
-;;     kind has the same storage size as the default
-;;     integer"; we currently use kind=4 as default
-;;     integer, so we also use kind=4 for the
-;;     default logical.)
-
-
-(s/def ::integer-kind   #{1 2 4 8 16})
-(s/def ::real-kind      #{4 8})
-(s/def ::complex-kind   #{4 8})
-(s/def ::logical-kind   #{1 2 4})
-(s/def ::character-kind #{1})
-
-
-(tests (s/valid? ::integer-kind 42) := false)
-
-
-;; Here are the first four ttypes, which all follow
-;; a common pattern captured in macros. There are
-;; more ttypes later that don't follow that pattern.
-
-;; ttype
-;;     = Integer(int kind, dimension* dims)
-;;     | Real(int kind, dimension* dims)
-;;     | Complex(int kind, dimension* dims)
-;;     | Logical(int kind, dimension* dims)
-
-
 ;;  _   _                    _                _
 ;; | |_| |_ _  _ _ __  ___  | |_  ___ __ _ __| |
 ;; |  _|  _| || | '_ \/ -_) | ' \/ -_) _` / _` |
@@ -1385,6 +1347,69 @@
 ;; Character.
 
 
+;;; Now, the asr-term defmethod spec for ttype.
+(defmethod term ::ttype [_]
+  (s/keys :req [::term ::asr-ttype-head]))
+
+
+(def-term-entity-key ttype)
+
+
+(def MIN-NUMBER-OF-TTYPES    0)
+(def MAX-NUMBER-OF-TTYPES 1024)
+
+
+(s/def ::ttypes (s/coll-of ::ttype
+                          :min-count MIN-NUMBER-OF-TTYPES
+                          :max-count MAX-NUMBER-OF-TTYPES))
+
+
+(s/def ::ttypeq (s/coll-of ::ttype
+                          :min-count 0
+                          :max-count 1))
+;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+;; kind: The `kind` member selects the kind of a
+;; given type. We currently support the following:
+;;
+;; Integer kinds: 1 (i8), 2 (i16), 4 (i32), 8 (i64)
+;; Real kinds: 4 (f32), 8 (f64)
+;; Complex kinds: 4 (c32), 8 (c64)
+;; Character kinds: 1 (utf8 string)
+;; Logical kinds: 1, 2, 4: (boolean represented by
+;;     1, 2, 4 bytes; the default kind is 4, just
+;;     like the default integer kind, consistent
+;;     with Python and Fortran: in Python "Booleans
+;;     in Python are implemented as a subclass of
+;;     integers", in Fortran the "default logical
+;;     kind has the same storage size as the default
+;;     integer"; we currently use kind=4 as default
+;;     integer, so we also use kind=4 for the
+;;     default logical.)
+
+
+(s/def ::integer-kind   #{1 2 4 8 16})
+(s/def ::real-kind      #{4 8})
+(s/def ::complex-kind   #{4 8})
+(s/def ::logical-kind   #{1 2 4})
+(s/def ::character-kind #{1})
+
+
+(tests (s/valid? ::integer-kind 42) := false)
+
+
+;; Here are the first four ttypes, which all follow
+;; a common pattern captured in macros. There are
+;; more ttypes later that don't follow that pattern.
+
+;; ttype
+;;     = Integer(int kind, dimension* dims)
+;;     | Real(int kind, dimension* dims)
+;;     | Complex(int kind, dimension* dims)
+;;     | Logical(int kind, dimension* dims)
+
+
 (defmacro def-ttype-head
   "Defmethods for defmulti ttype-head, requiring
   entity keywords ::ttype-head and ::dimensions."
@@ -1400,12 +1425,26 @@
        (s/keys :req [::ttype-head ~kind ::dimensions]))))
 
 
+;;  ___     _                      ___          _
+;; |_ _|_ _| |_ ___ __ _ ___ _ _  | _ \___ __ _| |
+;;  | || ' \  _/ -_) _` / -_) '_| |   / -_) _` | |
+;; |___|_||_\__\___\__, \___|_|   |_|_\___\__,_|_|
+;;                 |___/
+;;   ___                _           _              _         _
+;;  / __|___ _ __  _ __| |_____ __ | |   ___  __ _(_)__ __ _| |
+;; | (__/ _ \ '  \| '_ \ / -_) \ / | |__/ _ \/ _` | / _/ _` | |
+;;  \___\___/_|_|_| .__/_\___/_\_\ |____\___/\__, |_\__\__,_|_|
+;;                |_|                        |___/
+
+
 (def-ttype-head Integer)
 (def-ttype-head Real)
 (def-ttype-head Complex)
 (def-ttype-head Logical)
+
+
 ;; Character is more rich
-(def-ttype-head Character)
+;; (def-ttype-head Character)
 
 
 ;; -+-+-+-+-+-+-+-+-+-
@@ -1443,13 +1482,6 @@
           ::dimensions
           (dimensions [[6 60] [1 42]])}]
    (s/conform ::asr-ttype-head a)                   := a))
-
-;;; Now, the asr-term defmethod spec for ttype.
-(defmethod term ::ttype [_]
-  (s/keys :req [::term ::asr-ttype-head]))
-
-
-(def-term-entity-key ttype)
 
 ;; full-forms
 (tests
@@ -1580,6 +1612,102 @@
 (def-term-head--entity-key ttype Logical)
 
 
+;;  ___             _   _        _____
+;; | __|  _ _ _  __| |_(_)___ _ |_   _|  _ _ __  ___
+;; | _| || | ' \/ _|  _| / _ \ ' \| || || | '_ \/ -_)
+;; |_| \_,_|_||_\__|\__|_\___/_||_|_| \_, | .__/\___|
+;;                                    |__/|_|
+
+;;     | FunctionType(ttype*  arg_types,       ;; rename param-types
+;;                    ttype?  return_var_type,
+;;                    abi     abi,
+;;                    deftype deftype,
+;;                    string? bindc_name,
+;;                    bool    elemental,
+;;                    bool    pure,
+;;                    bool    module,
+;;                    bool    inline,
+;;                    bool    static,
+;;                    ttype*  type_params,
+;;                    symbol* restrictions,
+;;                    bool    is_restriction)
+
+
+(s/def ::param-types     ::ttypes)
+(s/def ::return-var-type ::ttypeq)
+;; abi is good enough
+(enum-like deftype #{'Implementation, 'Interface})
+(s/def ::bindc-name      (s/nilable string?))
+(s/def ::elemental       ::bool)
+(s/def ::pure            ::bool)
+(s/def ::module          ::bool)
+(s/def ::inline          ::bool)
+(s/def ::static          ::bool)
+(s/def ::type-params     ::ttypes)
+;; forward reference. Can only test empty
+;; restrictions until symbol is properly defined
+;; below.
+(def-term-entity-key symbol)
+(def MIN-NUMBER-OF-SYMBOLS   0)
+(def MAX-NUMBER-OF-SYMBOLS 128)
+(s/def ::symbols (s/coll-of ::symbol
+                            :min-count MIN-NUMBER-OF-SYMBOLS
+                            :max-count MAX-NUMBER-OF-SYMBOLS))
+(s/def ::symbolq (s/coll-of ::symbol :min-count 0, :max-count 1))
+(s/def ::restrictions    ::symbols)
+(s/def ::is-restriction  ::bool)
+
+(defmethod ttype-head ::FunctionType [_]
+  (s/keys :req [::ttype-head
+                ::param-types     ::return-var-type  ::abi
+                ::deftype         ::bindc-name       ::elemental
+                ::pure            ::module           ::inline
+                ::static          ::type-params      ::restrictions
+                ::is-restriction
+                ]))
+
+
+(def-term-head--entity-key ttype FunctionType)
+
+;; heavy sugar
+(defn FunctionType [param-types-     return-var-type-  abi-
+                    deftype-         bindc-name-       elemental-
+                    pure-            module-           inline-
+                    static-          type-params-      restrictions-
+                    is-restriction-  ]
+  {::term ::ttype
+   ::asr-ttype-head
+   {::ttype-head       ::FunctionType
+
+    ::param-types      param-types-
+    ::return-var-type  return-var-type-
+    ::abi              abi-
+
+    ::deftype          deftype-
+    ::bindc-name       (if (empty? bindc-name-) nil bindc-name-)
+    ::elemental        elemental-
+
+    ::pure             pure-
+    ::module           module-
+    ::inline           inline-
+
+    ::static           static-
+    ::type-params      type-params-
+    ::restrictions     restrictions-
+
+    ::is-restriction   is-restriction-}})
+
+
+(tests (let [ft (FunctionType
+                 [] () Source
+                 Implementation () false
+                 false false false
+                 false [] [] false)]
+         (s/valid?  ::asr-term      ft)  := true
+         (s/valid?  ::ttype         ft)  := true
+         (s/valid?  ::FunctionType  ft)  := true))
+
+
 ;; TODO the rest of the ttypes
 ;;     >>> Integer, Real, Complex, Logical are already done ...
 ;;     >>> Here are the rest of the ttypes.
@@ -1596,10 +1724,6 @@
 ;;     | Const(ttype type)
 ;;     | CPtr()
 ;;     | TypeParameter(identifier param, dimension* dims)
-;;     | FunctionType(ttype* arg_types, ttype? return_var_type,
-;;         abi abi, deftype deftype, string? bindc_name, bool elemental,
-;;         bool pure, bool module, bool inline, bool static,
-;;         ttype* type_params, symbol* restrictions, bool is_restriction)
 
 
 ;; ================================================================
@@ -1613,6 +1737,7 @@
 ;; satisfy ::asr-term because that's really too
 ;; heavyweight for them. They're just alternative
 ;; names for atomic types. They're like typedefs.
+;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 ;;           _                   _   _
@@ -1732,6 +1857,7 @@
 ;; | |_) | |     / _ \| |   |  _| | |_| | | | | |   | | | |  _| | |_) \___ \
 ;; |  __/| |___ / ___ \ |___| |___|  _  | |_| | |___| |_| | |___|  _ < ___) |
 ;; |_|   |_____/_/   \_\____|_____|_| |_|\___/|_____|____/|_____|_| \_\____/
+;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 ;;                _         _ _               _
@@ -1786,8 +1912,9 @@
 (defmethod term ::symbol [_]
   (s/keys :req [::term ::asr-symbol-head]))
 
-
-(def-term-entity-key symbol)
+;; This is moved above Function type
+;; (def-term-entity-key symbol)
+;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 ;; __   __        _      _    _
@@ -1810,7 +1937,7 @@
 
 ;; (Variable                ;   head, term: symbol
 ;;  2                       ;   symbol_table    parent-symtab-id
-;;                                         ;     TODO: NOT SYMBOL!
+                            ;     TODO: NOT SYMBOL-TABLE!
 ;;  x                       ;   identifier      nym
 ;;  []                      ;   identifier *    dependencies
 ;;  Local                   ;   intent          intent
@@ -2435,6 +2562,7 @@
 (s/def ::exprq (s/coll-of ::expr
                           :min-count 0
                           :max-count 1))
+;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 ;; To add a new head to term expr, create a
@@ -2708,6 +2836,7 @@
 (s/def ::stmtq (s/coll-of ::stmt
                           :min-count 0
                           :max-count 1))
+;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 ;;    _          _                         _
