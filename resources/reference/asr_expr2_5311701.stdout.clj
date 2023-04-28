@@ -1,89 +1,98 @@
 (ns reference.asr-expr2-5311701.stdout
-  (:use [masr.specs])
-  (:require [clojure.spec.alpha :as s]))
+  (:use [masr.specs]
+        [clojure.walk])
+  (:require [clojure.spec.alpha :as    s]
+            [hyperfiddle.rcf    :refer [tests tap %]]
+            [clojure.pprint     :refer [pprint]]
+))
 
-'(TranslationUnit
-  (SymbolTable
-   1 {:_global_symbols
-      (Module
-       (SymbolTable
-        4 {:test_boolOp
-           (Function
-            (SymbolTable
-             2 {:a
-                (Variable
-                 2 a [] Local
-                 () () Default (Logical 4 [])
-                 Source Public Required false),
-                :b
-                (Variable
-                 2 b [] Local
-                 () () Default (Logical 4 [])
-                 Source Public Required false)})
-            test_boolOp
-            (FunctionType
-             [] () Source
-             Implementation () false
-             false false false
-             false [] [] false)
-            [] []
-            [(= (Var 2 a)
-              (LogicalConstant false (Logical 4 []))
-              ())
-             (= (Var 2 b)
-              (LogicalConstant true (Logical 4 []))
-              ())
-             (= (Var 2 a)
-              (LogicalBinOp
-               (Var 2 a)
-               And
-               (Var 2 b)
-               (Logical 4 []) ()) ())
-             (= (Var 2 b)
-              (LogicalBinOp
-               (Var 2 a)
-               Or
-               (LogicalConstant true (Logical 4 []))
-               (Logical 4 []) ()) ())
-             (= (Var 2 a)
-              (LogicalBinOp
-               (Var 2 a)
-               Or
-               (Var 2 b)
-               (Logical 4 []) ()) ())
-             (= (Var 2 a)
-              (LogicalBinOp
-               (Var 2 a)
-               And
-               (LogicalCompare
-                (Var 2 b)
-                Eq
-                (Var 2 b)
-                (Logical 4 []) ())
-               (Logical 4 []) ()) ())
-             (= (Var 2 a)
-              (LogicalBinOp
-               (Var 2 a)
-               And
-               (LogicalCompare
-                (Var 2 b)
-                NotEq
-                (Var 2 b)
-                (Logical 4 []) ())
-               (Logical 4 []) ()) ())
-             (= (Var 2 a)
-              (LogicalBinOp
-               (Var 2 b)
-               Or
-               (Var 2 b)
-               (Logical 4 []) ()) ())]
-            () Public false false)})
-       _global_symbols
-       [] false false),
-      :main_program
-      (Program
-       (SymbolTable 3 {})
-       main_program [] [])}) [])
+(def asr-expr2-5311701
+  '(TranslationUnit
+    (SymbolTable
+     1 {:_global_symbols
+        (Module
+         (SymbolTable
+          4 {:test_boolOp
+             (Function
+              (SymbolTable
+               2 {:a
+                  (Variable
+                   2 a [] Local
+                   () () Default (Logical 4 [])
+                   Source Public Required false),
+                  :b
+                  (Variable
+                   2 b [] Local
+                   () () Default (Logical 4 [])
+                   Source Public Required false)})
+              test_boolOp
+              (FunctionType
+               [] () Source
+               Implementation () false
+               false false false
+               false [] [] false)
+              [] []
+              [(= (Var 2 a)
+                  (LogicalConstant false (Logical 4 []))
+                  ())
+               (= (Var 2 b)
+                  (LogicalConstant true (Logical 4 []))
+                  ())
+               (= (Var 2 a)
+                  (LogicalBinOp
+                   (Var 2 a)
+                   And
+                   (Var 2 b)
+                   (Logical 4 []) ()) ())
+               (= (Var 2 b)
+                  (LogicalBinOp
+                   (Var 2 a)
+                   Or
+                   (LogicalConstant true (Logical 4 []))
+                   (Logical 4 []) ()) ())
+               (= (Var 2 a)
+                  (LogicalBinOp
+                   (Var 2 a)
+                   Or
+                   (Var 2 b)
+                   (Logical 4 []) ()) ())
+               (= (Var 2 a)
+                  (LogicalBinOp
+                   (Var 2 a)
+                   And
+                   (LogicalCompare
+                    (Var 2 b)
+                    Eq
+                    (Var 2 b)
+                    (Logical 4 []) ())
+                   (Logical 4 []) ()) ())
+               (= (Var 2 a)
+                  (LogicalBinOp
+                   (Var 2 a)
+                   And
+                   (LogicalCompare
+                    (Var 2 b)
+                    NotEq
+                    (Var 2 b)
+                    (Logical 4 []) ())
+                   (Logical 4 []) ()) ())
+               (= (Var 2 a)
+                  (LogicalBinOp
+                   (Var 2 b)
+                   Or
+                   (Var 2 b)
+                   (Logical 4 []) ()) ())]
+              () Public false false)})
+         _global_symbols
+         [] false false),
+        :main_program
+        (Program
+         (SymbolTable 3 {})
+         main_program [] [])}) []))
+
+
+
+
 
 ;; Legacy lpython/src/libasr/ASR.asdl as of 25 April 2023
 ;;
@@ -94,23 +103,23 @@
 
 ;; Legacy macro
 
-(s/valid?
- :masr.specs/Variable
- (Variable
-  2 a []
-  Local () ()
-  Default (Logical 4 []) Source
-  Public Required false))
+(tests true := (s/valid?
+                :masr.specs/Variable
+                (Variable
+                 2 a []
+                 Local () ()
+                 Default (Logical 4 []) Source
+                 Public Required false)))
 ;; => true
 
 ;; Heavy Sugar
 
-(s/valid?
- :masr.specs/Variable
- (Variable--
-  2 'x (Integer 4)
-  nil [] Local
-  [] []  Default
-  Source Public Required
-  false))
+(tests true := (s/valid?
+                :masr.specs/Variable
+                (Variable--
+                 2 'x (Integer 4)
+                 nil [] Local
+                 [] []  Default
+                 Source Public Required
+                 false)))
 ;; => true
