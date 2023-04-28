@@ -2553,10 +2553,10 @@
 
 (defmethod expr-head ::LogicalBinOp [_]
   (s/keys :req [::expr-head
-                ::left
+                ::expr-left
                 ::logicalbinop
-                ::right
-                ::ttype
+                ::expr-right
+                ::Logical
                 ::value
                 ]))
 
@@ -2564,40 +2564,42 @@
 (def-term-head--entity-key expr LogicalBinOp)
 
 
-;; (s/def ::expr-left  ::expr)
-;; (s/def ::expr-right ::expr)
+(s/def ::expr-left  ::expr)
+(s/def ::expr-right ::expr)
 
 
-;; (s/valid? ::expr (LogicalConstant true (Logical 4 [])))
-;; (s/valid? ::expr (Var 2 a))
-
-
-;; heavy sugar
-;; (defn LogicalBinOp [left- lbo- right- tt- val-]
-;;   {::term ::expr,
-;;    ::asr-expr-head
-;;    {::expr-head    ::LogicalBinOp
-;;     ::expr-left    left-
-;;     ::logicalbinop lbo-
-;;     ::expr-right   right-
-;;     ::Logical      tt-
-;;     ::value        val-
-;;     }})
+(tests
+ (s/valid? ::expr (LogicalConstant true (Logical 4 []))) := true
+ (s/valid? ::expr (Var 2 a))                             := true)
 
 ;; heavy sugar
-;; (tests
-;;  (s/valid? ::LogicalBinOp
-;;            (LogicalBinOp
-;;             (Var 2 a)
-;;             And
-;;             (Var 2 b)
-;;             (Logical 4 [])
-;;             ()))             := true)
+(defn LogicalBinOp [left- lbo- right- tt- val-]
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head    ::LogicalBinOp
+    ::expr-left    left-
+    ::logicalbinop lbo-
+    ::expr-right   right-
+    ::Logical      tt-
+    ::value        val-
+    }})
+
+;; heavy sugar
+(tests
+ (s/valid? ::LogicalBinOp
+           (LogicalBinOp
+            (Var 2 a)
+            And
+            (Var 2 b)
+            (Logical 4 [])
+            ()))             := true)
 
 
-;; -+-+-+-+-+-+-
-;;  E q u a l s
-;; -+-+-+-+-+-+-
+;;  ___                _
+;; | __|__ _ _  _ __ _| |___
+;; | _|/ _` | || / _` | (_-<
+;; |___\__, |\_,_\__,_|_/__/
+;;        |_|
 ;;
 ;; Workaround; See Issues
 ;;
@@ -2641,14 +2643,28 @@
  (s/valid? ::Equals
            (Equals-- (Var 2 a)
                      (LogicalConstant false (Logical 4 []))
-                     ())) := true)
+                     ()))                    := true)
 
 ;; legacy sugar
 (tests
  (s/valid? ::Equals
            (legacy (= (Var 2 a)
                       (LogicalConstant false (Logical 4 []))
-                      ()))) := true)
+                      ())))                  := true)
+
+;; back-tests
+(tests
+ (let [v (Variable-- 2 'a (Logical 4)
+                     nil [] 'Local
+                     [] [] 'Default
+                     'Source 'Public 'Required
+                     false)]
+   (s/valid? ::LogicalBinOp v )              := false
+   (s/valid? ::LogicalConstant v )           := false
+   (s/valid? ::Logical v)                    := false
+   (s/valid? ::expr v )                      := false
+   (s/valid? ::Equals v )                    := false
+   ))
 
 
 ;; ================================================================
