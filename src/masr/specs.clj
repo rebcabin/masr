@@ -2396,23 +2396,6 @@
    (s/valid? :masr.specs/asr-term    st) := true))
 
 
-;;  ___             _   _
-;; | __|  _ _ _  __| |_(_)___ _ _
-;; | _| || | ' \/ _|  _| / _ \ ' \
-;; |_| \_,_|_||_\__|\__|_\___/_||_|
-
-;; | Function(symbol_table symtab,
-;;            identifier   name,
-;;            ttype        function_signature,
-;;            identifier*  dependencies,
-;;            expr*        args,
-;;            stmt*        body,
-;;            expr?        return_var,
-;;            access       access,
-;;            bool         deterministic,
-;;            bool         side_effect_free)
-
-
 ;; ================================================================
 ;;  _______  ______  ____
 ;; | ____\ \/ /  _ \|  _ \
@@ -2582,9 +2565,9 @@
 
 (defmethod expr-head ::LogicalBinOp [_]
   (s/keys :req [::expr-head
-                ::expr-left
+                ::expr-left     ;; check ::Logical
                 ::logicalbinop
-                ::expr-right
+                ::expr-right    ;; check ::Logical
                 ::Logical
                 ::value
                 ]))
@@ -2783,3 +2766,126 @@
 ;; \___ \ | | | |\/| | | |
 ;;  ___) || | | |  | | | |
 ;; |____/ |_| |_|  |_| |_|
+
+
+;;  ___             _   _
+;; | __|  _ _ _  __| |_(_)___ _ _
+;; | _| || | ' \/ _|  _| / _ \ ' \
+;; |_| \_,_|_||_\__|\__|_\___/_||_|
+
+;; | Function(symbol_table symtab,
+;;            identifier   name,
+;;            ttype        function_signature,
+;;            identifier*  dependencies,
+;;            expr*        args,              ;; rename ::params
+;;            stmt*        body,
+;;            expr?        return_var,
+;;            access       access,
+;;            bool         deterministic,
+;;            bool         side_effect_free)
+
+
+;;            _ _   _      _ _    _ _   _
+;;  _ __ _  _| | |_(_)_ __| (_)__(_) |_(_)___ ___
+;; | '  \ || | |  _| | '_ \ | / _| |  _| / -_|_-<
+;; |_|_|_\_,_|_|\__|_| .__/_|_\__|_|\__|_\___/__/
+;;                   |_|
+
+
+(def MIN-NUMBER-OF-EXPRS    0)
+(def MAX-NUMBER-OF-EXPRS 1024)
+
+
+(s/def ::exprs (s/coll-of ::expr
+                          :min-count MIN-NUMBER-OF-EXPRS
+                          :max-count MAX-NUMBER-OF-EXPRS))
+
+
+(s/def ::exprq (s/coll-of ::expr
+                          :min-count 0
+                          :max-count 1))
+
+
+(def MIN-NUMBER-OF-STMTS    0)
+(def MAX-NUMBER-OF-STMTS 1024)
+
+
+(s/def ::stmts (s/coll-of ::stmt
+                          :min-count MIN-NUMBER-OF-STMTS
+                          :max-count MAX-NUMBER-OF-STMTS))
+
+
+(s/def ::stmtq (s/coll-of ::stmt
+                          :min-count 0
+                          :max-count 1))
+
+
+;;  _ __  __ _ _ _ __ _ _ __  ___
+;; | '_ \/ _` | '_/ _` | '  \(_-<
+;; | .__/\__,_|_| \__,_|_|_|_/__/
+;; |_|
+
+
+(s/def ::params ::exprs)
+
+
+;;  _             _
+;; | |__  ___  __| |_  _
+;; | '_ \/ _ \/ _` | || |
+;; |_.__/\___/\__,_|\_, |
+;;                  |__/
+
+
+(s/def ::body ::stmts)
+
+
+;;          _
+;;  _ _ ___| |_ _  _ _ _ _ _   __ ____ _ _ _
+;; | '_/ -_)  _| || | '_| ' \  \ V / _` | '_|
+;; |_| \___|\__|\_,_|_| |_||_|  \_/\__,_|_|
+
+
+(s/def ::return-var ::exprq)
+
+
+;;     _     _                 _      _    _   _
+;;  __| |___| |_ ___ _ _ _ __ (_)_ _ (_)__| |_(_)__
+;; / _` / -_)  _/ -_) '_| '  \| | ' \| (_-<  _| / _|
+;; \__,_\___|\__\___|_| |_|_|_|_|_||_|_/__/\__|_\__|
+
+
+(s/def ::deterministic ::bool)
+
+
+;;     _    _              __  __        _        __
+;;  __(_)__| |___ ___ ___ / _|/ _|___ __| |_ ___ / _|_ _ ___ ___
+;; (_-< / _` / -_)___/ -_)  _|  _/ -_) _|  _|___|  _| '_/ -_) -_)
+;; /__/_\__,_\___|   \___|_| |_| \___\__|\__|   |_| |_| \___\___|
+
+
+(s/def ::side-effect-free ::bool)
+
+
+;;   __              _   _
+;;  / _|_  _ _ _  __| |_(_)___ _ _ ___ _ _  __ _ _ __  ___
+;; |  _| || | ' \/ _|  _| / _ \ ' \___| ' \/ _` | '  \/ -_)
+;; |_|  \_,_|_||_\__|\__|_\___/_||_|  |_||_\__,_|_|_|_\___|
+
+
+(s/def function-name ::identifier)
+
+
+(defmethod symbol-head ::Function [_]
+  (s/keys :req [::symbol-head
+                ::function-name
+                ::function-signature
+                ::params
+                ::body
+                ::return-var
+                ::access
+                ::deterministic
+                ::side-effect-free
+                ]))
+
+
+(def-term-head--entity-key symbol Function)
