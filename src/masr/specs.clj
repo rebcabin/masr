@@ -1227,701 +1227,6 @@
 
 
 ;; ================================================================
-;;  _   _ _   _ ___ _____
-;; | | | | \ | |_ _|_   _|
-;; | | | |  \| || |  | |
-;; | |_| | |\  || |  | |
-;;  \___/|_| \_|___| |_|
-
-
-;;  _____                 _      _   _         _   _      _ _
-;; |_   _| _ __ _ _ _  __| |__ _| |_(_)___ _ _| | | |_ _ (_) |_
-;;   | || '_/ _` | ' \(_-< / _` |  _| / _ \ ' \ |_| | ' \| |  _|
-;;   |_||_| \__,_|_||_/__/_\__,_|\__|_\___/_||_\___/|_||_|_|\__|
-
-;; This term, unit, has onloy one head,
-;; TranslationUnit.
-
-;; nested multi-spec
-(do (defmulti unit-head ::unit-head)
-    (s/def ::asr-unit-head
-      (s/multi-spec unit-head ::unit-head)))
-
-;; Employ the nested multi-spec:
-(defmethod term ::unit [_]
-  (s/keys :req [::term ::asr-unit-head]))
-
-
-(def-term-entity-key unit)
-
-
-(defmethod unit-head ::TranslationUnit [_]
-  (s/keys :req [::unit-head
-                ::SymbolTable
-                ::nodes]))
-
-
-#_(s/def ::node (s/one-of ::expr ::stmt ::symbol))
-
-
-(def-term-head--entity-key unit TranslationUnit)
-
-
-;; ================================================================
-;;  ______   ____  __ ____   ___  _
-;; / ___\ \ / /  \/  | __ ) / _ \| |
-;; \___ \\ V /| |\/| |  _ \| | | | |
-;;  ___) || | | |  | | |_) | |_| | |___
-;; |____/ |_| |_|  |_|____/ \___/|_____|
-
-;;                _         _   _                _
-;;  ____  _ _ __ | |__  ___| | | |_  ___ __ _ __| |
-;; (_-< || | '  \| '_ \/ _ \ | | ' \/ -_) _` / _` |
-;; /__/\_, |_|_|_|_.__/\___/_| |_||_\___\__,_\__,_|
-;;     |__/     _          _             _ _   _
-;;  _ _  ___ __| |_ ___ __| |  _ __ _  _| | |_(_)___ ____ __  ___ __
-;; | ' \/ -_|_-<  _/ -_) _` | | '  \ || | |  _| |___(_-< '_ \/ -_) _|
-;; |_||_\___/__/\__\___\__,_| |_|_|_\_,_|_|\__|_|   /__/ .__/\___\__|
-;;                                                     |_|
-
-
-;; nested multi-spec
-(do (defmulti symbol-head ::symbol-head)
-    (s/def ::asr-symbol-head
-      (s/multi-spec symbol-head ::symbol-head)))
-
-;; Employ the nested multi-spec:
-(defmethod term ::symbol [_]
-  (s/keys :req [::term ::asr-symbol-head]))
-
-
-;; (def-term-entity-key symbol) moved above
-;; FunctionType
-;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-;; __   __        _      _    _
-;; \ \ / /_ _ _ _(_)__ _| |__| |___
-;;  \ V / _` | '_| / _` | '_ \ / -_)
-;;   \_/\__,_|_| |_\__,_|_.__/_\___|
-;;
-;; | Variable(symbol_table   parent_symtab,   ;; really an integer id
-;;            identifier     name,
-;;            identifier   * dependencies,    ;; vector of dependency
-;;            intent         intent,
-;;            expr         ? symbolic_value,  ;; lack specified by nil
-;;            expr         ? value,
-;;            storage_type   storage,
-;;            ttype          type,
-;;            abi            abi,
-;;            access         access,
-;;            presence       presence,
-;;            bool           value_attr)
-
-;; (Variable                ;   head, term: symbol
-;;  2                       ;   symbol_table    parent-symtab-id
-                            ;     TODO: NOT SYMBOL-TABLE!
-;;  x                       ;   identifier      nym
-;;  []                      ;   identifier *    dependencies
-;;  Local                   ;   intent          intent
-;;  ()                      ;   expr ?          symbolic-value
-;;  ()                      ;   expr ?          value
-;;  Default                 ;   storage_type    storage
-;;  (Integer 4 [])          ;   ttype           tipe
-;;  Source                  ;   abi             abi
-;;  Public                  ;   access          access
-;;  Required                ;   presence        presence
-;;  .false.)})              ;   bool            value-attr
-
-
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-;;  p r e r e q u i s i t e   t y p e   a l i a s e s
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-
-
-(s/def ::value-attr       ::bool)
-(s/def ::varnym           ::identifier)
-;; https://github.com/rebcabin/masr/issues/28
-(s/def ::type-declaration (s/nilable ::symtab-id))
-;; TODO: there is ambiguity regarding identifier-sets and lists:
-(s/def ::dependencies     ::identifier-set)
-
-
-;; -+-+-+-+-+-+-+-+-+-
-;;  f u l l   f o r m
-;; -+-+-+-+-+-+-+-+-+-
-
-
-(defmethod symbol-head ::Variable [_]
-  (s/keys :req [::symbol-head
-                ::symtab-id        ::varnym          ::dependencies
-                ::intent           ::symbolic-value  ::value
-                ::storage-type     ::ttype           ::abi
-                ::access           ::presence        ::value-attr
-                ::type-declaration
-                ]))
-
-
-(def-term-head--entity-key symbol Variable)
-
-
-;; -+-+-+-+-+-+-+-+-+-+-+-
-;;  l i g h t   s u g a r
-;; -+-+-+-+-+-+-+-+-+-+-+-
-
-
-(defn Variable-
-  [& {:keys [ ;; required
-             symtab-id,          varnym,         ttype,
-             ;; defaulted
-             type-declaration,   dependencies,   intent,
-             symbolic-value,     value,          storage-type,
-             abi,                access,         presence,
-             value-attr
-             ]
-      :or {type-declaration nil
-           dependencies     ()
-           intent           (intent 'Local)
-
-           symbolic-value   ()
-           value            ()
-           storage-type     (storage-type 'Default)
-
-           abi              Source
-           access           Public
-           presence         Required
-           value-attr       false}}]
-  (let [a (s/conform
-           ::asr-term
-           {::term              ::symbol,
-            ::asr-symbol-head
-            {::symbol-head      ::Variable,
-
-             ::symtab-id        symtab-id,
-             ::varnym           varnym,
-             ::ttype            ttype,
-
-             ::type-declaration type-declaration,
-             ::dependencies     dependencies,
-             ::intent           intent,
-
-             ::symbolic-value   symbolic-value,
-             ::value            value,
-             ::storage-type     storage-type,
-
-             ::abi              abi,
-             ::access           access,
-             ::presence         presence,
-
-             ::value-attr       value-attr,
-             }})]
-    (if (s/invalid? a)
-      ::invalid-variable
-      a)))
-
-;; Test full-form:
-(let [a-var-head {::symbol-head      ::Variable
-
-                  ::symtab-id        2
-                  ::varnym           'x
-                  ::ttype            (Integer 4 [])
-
-                  ::type-declaration nil
-                  ::dependencies     ()
-                  ::intent           Local
-
-                  ::symbolic-value   () ;; TODO sugar
-                  ::value            () ;; TODO sugar
-                  ::storage-type     Default
-
-                  ::abi              Source
-                  ::access           Public
-                  ::presence         Required
-                  ::value-attr       false
-                  }
-      ;; nested
-      a-var {::term ::symbol
-             ::asr-symbol-head a-var-head}
-      a-var-light (Variable- :varnym     'x
-                             :symtab-id  2
-                             :ttype      (Integer 4))
-      avl-2  (Variable- :varnym     'x
-                        :symtab-id  2
-                        :ttype      (Integer 42))]
-  (tests
-   a-var-light := (s/conform ::asr-term a-var)
-   a-var-light := (s/conform ::Variable a-var)
-
-   (s/valid? ::asr-symbol-head a-var-head) := true
-
-   (s/valid? ::asr-term a-var)             := true
-   (s/valid? ::asr-term a-var-light)       := true
-   (s/valid? ::asr-term avl-2)             := false
-
-   (s/valid? ::symbol   a-var)             := true
-   (s/valid? ::symbol   a-var-light)       := true
-   (s/valid? ::symbol   avl-2)             := false
-
-   (s/valid? ::Variable a-var)             := true
-   (s/valid? ::Variable a-var-light)       := true
-   (s/valid? ::Variable avl-2)             := false
-   ))
-
-;; Test light sugar:
-(tests
- ;; fully spec'ced, order does not matter
- (let [a-valid
-       (Variable- :symtab-id        2
-                  :varnym           'x
-                  :intent           Local ;; ASDL back-channel
-
-                  :ttype            (Integer)
-                  :access           Private
-                  :presence         Required
-
-                  :abi              Source
-                  :type-declaration nil
-                  :value-attr       false
-
-                  :symbolic-value   []
-                  :value            []
-                  :storage-type     Default
-
-                  :dependencies     ['y 'z]
-                  )]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::Variable a-valid) := true))
-
-
-(tests
- (let [a-valid
-       (Variable- :symtab-id 2,
-                  :varnym    'x,
-                  :intent    (intent 'Local) ;; explicit
-                  :ttype     (Integer 4 [[1 42]]))]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
- (let [a-valid
-       (Variable- :symtab-id 2,
-                  :varnym    'x,
-                  :intent    Local ;; ASDL back-channel
-                  :ttype     (Integer 4 [[1 42]]))]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
- (let [a-valid ;; default intent
-       (Variable- :symtab-id 2,
-                  :varnym    'x,
-                  :ttype     (Integer 4 [[1 42]]))]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
- (let [a-valid
-       (Variable- :symtab-id (symtab-id 2),
-                  :varnym    'x,
-                  :ttype     (Integer 4 [[1 42]]))]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
- (let [a-valid
-       (Variable- :symtab-id 2,
-                  :varnym    'x,
-                  :ttype     (Integer 4 [[1 42]]))]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
- (let [a-valid
-       (Variable- :symtab-id 2,
-                  :varnym    'x,
-                  :ttype     (Integer 4 [[1 42]])
-                  ;; explicit abi
-                  :abi       (abi 'Source :external false))]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
- (let [a-valid
-       (Variable- :symtab-id 2,
-                  :varnym    'x,
-                  :ttype     (Integer 4 [[1 42]])
-                  ;; explicit defaulted abi
-                  :abi       (abi 'Source))]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true) ;; invalid examples
- (let [a-valid
-       (Variable- :symtab-id 2,
-                  :varnym    'x,
-                  :ttype     (Integer 4 [[1 42]])
-                  ;; explicit ASDL back-channel abi
-                  :abi       Source)]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
- (let [a-valid
-       (Variable- :symtab-id 2,
-                  :varnym    'x,
-                  :ttype     (Integer)
-                  :abi       Source)]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
- (let [a-inval
-       (Variable- :symtab-id 2,
-                  :varnym    'x,
-                  :ttype     (Integer 4 [[1 42]])
-                  ;; wrong abi
-                  :abi       (abi 'Source :external true))]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- )
-
-
-;; -+-+-+-+-+-+-+-+-+-+-+-
-;;  h e a v y   s u g a r
-;; -+-+-+-+-+-+-+-+-+-+-+-
-
-
-(defn Variable--
-  "Heavy sugar; parameters that collide with functions
-  have trailing hyphens."
-  [symtab-id-,         varnym-,        ttype-,
-   typedecl-,          dependencies-,  intent-,
-   symbolic-value-,    value-,         storage-type-,
-   abi-,               access-,        presence-,
-   value-attr-]
-  (let [cnf (s/conform
-             ::asr-term
-             {::term              ::symbol,
-              ::asr-symbol-head
-              {::symbol-head      ::Variable,
-
-               ::symtab-id        symtab-id-,
-               ::varnym           varnym-,
-               ::ttype            ttype-, ;; already wrapped!
-
-               ;; https://github.com/rebcabin/masr/issues/28
-               ::type-declaration typedecl-
-               ::dependencies     dependencies-,
-               ::intent           (if (symbol? intent-)
-                                      (intent  intent-)
-                                      intent-),
-
-               ::symbolic-value   symbolic-value-,
-               ::value            value-,
-               ::storage-type     (if (symbol? storage-type-)
-                                    (storage-type storage-type-)
-                                    storage-type-),
-
-               ::abi              (if (symbol? abi-)
-                                    (abi abi-)
-                                    abi-),
-               ::access           (if (symbol? access-)
-                                    (access access-)
-                                    access-),
-               ::presence         (if (symbol? presence-)
-                                    (presence presence-)
-                                    presence-),
-
-               ::value-attr       value-attr-,
-               }})]
-    (if (s/invalid? cnf)
-      ::invalid-variable
-      cnf)))
-
-;; Test heavy sugar:
-(tests
- ;; valid examples
-  (let [a-valid (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
-
- ;; invalid examples
- ;; Show that every entity key is checked.
- (let [a-inval (Variable-- "foo" 'x (Integer 4) ;; bad symtab-id
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 "foo" (Integer 4) ;; bad varnym
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 42424242) ;; bad ttupe
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 42424242)
-                         'FOOBAR [] 'Local ;; bad dependencies
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'FOOBAR ;; bad intent
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil ['x 'y "foo"] 'Local ;; bad dependencies
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'FOOBAR ;; bad storage-type
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'FOOBAR 'Public 'Required ;; bad abi
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'FOOBAR 'Required ;; bad access
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'FOOBAR ;; bad presence
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         'FOOBAR)] ;; bad value-attr
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::Variable a-inval) := false))
-
-
-(tests
- ;; valid examples
-  (let [a-valid (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
-
- ;; invalid examples
- ;; Show that every entity key is checked.
- (let [a-inval (Variable-- "foo" 'x (Integer 4) ;; bad symtab-id
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 "foo" (Integer 4) ;; bad varnym
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 42424242) ;; bad ttupe
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 42424242)
-                         'FOOBAR [] 'Local ;; bad dependencies
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'FOOBAR ;; bad intent
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil ['x 'y "foo"] 'Local ;; bad dependencies
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'FOOBAR ;; bad storage-type
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'FOOBAR 'Public 'Required ;; bad abi
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'FOOBAR 'Required ;; bad access
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'FOOBAR ;; bad presence
-                         false)]
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false)
- (let [a-inval (Variable-- 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         'FOOBAR)] ;; bad value-attr
-   (s/valid? ::asr-term a-inval) := false
-   (s/valid? ::symbol   a-inval) := false
-   (s/valid? ::Variable a-inval) := false))
-
-;; ASDL Back-Channel
-(tests
- ;; valid examples
- (let [a-valid (Variable-- 2 'x (Integer 4)
-                           nil [] Local
-                           [] []  Default
-                           Source Public Required
-                           false)]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::symbol   a-valid) := true
-   (s/valid? ::Variable a-valid) := true))
-
-
-;; -+-+-+-+-+-+-+-+-+-+-+-+-
-;;  l e g a c y   m a c r o
-;; -+-+-+-+-+-+-+-+-+-+-+-+-
-
-;; It's a judgment call whether to introduce a
-;; legacy macro for a term or head. Legacy macros
-;; track the "current" state of ASR as it evolves
-;; toward the ideal of MASR.
-;;
-;; When a legacy macro exists, the heavy-sugar
-;; function will be named with two trailing hyphens,
-;; as in Variable--. Light-sugar functions will
-;; continue to have names with a single trailing
-;; hyphen, as in Variable-, and full form will
-;; continue to represent what we ultimately want.
-
-
-(defmacro Variable
-  "Honor legacy parameter order of
-  lpython/src/libasr/ASR.asdl as of 25 April 2023.
-  Quote the varnym and pass along all other params."
-  [symtab-id-,     varnym-,          dependencies-,
-   intent-,        symbolic-value-,  value-,
-   storage-type-,  ttype-,           abi-,
-   access-,        presence-,        value-attr-]
-  `(Variable-- ;; heavy sugar
-    ~symtab-id-
-    '~varnym-  ;; notice the tick mark
-    ~ttype-    ;; moved up from between storage type and abi
-    nil ;; legacy doesn't have type-declaration
-    ~dependencies-
-    ~intent-
-    ~symbolic-value-
-    ~value-
-    ~storage-type-
-    ;; ttype goes here in legacy
-    ~abi-
-    ~access-
-    ~presence-
-    ~value-attr-))
-
-;; Test legacy macro:
-(tests
- (let [v (Variable
-          2 a []
-          Local () ()
-          Default (Logical 4 []) Source
-          Public Required false)]
-   ;; using "legacicated" symbols:
-   v := (Variable-- 2 'a (Logical 4)
-                    nil [] Local
-                    [] [] Default
-                    Source Public Required
-                    false)
-   ;; using tick marks (quoted symbolic constants)
-   v := (Variable-- 2 'a (Logical 4)
-                    nil [] 'Local
-                    [] [] 'Default
-                    'Source 'Public 'Required
-                    false)
-   ;; using telescoping specs
-   (s/valid? :masr.specs/Variable v) := true
-   (s/valid? :masr.specs/symbol   v) := true
-   (s/valid? :masr.specs/asr-term v) := true))
-
-;; Test SymbolTable with Variable:
-(tests
- (let [st (SymbolTable
-           2 {:a
-              (Variable
-               2 a [] Local
-               () () Default (Logical 4 [])
-               Source Public Required false),
-              :b
-              (Variable
-               2 b [] Local
-               () () Default (Logical 4 [])
-               Source Public Required false)})]
-   (s/valid? :masr.specs/SymbolTable st) := true
-   ;; A SymbolTable is not a symbol:
-   (s/valid? :masr.specs/symbol      st) := false
-   (s/valid? :masr.specs/asr-term    st) := true))
-
-
-;; ================================================================
 ;;  _______  ______  ____
 ;; | ____\ \/ /  _ \|  _ \
 ;; |  _|  \  /| |_) | |_) |
@@ -2328,6 +1633,370 @@
                        (Var 2 b)
                        (Logical 4 []) ()) ()))) := true)
 
+;; ================================================================
+;;  ______   ____  __ ____   ___  _
+;; / ___\ \ / /  \/  | __ ) / _ \| |
+;; \___ \\ V /| |\/| |  _ \| | | | |
+;;  ___) || | | |  | | |_) | |_| | |___
+;; |____/ |_| |_|  |_|____/ \___/|_____|
+
+;;                _         _   _                _
+;;  ____  _ _ __ | |__  ___| | | |_  ___ __ _ __| |
+;; (_-< || | '  \| '_ \/ _ \ | | ' \/ -_) _` / _` |
+;; /__/\_, |_|_|_|_.__/\___/_| |_||_\___\__,_\__,_|
+;;     |__/     _          _             _ _   _
+;;  _ _  ___ __| |_ ___ __| |  _ __ _  _| | |_(_)___ ____ __  ___ __
+;; | ' \/ -_|_-<  _/ -_) _` | | '  \ || | |  _| |___(_-< '_ \/ -_) _|
+;; |_||_\___/__/\__\___\__,_| |_|_|_\_,_|_|\__|_|   /__/ .__/\___\__|
+;;                                                     |_|
+
+;; nested multi-spec
+
+
+(do (defmulti symbol-head ::symbol-head)
+    (s/def ::asr-symbol-head
+      (s/multi-spec symbol-head ::symbol-head)))
+
+;; Employ the nested multi-spec:
+(defmethod term ::symbol [_]
+  (s/keys :req [::term ::asr-symbol-head]))
+
+
+;; (def-term-entity-key symbol) moved
+;; above FunctionType
+;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+;; __   __        _      _    _
+;; \ \ / /_ _ _ _(_)__ _| |__| |___
+;;  \ V / _` | '_| / _` | '_ \ / -_)
+;;   \_/\__,_|_| |_\__,_|_.__/_\___|
+;;
+;; | Variable(symbol_table   parent_symtab,   ;; really an integer id
+;;            identifier     name,
+;;            identifier   * dependencies,    ;; vector of dependency
+;;            intent         intent,
+;;            expr         ? symbolic_value,  ;; lack specified by nil
+;;            expr         ? value,
+;;            storage_type   storage,
+;;            ttype          type,
+;;            abi            abi,
+;;            access         access,
+;;            presence       presence,
+;;            bool           value_attr)
+
+;; (Variable                ;   head, term: symbol
+;;  2                       ;   symbol_table    parent-symtab-id
+                            ;     TODO: NOT SYMBOL-TABLE!
+;;  x                       ;   identifier      nym
+;;  []                      ;   identifier *    dependencies
+;;  Local                   ;   intent          intent
+;;  ()                      ;   expr ?          symbolic-value
+;;  ()                      ;   expr ?          value
+;;  Default                 ;   storage_type    storage
+;;  (Integer 4 [])          ;   ttype           tipe
+;;  Source                  ;   abi             abi
+;;  Public                  ;   access          access
+;;  Required                ;   presence        presence
+;;  .false.)})              ;   bool            value-attr
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  p r e r e q u i s i t e   t y p e   a l i a s e s
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+
+(s/def ::value-attr       ::bool)
+(s/def ::varnym           ::identifier)
+;; https://github.com/rebcabin/masr/issues/28
+(s/def ::type-declaration (s/nilable ::symtab-id))
+;; TODO: there is ambiguity regarding identifier-sets and lists:
+(s/def ::dependencies     ::identifier-set)
+
+
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
+
+
+(defmethod symbol-head ::Variable [_]
+  (s/keys :req [::symbol-head
+                ::symtab-id        ::varnym          ::dependencies
+                ::intent           ::symbolic-value  ::value
+                ::storage-type     ::ttype           ::abi
+                ::access           ::presence        ::value-attr
+                ::type-declaration
+                ]))
+
+
+(def-term-head--entity-key symbol Variable)
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  l i g h t   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-
+
+
+(defn Variable-
+  [& {:keys [ ;; required
+             symtab-id,          varnym,         ttype,
+             ;; defaulted
+             type-declaration,   dependencies,   intent,
+             symbolic-value,     value,          storage-type,
+             abi,                access,         presence,
+             value-attr
+             ]
+      :or {type-declaration nil
+           dependencies     ()
+           intent           (intent 'Local)
+
+           symbolic-value   ()
+           value            ()
+           storage-type     (storage-type 'Default)
+
+           abi              Source
+           access           Public
+           presence         Required
+           value-attr       false}}]
+  (let [a (s/conform
+           ::asr-term
+           {::term              ::symbol,
+            ::asr-symbol-head
+            {::symbol-head      ::Variable,
+
+             ::symtab-id        symtab-id,
+             ::varnym           varnym,
+             ::ttype            ttype,
+
+             ::type-declaration type-declaration,
+             ::dependencies     dependencies,
+             ::intent           intent,
+
+             ::symbolic-value   symbolic-value,
+             ::value            value,
+             ::storage-type     storage-type,
+
+             ::abi              abi,
+             ::access           access,
+             ::presence         presence,
+
+             ::value-attr       value-attr,
+             }})]
+    (if (s/invalid? a)
+      ::invalid-variable
+      a)))
+
+;; Test full-form:
+(let [a-var-head {::symbol-head      ::Variable
+
+                  ::symtab-id        2
+                  ::varnym           'x
+                  ::ttype            (Integer 4 [])
+
+                  ::type-declaration nil
+                  ::dependencies     ()
+                  ::intent           Local
+
+                  ::symbolic-value   () ;; TODO sugar
+                  ::value            () ;; TODO sugar
+                  ::storage-type     Default
+
+                  ::abi              Source
+                  ::access           Public
+                  ::presence         Required
+                  ::value-attr       false
+                  }
+      ;; nested
+      a-var {::term ::symbol
+             ::asr-symbol-head a-var-head}
+      a-var-light (Variable- :varnym     'x
+                             :symtab-id  2
+                             :ttype      (Integer 4))
+      avl-2  (Variable- :varnym     'x
+                        :symtab-id  2
+                        :ttype      (Integer 42))]
+  (tests
+   a-var-light := (s/conform ::asr-term a-var)
+   a-var-light := (s/conform ::Variable a-var)
+
+   (s/valid? ::asr-symbol-head a-var-head) := true
+
+   (s/valid? ::asr-term a-var)             := true
+   (s/valid? ::asr-term a-var-light)       := true
+   (s/valid? ::asr-term avl-2)             := false
+
+   (s/valid? ::symbol   a-var)             := true
+   (s/valid? ::symbol   a-var-light)       := true
+   (s/valid? ::symbol   avl-2)             := false
+
+   (s/valid? ::Variable a-var)             := true
+   (s/valid? ::Variable a-var-light)       := true
+   (s/valid? ::Variable avl-2)             := false
+   ))
+
+;; Test light sugar:
+(tests
+ ;; fully spec'ced, order does not matter
+ (let [a-valid
+       (Variable- :symtab-id        2
+                  :varnym           'x
+                  :intent           Local ;; ASDL back-channel
+
+                  :ttype            (Integer)
+                  :access           Private
+                  :presence         Required
+
+                  :abi              Source
+                  :type-declaration nil
+                  :value-attr       false
+
+                  :symbolic-value   []
+                  :value            []
+                  :storage-type     Default
+
+                  :dependencies     ['y 'z]
+                  )]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true))
+
+
+(tests
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :intent    (intent 'Local) ;; explicit
+                  :ttype     (Integer 4 [[1 42]]))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :intent    Local ;; ASDL back-channel
+                  :ttype     (Integer 4 [[1 42]]))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid ;; default intent
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (Integer 4 [[1 42]]))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid
+       (Variable- :symtab-id (symtab-id 2),
+                  :varnym    'x,
+                  :ttype     (Integer 4 [[1 42]]))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (Integer 4 [[1 42]]))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (Integer 4 [[1 42]])
+                  ;; explicit abi
+                  :abi       (abi 'Source :external false))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (Integer 4 [[1 42]])
+                  ;; explicit defaulted abi
+                  :abi       (abi 'Source))]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true) ;; invalid examples
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (Integer 4 [[1 42]])
+                  ;; explicit ASDL back-channel abi
+                  :abi       Source)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-valid
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (Integer)
+                  :abi       Source)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+ (let [a-inval
+       (Variable- :symtab-id 2,
+                  :varnym    'x,
+                  :ttype     (Integer 4 [[1 42]])
+                  ;; wrong abi
+                  :abi       (abi 'Source :external true))]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ )
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  h e a v y   s u g a r
+;; -+-+-+-+-+-+-+-+-+-+-+-
+
+
+(defn Variable--
+  "Heavy sugar; parameters that collide with functions
+  have trailing hyphens."
+  [symtab-id-,         varnym-,        ttype-,
+   typedecl-,          dependencies-,  intent-,
+   symbolic-value-,    value-,         storage-type-,
+   abi-,               access-,        presence-,
+   value-attr-]
+  (let [cnf (s/conform
+             ::asr-term
+             {::term              ::symbol,
+              ::asr-symbol-head
+              {::symbol-head      ::Variable,
+
+               ::symtab-id        symtab-id-,
+               ::varnym           varnym-,
+               ::ttype            ttype-, ;; already wrapped!
+
+               ;; https://github.com/rebcabin/masr/issues/28
+               ::type-declaration typedecl-
+               ::dependencies     dependencies-,
+               ::intent           (if (symbol? intent-)
+                                      (intent  intent-)
+                                      intent-),
+
+               ::symbolic-value   symbolic-value-,
+               ::value            value-,
+               ::storage-type     (if (symbol? storage-type-)
+                                    (storage-type storage-type-)
+                                    storage-type-),
+
+               ::abi              (if (symbol? abi-)
+                                    (abi abi-)
+                                    abi-),
+               ::access           (if (symbol? access-)
+                                    (access access-)
+                                    access-),
+               ::presence         (if (symbol? presence-)
+                                    (presence presence-)
+                                    presence-),
+
+               ::value-attr       value-attr-,
+               }})]
+    (if (s/invalid? cnf)
+      ::invalid-variable
+      cnf)))
+
 ;; back-tests
 (tests
  (let [v (Variable-- 2 'a (Logical 4)
@@ -2341,6 +2010,296 @@
    (s/valid? ::stmt            v) := false
    (s/valid? ::Assignment      v) := false
    ))
+
+;; Test heavy sugar:
+(tests
+ ;; valid examples
+  (let [a-valid (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+
+ ;; invalid examples
+ ;; Show that every entity key is checked.
+ (let [a-inval (Variable-- "foo" 'x (Integer 4) ;; bad symtab-id
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 "foo" (Integer 4) ;; bad varnym
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 42424242) ;; bad ttupe
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 42424242)
+                         'FOOBAR [] 'Local ;; bad dependencies
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'FOOBAR ;; bad intent
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil ['x 'y "foo"] 'Local ;; bad dependencies
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'FOOBAR ;; bad storage-type
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'FOOBAR 'Public 'Required ;; bad abi
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'FOOBAR 'Required ;; bad access
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'FOOBAR ;; bad presence
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         'FOOBAR)] ;; bad value-attr
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::Variable a-inval) := false))
+
+
+(tests
+ ;; valid examples
+  (let [a-valid (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true)
+
+ ;; invalid examples
+ ;; Show that every entity key is checked.
+ (let [a-inval (Variable-- "foo" 'x (Integer 4) ;; bad symtab-id
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 "foo" (Integer 4) ;; bad varnym
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 42424242) ;; bad ttupe
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 42424242)
+                         'FOOBAR [] 'Local ;; bad dependencies
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'FOOBAR ;; bad intent
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil ['x 'y "foo"] 'Local ;; bad dependencies
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'FOOBAR ;; bad storage-type
+                         'Source 'Public 'Required
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'FOOBAR 'Public 'Required ;; bad abi
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'FOOBAR 'Required ;; bad access
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'FOOBAR ;; bad presence
+                         false)]
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false)
+ (let [a-inval (Variable-- 2 'x (Integer 4)
+                         nil [] 'Local
+                         [] []  'Default
+                         'Source 'Public 'Required
+                         'FOOBAR)] ;; bad value-attr
+   (s/valid? ::asr-term a-inval) := false
+   (s/valid? ::symbol   a-inval) := false
+   (s/valid? ::Variable a-inval) := false))
+
+;; ASDL Back-Channel
+(tests
+ ;; valid examples
+ (let [a-valid (Variable-- 2 'x (Integer 4)
+                           nil [] Local
+                           [] []  Default
+                           Source Public Required
+                           false)]
+   (s/valid? ::asr-term a-valid) := true
+   (s/valid? ::symbol   a-valid) := true
+   (s/valid? ::Variable a-valid) := true))
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-
+;;  l e g a c y   m a c r o
+;; -+-+-+-+-+-+-+-+-+-+-+-+-
+
+;; It's a judgment call whether to introduce a
+;; legacy macro for a term or head. Legacy macros
+;; track the "current" state of ASR as it evolves
+;; toward the ideal of MASR.
+;;
+;; When a legacy macro exists, the heavy-sugar
+;; function will be named with two trailing hyphens,
+;; as in Variable--. Light-sugar functions will
+;; continue to have names with a single trailing
+;; hyphen, as in Variable-, and full form will
+;; continue to represent what we ultimately want.
+
+
+(defmacro Variable
+  "Honor legacy parameter order of
+  lpython/src/libasr/ASR.asdl as of 25 April 2023.
+  Quote the varnym and pass along all other params."
+  [symtab-id-,     varnym-,          dependencies-,
+   intent-,        symbolic-value-,  value-,
+   storage-type-,  ttype-,           abi-,
+   access-,        presence-,        value-attr-]
+  `(Variable-- ;; heavy sugar
+    ~symtab-id-
+    '~varnym-  ;; notice the tick mark
+    ~ttype-    ;; moved up from between storage type and abi
+    nil ;; legacy doesn't have type-declaration
+    ~dependencies-
+    ~intent-
+    ~symbolic-value-
+    ~value-
+    ~storage-type-
+    ;; ttype goes here in legacy
+    ~abi-
+    ~access-
+    ~presence-
+    ~value-attr-))
+
+;; Test legacy macro:
+(tests
+ (let [v (Variable
+          2 a []
+          Local () ()
+          Default (Logical 4 []) Source
+          Public Required false)]
+   ;; using "legacicated" symbols:
+   v := (Variable-- 2 'a (Logical 4)
+                    nil [] Local
+                    [] [] Default
+                    Source Public Required
+                    false)
+   ;; using tick marks (quoted symbolic constants)
+   v := (Variable-- 2 'a (Logical 4)
+                    nil [] 'Local
+                    [] [] 'Default
+                    'Source 'Public 'Required
+                    false)
+   ;; using telescoping specs
+   (s/valid? :masr.specs/Variable v) := true
+   (s/valid? :masr.specs/symbol   v) := true
+   (s/valid? :masr.specs/asr-term v) := true))
+
+;; Test SymbolTable with Variable:
+(tests
+ (let [st (SymbolTable
+           2 {:a
+              (Variable
+               2 a [] Local
+               () () Default (Logical 4 [])
+               Source Public Required false),
+              :b
+              (Variable
+               2 b [] Local
+               () () Default (Logical 4 [])
+               Source Public Required false)})]
+   (s/valid? :masr.specs/SymbolTable st) := true
+   ;; A SymbolTable is not a symbol:
+   (s/valid? :masr.specs/symbol      st) := false
+   (s/valid? :masr.specs/asr-term    st) := true))
 
 
 ;;  ___             _   _
@@ -2398,8 +2357,7 @@
 
 (def-term-head--entity-key symbol Function)
 
-
-;;heavy sugar
+;; heavy sugar
 (defn Function [symtab,
                 fnnym,   fnsig,  deps,
                 params-, body-,  retvar,
@@ -2513,3 +2471,91 @@
      (s/valid? ::symbol   afn)  :=  true
      (s/valid? ::Function afn)  :=  true
      ))
+
+
+;;  ___
+;; | _ \_ _ ___  __ _ _ _ __ _ _ __
+;; |  _/ '_/ _ \/ _` | '_/ _` | '  \
+;; |_| |_| \___/\__, |_| \__,_|_|_|_|
+;;              |___/
+
+;; = Program(symbol_table symtab, identifier name, identifier* dependencies,
+;;                        stmt* body)
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  p r e r e q u i s i t e   t y p e   a l i a s e s
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+
+(s/def ::prognym ::identifier)
+
+
+(defmethod symbol-head ::Variable [_]
+  (s/keys :req [::symbol-head
+                ::prognym
+                ::dependencies
+                ::body]))
+
+
+;; ================================================================
+;;  _   _  ___  ____  _____
+;; | \ | |/ _ \|  _ \| ____|
+;; |  \| | | | | | | |  _|
+;; | |\  | |_| | |_| | |___
+;; |_| \_|\___/|____/|_____|
+
+;; A node is an unwritten concept in ASDL. It is an
+;; alternation or disjunction of other things. We'll
+;; make it a nested multi-spec, adding a third level
+;; to the hierarchy. TODO: Instead, we might employ
+;; s/or or s/alt. However, they leave branch tags:
+;; e.g. [:id 42] or [:expr (IntegerConstant 42)] for
+;; (s/or :id ::net, :expr ::expr). It's a hassle with
+;; s/conform to strip those, especially recursively.
+;; Multi-specs are a way to work around that junk.
+
+
+(defmulti node ::node)
+(s/def ::asr-node (s/multi-spec node ::node))
+
+;; (defmethod node ::Program [_]
+;;   (s/keys :req [::node ::asr-node-head]))
+
+
+;; ================================================================
+;;  _   _ _   _ ___ _____
+;; | | | | \ | |_ _|_   _|
+;; | | | |  \| || |  | |
+;; | |_| | |\  || |  | |
+;;  \___/|_| \_|___| |_|
+
+
+;;  _____                 _      _   _         _   _      _ _
+;; |_   _| _ __ _ _ _  __| |__ _| |_(_)___ _ _| | | |_ _ (_) |_
+;;   | || '_/ _` | ' \(_-< / _` |  _| / _ \ ' \ |_| | ' \| |  _|
+;;   |_||_| \__,_|_||_/__/_\__,_|\__|_\___/_||_\___/|_||_|_|\__|
+
+;; This term, unit, has onloy one head,
+;; TranslationUnit.
+
+;; nested multi-spec
+(do (defmulti unit-head ::unit-head)
+    (s/def ::asr-unit-head
+      (s/multi-spec unit-head ::unit-head)))
+
+;; Employ the nested multi-spec:
+(defmethod term ::unit [_]
+  (s/keys :req [::term ::asr-unit-head]))
+
+
+(def-term-entity-key unit)
+
+
+(defmethod unit-head ::TranslationUnit [_]
+  (s/keys :req [::unit-head
+                ::SymbolTable
+                ::nodes]))
+
+
+(def-term-head--entity-key unit TranslationUnit)

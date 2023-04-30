@@ -7,6 +7,12 @@
             [clojure.spec.gen.alpha :as gen]
             [masr.core :as masr]
             [masr.utils :refer [warnings-banner]]
+            [masr.simplespecs :refer [nat
+                                      identifier
+                                      identifier-set
+                                      identifier-list
+                                      identifier-suit
+                                      ]]
             [clojure.set :as set]))
 
 
