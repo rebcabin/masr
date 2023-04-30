@@ -244,17 +244,26 @@ snapshot.[fn:grammar-snapshot]
 
 ** Specs
 
-Clojure specs double as /types/, constituting ASR's
-type system.[fn:spec] The functions =s/valid?= and
-=s/conform= recursively check instances of a form
-against specs.
+Clojure specs are simple, one-parameter predicate
+functions. They double as /types/, constituting
+ASR's type system.[fn:spec][fn:specdocs:
+https://clojuredocs.org/clojure.spec.alpha] The
+function =s/valid?=[fn:svalid:
+https://clojuredocs.org/clojure.spec.alpha/valid_q]
+recursively checks instances of a form against a
+spec. The function =s/conform=[fn:sconform:
+https://clojuredocs.org/clojure.spec.alpha/conform]
+produces a conforming instance from a candidate
+instance, or a value that passes =s/invalid?=.
 
 ** Namespace-Qualified Keywords
 
 Specs are named, defined, and registered via
-/namespace-qualified keywords/. All MASR spec
-keywords are registered in namespace =masr.specs=.
-The file \linebreak =specs.clj= defines the
+/namespace-qualified keywords/ like \linebreak
+=:masr.specs/nat=, in which the namespace is
+=masr.specs= and the keyword is =:nat=. All MASR
+spec keywords are registered in namespace
+=masr.specs=. The file =specs.clj= defines the
 namespace =masr.specs=. In the file =specs.clj=, a
 double-colon shorthand is available. For example,
 =::nat= in the file =specs.clj= is short for
@@ -264,13 +273,18 @@ double-colon shorthand is available. For example,
 
 MASR has three kinds of registered specs:
 
-- simple specs :: --- registered via =s/def=, as in
-  =(s/def ::bool boolean?)=
+- simple specs :: --- registered via
+  =s/def=,[fn:sdef:
+  https://clojuredocs.org/clojure.spec.alpha/def] as
+  in =(s/def ::bool boolean?)=
 
-- entity specs :: --- registered via =s/keys=; have
+- entity specs :: --- defined but not registered via
+  =s/keys=;[fn:skeys:
+  https://clojuredocs.org/clojure.spec.alpha] have
   required and optional attributes; examples below
 
-- multi-specs :: --- defined via =s/multi-spec=,
+- multi-specs :: --- defined via
+  =s/multi-spec=,[fn:smulti-spec:https://clojuredocs.org/clojure.spec.alpha/multi-spec]
   registered via =s/def=; multi-specs have a
   distinguished /tag/ attribute like tagged unions
   in C; examples below
@@ -301,27 +315,29 @@ type-checking is invoked.
 
 ** Sugar
 
-Every spec /qua/ type has a full form as well as
-several shorter sugared forms. Sugar is defined by
-functions like =Integer= and =Integer-= that return
-instances in full-form. Sugar comes in two flavors,
-/light/ and /heavy/. See Section [[sugar]].
+In addition to the full form for every type, there
+are several shorter sugared forms. Sugar is defined
+by functions like =Integer= and =Integer-= that
+return instances in full-form. Sugar comes in three
+flavors, /light/, /heavy/, and /legacy/. See Section
+[[sugar]].
 
 ** Terms and Heads
 
 MASR defines /terms/ and /heads/ that describe the
-semantics of programs. Terms are top-most in the ASR
-grammar and heads are at the bottom level. There are
-only two levels.
+semantics of programs. Terms are top-most in the
+legacy ASDL grammar[fn:grammar-snapshot] --- to the
+left of equals signs --- and heads are at the bottom
+level --- /vbar/-separated alternatives to the right
+of equals signs. There are only two levels.
 
-The following tables summarize this document via
-conforming examples, written in the recommended
-sugar form.
+The following tables summarize MASR via conforming
+examples, written in heavy sugar or legacy form.
 
 Equally important are non-conforming examples. See
-the body of the reference document, =tests= in
-=specs.clj=, and =deftest= in =core_tests= for many
-non-conforming examples.
+(1) the body of the reference document, (2) =tests=
+in =specs.clj=, and (3) =deftest= in =core_tests=
+for many non-conforming examples.
 
 #+caption: Atomic and Naked Specs: No Sugar
 #+label: tbl:atomic-specs
@@ -350,7 +366,7 @@ non-conforming examples.
 | =::dependencies=     | =::identifier-set=       | =(dependencies ['a 'b 'c])= |
 | =::symbolic-value=   | TODO =empty?=            | =(symbolic-value ())=       |
 | =::value=            | TODO =empty?=            | =(value ())=                |
-| =::type-declaration= | TODO nilable =symtab-id= | =(type-declaration nil)=    |
+| =::type-declaration= | nilable =symtab-id=      | =(type-declaration nil)=    |
 | =::varnym=           | =::identifier=           | =(varnym 'x)=               |
 
 #+caption: /Term/ Multi-Specs; Like Tagged Unions
@@ -366,13 +382,14 @@ non-conforming examples.
 
 #+caption: =::asr-term= Specs with Nested /Head/ Multi-Specs
 #+label: tbl:nested-multi-specs
-| **Term**   | **Head**     | **Example**                       |
-|------------+--------------+-----------------------------------|
-| =::ttype=  | =::Integer=  | =(Integer 4 [[6 60] [1 42]])=     |
-| =::ttype=  | =::Real=     | =(Real    8 [[6 60] [1 42]])=     |
-| =::ttype=  | =::Complex=  | =(Complex 4 [[6 60] [1 42]])=     |
-| =::ttype=  | =::Logical=  | =(Logical 1 [[6 60] [1 42]])=     |
-| =::symbol= | =::Variable= | =(Variable 42 'x (Integer 4)...)= |
+| **Term**   | **Head**            | **Example**                         |
+|------------+---------------------+-------------------------------------|
+| =::ttype=  | =::Integer=         | =(Integer 4 [[6 60] [1 42]])=       |
+| =::ttype=  | =::Real=            | =(Real    8 [[6 60] [1 42]])=       |
+| =::ttype=  | =::Complex=         | =(Complex 4 [[6 60] [1 42]])=       |
+| =::ttype=  | =::Logical=         | =(Logical 1 [[6 60] [1 42]])=       |
+| =::symbol= | =::Variable=        | =(Variable 42 x (Integer 4)...)=    |
+| =::expr=   | =::LogicalConstant= | =(LogicalConstant true (Logical 4)= |
 
 \clearpage
 ** Multi-Specs
@@ -382,8 +399,13 @@ Instance hash-maps that conform to multi-spec
 =::asr-term= are polymorphic. They have a tag
 attribute, fetched via =::term=, that must match a
 term =defmethod=.[fn:defmulti:
-https://clojuredocs.org/clojure.core/defmulti] For
-instance, the following example is a valid
+https://clojuredocs.org/clojure.core/defmulti] The
+keyword, =::term=, doubles as an attribute key in
+the instance and as a function that fetches the
+value of the =::term= attribute from any instance
+hash-map.
+
+For instance, the following example is a valid
 =::asr-term= in full-form; its =::term= attribute is
 =::intent=:
 
@@ -403,10 +425,8 @@ registered via =s/def=:
     #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 #+end_src
 
-Its =::term=, =::intent=, matches a term =defmethod=
-below. The keyword, =::term=, doubles as an
-attribute key in the instance and as a function for
-fetching the =::term= value from an instance.
+Its =::term=, =::intent=, matches a term-=defmethod=
+below.
 
 Here is another =::asr-term= in full-form, matching
 a term =defmethod= for =::abi=:
@@ -470,7 +490,7 @@ begin with =::asr-= and end with either =term= or
 \linebreak =::asr-ttype-head=. There is only one
 level of nesting: terms above heads.
 
-Here is the =::asr-term= entity spec for =::ttype=.
+Here is the =::asr-term=-entity spec for =::ttype=.
 The /nested/ multi-spec is named \linebreak
 =::asr-type-head=.
 
@@ -532,67 +552,94 @@ full-form, abbreviated:
       ::symtab-id (nat 2)
       ::varnym    (identifier 'x)
       ::intent    (intent 'Local)
-      ::ttype     (ttype (Integer 4 [[0 42])) ,,, }})
+      ::ttype     (Integer 4 [[0 42])) ,,, }}
 #+end_src
 
-** Light Sugar, Heavy Sugar
+** Light Sugar, Heavy Sugar, Legacy Sugar
 <<sugar>>
 
 /Light-sugar/ forms are shorter than full-form, but
-longer and more explicit than /heavy-sugar/.
-Heavy-sugar require positional arguments, and are
-thus more brittle, especially for long
-specifications with many arguments, where the risk
-is high of getting arguments out of order in
-hand-written code.
+longer and more explicit than /heavy-sugar/. Light
+sugar employs functions with keyword arguments and
+defaults. Heavy sugar employs functions with
+positional arguments and defaults only at the end of
+an argument list. Heavy-sugar functions are thus
+more brittle, especially for long specs with many
+arguments, with high risk of writing arguments out
+of order. /Legacy sugar/ is order-dependent and
+compatible with =--show-asr= output from current
+LCompilers. It will be deprecated when MASR is
+integrated with LCompilers.
 
-Light-sugar specs are returned by functions like
-=Integer-= whose names have trailing hyphens. Light
-sugar functions typically have keyword arguments,
-partitioned into required and
-optional-with-defaults. The keyword argument lists
-of light-sugar functions do not depend on order. The
-following two examples conform to both =::asr-term=
-and to =::ttype=:
-
-\vskip 0.26cm
-#+begin_src clojure :eval never
-  (ttype (Integer- {:dimensions [], :kind 4}))
-  (ttype (Integer- {:kind 4, :dimensions []}))
-#+end_src
-
-Heavy-sugar specs are returned by functions like
-=Integer= whose names do not have trailing hyphens.
-Heavy-sugar specs are compatible with current
-\linebreak =libasr --show-asr= syntax. Heavy-sugar
-functions employ positional arguments that depend on
-order. Final arguments may have defaults. For
-example, the following examples conform to both
-=::asr-term= and to =::ttype=:
+The names of light-sugar functions, like =Integer-=,
+have a single trailing hyphen. The keyword arguments
+of light-sugar functions are partitioned into
+required and optional-with-defaults. The keyword
+argument lists of light-sugar functions do not
+depend on order. The following two examples both
+conform to =::asr-term= and to =::ttype=:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  (ttype (Integer))
-  (ttype (Integer 4))
-  (ttype (Integer 2 []))
-  (ttype (Integer 8 [[6 60] [1 42]]))
+  (Integer- {:dimensions [], :kind 4})
+  (Integer- {:kind 4, :dimensions []})
 #+end_src
 
-Here is a conforming spec for =::Variable= in heavy
-sugar; it also conforms to =::asr-term=:
+The names of heavy-sugar functions, like =Integer=
+or =Variable--=, have either zero or two trailing
+hyphens. The difference concerns legacy. In addition
+to heavy sugar =Variable--=, MASR exports
+=Variable=, a macro for legacy \linebreak
+=libasr --show-asr= syntax. Both produce identical
+full-forms.
+
+\newpage
+For example, The following is heavy sugar for a
+/Variable/, representing the more progressive,
+desired form:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  (let [a-valid (Variable 2 'x (Integer 4)
-                         nil [] 'Local
-                         [] []  'Default
-                         'Source 'Public 'Required
-                         false)]
-   (s/valid? ::asr-term a-valid) := true
-   (s/valid? ::Variable a-valid) := true)
+  (Variable-- 2 'x (Integer 4)
+              nil [] Local
+              [] []  Default
+              Source Public Required
+              false)
 #+end_src
 
+and here is a legacy version of the same instance:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (Variable 2 x []
+            Local () ()
+            Default (Integer 4 []) Source
+            Public Required false)
+#+end_src
+
+Notice no quote mark on the name of the variable.
+That's the way =--show-asr= prints it.
+
+For specs where MASR heavy sugar and ASDL legacy are
+identical, like =Integer=, there is only one
+function with no trailing hyphens in its name.
+
+Heavy-sugar functions employ positional arguments
+that depend on order. Final arguments may have
+defaults. For example, the following examples
+conform to both =::asr-term= and to =::ttype=:
+
+\vskip 0.26cm
+#+begin_src clojure :eval never
+  (Integer)
+  (Integer 4)
+  (Integer 2 [])
+  (Integer 8 [[6 60] [1 42]])
+#+end_src
+
+\clearpage
 *** \color{red}{Term Entity-Key Specs}
+<<entity-key-specs>>
 
 For recursive type checking, as in =::Variable=, it
 is not convenient for terms to conform /only/ to
@@ -625,6 +672,10 @@ helper function and a macro:
          (term-selector-spec ~tkw))))
 #+end_src
 
+Remember the name, =term-selector-spec=, of the
+helper function. We reuse it in the =def-enum-like=
+macro in the next section.
+
 Here are some invocations of that macro:
 
 \vskip 0.26cm
@@ -634,28 +685,30 @@ Here are some invocations of that macro:
   (def-term-entity-key ttype)
 #+end_src
 
+\newpage
 Here are some examples of extra conformance tests
-for sugared specs via term entity-key specs:
+for sugared instances via term entity-key specs:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
-  (s/valid? ::asr-term  (dimension []))        := true
-  (s/valid? ::asr-term  (dimension '(1 60)))   := true
-  (s/valid? ::asr-term  (dimension '()))       := true
+  (s/valid? ::asr-term  (dimension []))      := true
+  (s/valid? ::asr-term  (dimension '(1 60))) := true
+  (s/valid? ::asr-term  (dimension '()))     := true
 
-  (s/valid? ::dimension (dimension []))        := true
-  (s/valid? ::dimension (dimension '(1 60)))   := true
-  (s/valid? ::dimension (dimension '()))       := true
+  (s/valid? ::dimension (dimension []))      := true
+  (s/valid? ::dimension (dimension '(1 60))) := true
+  (s/valid? ::dimension (dimension '()))     := true
 
-  (s/valid? ::asr-term (ttype (Integer 4)))    := true
-  (s/valid? ::asr-term (ttype (Integer 4 []))) := true
+  (s/valid? ::asr-term  (Integer 4))         := true
+  (s/valid? ::asr-term  (Integer 4 []))      := true
 
-  (s/valid? ::ttype    (ttype (Integer 4)))    := true
-  (s/valid? ::ttype    (ttype (Integer 4 []))) := true
+  (s/valid? ::ttype     (Integer 4))         := true
+  (s/valid? ::ttype     (Integer 4 []))      := true
 
 #+end_src
 
 *** \color{red}{Enum-Like Specs}
+<<enum-likes>>
 
 Entity-key specs are defined automatically for all
 /enum-like/ terms via the \linebreak =enum-like=
@@ -676,6 +729,9 @@ macro:
          ,,, )))
 #+end_src
 
+The macro, incidentally, defines and registers
+entity-key specs, as explained in the prior section.
+
 Here are some examples of extra conformance tests
 for automatically defined term entity-keys for
 enum-like specs:
@@ -688,12 +744,14 @@ enum-like specs:
    (s/conform ::intent iex)           := iex)
 #+end_src
 
+\newpage
 *** \color{red}{Term-Head Entity-Key Specs}
 
-For terms like =::symbol= and =::stmt= with multiple
-heads like =::Variable= and =::Assignment= it is
-convenient to define redundant entity-key specs like
-the following:
+For terms like =::symbol=, =::ttype=, and =::stmt=,
+which have multiple heads like =::Variable=,
+=::Integer=, and =::Assignment=, it is convenient to
+define redundant entity-key specs like the
+following:
 
 \vskip 0.26cm
 #+begin_src clojure :eval never
@@ -702,6 +760,11 @@ the following:
        #(= ::Variable              ;; nested tag
            (-> % ::asr-symbol-head ;; nested multi-spec
                  ::symbol-head)))) ;; tag fetcher
+   (s/def ::Integer                ;; head entity key
+     (s/and ::asr-term             ;; top multi-spec
+       #(= ::Integer               ;; nested tag
+           (-> % ::asr-symbol-head ;; nested multi-spec
+                 ::ttype-head))))  ;; tag fetcher
    (s/def ::Assignment             ;; head entity key
      (s/and ::asr-term             ;; top multi-spec
        #(= ::Assignment            ;; nested tag
@@ -709,20 +772,15 @@ the following:
                  ::stmt-head       ;; tag fetcher
 #+end_src
 
-We define these with another macro,
-=def-term-head--entity-key=. The definition of this
-macro is found in the file =specs.clj=. An example
-of conformance to =::Variable= is found above, in
+We define these with macros,
+=def-term-head--entity-key= and
+=def-ttype-and-head=. The definition of these macros
+are found in the file =specs.clj=. An example of
+conformance to =::Variable= is found above, in
 Section [[sugar]].
 
-We do not define term-head entity-key specs for
-every term, but only where convenient. For example,
-we don't define term-head entity-key specs for
-=::Integer=, =::Real=, =::Complex=, and =::Logical=
-ttypes. Conformance of such specs to =::ttype=
-suffice for recursive type-checking in heavy sugar.
-
-* ASDL Back-Channel
+\clearpage
+* COMMENT ASDL Back-Channel
 
 As an intermediate step from MASR to LASR, we will
 initially produce ASDL from MASR. Eventually, we
@@ -779,11 +837,6 @@ and so on. This works because all heads in ASR,
 including enum-likes, are unique at top level,
 despite being categorized under terms. No two terms
 have any heads that are alike.
-
-TODO: Similar definitions for non-constant symbols
-like =x= can be made, but collisions with extant
-definitions must be avoided. This problem of
-collisions is **unsolved**.
 
 \newpage
 A macro to automate these definitions for any

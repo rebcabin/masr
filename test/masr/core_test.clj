@@ -497,39 +497,32 @@
 ;;          |__/|_|
 
 
-(defn vh? [term]
-  (s/valid? ::asr/asr-ttype-head term))
-
-
-(defn vt? [term]
-  (s/valid? ::asr/asr-term term))
-
-
-(defn cfh [head]
-  (s/conform ::asr/asr-ttype-head head))
+(defn vt? [ttype]
+  (and (s/valid? ::asr/asr-term ttype)
+       (s/valid? ::asr/ttype    ttype)))
 
 
 (deftest ttype-test
   (testing "full-sugar and light-sugar)"
-    (is (vt? (ttype (Integer))))
-    (is (vt? (ttype (Integer 4))))
-    (is (vt? (ttype (Integer 4 []))))
-    (is (vt? (ttype (Integer 4 [[6 60] [1 42]]))))
-    (is (vt? (ttype (Integer))))
-    (is (vt? (ttype (Integer 8))))
-    (is (vt? (ttype (Integer 8 []))))
-    (is (vt? (ttype (Integer 8 [[6 60] [1 82]]))))
-    (is (vt? (ttype (Logical))))
-    (is (vt? (ttype (Logical 4))))
-    (is (vt? (ttype (Logical 4 []))))
-    (is (vt? (ttype (Logical 4 [[6 60] [1 42]]))))
-    (is (vt? (ttype (Integer- {:dimensions [], :kind 4}))))
-    (is (vt? (ttype (Integer- {:kind 4, :dimensions []}))))
+    (is (vt? (Integer)))
+    (is (vt? (Integer 4)))
+    (is (vt? (Integer 4 [])))
+    (is (vt? (Integer 4 [[6 60] [1 42]])))
+    (is (vt? (Integer)))
+    (is (vt? (Integer 8)))
+    (is (vt? (Integer 8 [])))
+    (is (vt? (Integer 8 [[6 60] [1 82]])))
+    (is (vt? (Logical)))
+    (is (vt? (Logical 4)))
+    (is (vt? (Logical 4 [])))
+    (is (vt? (Logical 4 [[6 60] [1 42]])))
+    (is (vt? (Integer- {:dimensions [], :kind 4})))
+    (is (vt? (Integer- {:kind 4, :dimensions []})))
     (testing "non-conformance"
-      (is (not (vt? (ttype (Logical 4 ['fubar])))))
-      (is (not (vt? (ttype (Logical 8)))))
-      (is (not (vt? (ttype (Logical 0 [])))))
-      (is (not (vt? (ttype (Logical 42 [[6 60] [42]])))))))
+      (is (not (vt? (Logical 4 ['fubar]))))
+      (is (not (vt? (Logical 8))))
+      (is (not (vt? (Logical 0 []))))
+      (is (not (vt? (Logical 42 [[6 60] [42]]))))))
   (testing "full-form"
     (is (vt?
         {::asr/term ::asr/ttype,
@@ -543,27 +536,13 @@
           {::asr/ttype-head   ::asr/Real,
            ::asr/real-kind    4
            ::asr/dimensions   []}})))
-  (testing "syntax sugar"
-    (is (vh? (Integer 1 [])))
-    (is (vh? (Integer 2 [])))
-    (is (vh? (Integer 4 [])))
-    (is (vh? (Integer 8 [])))
-    (is (vh? (Integer)))
-    (is (vh? (Real 4 [])))
-    (is (vh? (Real 8 [])))
-    (is (vh? (Real))))
-  (testing "non-conformance"
-    (is (not (vh? (Real 1 []))))
-    (is (not (vh? (Real 2 []))))
-    (is (not (vh? (Integer 42))))
-    (is (not (vh? (Integer 'fubar)))))
   (testing "defaults"
-    (is (= (cfh (Integer))
+    (is (= (Integer)
            (Integer 4 [])))
-    (is (= (cfh (Integer 4))
+    (is (= (Integer 4)
            (Integer 4 []))))
   (testing "order-independence of light sugar"
-    (is (= (cfh (Integer- {:dimensions [], :kind 4}))
+    (is (= (Integer- {:dimensions [], :kind 4})
            (Integer- {:kind 4, :dimensions []})))))
 
 
