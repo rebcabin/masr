@@ -241,10 +241,15 @@
 ;; https://github.com/rebcabin/masr/issues/5
 
 
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  p l u r a l i t i e s
+;; -+-+-+-+-+-+-+-+-+-+-+-
+
+
 (def MIN-DIMENSION-COUNT 0)
 (def MAX-DIMENSION-COUNT 2)
 
-
+;; consider a regex-spec
 (s/def ::dimension-content
   (s/and (fn [it] (not (= 1 (count it))))
    (s/coll-of ::nat
@@ -294,7 +299,7 @@
 (defn dimension [it] ;; candidate contents
   (if (or (not (coll? it)) (set? it) (map? it))
     ::invalid-dimension
-    (let [cnf (s/conform ::asr-term
+    (let [cnf (s/conform ::dimension
                           {::term ::dimension,
                            ::dimension-content it})]
       (if (s/invalid? cnf)
@@ -339,22 +344,22 @@
 ;; not an asr-term
 
 
-;; -+-+-+-+-+-+-+-+-+-
-;;  f u l l   f o r m
-;; -+-+-+-+-+-+-+-+-+-
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  p l u r a l i t i e s
+;; -+-+-+-+-+-+-+-+-+-+-+-
 
 
 (def MIN-NUMBER-OF-DIMENSIONS 0)  ;; TODO: 1?
 (def MAX-NUMBER-OF-DIMENSIONS 9)
 
-
+;; consider a regex-spec
 (s/def ::dimensions
   (s/coll-of (term-selector-spec ::dimension)
              :min-count MIN-NUMBER-OF-DIMENSIONS,
              :max-count MAX-NUMBER-OF-DIMENSIONS,
              :into []))
 
-
+;; full-form
 (tests (s/valid?
         ::dimensions
         [#:masr.specs{:term :masr.specs/dimension,
@@ -667,14 +672,13 @@
    (cond
      (not (= ext-kw :external)) ::invalid-abi
      :else
-     (let [abi_ (s/conform
-                 ::abi
-                 {::term         ::abi,
-                  ::abi-enum     the-enum,
-                  ::abi-external the-bool})]
-       (if (s/invalid? abi_)
+     (let [cnf (s/conform ::abi
+                          {::term         ::abi,
+                           ::abi-enum     the-enum,
+                           ::abi-external the-bool})]
+       (if (s/invalid? cnf)
          ::invalid-abi
-         abi_)))))
+         cnf)))))
 
 ;; ASDL Back-Channel
 (def LFortranModule (abi 'LFortranModule :external true))
@@ -800,15 +804,20 @@
 (def-term-entity-key ttype)
 
 
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  p l u r a l i t i e s
+;; -+-+-+-+-+-+-+-+-+-+-+-
+
+
 (def MIN-NUMBER-OF-TTYPES    0)
 (def MAX-NUMBER-OF-TTYPES 1024)
 
-
+;; consider a regex-spec
 (s/def ::ttypes (s/coll-of ::ttype
                           :min-count MIN-NUMBER-OF-TTYPES
                           :max-count MAX-NUMBER-OF-TTYPES))
 
-
+;; consider a regex-spec
 (s/def ::ttypeq (s/coll-of ::ttype
                           :min-count 0
                           :max-count 1))
@@ -928,7 +937,7 @@
           (dimensions [[6 60] [1 42]])}]
    (s/conform ::asr-ttype-head a)          := a))
 
-;; full-forms
+;; full-form
 (tests
  (s/valid? ::asr-term
            {::term ::ttype,
@@ -951,10 +960,9 @@
 
 
 (defn ttype [it]
-  (let [cnf (s/conform
-             ::asr-term
-             {::term ::ttype,
-              ::asr-ttype-head it})]
+  (let [cnf (s/conform ::ttype
+                       {::term ::ttype,
+                        ::asr-ttype-head it})]
     (if (s/invalid? cnf)
       ::invalid-ttype
       cnf)))
@@ -1104,9 +1112,17 @@
 ;; restrictions until symbol is properly defined
 ;; below.
 (def-term-entity-key symbol)
-;; consider a regex-spec
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  p l u r a l i t i e s
+;; -+-+-+-+-+-+-+-+-+-+-+-
+
+
 (def MIN-NUMBER-OF-SYMBOLS   0)
 (def MAX-NUMBER-OF-SYMBOLS 128)
+
+;; consider a regex-spec
 (s/def ::symbols (s/coll-of ::symbol
                             :min-count MIN-NUMBER-OF-SYMBOLS
                             :max-count MAX-NUMBER-OF-SYMBOLS))
@@ -1247,6 +1263,11 @@
 
 
 (def-term-entity-key expr)
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  p l u r a l i t i e s
+;; -+-+-+-+-+-+-+-+-+-+-+-
 
 
 (def MIN-NUMBER-OF-EXPRS    0)
@@ -1537,6 +1558,11 @@
 (def-term-entity-key stmt)
 
 
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  p l u r a l i t i e s
+;; -+-+-+-+-+-+-+-+-+-+-+-
+
+
 (def MIN-NUMBER-OF-STMTS    0)
 (def MAX-NUMBER-OF-STMTS 1024)
 
@@ -1676,7 +1702,8 @@
 
 ;; Employ the nested multi-spec:
 (defmethod term ::symbol [_]
-  (s/keys :req [::term ::asr-symbol-head]))
+  (s/keys :req [::term
+                ::asr-symbol-head]))
 
 
 ;; (def-term-entity-key symbol) moved
@@ -1775,35 +1802,34 @@
            access           Public
            presence         Required
            value-attr       false}}]
-  (let [cnf (s/conform
-             ::asr-term
-             {::term              ::symbol,
-              ::asr-symbol-head
-              {::symbol-head      ::Variable,
+  (let [cnf (s/conform ::Variable
+                       {::term              ::symbol,
+                        ::asr-symbol-head
+                        {::symbol-head      ::Variable,
 
-               ::symtab-id        symtab-id,
-               ::varnym           varnym,
-               ::ttype            ttype,
+                         ::symtab-id        symtab-id,
+                         ::varnym           varnym,
+                         ::ttype            ttype,
 
-               ::type-declaration type-declaration,
-               ::dependencies     dependencies,
-               ::intent           intent,
+                         ::type-declaration type-declaration,
+                         ::dependencies     dependencies,
+                         ::intent           intent,
 
-               ::symbolic-value   symbolic-value,
-               ::value            value,
-               ::storage-type     storage-type,
+                         ::symbolic-value   symbolic-value,
+                         ::value            value,
+                         ::storage-type     storage-type,
 
-               ::abi              abi,
-               ::access           access,
-               ::presence         presence,
+                         ::abi              abi,
+                         ::access           access,
+                         ::presence         presence,
 
-               ::value-attr       value-attr,
-               }})]
+                         ::value-attr       value-attr,
+                         }})]
     (if (s/invalid? cnf)
       ::invalid-variable
       cnf)))
 
-;; Test full-form:
+;; full-form
 (let [a-var-head {::symbol-head      ::Variable
 
                   ::symtab-id        2
@@ -1975,41 +2001,40 @@
    symbolic-value-,    value-,         storage-type-,
    abi-,               access-,        presence-,
    value-attr-]
-  (let [cnf (s/conform
-             ::asr-term
-             {::term              ::symbol,
-              ::asr-symbol-head
-              {::symbol-head      ::Variable,
+  (let [cnf (s/conform ::Variable
+                       {::term              ::symbol,
+                        ::asr-symbol-head
+                        {::symbol-head      ::Variable,
 
-               ::symtab-id        symtab-id-,
-               ::varnym           varnym-,
-               ::ttype            ttype-, ;; already wrapped!
+                         ::symtab-id        symtab-id-,
+                         ::varnym           varnym-,
+                         ::ttype            ttype-, ;; already wrapped!
 
-               ;; https://github.com/rebcabin/masr/issues/28
-               ::type-declaration typedecl-
-               ::dependencies     dependencies-,
-               ::intent           (if (symbol? intent-)
-                                      (intent  intent-)
-                                      intent-),
+                         ;; https://github.com/rebcabin/masr/issues/28
+                         ::type-declaration typedecl-
+                         ::dependencies     dependencies-,
+                         ::intent           (if (symbol? intent-)
+                                              (intent  intent-)
+                                              intent-),
 
-               ::symbolic-value   symbolic-value-,
-               ::value            value-,
-               ::storage-type     (if (symbol? storage-type-)
-                                    (storage-type storage-type-)
-                                    storage-type-),
+                         ::symbolic-value   symbolic-value-,
+                         ::value            value-,
+                         ::storage-type     (if (symbol? storage-type-)
+                                              (storage-type storage-type-)
+                                              storage-type-),
 
-               ::abi              (if (symbol? abi-)
-                                    (abi abi-)
-                                    abi-),
-               ::access           (if (symbol? access-)
-                                    (access access-)
-                                    access-),
-               ::presence         (if (symbol? presence-)
-                                    (presence presence-)
-                                    presence-),
+                         ::abi              (if (symbol? abi-)
+                                              (abi abi-)
+                                              abi-),
+                         ::access           (if (symbol? access-)
+                                              (access access-)
+                                              access-),
+                         ::presence         (if (symbol? presence-)
+                                              (presence presence-)
+                                              presence-),
 
-               ::value-attr       value-attr-,
-               }})]
+                         ::value-attr       value-attr-,
+                         }})]
     (if (s/invalid? cnf)
       ::invalid-variable
       cnf)))
@@ -2358,6 +2383,7 @@
 (s/def ::deterministic      ::bool)
 (s/def ::side-effect-free   ::bool)
 
+
 (defmethod symbol-head ::Function [_]
   (s/keys :req [::symbol-head
 
@@ -2386,7 +2412,7 @@
                 access-, determ, sefree]
   (let [cnf {::term ::symbol
              ::asr-symbol-head
-             {::symbol-head ::Function
+             {::symbol-head         ::Function
 
               ::SymbolTable         symtab
 
@@ -2528,15 +2554,14 @@
 
 
 (defn Program [stab, nym, deps, body-]
-  (let [cnf (s/conform
-             ::asr-term
-             {::term ::symbol,
-              ::asr-symbol-head
-              {::symbol-head  ::Program
-               ::SymbolTable  stab
-               ::prognym      nym
-               ::dependencies deps
-               ::body         body-}})]
+  (let [cnf (s/conform ::Program
+                       {::term ::symbol,
+                        ::asr-symbol-head
+                        {::symbol-head  ::Program
+                         ::SymbolTable  stab
+                         ::prognym      nym
+                         ::dependencies deps
+                         ::body         body-}})]
     (if (s/invalid? cnf)
       ::invalid-program
       cnf)))
@@ -2552,6 +2577,102 @@
    (s/valid? ::symbol   p) := true
    (s/valid? ::Program  p) := true)
  )
+
+
+(tests
+ (let [p (legacy (Program
+                  (SymbolTable 3 {})
+                  'main_program
+                  []
+                  [(= (Var 2 a)
+                      (LogicalConstant false (Logical 4 []))
+                      ())]))]
+   (s/valid? ::asr-term p) := true
+   (s/valid? ::symbol   p) := true
+   (s/valid? ::Program  p) := true)
+ )
+
+
+;; ================================================================
+;;  _   _ _   _ ___ _____
+;; | | | | \ | |_ _|_   _|
+;; | | | |  \| || |  | |
+;; | |_| | |\  || |  | |
+;;  \___/|_| \_|___| |_|
+
+
+(defmethod term ::unit [_]
+  (s/keys :reg [::term
+                ::asr-unit-head]))
+
+
+(def-term-entity-key unit)
+
+
+;; Unit has only one nested term-head spec, but we follow the pattern.
+(do (defmulti unit-head ::unit-head)
+    (s/def ::asr-unit-head
+      (s/multi-spec unit-head ::unit-head)))
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;  p l u r a l i t i e s
+;; -+-+-+-+-+-+-+-+-+-+-+-
+;;
+;; temporary, until we figure out nodes
+
+
+(def MIN-SYMBOL-COUNT    0)
+(def MAX-SYMBOL-COUNT 4096)
+
+;; consider a regex-spec
+(s/def ::symbols
+  (s/and (s/coll-of ::symbol
+                    :min-count MIN-SYMBOL-COUNT,
+                    :max-count MAX-SYMBOL-COUNT)))
+
+
+(defmethod unit-head ::TranslationUnit [_]
+  (s/keys :req [::unit-head
+                ::SymbolTable
+                ::symbols]))
+
+
+(def-term-head--entity-key unit TranslationUnit)
+
+
+(defn TranslationUnit [stab, nodes-]
+  (let [cnf (s/conform ::unit
+                       {::term          ::unit
+                        ::asr-unit-head
+                        {::unit-head    ::TranslationUnit
+                         ::SymbolTable  stab
+                         ::symbols      nodes-}})]
+    (if (s/invalid? cnf)
+      :invalid-translation-unit
+      cnf)))
+
+
+(tests
+ (s/valid? ::unit
+           (TranslationUnit
+            (SymbolTable 42 {})
+            [(Program
+              (SymbolTable 3 {})
+              'main_program
+              []
+              [])])) := true
+ (s/valid? ::unit
+           (legacy
+            (TranslationUnit
+             (SymbolTable 42 {})
+             [(Program
+               (SymbolTable 3 {})
+               'main_program
+               []
+               [(= (Var 2 a)
+                   (LogicalConstant false (Logical 4 []))
+                   ())])]))))
 
 
 ;; ================================================================
@@ -2579,88 +2700,164 @@
 ;; like "legacy".
 
 
-(do (defmulti node ::node)
-    (s/def ::asr-node
-      (s/multi-spec node ::node)))
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  i n f r a s t r u c t u r e
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+;; See (defmulti term ::term) for pattern
 
 
-(defmethod node ::Program-node [_]
-  (s/keys :req [::node
-                ::Program]))
+;; (s/def ::node qualified-keyword?)
 
-;; heavy sugar
-;; (defn Program-node [pgm]
-;;   (let ))
-
-
-(tests
- (let [p (Program
-          (SymbolTable 3 {})
-          'main_program
-          []
-          [])]
-   (s/valid? ::asr-term p) := true
-   (s/valid? ::symbol   p) := true
-   (s/valid? ::Program  p) := true)
- )
-
-;; "Head" is a synonym for "alternative."
-;; (do (defmulti node-head ::node-head)
-;;     (s/def ::asr-node-head
-;;       (s/multi-spec node-head ::node-head)))
+;; ;; All multi-specs, nested or not, have names that begin with "asr-".
+;; (do (defmulti node ::node)
+;;     (s/def ::asr-node
+;;       (s/multi-spec node ::node)))
 
 
+;; (defmethod node ::Program-node [_]
+;;   (s/keys :req [::node
+;;                 ::Program ;; a symbol-head
+;;                 ]))
+
+;; ;; for node-entity-key
 ;; (defn node-selector-spec [kwd]
 ;;   (s/and ::asr-node
 ;;          #(= kwd (::node %))))
 
 
 ;; (defmacro def-node-entity-key
-;;   "Define node entity key like ::Program,
+;;   "Define node entity key like ::Program-node,
 ;;   which is an ::asr-node."
 ;;   [node]
 ;;   (let [ns "masr.specs"
 ;;         tkw (keyword ns (str node))]
-;;     `(s/def ~tkw    ;; like ::dimension
+;;     `(s/def ~tkw    ;; like ::Program-node
 ;;        (node-selector-spec ~tkw))))
 
 
-;; (def-node)
+;; ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;; ;;  p a r t i c u l a r   n o d e s
+;; ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
-;; ================================================================
-;;  _   _ _   _ ___ _____
-;; | | | | \ | |_ _|_   _|
-;; | | | |  \| || |  | |
-;; | |_| | |\  || |  | |
-;;  \___/|_| \_|___| |_|
+;; (def-node-entity-key Program-node)
+
+;; ;; heavy sugar
+;; (defn Program-node [pgm]
+;;   (let [cnf {::node    ::Program-node
+;;              ::Program pgm}]
+;;     (if (s/invalid? cnf)
+;;       :invalid-program-node
+;;       cnf)))
+
+;; ;; conformance
+;; (tests
+;;  (let [p (Program
+;;           (SymbolTable 3 {})
+;;           'main_program
+;;           []
+;;           [])
+;;        n (Program-node p)]
+;;    (s/valid? ::asr-node n)     := true
+;;    (s/valid? ::Program-node n) := true
+;;    ))
 
 
-;;  _____                 _      _   _         _   _      _ _
-;; |_   _| _ __ _ _ _  __| |__ _| |_(_)___ _ _| | | |_ _ (_) |_
-;;   | || '_/ _` | ' \(_-< / _` |  _| / _ \ ' \ |_| | ' \| |  _|
-;;   |_||_| \__,_|_||_/__/_\__,_|\__|_\___/_||_\___/|_||_|_|\__|
-
-;; This term, unit, has onloy one head,
-;; TranslationUnit.
-
-;; nested multi-spec
-(do (defmulti unit-head ::unit-head)
-    (s/def ::asr-unit-head
-      (s/multi-spec unit-head ::unit-head)))
-
-;; Employ the nested multi-spec:
-(defmethod term ::unit [_]
-  (s/keys :req [::term ::asr-unit-head]))
+;; ;; -+-+-+-+-+-+-+-+-+-+-+-
+;; ;;  p l u r a l i t i e s
+;; ;; -+-+-+-+-+-+-+-+-+-+-+-
 
 
-(def-term-entity-key unit)
+;; (def MIN-NODE-COUNT    0)
+;; (def MAX-NODE-COUNT 4096)
+
+;; ;; consider a regex-spec
+;; (s/def ::nodes (s/coll-of ::asr-node
+;;                           :min-count MIN-NODE-COUNT
+;;                           :max-count MAX-NODE-COUNT))
+
+;; ;; consider a regex-spec
+;; (s/def ::nodeq (s/coll-of ::asr-node
+;;                           :min-count 0
+;;                           :max-count 1))
 
 
-(defmethod unit-head ::TranslationUnit [_]
-  (s/keys :req [::unit-head
-                ::SymbolTable
-                ::nodes]))
+;; (tests
+;;  (let [p (Program
+;;           (SymbolTable 3 {})
+;;           'main_program
+;;           []
+;;           [])
+;;        n (Program-node p)]
+;;    (s/valid? ::nodes [n])     := true
+;;    ))
+
+;; ;; ================================================================
+;; ;;  _   _ _   _ ___ _____
+;; ;; | | | | \ | |_ _|_   _|
+;; ;; | | | |  \| || |  | |
+;; ;; | |_| | |\  || |  | |
+;; ;;  \___/|_| \_|___| |_|
 
 
-(def-term-head--entity-key unit TranslationUnit)
+;; ;;  _____                 _      _   _         _   _      _ _
+;; ;; |_   _| _ __ _ _ _  __| |__ _| |_(_)___ _ _| | | |_ _ (_) |_
+;; ;;   | || '_/ _` | ' \(_-< / _` |  _| / _ \ ' \ |_| | ' \| |  _|
+;; ;;   |_||_| \__,_|_||_/__/_\__,_|\__|_\___/_||_\___/|_||_|_|\__|
+
+;; ;; This term, unit, has onloy one head,
+;; ;; TranslationUnit.
+
+;; ;; nested multi-spec, see "symbol-head" for pattern.
+;; (do (defmulti unit-head ::unit-head)
+;;     (s/def ::asr-unit-head
+;;       (s/multi-spec unit-head ::unit-head)))
+
+;; ;; Employ the nested multi-spec:
+;; (defmethod term ::unit [_]
+;;   (s/keys :req [::term
+;;                 ::asr-unit-head]))
+
+
+;; (def-term-entity-key unit)
+
+
+;; (defmethod unit-head ::TranslationUnit [_]
+;;   (s/keys :req [::unit-head
+;;                 ::SymbolTable
+;;                 ::nodes]))
+
+
+;; (s/valid? ::asr-term
+;;            {::term ::unit
+;;             ::asr-unit-head
+;;             {::unit-head ::TranslationUnit
+;;              ::SymbolTable (SymbolTable 42 {})
+;;              ::nodes []}})
+
+
+;; (def-term-head--entity-key unit TranslationUnit)
+
+
+;; (defn TranslationUnit [stab, nodes-]
+;;   (let [cnf (s/conform ::asr-term
+;;                        {::term          ::unit
+;;                         ::asr-unit-head
+;;                         {::unit-head    ::TranslationUnit
+;;                          ::SymbolTable  stab
+;;                          ::nodes        nodes-}})]
+;;     (if (s/invalid? cnf)
+;;       :invalid-translation-unit
+;;       cnf)))
+
+
+;; (tests
+;;  (s/explain ::asr-term
+;;            (TranslationUnit
+;;             (SymbolTable 42 {})
+;;             [(Program
+;;               (SymbolTable 3 {})
+;;               'main_program
+;;               []
+;;               [])])) := true)
