@@ -597,6 +597,10 @@
 (enum-like cmpop #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
 (enum-like intent #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 (enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
+(enum-like logicalcmpop #{'Eq 'NotEq})
+(enum-like access #{'Public 'Private})
+(enum-like presence #{'Required 'Optional})
+(enum-like deftype #{'Implementation, 'Interface})
 
 
 ;;       _    _
@@ -736,49 +740,6 @@
  (s/conform ::abi      LFortranModule) := LFortranModule
  (abi 'LFortranModule true)            := ::invalid-abi
  (abi 'LFortranModule :external false) := ::invalid-abi)
-
-
-;;  __ _ __ __ ___ ______
-;; / _` / _/ _/ -_|_-<_-<
-;; \__,_\__\__\___/__/__/
-
-
-(enum-like access #{'Public 'Private})
-
-
-(tests
- (let [public (access 'Public)]
-   (s/conform ::asr-term public) := public
-   (s/conform ::access   public) := public)
- (access 'foobar) := ::invalid-access)
-
-;; ASDL Back-Channel
-(tests
- (let [public Public]
-   (s/conform ::asr-term public) := public
-   (s/conform ::access   public) := public))
-
-
-;;  _ __ _ _ ___ ___ ___ _ _  __ ___
-;; | '_ \ '_/ -_|_-</ -_) ' \/ _/ -_)
-;; | .__/_| \___/__/\___|_||_\__\___|
-;; |_|
-
-
-(enum-like presence #{'Required 'Optional})
-
-
-(tests
- (let [required (presence 'Required)]
-   (s/conform ::asr-term required) := required
-   (s/conform ::presence required) := required)
- (presence 'fubar) := ::invalid-presence)
-
-;; ASDL Back-Channel
-(tests
- (let [required Required]
-   (s/conform ::asr-term required) := required
-   (s/conform ::presence required) := required))
 
 
 ;; ================================================================
@@ -1129,7 +1090,7 @@
 (s/def ::param-types     ::ttypes)
 (s/def ::return-var-type ::ttypeq)
 ;; ABI is already good enough.
-(enum-like deftype #{'Implementation, 'Interface})
+;; deftype is found above
 (s/def ::bindc-name      (s/nilable string?))
 (s/def ::elemental       ::bool)
 (s/def ::pure            ::bool)
@@ -1140,16 +1101,18 @@
 ;; symbol* is written "symbols," and restrictions
 ;; is a type alias for symbols.
 ;;
-;; forward reference. Can only test empty
+;; forward reference. Can only test empty symbol*
 ;; restrictions until symbol is properly defined
 ;; below.
 (def-term-entity-key symbol)
+;; consider a regex-spec
 (def MIN-NUMBER-OF-SYMBOLS   0)
 (def MAX-NUMBER-OF-SYMBOLS 128)
 (s/def ::symbols (s/coll-of ::symbol
                             :min-count MIN-NUMBER-OF-SYMBOLS
                             :max-count MAX-NUMBER-OF-SYMBOLS))
 ;; symbol? is written "symbolq."
+;; consider a regex-spec
 (s/def ::symbolq (s/coll-of ::symbol :min-count 0, :max-count 1))
 (s/def ::restrictions    ::symbols)
 (s/def ::is-restriction  ::bool)
@@ -1264,6 +1227,47 @@
 
 
 ;; ================================================================
+;;  _   _ _   _ ___ _____
+;; | | | | \ | |_ _|_   _|
+;; | | | |  \| || |  | |
+;; | |_| | |\  || |  | |
+;;  \___/|_| \_|___| |_|
+
+
+;;  _____                 _      _   _         _   _      _ _
+;; |_   _| _ __ _ _ _  __| |__ _| |_(_)___ _ _| | | |_ _ (_) |_
+;;   | || '_/ _` | ' \(_-< / _` |  _| / _ \ ' \ |_| | ' \| |  _|
+;;   |_||_| \__,_|_||_/__/_\__,_|\__|_\___/_||_\___/|_||_|_|\__|
+
+;; This term, unit, has onloy one head,
+;; TranslationUnit.
+
+;; nested multi-spec
+(do (defmulti unit-head ::unit-head)
+    (s/def ::asr-unit-head
+      (s/multi-spec unit-head ::unit-head)))
+
+;; Employ the nested multi-spec:
+(defmethod term ::unit [_]
+  (s/keys :req [::term ::asr-unit-head]))
+
+
+(def-term-entity-key unit)
+
+
+(defmethod unit-head ::TranslationUnit [_]
+  (s/keys :req [::unit-head
+                ::SymbolTable
+                ::nodes]))
+
+
+#_(s/def ::node (s/one-of ::expr ::stmt ::symbol))
+
+
+(def-term-head--entity-key unit TranslationUnit)
+
+
+;; ================================================================
 ;;  ______   ____  __ ____   ___  _
 ;; / ___\ \ / /  \/  | __ ) / _ \| |
 ;; \___ \\ V /| |\/| |  _ \| | | | |
@@ -1290,8 +1294,9 @@
 (defmethod term ::symbol [_]
   (s/keys :req [::term ::asr-symbol-head]))
 
-;; This is moved above Function type
-;; (def-term-entity-key symbol)
+
+;; (def-term-entity-key symbol) moved above
+;; FunctionType
 ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -1940,19 +1945,19 @@
 (def MIN-NUMBER-OF-EXPRS    0)
 (def MAX-NUMBER-OF-EXPRS 1024)
 
-
+;; consider a regex-spec
 (s/def ::exprs (s/coll-of ::expr
                           :min-count MIN-NUMBER-OF-EXPRS
                           :max-count MAX-NUMBER-OF-EXPRS))
 
-
+;; consider a regex-spec
 (s/def ::exprq (s/coll-of ::expr
                           :min-count 0
                           :max-count 1))
 ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-;; To add a new head to term expr, create a
+;; To add a new head to term "expr," create a
 ;; defmethod and a term-head entity key according to
 ;; the patterns obvious in the examples below. Also
 ;; add sugar functions like LogicalConstant-,
@@ -2161,9 +2166,6 @@
 ;;                  expr? value)
 
 
-(enum-like logicalcmpop #{'Eq 'NotEq})
-
-
 (defmethod expr-head ::LogicalCompare [_]
   (s/keys :req [::expr-head
                 ::expr-left
@@ -2219,12 +2221,12 @@
 (def MIN-NUMBER-OF-STMTS    0)
 (def MAX-NUMBER-OF-STMTS 1024)
 
-
+;; consider a regex-spec
 (s/def ::stmts (s/coll-of ::stmt
                           :min-count MIN-NUMBER-OF-STMTS
                           :max-count MAX-NUMBER-OF-STMTS))
 
-
+;; consider a regex-spec
 (s/def ::stmtq (s/coll-of ::stmt
                           :min-count 0
                           :max-count 1))
