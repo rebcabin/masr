@@ -27,6 +27,9 @@
 ;; not terms in the grammar:
 
 
+;; Write specs into the masr.specs namespace.
+
+
 (s/def :masr.specs/int   int?)     ;; java.lang.Long
 (s/def :masr.specs/float float?)
 (s/def :masr.specs/bool  boolean?)
