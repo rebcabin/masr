@@ -2622,20 +2622,20 @@
 ;; temporary, until we figure out nodes
 
 
-(def MIN-SYMBOL-COUNT    0)
-(def MAX-SYMBOL-COUNT 4096)
+(def MIN-TERM-COUNT    0)
+(def MAX-TERM-COUNT 4096)
 
 ;; consider a regex-spec
-(s/def ::symbols
-  (s/and (s/coll-of ::symbol
-                    :min-count MIN-SYMBOL-COUNT,
-                    :max-count MAX-SYMBOL-COUNT)))
+(s/def ::terms
+  (s/and (s/coll-of ::asr-term
+                    :min-count MIN-TERM-COUNT,
+                    :max-count MAX-TERM-COUNT)))
 
 
 (defmethod unit-head ::TranslationUnit [_]
   (s/keys :req [::unit-head
                 ::SymbolTable
-                ::symbols]))
+                ::terms]))
 
 
 (def-term-head--entity-key unit TranslationUnit)
@@ -2647,7 +2647,7 @@
                         ::asr-unit-head
                         {::unit-head    ::TranslationUnit
                          ::SymbolTable  stab
-                         ::symbols      nodes-}})]
+                         ::terms      nodes-}})]
     (if (s/invalid? cnf)
       :invalid-translation-unit
       cnf)))
@@ -2673,191 +2673,3 @@
                [(= (Var 2 a)
                    (LogicalConstant false (Logical 4 []))
                    ())])]))))
-
-
-;; ================================================================
-;;  _   _  ___  ____  _____
-;; | \ | |/ _ \|  _ \| ____|
-;; |  \| | | | | | | |  _|
-;; | |\  | |_| | |_| | |___
-;; |_| \_|\___/|____/|_____|
-
-;; A node is an unwritten type in ASDL. It is an
-;; alternation or disjunction of terms or heads. Its
-;; alternatives are not currently clear.
-;; https://github.com/rebcabin/masr/issues/30
-;;
-;; For now, make it a top-level type like term, with
-;; alternatives by defmulti dispatch, exactly as
-;; with term.
-;;
-;; TODO: Instead, we might employ s/or or s/alt.
-;; However, they leave branch tags: e.g. [:id 42]
-;; or [:expr (IntegerConstant 42)] for
-;; (s/or :id ::net, :expr ::expr). It's a hassle
-;; with s/conform to strip branch tags, especially
-;; recursively, requiring another prewalk macro
-;; like "legacy".
-
-
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-;;  i n f r a s t r u c t u r e
-;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-
-;; See (defmulti term ::term) for pattern
-
-
-;; (s/def ::node qualified-keyword?)
-
-;; ;; All multi-specs, nested or not, have names that begin with "asr-".
-;; (do (defmulti node ::node)
-;;     (s/def ::asr-node
-;;       (s/multi-spec node ::node)))
-
-
-;; (defmethod node ::Program-node [_]
-;;   (s/keys :req [::node
-;;                 ::Program ;; a symbol-head
-;;                 ]))
-
-;; ;; for node-entity-key
-;; (defn node-selector-spec [kwd]
-;;   (s/and ::asr-node
-;;          #(= kwd (::node %))))
-
-
-;; (defmacro def-node-entity-key
-;;   "Define node entity key like ::Program-node,
-;;   which is an ::asr-node."
-;;   [node]
-;;   (let [ns "masr.specs"
-;;         tkw (keyword ns (str node))]
-;;     `(s/def ~tkw    ;; like ::Program-node
-;;        (node-selector-spec ~tkw))))
-
-
-;; ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-;; ;;  p a r t i c u l a r   n o d e s
-;; ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-
-
-;; (def-node-entity-key Program-node)
-
-;; ;; heavy sugar
-;; (defn Program-node [pgm]
-;;   (let [cnf {::node    ::Program-node
-;;              ::Program pgm}]
-;;     (if (s/invalid? cnf)
-;;       :invalid-program-node
-;;       cnf)))
-
-;; ;; conformance
-;; (tests
-;;  (let [p (Program
-;;           (SymbolTable 3 {})
-;;           'main_program
-;;           []
-;;           [])
-;;        n (Program-node p)]
-;;    (s/valid? ::asr-node n)     := true
-;;    (s/valid? ::Program-node n) := true
-;;    ))
-
-
-;; ;; -+-+-+-+-+-+-+-+-+-+-+-
-;; ;;  p l u r a l i t i e s
-;; ;; -+-+-+-+-+-+-+-+-+-+-+-
-
-
-;; (def MIN-NODE-COUNT    0)
-;; (def MAX-NODE-COUNT 4096)
-
-;; ;; consider a regex-spec
-;; (s/def ::nodes (s/coll-of ::asr-node
-;;                           :min-count MIN-NODE-COUNT
-;;                           :max-count MAX-NODE-COUNT))
-
-;; ;; consider a regex-spec
-;; (s/def ::nodeq (s/coll-of ::asr-node
-;;                           :min-count 0
-;;                           :max-count 1))
-
-
-;; (tests
-;;  (let [p (Program
-;;           (SymbolTable 3 {})
-;;           'main_program
-;;           []
-;;           [])
-;;        n (Program-node p)]
-;;    (s/valid? ::nodes [n])     := true
-;;    ))
-
-;; ;; ================================================================
-;; ;;  _   _ _   _ ___ _____
-;; ;; | | | | \ | |_ _|_   _|
-;; ;; | | | |  \| || |  | |
-;; ;; | |_| | |\  || |  | |
-;; ;;  \___/|_| \_|___| |_|
-
-
-;; ;;  _____                 _      _   _         _   _      _ _
-;; ;; |_   _| _ __ _ _ _  __| |__ _| |_(_)___ _ _| | | |_ _ (_) |_
-;; ;;   | || '_/ _` | ' \(_-< / _` |  _| / _ \ ' \ |_| | ' \| |  _|
-;; ;;   |_||_| \__,_|_||_/__/_\__,_|\__|_\___/_||_\___/|_||_|_|\__|
-
-;; ;; This term, unit, has onloy one head,
-;; ;; TranslationUnit.
-
-;; ;; nested multi-spec, see "symbol-head" for pattern.
-;; (do (defmulti unit-head ::unit-head)
-;;     (s/def ::asr-unit-head
-;;       (s/multi-spec unit-head ::unit-head)))
-
-;; ;; Employ the nested multi-spec:
-;; (defmethod term ::unit [_]
-;;   (s/keys :req [::term
-;;                 ::asr-unit-head]))
-
-
-;; (def-term-entity-key unit)
-
-
-;; (defmethod unit-head ::TranslationUnit [_]
-;;   (s/keys :req [::unit-head
-;;                 ::SymbolTable
-;;                 ::nodes]))
-
-
-;; (s/valid? ::asr-term
-;;            {::term ::unit
-;;             ::asr-unit-head
-;;             {::unit-head ::TranslationUnit
-;;              ::SymbolTable (SymbolTable 42 {})
-;;              ::nodes []}})
-
-
-;; (def-term-head--entity-key unit TranslationUnit)
-
-
-;; (defn TranslationUnit [stab, nodes-]
-;;   (let [cnf (s/conform ::asr-term
-;;                        {::term          ::unit
-;;                         ::asr-unit-head
-;;                         {::unit-head    ::TranslationUnit
-;;                          ::SymbolTable  stab
-;;                          ::nodes        nodes-}})]
-;;     (if (s/invalid? cnf)
-;;       :invalid-translation-unit
-;;       cnf)))
-
-
-;; (tests
-;;  (s/explain ::asr-term
-;;            (TranslationUnit
-;;             (SymbolTable 42 {})
-;;             [(Program
-;;               (SymbolTable 3 {})
-;;               'main_program
-;;               []
-;;               [])])) := true)
