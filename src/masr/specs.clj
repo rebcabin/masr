@@ -294,14 +294,14 @@
 (defn dimension [it] ;; candidate contents
   (if (or (not (coll? it)) (set? it) (map? it))
     ::invalid-dimension
-    (let [conf (s/conform ::asr-term
+    (let [cnf (s/conform ::asr-term
                           {::term ::dimension,
                            ::dimension-content it})]
-      (if (s/invalid? conf)
+      (if (s/invalid? cnf)
         ::invalid-dimension
         {::term ::dimension,
          ::dimension-content
-         (::dimension-content conf)}))))
+         (::dimension-content cnf)}))))
 
 
 (tests
@@ -593,13 +593,13 @@
 
 
 (enum-like logicalbinop #{'And  'Or  'Xor  'NEqv  'Eqv})
-(enum-like cmpop #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
-(enum-like intent #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+(enum-like cmpop        #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
+(enum-like intent       #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
 (enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
 (enum-like logicalcmpop #{'Eq 'NotEq})
-(enum-like access #{'Public 'Private})
-(enum-like presence #{'Required 'Optional})
-(enum-like deftype #{'Implementation, 'Interface})
+(enum-like access       #{'Public 'Private})
+(enum-like presence     #{'Required 'Optional})
+(enum-like deftype      #{'Implementation, 'Interface})
 
 
 ;;       _    _
@@ -1135,27 +1135,30 @@
                     pure-            module-           inline-
                     static-          type-params-      restrictions-
                     is-restriction-  ]
-  {::term ::ttype
-   ::asr-ttype-head
-   {::ttype-head       ::FunctionType
+  (let [cnf {::term ::ttype
+             ::asr-ttype-head
+             {::ttype-head       ::FunctionType
 
-    ::param-types      param-types-
-    ::return-var-type  return-var-type-
-    ::abi              abi-
+              ::param-types      param-types-
+              ::return-var-type  return-var-type-
+              ::abi              abi-
 
-    ::deftype          deftype-
-    ::bindc-name       (if (empty? bindc-name-) nil bindc-name-)
-    ::elemental        elemental-
+              ::deftype          deftype-
+              ::bindc-name       (if (empty? bindc-name-) nil bindc-name-)
+              ::elemental        elemental-
 
-    ::pure             pure-
-    ::module           module-
-    ::inline           inline-
+              ::pure             pure-
+              ::module           module-
+              ::inline           inline-
 
-    ::static           static-
-    ::type-params      type-params-
-    ::restrictions     restrictions-
+              ::static           static-
+              ::type-params      type-params-
+              ::restrictions     restrictions-
 
-    ::is-restriction   is-restriction-}})
+              ::is-restriction   is-restriction-}}]
+    (if (s/invalid? cnf)
+      :invalid-function-type
+      cnf)))
 
 
 (tests (let [ft (FunctionType
@@ -1289,11 +1292,14 @@
 (defn LogicalConstant
   ;; arity-2
   ([a-bool, a-ttype]
-   {::term ::expr,
-    ::asr-expr-head
-    {::expr-head ::LogicalConstant
-     ::bool      a-bool
-     ::Logical   a-ttype}})
+   (let [cnf {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ::LogicalConstant
+               ::bool      a-bool
+               ::Logical   a-ttype}}]
+     (if (s/invalid? cnf)
+       :invalid-logical-constant
+       cnf)))
   ;; arity-1
   ([a-bool]
    (LogicalConstant a-bool (Logical))))
@@ -1358,12 +1364,15 @@
 
 ;; heavy sugar
 (defn Var-- [stid, ident]
-  {::term ::expr,
-   ::asr-expr-head
-   {::expr-head  ::Var
-    ::symtab-id  stid
-    ::identifier ident
-    }})
+  (let [cnf {::term ::expr,
+             ::asr-expr-head
+             {::expr-head  ::Var
+              ::symtab-id  stid
+              ::identifier ident
+              }}]
+    (if (s/invalid? cnf)
+      :invalid-var
+      cnf)))
 
 ;; legacy sugar
 (defmacro Var [stid, unquoted-ident]
@@ -1430,15 +1439,18 @@
 
 ;; heavy sugar
 (defn LogicalBinOp [left- lbo- right- tt- val-]
-  {::term ::expr,
-   ::asr-expr-head
-   {::expr-head    ::LogicalBinOp
-    ::expr-left    left-
-    ::logicalbinop lbo-
-    ::expr-right   right-
-    ::Logical      tt-
-    ::value        val-
-    }})
+  (let [cnf {::term ::expr,
+             ::asr-expr-head
+             {::expr-head    ::LogicalBinOp
+              ::expr-left    left-
+              ::logicalbinop lbo-
+              ::expr-right   right-
+              ::Logical      tt-
+              ::value        val-
+              }}]
+    (if (s/invalid? cnf)
+      :invalid-logical-bin-op
+      cnf)))
 
 ;; heavy sugar
 (tests
@@ -1482,14 +1494,17 @@
 
 ;; heavy sugar
 (defn LogicalCompare [l- cmp- r- tt- val-]
-  {::term ::expr,
-   ::asr-expr-head
-   {::expr-head    ::LogicalCompare
-    ::expr-left    l-
-    ::logicalcmpop cmp-
-    ::expr-right   r-
-    ::Logical      tt-
-    ::value        val-}})
+  (let [cnf {::term ::expr,
+             ::asr-expr-head
+             {::expr-head    ::LogicalCompare
+              ::expr-left    l-
+              ::logicalcmpop cmp-
+              ::expr-right   r-
+              ::Logical      tt-
+              ::value        val-}}]
+    (if (s/invalid? cnf)
+      :invalid-logical-compare
+      cnf)))
 
 ;; heavy sugar
 (tests
@@ -1580,12 +1595,15 @@
 
 ;; heavy sugar
 (defn Assignment-- [lhs, rhs, unk]
-  {::term ::stmt,
-   ::asr-stmt-head
-   {::stmt-head   ::Assignment
-    ::lvalue      lhs
-    ::rvalue      rhs
-    ::overloaded  unk}})
+  (let [cnf {::term ::stmt,
+             ::asr-stmt-head
+             {::stmt-head   ::Assignment
+              ::lvalue      lhs
+              ::rvalue      rhs
+              ::overloaded  unk}}]
+    (if (s/invalid? cnf)
+      :invalid-assignment
+      cnf)))
 
 ;;
 (tests
@@ -1757,33 +1775,33 @@
            access           Public
            presence         Required
            value-attr       false}}]
-  (let [a (s/conform
-           ::asr-term
-           {::term              ::symbol,
-            ::asr-symbol-head
-            {::symbol-head      ::Variable,
+  (let [cnf (s/conform
+             ::asr-term
+             {::term              ::symbol,
+              ::asr-symbol-head
+              {::symbol-head      ::Variable,
 
-             ::symtab-id        symtab-id,
-             ::varnym           varnym,
-             ::ttype            ttype,
+               ::symtab-id        symtab-id,
+               ::varnym           varnym,
+               ::ttype            ttype,
 
-             ::type-declaration type-declaration,
-             ::dependencies     dependencies,
-             ::intent           intent,
+               ::type-declaration type-declaration,
+               ::dependencies     dependencies,
+               ::intent           intent,
 
-             ::symbolic-value   symbolic-value,
-             ::value            value,
-             ::storage-type     storage-type,
+               ::symbolic-value   symbolic-value,
+               ::value            value,
+               ::storage-type     storage-type,
 
-             ::abi              abi,
-             ::access           access,
-             ::presence         presence,
+               ::abi              abi,
+               ::access           access,
+               ::presence         presence,
 
-             ::value-attr       value-attr,
-             }})]
-    (if (s/invalid? a)
+               ::value-attr       value-attr,
+               }})]
+    (if (s/invalid? cnf)
       ::invalid-variable
-      a)))
+      cnf)))
 
 ;; Test full-form:
 (let [a-var-head {::symbol-head      ::Variable
@@ -2366,24 +2384,27 @@
                 fnnym,   fnsig,  deps,
                 params-, body-,  retvar,
                 access-, determ, sefree]
-  {::term ::symbol
-   ::asr-symbol-head
-   {::symbol-head ::Function
+  (let [cnf {::term ::symbol
+             ::asr-symbol-head
+             {::symbol-head ::Function
 
-    ::SymbolTable         symtab
+              ::SymbolTable         symtab
 
-    ::function-name       fnnym
-    ::function-signature  fnsig
-    ::dependencies        deps
+              ::function-name       fnnym
+              ::function-signature  fnsig
+              ::dependencies        deps
 
-    ::params              params-
-    ::body                body-
-    ::return-var          retvar
+              ::params              params-
+              ::body                body-
+              ::return-var          retvar
 
-    ::access              access-
-    ::deterministic       determ
-    ::side-effect-free    sefree
-    }})
+              ::access              access-
+              ::deterministic       determ
+              ::side-effect-free    sefree
+              }}]
+    (if (s/invalid? cnf)
+      :invalid-function
+      cnf)))
 
 
 (tests
@@ -2540,22 +2561,71 @@
 ;; | |\  | |_| | |_| | |___
 ;; |_| \_|\___/|____/|_____|
 
-;; A node is an unwritten concept in ASDL. It is an
-;; alternation or disjunction of other things. We'll
-;; make it a nested multi-spec, adding a third level
-;; to the hierarchy. TODO: Instead, we might employ
-;; s/or or s/alt. However, they leave branch tags:
-;; e.g. [:id 42] or [:expr (IntegerConstant 42)] for
-;; (s/or :id ::net, :expr ::expr). It's a hassle with
-;; s/conform to strip those, especially recursively.
-;; Multi-specs are a way to work around that junk.
+;; A node is an unwritten type in ASDL. It is an
+;; alternation or disjunction of terms or heads. Its
+;; alternatives are not currently clear.
+;; https://github.com/rebcabin/masr/issues/30
+;;
+;; For now, make it a top-level type like term, with
+;; alternatives by defmulti dispatch, exactly as
+;; with term.
+;;
+;; TODO: Instead, we might employ s/or or s/alt.
+;; However, they leave branch tags: e.g. [:id 42]
+;; or [:expr (IntegerConstant 42)] for
+;; (s/or :id ::net, :expr ::expr). It's a hassle
+;; with s/conform to strip branch tags, especially
+;; recursively, requiring another prewalk macro
+;; like "legacy".
 
 
-(defmulti node ::node)
-(s/def ::asr-node (s/multi-spec node ::node))
+(do (defmulti node ::node)
+    (s/def ::asr-node
+      (s/multi-spec node ::node)))
 
-;; (defmethod node ::Program [_]
-;;   (s/keys :req [::node ::asr-node-head]))
+
+(defmethod node ::Program-node [_]
+  (s/keys :req [::node
+                ::Program]))
+
+;; heavy sugar
+;; (defn Program-node [pgm]
+;;   (let ))
+
+
+(tests
+ (let [p (Program
+          (SymbolTable 3 {})
+          'main_program
+          []
+          [])]
+   (s/valid? ::asr-term p) := true
+   (s/valid? ::symbol   p) := true
+   (s/valid? ::Program  p) := true)
+ )
+
+;; "Head" is a synonym for "alternative."
+;; (do (defmulti node-head ::node-head)
+;;     (s/def ::asr-node-head
+;;       (s/multi-spec node-head ::node-head)))
+
+
+;; (defn node-selector-spec [kwd]
+;;   (s/and ::asr-node
+;;          #(= kwd (::node %))))
+
+
+;; (defmacro def-node-entity-key
+;;   "Define node entity key like ::Program,
+;;   which is an ::asr-node."
+;;   [node]
+;;   (let [ns "masr.specs"
+;;         tkw (keyword ns (str node))]
+;;     `(s/def ~tkw    ;; like ::dimension
+;;        (node-selector-spec ~tkw))))
+
+
+;; (def-node)
 
 
 ;; ================================================================
