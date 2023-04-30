@@ -1,19 +1,19 @@
 (ns masr.core-test
   (:use     [masr.core]
             ;; https://groups.google.com/g/clojure/c/i770QaIFiF0 :
-            [masr.specs :as asr])
-  (:require [clojure.test :refer :all]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
-            [masr.core :as masr]
-            [masr.utils :refer [warnings-banner]]
-            [masr.simplespecs :refer [nat
-                                      identifier
-                                      identifier-set
-                                      identifier-list
-                                      identifier-suit
-                                      ]]
-            [clojure.set :as set]))
+            [masr.specs             :as asr])
+  (:require [clojure.test           :refer :all]
+            [clojure.spec.alpha     :as    s]
+            [clojure.spec.gen.alpha :as    gen]
+            [masr.core              :as    masr]
+            [masr.utils             :refer [warnings-banner]]
+            [masr.simplespecs       :refer [nat
+                                            identifier
+                                            identifier-set
+                                            identifier-list
+                                            identifier-suit
+                                            ]]
+            [clojure.set            :as set]))
 
 
 (warnings-banner)

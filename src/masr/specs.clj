@@ -5,21 +5,20 @@
             [clojure.test.check.generators :as      tgen         ]
             [clojure.string                :as      str          ]
             [clojure.pprint                :refer   [pprint     ]]
-
-            [masr.logic                    :refer   [iff implies]]
-            [masr.utils                    :refer   [plnecho    ]]
-
-            [hyperfiddle.rcf               :refer   [tests tap %]]
-            [blaster.clj-fstring           :refer   [f-str      ]]
             [clojure.walk                  :refer   [prewalk    ]]
-            #_[clojure.zip                 :as z                 ]
-            )
-  (:require [masr.simplespecs
-             :refer [nat
-                     identifier-list
-                     identifier-set
-                     identifier-suit
-                     identifier]]))
+            #_[clojure.zip                 :as      z           ])
+
+  (:require [hyperfiddle.rcf               :refer   [tests tap %]]
+            [blaster.clj-fstring           :refer   [f-str      ]])
+
+  (:require [masr.logic                    :refer   [iff implies]]
+            [masr.utils                    :refer   [plnecho    ]]
+            [masr.simplespecs              :refer   [nat
+                                                     identifier-list
+                                                     identifier-set
+                                                     identifier-suit
+                                                     identifier ]]
+            ))
 
 
 ;; lightweight, load-time testing:
@@ -2308,18 +2307,23 @@
 ;; |_| \_,_|_||_\__|\__|_\___/_||_|
 
 ;; | Function(symbol_table symtab,
-
+;;
 ;;            identifier   name,
 ;;            ttype        function_signature,
 ;;            identifier*  dependencies,
-
+;;
 ;;            expr*        args,              ;; rename ::params
 ;;            stmt*        body,
 ;;            expr?        return_var,
-
+;;
 ;;            access       access,
 ;;            bool         deterministic,
 ;;            bool         side_effect_free)
+
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  p r e r e q u i s i t e   t y p e   a l i a s e s
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
 ;; SymbolTable is already defined
@@ -2491,11 +2495,42 @@
 (s/def ::prognym ::identifier)
 
 
-(defmethod symbol-head ::Variable [_]
+(defmethod symbol-head ::Program [_]
   (s/keys :req [::symbol-head
+                ::SymbolTable
                 ::prognym
                 ::dependencies
                 ::body]))
+
+
+(def-term-head--entity-key symbol Program)
+
+
+(defn Program [stab, nym, deps, body-]
+  (let [cnf (s/conform
+             ::asr-term
+             {::term ::symbol,
+              ::asr-symbol-head
+              {::symbol-head  ::Program
+               ::SymbolTable  stab
+               ::prognym      nym
+               ::dependencies deps
+               ::body         body-}})]
+    (if (s/invalid? cnf)
+      ::invalid-program
+      cnf)))
+
+
+(tests
+ (let [p (Program
+          (SymbolTable 3 {})
+          'main_program
+          []
+          [])]
+   (s/valid? ::asr-term p) := true
+   (s/valid? ::symbol   p) := true
+   (s/valid? ::Program  p) := true)
+ )
 
 
 ;; ================================================================
