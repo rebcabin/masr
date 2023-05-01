@@ -1633,17 +1633,19 @@
 
 ;;
 (tests
+ true :=
  (s/valid? ::Assignment
            (Assignment-- (Var 2 a)
                      (LogicalConstant false (Logical 4 []))
-                     ()))                    := true)
+                     ())))
 
 ;; legacy sugar
 (tests
+ true :=
  (s/valid? ::Assignment
            (legacy (= (Var 2 a)
                       (LogicalConstant false (Logical 4 []))
-                      ())))                  := true
+                      ())))
  (let [e (legacy (= (Var 2 a)
                     (LogicalBinOp
                      (Var 2 a)
@@ -1657,6 +1659,7 @@
    (s/valid? ::Assignment e) := true
    (s/valid? ::stmt       e) := true
    (s/valid? ::asr-term   e) := true)
+ true :=
  (s/valid? ::Assignment
            (legacy (= (Var 2 a)
                       (LogicalBinOp
@@ -1667,14 +1670,15 @@
                         NotEq
                         (Var 2 b)
                         (Logical 4 []) ())
-                       (Logical 4 []) ()) ()))) := true
+                       (Logical 4 []) ()) ())))
+ true :=
  (s/valid? ::Assignment
            (legacy (= (Var 2 a)
                       (LogicalBinOp
                        (Var 2 b)
                        Or
                        (Var 2 b)
-                       (Logical 4 []) ()) ()))) := true)
+                       (Logical 4 []) ()) ()))))
 
 ;; ================================================================
 ;;  ______   ____  __ ____   ___  _
@@ -2488,80 +2492,82 @@
    (s/valid? ::symbol   afn)  := true
    (s/valid? ::Function afn)  := true
    )
- (let [afn (legacy (Function
-                      (SymbolTable
-                       2 {:a
-                          (Variable
-                           2 a [] Local
-                           () () Default (Logical 4 [])
-                           Source Public Required false),
-                          :b
-                          (Variable
-                           2 b [] Local
-                           () () Default (Logical 4 [])
-                           Source Public Required false)})
-                      'test_boolOp
-                      (FunctionType
-                       [] () Source
-                       Implementation () false
-                       false false false
-                       false [] [] false)
-                      [] []
-                      [(= (Var 2 a)
-                          (LogicalConstant false (Logical 4 []))
-                          ())
-                       (= (Var 2 b)
-                          (LogicalConstant true (Logical 4 []))
-                          ())
-                       (= (Var 2 a)
-                          (LogicalBinOp
-                           (Var 2 a)
-                           And
-                           (Var 2 b)
-                           (Logical 4 []) ()) ())
-                       (= (Var 2 b)
-                          (LogicalBinOp
-                           (Var 2 a)
-                           Or
-                           (LogicalConstant true (Logical 4 []))
-                           (Logical 4 []) ()) ())
-                       (= (Var 2 a)
-                          (LogicalBinOp
-                           (Var 2 a)
-                           Or
-                           (Var 2 b)
-                           (Logical 4 []) ()) ())
-                       (= (Var 2 a)
-                          (LogicalBinOp
-                           (Var 2 a)
-                           And
-                           (LogicalCompare
-                            (Var 2 b)
-                            Eq
-                            (Var 2 b)
-                            (Logical 4 []) ())
-                           (Logical 4 []) ()) ())
-                       (= (Var 2 a)
-                          (LogicalBinOp
-                           (Var 2 a)
-                           And
-                           (LogicalCompare
-                            (Var 2 b)
-                            NotEq
-                            (Var 2 b)
-                            (Logical 4 []) ())
-                           (Logical 4 []) ()) ())
-                       (= (Var 2 a)
-                          (LogicalBinOp
-                           (Var 2 b)
-                           Or
-                           (Var 2 b)
-                           (Logical 4 []) ()) ())]
-                      () Public false false))]
-     (s/valid? ::asr-term afn)  :=  true
-     (s/valid? ::symbol   afn)  :=  true
-     (s/valid? ::Function afn)  :=  true
-     ))
+ (let [afn
+       (legacy
+        (Function
+         (SymbolTable
+          2 {:a
+             (Variable
+              2 a [] Local
+              () () Default (Logical 4 [])
+              Source Public Required false),
+             :b
+             (Variable
+              2 b [] Local
+              () () Default (Logical 4 [])
+              Source Public Required false)})
+         'test_boolOp
+         (FunctionType
+          [] () Source
+          Implementation () false
+          false false false
+          false [] [] false)
+         [] []
+         [(= (Var 2 a)
+             (LogicalConstant false (Logical 4 []))
+             ())
+          (= (Var 2 b)
+             (LogicalConstant true (Logical 4 []))
+             ())
+          (= (Var 2 a)
+             (LogicalBinOp
+              (Var 2 a)
+              And
+              (Var 2 b)
+              (Logical 4 []) ()) ())
+          (= (Var 2 b)
+             (LogicalBinOp
+              (Var 2 a)
+              Or
+              (LogicalConstant true (Logical 4 []))
+              (Logical 4 []) ()) ())
+          (= (Var 2 a)
+             (LogicalBinOp
+              (Var 2 a)
+              Or
+              (Var 2 b)
+              (Logical 4 []) ()) ())
+          (= (Var 2 a)
+             (LogicalBinOp
+              (Var 2 a)
+              And
+              (LogicalCompare
+               (Var 2 b)
+               Eq
+               (Var 2 b)
+               (Logical 4 []) ())
+              (Logical 4 []) ()) ())
+          (= (Var 2 a)
+             (LogicalBinOp
+              (Var 2 a)
+              And
+              (LogicalCompare
+               (Var 2 b)
+               NotEq
+               (Var 2 b)
+               (Logical 4 []) ())
+              (Logical 4 []) ()) ())
+          (= (Var 2 a)
+             (LogicalBinOp
+              (Var 2 b)
+              Or
+              (Var 2 b)
+              (Logical 4 []) ()) ())]
+         () Public false false))]
+   (s/valid? ::asr-term afn)  :=  true
+   (s/valid? ::symbol   afn)  :=  true
+   (s/valid? ::Function afn)  :=  true
+   ))
 
 
 ;;  ___
@@ -2764,113 +2770,116 @@
    true := (s/valid? ::TranslationUnit medium)
    true := (s/valid? ::TranslationUnit large)
 
-   true := (s/valid? ::unit
-                     (TranslationUnit
-                      (SymbolTable 42 {})
-                      []))
-   true := (s/valid? ::unit
-                     (TranslationUnit
-                      (SymbolTable 42 {})
-                      [(Program
-                        (SymbolTable 3 {})
-                        'main_program
-                        []
-                        [])]))
-   true := (s/valid? ::unit
-                     (legacy
-                      (TranslationUnit
-                       (SymbolTable 42 {})
-                       [(Program
-                         (SymbolTable 3 {})
-                         'main_program
-                         []
-                         [(= (Var 2 a)
-                             (LogicalConstant false (Logical 4 []))
-                             ())])])))
-   true := (s/valid? ::unit
-                     (legacy
-                      (TranslationUnit
-                       (SymbolTable
-                        1 {:_global_symbols
-                           (Module
-                            (SymbolTable
-                             4 {:test_boolOp
-                                (Function
-                                 (SymbolTable
-                                  2 {:a
-                                     (Variable
-                                      2 a [] Local
-                                      () () Default (Logical 4 [])
-                                      Source Public Required false),
-                                     :b
-                                     (Variable
-                                      2 b [] Local
-                                      () () Default (Logical 4 [])
-                                      Source Public Required false)})
-                                 'test_boolOp ;; NOTE TICK MARK
-                                 (FunctionType
-                                  [] () Source
-                                  Implementation () false
-                                  false false false
-                                  false [] [] false)
-                                 [] []
-                                 [(= (Var 2 a)
-                                     (LogicalConstant false (Logical 4 []))
-                                     ())
-                                  (= (Var 2 b)
-                                     (LogicalConstant true (Logical 4 []))
-                                     ())
-                                  (= (Var 2 a)
-                                     (LogicalBinOp
-                                      (Var 2 a)
-                                      And
-                                      (Var 2 b)
-                                      (Logical 4 []) ()) ())
-                                  (= (Var 2 b)
-                                     (LogicalBinOp
-                                      (Var 2 a)
-                                      Or
-                                      (LogicalConstant true (Logical 4 []))
-                                      (Logical 4 []) ()) ())
-                                  (= (Var 2 a)
-                                     (LogicalBinOp
-                                      (Var 2 a)
-                                      Or
-                                      (Var 2 b)
-                                      (Logical 4 []) ()) ())
-                                  (= (Var 2 a)
-                                     (LogicalBinOp
-                                      (Var 2 a)
-                                      And
-                                      (LogicalCompare
-                                       (Var 2 b)
-                                       Eq
-                                       (Var 2 b)
-                                       (Logical 4 []) ())
-                                      (Logical 4 []) ()) ())
-                                  (= (Var 2 a)
-                                     (LogicalBinOp
-                                      (Var 2 a)
-                                      And
-                                      (LogicalCompare
-                                       (Var 2 b)
-                                       NotEq
-                                       (Var 2 b)
-                                       (Logical 4 []) ())
-                                      (Logical 4 []) ()) ())
-                                  (= (Var 2 a)
-                                     (LogicalBinOp
-                                      (Var 2 b)
-                                      Or
-                                      (Var 2 b)
-                                      (Logical 4 []) ()) ())]
-                                 () Public false false)})
-                            '_global_symbols ;; NOTE TICK MARK
-                            [] false false),
-                           :main_program
-                           (Program
-                            (SymbolTable 3 {})
-                            'main_program ;; NOTE TICK MARK
-                            [] [])}) [])
-                      ))
+   true := (s/valid?
+            ::unit
+            (TranslationUnit
+             (SymbolTable 42 {})
+             []))
+   true := (s/valid?
+            ::unit
+            (TranslationUnit
+             (SymbolTable 42 {})
+             [(Program
+               (SymbolTable 3 {})
+               'main_program
+               []
+               [])]))
+   true := (s/valid?
+            ::unit
+            (legacy
+             (TranslationUnit
+              (SymbolTable 42 {})
+              [(Program
+                (SymbolTable 3 {})
+                'main_program
+                []
+                [(= (Var 2 a)
+                    (LogicalConstant false (Logical 4 []))
+                    ())])])))
+   true := (s/valid?
+            ::unit
+            (legacy
+             (TranslationUnit
+              (SymbolTable
+               1 {:_global_symbols
+                  (Module
+                   (SymbolTable
+                    4 {:test_boolOp
+                       (Function
+                        (SymbolTable
+                         2 {:a
+                            (Variable
+                             2 a [] Local
+                             () () Default (Logical 4 [])
+                             Source Public Required false),
+                            :b
+                            (Variable
+                             2 b [] Local
+                             () () Default (Logical 4 [])
+                             Source Public Required false)})
+                        'test_boolOp ;; NOTE TICK MARK
+                        (FunctionType
+                         [] () Source
+                         Implementation () false
+                         false false false
+                         false [] [] false)
+                        [] []
+                        [(= (Var 2 a)
+                            (LogicalConstant false (Logical 4 []))
+                            ())
+                         (= (Var 2 b)
+                            (LogicalConstant true (Logical 4 []))
+                            ())
+                         (= (Var 2 a)
+                            (LogicalBinOp
+                             (Var 2 a)
+                             And
+                             (Var 2 b)
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 b)
+                            (LogicalBinOp
+                             (Var 2 a)
+                             Or
+                             (LogicalConstant true (Logical 4 []))
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp
+                             (Var 2 a)
+                             Or
+                             (Var 2 b)
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp
+                             (Var 2 a)
+                             And
+                             (LogicalCompare
+                              (Var 2 b)
+                              Eq
+                              (Var 2 b)
+                              (Logical 4 []) ())
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp
+                             (Var 2 a)
+                             And
+                             (LogicalCompare
+                              (Var 2 b)
+                              NotEq
+                              (Var 2 b)
+                              (Logical 4 []) ())
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp
+                             (Var 2 b)
+                             Or
+                             (Var 2 b)
+                             (Logical 4 []) ()) ())]
+                        () Public false false)})
+                   '_global_symbols ;; NOTE TICK MARK
+                   [] false false),
+                  :main_program
+                  (Program
+                   (SymbolTable 3 {})
+                   'main_program ;; NOTE TICK MARK
+                   [] [])}) [])))
    ))
