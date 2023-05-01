@@ -2344,6 +2344,46 @@
    (s/valid? :masr.specs/asr-term    st) := true))
 
 
+;;  __  __         _      _
+;; |  \/  |___  __| |_  _| |___
+;; | |\/| / _ \/ _` | || | / -_)
+;; |_|  |_\___/\__,_|\_,_|_\___|
+
+;; | Module(symbol_table symtab, identifier name, identifier* dependencies,
+;;                       bool loaded_from_mod, bool intrinsic)
+
+
+(s/def ::modulenym       ::identifier)
+(s/def ::loaded-from-mod ::bool)
+(s/def ::intrinsic       ::bool)
+
+
+(defmethod symbol-head ::Module [_]
+  (s/keys :req [::symbol-head
+                ::SymbolTable
+                ::modulenym
+                ::dependencies
+                ::loaded-from-mod
+                ::intrinsic]))
+
+
+(def-term-head--entity-key symbol Module)
+
+
+(defn Module [symtab, modnym, deps, loaded, intrinsic-]
+  (let [cnf {::term ::symbol
+             ::asr-symbol-head
+             {::symbol-head     ::Module
+              ::SymbolTable     symtab
+              ::modulenym       modnym
+              ::dependencies    deps
+              ::loaded-from-mod loaded
+              ::intrinsic       intrinsic-}}]
+    (if (s/invalid? cnf)
+      :invalid-module
+      cnf)))
+
+
 ;;  ___             _   _
 ;; | __|  _ _ _  __| |_(_)___ _ _
 ;; | _| || | ' \/ _|  _| / _ \ ' \
@@ -2615,61 +2655,222 @@
       (s/multi-spec unit-head ::unit-head)))
 
 
-;; -+-+-+-+-+-+-+-+-+-+-+-
-;;  p l u r a l i t i e s
-;; -+-+-+-+-+-+-+-+-+-+-+-
-;;
-;; temporary, until we figure out nodes
+;; ;; -+-+-+-+-+-+-+-+-+-+-+-
+;; ;;  p l u r a l i t i e s
+;; ;; -+-+-+-+-+-+-+-+-+-+-+-
+;; ;;
+;; ;; temporary, until we figure out nodes
 
 
-(def MIN-TERM-COUNT    0)
-(def MAX-TERM-COUNT 4096)
+;; (def MIN-TERM-COUNT    0)
+;; (def MAX-TERM-COUNT 4096)
+
+;; ;; consider a regex-spec
+;; (s/def ::terms
+;;   (s/and (s/coll-of ::asr-term
+;;                     :min-count MIN-TERM-COUNT,
+;;                     :max-count MAX-TERM-COUNT)))
+
+
+(s/def ::node (s/or :expr   ::expr
+                    :stmt   ::stmt
+                    :symbol ::symbol))
+
+
+(defn node [candidate]
+  (let [cnf (s/conform ::node candidate)]
+    (if (s/invalid? cnf)
+      :invalid-node
+      (second cnf))))
+
+
+(def MIN-NODE-COUNT    0)
+(def MAX-NODE-COUNT 4096)
 
 ;; consider a regex-spec
-(s/def ::terms
-  (s/and (s/coll-of ::asr-term
-                    :min-count MIN-TERM-COUNT,
-                    :max-count MAX-TERM-COUNT)))
+(s/def ::nodes
+  (s/and (s/coll-of ::node
+                    :min-count MIN-NODE-COUNT,
+                    :max-count MAX-NODE-COUNT)))
 
 
 (defmethod unit-head ::TranslationUnit [_]
   (s/keys :req [::unit-head
                 ::SymbolTable
-                ::terms]))
+                ::nodes]))
 
 
 (def-term-head--entity-key unit TranslationUnit)
 
 
-(defn TranslationUnit [stab, nodes-]
-  (let [cnf (s/conform ::unit
-                       {::term          ::unit
-                        ::asr-unit-head
-                        {::unit-head    ::TranslationUnit
-                         ::SymbolTable  stab
-                         ::terms      nodes-}})]
+(defn TranslationUnit [stab, node-preimages]
+  (let [node-cnf (map node node-preimages)
+        ;; the s/conform slips back in the tag keys
+        cnf
+        (s/conform
+             ::unit
+             {::term          ::unit
+              ::asr-unit-head
+              {::unit-head    ::TranslationUnit
+               ::SymbolTable  stab
+               ::nodes        node-cnf}})
+        ;; snip the tag keys
+        fixed
+        (assoc-in cnf
+                  [::asr-unit-head ::nodes]
+                  node-cnf)]
     (if (s/invalid? cnf)
       :invalid-translation-unit
-      cnf)))
+      fixed)))
 
 
 (tests
- (s/valid? ::unit
-           (TranslationUnit
-            (SymbolTable 42 {})
-            [(Program
-              (SymbolTable 3 {})
-              'main_program
-              []
-              [])])) := true
- (s/valid? ::unit
-           (legacy
-            (TranslationUnit
-             (SymbolTable 42 {})
-             [(Program
-               (SymbolTable 3 {})
-               'main_program
-               []
-               [(= (Var 2 a)
-                   (LogicalConstant false (Logical 4 []))
-                   ())])]))))
+ (let [small {::term ::unit
+              ::asr-unit-head
+              {::unit-head ::TranslationUnit
+               ::SymbolTable (SymbolTable 42 {})
+               ::nodes []}}
+       medium {::term ::unit
+               ::asr-unit-head
+               {::unit-head ::TranslationUnit
+                ::SymbolTable (SymbolTable 42 {})
+                ::nodes
+                (map
+                 node
+                 [(Program
+                   (SymbolTable 3 {})
+                   'main_program
+                   []
+                   [])])}}
+       large {::term ::unit
+              ::asr-unit-head
+              {::unit-head ::TranslationUnit
+               ::SymbolTable (SymbolTable 42 {})
+               ::nodes
+               (map
+                node
+                [(legacy
+                  (Program
+                   (SymbolTable 3 {})
+                   'main_program
+                   []
+                   [(= (Var 2 a)
+                       (LogicalConstant false (Logical 4 []))
+                       ())]))])}}]
+   true := (s/valid? ::unit small)
+   true := (s/valid? ::unit medium)
+   true := (s/valid? ::unit large)
+   true := (s/valid? ::TranslationUnit small)
+   true := (s/valid? ::TranslationUnit medium)
+   true := (s/valid? ::TranslationUnit large)
+
+   true := (s/valid? ::unit
+                     (TranslationUnit
+                      (SymbolTable 42 {})
+                      []))
+   true := (s/valid? ::unit
+                     (TranslationUnit
+                      (SymbolTable 42 {})
+                      [(Program
+                        (SymbolTable 3 {})
+                        'main_program
+                        []
+                        [])]))
+   true := (s/valid? ::unit
+                     (legacy
+                      (TranslationUnit
+                       (SymbolTable 42 {})
+                       [(Program
+                         (SymbolTable 3 {})
+                         'main_program
+                         []
+                         [(= (Var 2 a)
+                             (LogicalConstant false (Logical 4 []))
+                             ())])])))
+   true := (s/valid? ::unit
+                     (legacy
+                      (TranslationUnit
+                       (SymbolTable
+                        1 {:_global_symbols
+                           (Module
+                            (SymbolTable
+                             4 {:test_boolOp
+                                (Function
+                                 (SymbolTable
+                                  2 {:a
+                                     (Variable
+                                      2 a [] Local
+                                      () () Default (Logical 4 [])
+                                      Source Public Required false),
+                                     :b
+                                     (Variable
+                                      2 b [] Local
+                                      () () Default (Logical 4 [])
+                                      Source Public Required false)})
+                                 'test_boolOp ;; NOTE TICK MARK
+                                 (FunctionType
+                                  [] () Source
+                                  Implementation () false
+                                  false false false
+                                  false [] [] false)
+                                 [] []
+                                 [(= (Var 2 a)
+                                     (LogicalConstant false (Logical 4 []))
+                                     ())
+                                  (= (Var 2 b)
+                                     (LogicalConstant true (Logical 4 []))
+                                     ())
+                                  (= (Var 2 a)
+                                     (LogicalBinOp
+                                      (Var 2 a)
+                                      And
+                                      (Var 2 b)
+                                      (Logical 4 []) ()) ())
+                                  (= (Var 2 b)
+                                     (LogicalBinOp
+                                      (Var 2 a)
+                                      Or
+                                      (LogicalConstant true (Logical 4 []))
+                                      (Logical 4 []) ()) ())
+                                  (= (Var 2 a)
+                                     (LogicalBinOp
+                                      (Var 2 a)
+                                      Or
+                                      (Var 2 b)
+                                      (Logical 4 []) ()) ())
+                                  (= (Var 2 a)
+                                     (LogicalBinOp
+                                      (Var 2 a)
+                                      And
+                                      (LogicalCompare
+                                       (Var 2 b)
+                                       Eq
+                                       (Var 2 b)
+                                       (Logical 4 []) ())
+                                      (Logical 4 []) ()) ())
+                                  (= (Var 2 a)
+                                     (LogicalBinOp
+                                      (Var 2 a)
+                                      And
+                                      (LogicalCompare
+                                       (Var 2 b)
+                                       NotEq
+                                       (Var 2 b)
+                                       (Logical 4 []) ())
+                                      (Logical 4 []) ()) ())
+                                  (= (Var 2 a)
+                                     (LogicalBinOp
+                                      (Var 2 b)
+                                      Or
+                                      (Var 2 b)
+                                      (Logical 4 []) ()) ())]
+                                 () Public false false)})
+                            '_global_symbols ;; NOTE TICK MARK
+                            [] false false),
+                           :main_program
+                           (Program
+                            (SymbolTable 3 {})
+                            'main_program ;; NOTE TICK MARK
+                            [] [])}) [])
+                      ))
+   ))
