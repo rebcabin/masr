@@ -1720,8 +1720,10 @@
 ;; |_| |_| \___/\__, |_| \__,_|_|_|_|
 ;;              |___/
 
-;; = Program(symbol_table symtab, identifier name, identifier* dependencies,
-;;                        stmt* body)
+;; = Program(symbol_table symtab,
+;;           identifier   name,
+;;           identifier*  dependencies,
+;;           stmt*        body)
 
 
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
@@ -1743,7 +1745,7 @@
 (def-term-head--entity-key symbol Program)
 
 
-(defn Program [stab, nym, deps, body-]
+(defn Program-- [stab, nym, deps, body-]
   (let [cnf (s/conform ::Program
                        {::term ::symbol,
                         ::asr-symbol-head
@@ -1755,6 +1757,12 @@
     (if (s/invalid? cnf)
       ::invalid-program
       cnf)))
+
+
+(defmacro Program
+  "Quote the nym."
+  [stab, nym, deps, body-]
+  `(Program-- ~stab, '~nym, ~deps, ~body-))
 
 
 ;; ================================================================

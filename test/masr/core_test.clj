@@ -1436,7 +1436,7 @@
 (deftest Program-test
   (let [p (Program
            (SymbolTable 3 {})
-           'main_program
+           main_program
            []
            [])]
     (is (s/valid? ::asr/asr-term p))
@@ -1445,7 +1445,7 @@
   (let [p (legacy
            (Program
             (SymbolTable 3 {})
-            'main_program
+            main_program
             []
             [(= (Var 2 a)
                 (LogicalConstant false (Logical 4 []))
@@ -1476,7 +1476,7 @@
                   node
                   [(Program
                     (SymbolTable 3 {})
-                    'main_program
+                    main_program
                     []
                     [])])}}
         large {::asr/term ::asr/unit
@@ -1489,7 +1489,7 @@
                  [(legacy
                    (Program
                     (SymbolTable 3 {})
-                    'main_program
+                    main_program
                     []
                     [(= (Var 2 a)
                         (LogicalConstant false (Logical 4 []))
@@ -1512,7 +1512,7 @@
           (SymbolTable 42 {})
           [(Program
             (SymbolTable 3 {})
-            'main_program
+            main_program
             []
             [])])))
     (is (s/valid?
@@ -1522,7 +1522,7 @@
            (SymbolTable 42 {})
            [(Program
              (SymbolTable 3 {})
-             'main_program
+             main_program
              []
              [(= (Var 2 a)
                  (LogicalConstant false (Logical 4 []))
@@ -1611,6 +1611,6 @@
                :main_program
                (Program
                 (SymbolTable 3 {})
-                'main_program ;; NOTE TICK MARK
+                main_program
                 [] [])}) []))))
     ))
