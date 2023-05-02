@@ -25,8 +25,8 @@
 (hyperfiddle.rcf/enable!)
 
 
-;; Unmap "Integer" and "Character" so I can use
-;; those symbols in ttypes. Access the originals
+;; Unmap "Integer" and "Character" so we have those
+;; symbols in ttypes. Access the originals
 ;; via "java.lang.Integer" "java.lang.Character."
 ;; Lein test and lein run produce unmaskable
 ;; warnings. Access original "deftype"
@@ -114,7 +114,7 @@
 ;; discrimination. Both ::symbol, e.g., ::Variable,
 ;; and ::expr, e.g., ::LogicalBinOp,
 ;; are ::asr-terms. Both ::Variable and ::Function
-;; are ::symbol,
+;; are ::symbol.
 
 
 ;; -+-+-+-+-+-+-+-+-+-+-
@@ -136,13 +136,22 @@
 (s/def ::term qualified-keyword?)
 
 
-;; ::term is a fn that picks the ::term value from a
-;; hash-map:
+;; ::term is both a qualified keyword _and_ a fn
+;; that picks the value for the key ::term from a
+;; hash-map. "defmulti" defines a name, say "term"
+;; for a collection of "defmethods", and links the
+;; name "term" to a dispatcher function, here
+;; "::term". Each defmethod is tagged by the value
+;; fetched from an instance hash-map by the ::term
+;; function.
 (defmulti term ::term)
 
 
 ;; Here is the multi-spec; see below for examples of
-;; its usage.
+;; its usage. It ties together the defmulti term and
+;; the re-tagging function ::term. In our usage, the
+;; re-tagging function is the same as the original
+;; dispatcher. We don't need re-tagging.
 (s/def ::asr-term (s/multi-spec term ::term))
 
 
@@ -153,7 +162,11 @@
 ;;                                       /___/           /___/
 
 
-;; For recursive conformance in multi-specs.
+;; For recursive conformance in multi-specs. Each
+;; term, like symbol, needs its own spec, named
+;; by a qualified keyword like ::symbol. That is so
+;; fields in hash-maps with keys like ::symbol can
+;; be checked by specs named ::symbol.
 
 
 (defn term-selector-spec [kwd]
@@ -168,7 +181,7 @@
   [term]
   (let [ns "masr.specs"
         tkw (keyword ns (str term))]
-    `(s/def ~tkw    ;; like ::dimension
+    `(s/def ~tkw    ;; like ::dimension or ::symbol
        (term-selector-spec ~tkw))))
 
 
@@ -186,9 +199,8 @@
 (defmacro def-term-head--entity-key
   "Define entity key like ::Variable, which is an
    ::asr-symbol-head by the nested head multi-spec.
-   From term = symbol and head = Variable
-   or   term = stmt   and head = Assignment,
-   generate an s/def like
+   From term = symbol and head = Variable,
+   generate a spec s/def like
 
    (s/def ::Variable               ;; head entity key
      (s/and ::asr-term             ;; top multi-spec
@@ -196,7 +208,8 @@
            (-> % ::asr-symbol-head ;; nested multi-spec
                  ::symbol-head)))) ;; tag fetcher
 
-   or
+   From term = stmt and head = Assignment, generate
+   a spec s/def like
 
    (s/def ::Assignment             ;; head entity key
      (s/and ::asr-term             ;; top multi-spec
@@ -211,7 +224,7 @@
         trm (keyword ns "term")             ;; like ::term
         art (keyword ns "asr-term")         ;; like ::asr-term
         hkw (keyword ns
-             ;; BUG: breaks "LogicalConstant", etc.
+             ;; BUG: capitalize breaks "LogicalConstant", etc.
              ;; (str/capitalize (str head))
              (str head))                    ;; like ::Variable
         tmh (keyword ns (str term "-head")) ;; like ::symbol-head
@@ -227,46 +240,57 @@
 ;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \
 ;; \__,_|_|_|_|_\___|_||_/__/_\___/_||_|
 
-;; Dimension is a term. Dimensions [sic] is not
-;; a term. Dimensions stands for dimension*.
+;; Dimension is a term. Dimensions [sic] is not a
+;; term. Dimensions stands for dimension*, a
+;; plurality of dimension.
 
 
 ;; -+-+-+-+-+-+-+-+-+-
 ;;  f u l l   f o r m
 ;; -+-+-+-+-+-+-+-+-+-
 
+
+;; original ASDL:
 ;; dimension = (expr? start, expr? length)
 
-;; Case with 1 index is disallowed.
+
+;; The ASDL is imprecise. The real spec is that we
+;; have either both start and length or we just have
+;; nothing. Case with 1 index is disallowed.
 ;; https://github.com/rebcabin/masr/issues/5
-
-
-;; -+-+-+-+-+-+-+-+-+-+-+-
-;;  p l u r a l i t i e s
-;; -+-+-+-+-+-+-+-+-+-+-+-
 
 
 (def MIN-DIMENSION-COUNT 0)
 (def MAX-DIMENSION-COUNT 2)
 
-;; consider a regex-spec
+
+;; This says that a ::dimension-content is a
+;; collection of ::nat with either two or zero
+;; elements.
+;; TODO Consider a regex-spec.
 (s/def ::dimension-content
-  (s/and (fn [it] (not (= 1 (count it))))
+  (s/and
    (s/coll-of ::nat
               :min-count MIN-DIMENSION-COUNT,
               :max-count MAX-DIMENSION-COUNT,
-              :into ())))
+              :into ())
+   (fn [it] (not (= 1 (count it))))))
 
 
+;; This says that a dimension in full-form is a
+;; hash-map with keys ::term and
+;; ::dimension-content.
 (defmethod term ::dimension [_]
   (s/keys :req [::term ::dimension-content]))
 
 
+;; As usual, we need a term-entity key for
+;; recursive checking.
 (def-term-entity-key dimension)
 
-
-;; TODO https://github.com/rebcabin/masr/issues/14
-#_(gen/sample (s/gen ::dimension) 3)
+#_
+(gen/sample (s/gen ::dimension-content) 3)
+;; => (() (0 0) (1 1))
 
 
 ;; -+-+-+-+-+-
@@ -274,12 +298,15 @@
 ;; -+-+-+-+-+-
 
 
-(defn dimension [it] ;; candidate contents
-  (if (or (not (coll? it)) (set? it) (map? it))
+(defn dimension [candidate-contents] ;; candidate contents
+  (if (or (not (coll? candidate-contents))
+          (set? candidate-contents)
+          (map? candidate-contents))
     ::invalid-dimension
-    (let [cnf (s/conform ::dimension
-                          {::term ::dimension,
-                           ::dimension-content it})]
+    (let [cnf (s/conform
+               ::dimension
+               {::term ::dimension,
+                ::dimension-content candidate-contents})]
       (if (s/invalid? cnf)
         ::invalid-dimension
         {::term ::dimension,
@@ -303,7 +330,7 @@
 (def MIN-NUMBER-OF-DIMENSIONS 0)  ;; TODO: 1?
 (def MAX-NUMBER-OF-DIMENSIONS 9)
 
-;; consider a regex-spec
+;; Consider a regex-spec.
 (s/def ::dimensions
   (s/coll-of (term-selector-spec ::dimension)
              :min-count MIN-NUMBER-OF-DIMENSIONS,
@@ -312,7 +339,7 @@
 
 
 ;; TODO https://github.com/rebcabin/masr/issues/14
-#_(gen/sample (s/gen ::dimensions) 5)
+#_(gen/sample (s/gen ::dimensions) 3)
 
 
 ;; -+-+-+-+-+-
@@ -321,13 +348,13 @@
 
 
 (defn dimensions
-  [it] ;; candidate contents
-  (if (or (not (coll? it))
-          (set? it)
-          (map? it))
+  [candidate-contents]
+  (if (or (not (coll? candidate-contents))
+          (set? candidate-contents)
+          (map? candidate-contents))
     ::invalid-dimensions
     ;; else
-    (let [dims-coll (map dimension it)
+    (let [dims-coll (map dimension candidate-contents)
           dims-conf (s/conform ::dimensions dims-coll)]
       (if (s/invalid? dims-conf)
         ::invalid-dimensions
@@ -1648,10 +1675,10 @@
 (def-term-head--entity-key symbol Function)
 
 ;; heavy sugar
-(defn Function [symtab,
-                fnnym,   fnsig,  deps,
-                params-, body-,  retvar,
-                access-, determ, sefree]
+(defn Function-- [symtab,
+                  fnnym,   fnsig,  deps,
+                  params-, body-,  retvar,
+                  access-, determ, sefree]
   (let [cnf {::term ::symbol
              ::asr-symbol-head
              {::symbol-head         ::Function
@@ -1673,6 +1700,18 @@
     (if (s/invalid? cnf)
       :invalid-function
       cnf)))
+
+
+(defmacro Function
+  "Quote the fnnym."
+  [symtab,
+   fnnym,   fnsig,  deps,
+   params-, body-,  retvar,
+   access-, determ, sefree]
+  `(Function-- ~symtab,
+               '~fnnym,  ~fnsig,  ~deps,
+               ~params-, ~body-,  ~retvar,
+               ~access-, ~determ, ~sefree))
 
 
 ;;  ___

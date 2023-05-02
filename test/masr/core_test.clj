@@ -1,12 +1,13 @@
 (ns masr.core-test
   (:use     [masr.core]
             ;; https://groups.google.com/g/clojure/c/i770QaIFiF0 :
-            [masr.specs             :as    asr])
+            [masr.specs             :as    asr          ])
 
-  (:require [clojure.test           :refer :all]
-            [clojure.spec.alpha     :as    s]
-            [clojure.spec.gen.alpha :as    gen]
-            [clojure.set            :as    set])
+  (:require [clojure.test           :refer :all         ]
+            [clojure.spec.alpha     :as    s            ]
+            [clojure.spec.gen.alpha :as    gen          ]
+            [clojure.pprint         :refer [pprint     ]]
+            [clojure.set            :as    set          ])
 
   (:require [masr.utils             :refer [warnings-banner]]
             [masr.simplespecs       :refer [nat
@@ -243,8 +244,6 @@
   (is (not (vds? (dimensions {2 3}))))
   (is (not (vds? (dimensions '("f")))))
   (is (not (vds? (dimensions '[("f")])))))
-
-
 
 #_
 (gen/sample (s/gen ::asr/dimensions) 5)
@@ -944,6 +943,22 @@
                  (Logical 4 []) ()))))
 
 
+;;  _
+;; | |___ __ _ __ _ __ _  _
+;; | / -_) _` / _` / _| || |
+;; |_\___\__, \__,_\__|\_, |
+;;       |___/         |__/
+
+;; TODO
+
+#_
+(deftest legacy-test
+  (testing "switching of namespaces"
+    (is (= (with-out-str (print *ns*))
+           "#namespace[masr.specs]"))
+    ))
+
+
 ;;    _          _                         _
 ;;   /_\   _____(_)__ _ _ _  _ __  ___ _ _| |_
 ;;  / _ \ (_-<_-< / _` | ' \| '  \/ -_) ' \  _|
@@ -1326,7 +1341,7 @@
             false [] [] false)
         afn (Function
              (SymbolTable 42 {})
-             'test_boolOp ft []
+             test_boolOp ft []
              [] [] ()
              Public false false)]
     (is (s/valid? ::asr/asr-term afn))
@@ -1347,7 +1362,7 @@
                2 b [] Local
                () () Default (Logical 4 [])
                Source Public Required false)})
-          'test_boolOp
+          test_boolOp
           (FunctionType
            [] () Source
            Implementation () false
@@ -1533,7 +1548,7 @@
                           2 b [] Local
                           () () Default (Logical 4 [])
                           Source Public Required false)})
-                     'test_boolOp ;; NOTE TICK MARK
+                     test_boolOp
                      (FunctionType
                       [] () Source
                       Implementation () false
