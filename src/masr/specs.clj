@@ -1787,23 +1787,6 @@
       (s/multi-spec unit-head ::unit-head)))
 
 
-;; ;; -+-+-+-+-+-+-+-+-+-+-+-
-;; ;;  p l u r a l i t i e s
-;; ;; -+-+-+-+-+-+-+-+-+-+-+-
-;; ;;
-;; ;; temporary, until we figure out nodes
-
-
-;; (def MIN-TERM-COUNT    0)
-;; (def MAX-TERM-COUNT 4096)
-
-;; ;; consider a regex-spec
-;; (s/def ::terms
-;;   (s/and (s/coll-of ::asr-term
-;;                     :min-count MIN-TERM-COUNT,
-;;                     :max-count MAX-TERM-COUNT)))
-
-
 (s/def ::node (s/or :expr   ::expr
                     :stmt   ::stmt
                     :symbol ::symbol))
@@ -1819,7 +1802,7 @@
 (def MIN-NODE-COUNT    0)
 (def MAX-NODE-COUNT 4096)
 
-;; consider a regex-spec
+;; Consider a regex-spec.
 (s/def ::nodes
   (s/and (s/coll-of ::node
                     :min-count MIN-NODE-COUNT,
