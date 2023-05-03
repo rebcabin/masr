@@ -9,7 +9,9 @@
             [clojure.pprint         :refer [pprint     ]]
             [clojure.set            :as    set          ])
 
-  (:require [masr.utils             :refer [warnings-banner]]
+  (:require [masr.utils             :refer [warnings-banner
+                                            dosafely
+                                            plnecho]]
             [masr.simplespecs       :refer [nat
                                             identifier
                                             identifier-set
@@ -1614,3 +1616,36 @@
                 main_program
                 [] [])}) []))))
     ))
+
+
+;; ================================================================
+;;      __    _    ____  ____  _
+;;  ____\ \  / \  / ___||  _ \| |
+;; |_____\ \/ _ \ \___ \| | | | |
+;; |_____/ / ___ \ ___) | |_| | |___
+;;      /_/_/   \_\____/|____/|_____|
+
+
+(deftest ->asdl-test
+  (is (= "Program(symbol_table stab, identifier program_name, identifier* dependencies, stmt* body)"
+         (dosafely
+          (->asdl-type (Program
+                        (SymbolTable 3 {})
+                        main_program
+                        []
+                        [])))))
+  (is (= "No method in multimethod '->asdl-type' for dispatch value: null\n"
+         (dosafely
+          (->asdl-type (Program
+                        "messed-up"
+                        main_program
+                        []
+                        [])))))
+  (is (= "Assignment(expr target, expr value, stmt? overloaded)"
+         (->asdl-type (legacy
+                       (= (Var 2 a)
+                          (LogicalBinOp
+                           (Var 2 b)
+                           Or
+                           (Var 2 b)
+                           (Logical 4 []) ()) ()))))))

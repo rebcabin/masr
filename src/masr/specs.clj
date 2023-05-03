@@ -12,7 +12,8 @@
             [blaster.clj-fstring           :refer   [f-str      ]])
 
   (:require [masr.logic                    :refer   [iff implies]]
-            [masr.utils                    :refer   [plnecho    ]]
+            [masr.utils                    :refer   [plnecho
+                                                     dosafely   ]]
             [masr.simplespecs              :refer   [nat
                                                      identifier-list
                                                      identifier-set
@@ -1298,6 +1299,8 @@
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-
 
 
+;; TODO: more cases for lvalue, and an s/or
+;; with "second" hack
 (s/def ::lvalue     ::Var)
 (s/def ::rvalue     ::expr)
 (s/def ::overloaded ::stmtq)
@@ -1734,6 +1737,11 @@
 (s/def ::prognym ::identifier)
 
 
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l - f o r m
+;; -+-+-+-+-+-+-+-+-+-
+
+
 (defmethod symbol-head ::Program [_]
   (s/keys :req [::symbol-head
                 ::SymbolTable
@@ -1779,7 +1787,6 @@
 
 
 (def-term-entity-key unit)
-
 
 ;; Unit has only one nested term-head spec, but we follow the pattern.
 (do (defmulti unit-head ::unit-head)
@@ -1837,3 +1844,105 @@
     (if (s/invalid? cnf)
       :invalid-translation-unit
       fixed)))
+
+
+;; ================================================================
+;;      __    _    ____  ____  _        _______   ______  _____
+;;  ____\ \  / \  / ___||  _ \| |      |_   _\ \ / /  _ \| ____|
+;; |_____\ \/ _ \ \___ \| | | | |   _____| |  \ V /| |_) |  _|
+;; |_____/ / ___ \ ___) | |_| | |__|_____| |   | | |  __/| |___
+;;      /_/_/   \_\____/|____/|_____|    |_|   |_| |_|   |_____|
+
+
+(def asdl-types
+  {::SymbolTable  "symbol_table stab"
+   ::prognym      "identifier program_name"
+   ::dependencies "identifier* dependencies"
+   ::body         "stmt* body"
+   ::lvalue       "expr target"
+   ::rvalue       "expr value"
+   ::overloaded   "stmt? overloaded"
+   })
+
+
+(defmacro asdl-type-string
+  ;; like "symbol" or "stmt" in quotes
+  [it term]
+  ;; like symbol-head or stmt-head
+  (let [trm-head (symbol (str term "-head"))]
+    `(let [ks# (keys ~it),
+           params# (str/join
+                    ", "
+                    (for [k# (rest ks#)]
+                      (str (asdl-types k#)))),
+           head# (name ~trm-head)]
+       (str head# "(" params# ")"))))
+
+
+(defmulti  symbol->asdl-type ::symbol-head)
+(defmethod symbol->asdl-type ::Program
+  [{::keys [symbol-head
+            SymbolTable
+            prognym
+            dependencies
+            body] :as it}]
+  (asdl-type-string it "symbol"))
+
+
+(legacy
+ (= (Var 2 a)
+    (LogicalBinOp
+     (Var 2 b)
+     Or
+     (Var 2 b)
+     (Logical 4 []) ()) ()))
+
+
+(defmulti  stmt->asdl-type ::stmt-head)
+(defmethod stmt->asdl-type ::Assignment
+  [{::keys [stmt-head
+            lvalue
+            rvalue
+            overloaded] :as it}]
+  (asdl-type-string it "stmt"))
+
+
+(defmulti expr->asdl-type ::expr-head)
+
+
+(defmulti  ->asdl-type ::term)
+(defmacro term->asdl-type [term]
+  (let [ns "masr.specs"
+        ;; like ::keys
+        keys-key (keyword ns "keys")
+        ;; like ::symbol or ::stmt, value of term
+        mthd-key (keyword ns term)
+        ;; like asr-symbol-head or asr-stmt-head, a key-symbol
+        ;; for destructuring
+        nest-ksm (symbol (str "asr-" term "-head"))
+        ;; like symbol->asdl-type or stmt->asdl-type
+        call-sym (symbol (str term "->asdl-type"))
+        ;; don't put the namespace on "term";
+        ;; nons-term is a const destructuring key.
+        nons-trm (symbol "term")]
+    `(defmethod ->asdl-type ~mthd-key
+       [{~keys-key [~nons-trm ~nest-ksm]}]
+       (~call-sym ~nest-ksm))))
+
+;; (defmethod ->asdl-type :masr.specs/symbol
+;;   [#:masr.specs{:keys [term asr-symbol-head]}]
+;;   (symbol->asdl-type asr-symbol-head))
+
+(term->asdl-type "symbol") ;; Don't expand in CIDER! console only
+(term->asdl-type "stmt")
+(term->asdl-type "expr")
+
+
+(->asdl-type (legacy
+              (= (Var 2 a)
+                 (LogicalBinOp
+                  (Var 2 b)
+                  Or
+                  (Var 2 b)
+                  (Logical 4 []) ()) ())))
+;; => "Assignment(expr target, expr value, stmt? overloaded)"

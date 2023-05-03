@@ -15,3 +15,10 @@
   `(let [x# ~x]
      (do (println '~x "~~>" x#)
          x#)))
+
+
+(defmacro dosafely [expr]
+  `(try ~expr
+        (catch Exception e#
+          (with-out-str
+            (println (.getMessage e#))))))
