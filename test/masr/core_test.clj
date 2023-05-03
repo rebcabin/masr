@@ -284,14 +284,14 @@
 
 
 (deftest symtab-id-test
-  (is (= (symtab-id  42))                            42)
-  (is (= (symtab-id -42))                            ::asr/invalid-symtab-id)
-  (is (= (symtab-id 'foo))                           ::asr/invalid-symtab-id)
-  (is (= (s/conform ::asr/nat 42))                   42)
-  (is (= (s/conform ::asr/nat (nat 42)))             42)
-  (is (= (s/conform ::asr/symtab-id 42))             42)
-  (is (= (s/conform ::asr/symtab-id (symtab-id 42))) 42)
-  (is (= (s/conform ::asr/symtab-id (nat 42)))       42)
+  (is (= (symtab-id  42)                            42))
+  (is (= (symtab-id -42)                            ::asr/invalid-symtab-id))
+  (is (= (symtab-id 'foo)                           ::asr/invalid-symtab-id))
+  (is (= (s/conform ::asr/nat 42)                   42))
+  (is (= (s/conform ::asr/nat (nat 42))             42))
+  (is (= (s/conform ::asr/symtab-id 42)             42))
+  (is (= (s/conform ::asr/symtab-id (symtab-id 42)) 42))
+  (is (= (s/conform ::asr/symtab-id (nat 42))       42))
   )
 
 
@@ -303,11 +303,11 @@
 
 (deftest identifier-test
   (testing "better syntax"
-    (is (s/valid? ::asr/identifier      (identifier 'foobar)))
-    (is (s/valid? ::asr/identifier      (identifier '_foobar)))
-    (is (s/valid? ::asr/identifier      (identifier '__f_oobar)))
-    (is (s/valid? ::asr/identifier      (identifier '_1234)))
-    (is (s/valid? ::asr/identifier      (identifier '_1__234)))
+    (is      (s/valid? ::asr/identifier (identifier 'foobar)))
+    (is      (s/valid? ::asr/identifier (identifier '_foobar)))
+    (is      (s/valid? ::asr/identifier (identifier '__f_oobar)))
+    (is      (s/valid? ::asr/identifier (identifier '_1234)))
+    (is      (s/valid? ::asr/identifier (identifier '_1__234)))
     (is (not (s/valid? ::asr/identifier (identifier '1234))))
     ;; '1a won't even compile, throwing java.lang.NumberFormatException
     (is (not (s/valid? ::asr/identifier (identifier ""))))
@@ -367,21 +367,21 @@
 
 
 (deftest identifier-set-test
-  (is (s/valid? ::asr/identifier-set (identifier-set [])))
-  (is (s/valid? ::asr/identifier-set (identifier-set ())))
-  (is (s/valid? ::asr/identifier-set (identifier-set #{})))
+  (is      (s/valid? ::asr/identifier-set (identifier-set [])))
+  (is      (s/valid? ::asr/identifier-set (identifier-set ())))
+  (is      (s/valid? ::asr/identifier-set (identifier-set #{})))
   (is (not (s/valid? ::asr/identifier-set (identifier-set {}))))
-  (is (s/valid? ::asr/identifier-set (identifier-set ['foo])))
-  (is (s/valid? ::asr/identifier-set (identifier-set '(foo))))
-  (is (s/valid? ::asr/identifier-set (identifier-set #{'foo})))
+  (is      (s/valid? ::asr/identifier-set (identifier-set ['foo])))
+  (is      (s/valid? ::asr/identifier-set (identifier-set '(foo))))
+  (is      (s/valid? ::asr/identifier-set (identifier-set #{'foo})))
   (is (not (s/valid? ::asr/identifier-set (identifier-set {'foo 'bar}))))
-  (is (s/valid? ::asr/identifier-set (identifier-set ['foo 'bar])))
-  (is (s/valid? ::asr/identifier-set (identifier-set '(foo bar))))
-  (is (s/valid? ::asr/identifier-set (identifier-set #{'foo 'bar})))
-  (is (s/valid? ::asr/identifier-set (identifier-set ['foo 'foo])))
+  (is      (s/valid? ::asr/identifier-set (identifier-set ['foo 'bar])))
+  (is      (s/valid? ::asr/identifier-set (identifier-set '(foo bar))))
+  (is      (s/valid? ::asr/identifier-set (identifier-set #{'foo 'bar})))
+  (is      (s/valid? ::asr/identifier-set (identifier-set ['foo 'foo])))
   ;; check set-ness
   (is (= 1 (count (identifier-set ['foo 'foo]))))
-  (is (s/valid? ::asr/identifier-set (identifier-set '(foo foo))))
+  (is      (s/valid? ::asr/identifier-set (identifier-set '(foo foo))))
   ;; #{'foo 'foo} won't compile!
   (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo 123]))))
   (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo "foo"]))))
@@ -389,21 +389,21 @@
 
 
 (deftest identifier-list-test
-  (is (s/valid? ::asr/identifier-list (identifier-list [])))
-  (is (s/valid? ::asr/identifier-list (identifier-list ())))
-  (is (s/valid? ::asr/identifier-list (identifier-list #{})))
+  (is      (s/valid? ::asr/identifier-list (identifier-list [])))
+  (is      (s/valid? ::asr/identifier-list (identifier-list ())))
+  (is      (s/valid? ::asr/identifier-list (identifier-list #{})))
   (is (not (s/valid? ::asr/identifier-list (identifier-list {}))))
-  (is (s/valid? ::asr/identifier-list (identifier-list ['foo])))
-  (is (s/valid? ::asr/identifier-list (identifier-list '(foo))))
-  (is (s/valid? ::asr/identifier-list (identifier-list #{'foo})))
+  (is      (s/valid? ::asr/identifier-list (identifier-list ['foo])))
+  (is      (s/valid? ::asr/identifier-list (identifier-list '(foo))))
+  (is      (s/valid? ::asr/identifier-list (identifier-list #{'foo})))
   (is (not (s/valid? ::asr/identifier-list (identifier-list {'foo 'bar}))))
-  (is (s/valid? ::asr/identifier-list (identifier-list ['foo 'bar])))
-  (is (s/valid? ::asr/identifier-list (identifier-list '(foo bar))))
-  (is (s/valid? ::asr/identifier-list (identifier-list #{'foo 'bar})))
-  (is (s/valid? ::asr/identifier-list (identifier-list ['foo 'foo])))
+  (is      (s/valid? ::asr/identifier-list (identifier-list ['foo 'bar])))
+  (is      (s/valid? ::asr/identifier-list (identifier-list '(foo bar))))
+  (is      (s/valid? ::asr/identifier-list (identifier-list #{'foo 'bar})))
+  (is      (s/valid? ::asr/identifier-list (identifier-list ['foo 'foo])))
   ;; check that duplicates are allowed
   (is (= 2 (count (identifier-list ['foo 'foo]))))
-  (is (s/valid? ::asr/identifier-list (identifier-list '(foo foo))))
+  (is      (s/valid? ::asr/identifier-list (identifier-list '(foo foo))))
   ;; #{'foo 'foo} won't compile!
   (is (not (s/valid? ::asr/identifier-list (identifier-list ['foo 123]))))
   (is (not (s/valid? ::asr/identifier-list (identifier-list ['foo "foo"]))))
@@ -411,17 +411,17 @@
 
 
 (deftest identifier-suit-test
-  (is (s/valid? ::asr/identifier-suit (identifier-suit [])))
-  (is (s/valid? ::asr/identifier-suit (identifier-suit ())))
-  (is (s/valid? ::asr/identifier-suit (identifier-suit #{})))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit [])))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit ())))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit #{})))
   (is (not (s/valid? ::asr/identifier-suit (identifier-suit {}))))
-  (is (s/valid? ::asr/identifier-suit (identifier-suit ['foo])))
-  (is (s/valid? ::asr/identifier-suit (identifier-suit '(foo))))
-  (is (s/valid? ::asr/identifier-suit (identifier-suit #{'foo})))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit ['foo])))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit '(foo))))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit #{'foo})))
   (is (not (s/valid? ::asr/identifier-suit (identifier-suit {'foo 'bar}))))
-  (is (s/valid? ::asr/identifier-suit (identifier-suit ['foo 'bar])))
-  (is (s/valid? ::asr/identifier-suit (identifier-suit '(foo bar))))
-  (is (s/valid? ::asr/identifier-suit (identifier-suit #{'foo 'bar})))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit ['foo 'bar])))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit '(foo bar))))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit #{'foo 'bar})))
   (is (not (s/valid? ::asr/identifier-suit (identifier-suit ['foo 'foo]))))
   (is (not (s/valid? ::asr/identifier-suit (identifier-suit '(foo foo)))))
   ;; #{'foo 'foo} won't compile!
@@ -691,40 +691,48 @@
 ;;   |_|   |_|   |_| |_|   |_____|
 
 
-(defn vt? [ttype]
+(defn vt? [intermediate ttype]
   (and (s/valid? ::asr/asr-term ttype)
-       (s/valid? ::asr/ttype    ttype)))
+       (s/valid? ::asr/ttype    ttype)
+       (s/valid? intermediate   ttype)))
 
 
 (deftest ttype-test
+  (testing "top-level-types"
+    (is      (s/valid? ::asr/Logical (Logical)))
+    (is      (s/valid? ::asr/Integer (Integer)))
+    (is (not (s/valid? ::asr/Logical (Integer))))
+    (is (not (s/valid? ::asr/Integer (Logical)))))
   (testing "full-sugar and light-sugar)"
-    (is (vt? (Integer)))
-    (is (vt? (Integer 4)))
-    (is (vt? (Integer 4 [])))
-    (is (vt? (Integer 4 [[6 60] [1 42]])))
-    (is (vt? (Integer)))
-    (is (vt? (Integer 8)))
-    (is (vt? (Integer 8 [])))
-    (is (vt? (Integer 8 [[6 60] [1 82]])))
-    (is (vt? (Logical)))
-    (is (vt? (Logical 4)))
-    (is (vt? (Logical 4 [])))
-    (is (vt? (Logical 4 [[6 60] [1 42]])))
-    (is (vt? (Integer- {:dimensions [], :kind 4})))
-    (is (vt? (Integer- {:kind 4, :dimensions []})))
+    (is (vt? ::asr/Integer (Integer)))
+    (is (vt? ::asr/Integer (Integer 4)))
+    (is (vt? ::asr/Integer (Integer 4 [])))
+    (is (vt? ::asr/Integer (Integer 4 [[6 60] [1 42]])))
+    (is (vt? ::asr/Integer (Integer)))
+    (is (vt? ::asr/Integer (Integer 8)))
+    (is (vt? ::asr/Integer (Integer 8 [])))
+    (is (vt? ::asr/Integer (Integer 8 [[6 60] [1 82]])))
+
+    (is (vt? ::asr/Logical (Logical)))
+    (is (vt? ::asr/Logical (Logical 4)))
+    (is (vt? ::asr/Logical (Logical 4 [])))
+    (is (vt? ::asr/Logical (Logical 4 [[6 60] [1 42]])))
+
+    (is (vt? ::asr/Integer (Integer- {:dimensions [], :kind 4})))
+    (is (vt? ::asr/Integer (Integer- {:kind 4, :dimensions []})))
     (testing "non-conformance"
-      (is (not (vt? (Logical 4 ['fubar]))))
-      (is (not (vt? (Logical 8))))
-      (is (not (vt? (Logical 0 []))))
-      (is (not (vt? (Logical 42 [[6 60] [42]]))))))
+      (is (not (vt? ::asr/Logical (Logical 4 ['fubar]))))
+      (is (not (vt? ::asr/Logical (Logical 8))))
+      (is (not (vt? ::asr/Logical (Logical 0 []))))
+      (is (not (vt? ::asr/Logical (Logical 42 [[6 60] [42]]))))))
   (testing "full-form"
-    (is (vt?
+    (is (vt? ::asr/Integer
          {::asr/term ::asr/ttype,
           ::asr/asr-ttype-head
           {::asr/ttype-head   ::asr/Integer,
            ::asr/integer-kind 4
            ::asr/dimensions   []}}))
-    (is (vt?
+    (is (vt? ::asr/Real
          {::asr/term ::asr/ttype,
           ::asr/asr-ttype-head
           {::asr/ttype-head   ::asr/Real,
@@ -812,7 +820,7 @@
                      (Integer- {:dimensions [], :kind 4}))  true))
     (is (= (s/valid? ::asr/ttype
                      (Integer- {:kind 4, :dimensions []}))  true))
-   ))
+    ))
 
 
 ;;                _         _  _        _    _
@@ -824,13 +832,13 @@
 
 (deftest symbol-table-test
   (is (= (s/valid? ::asr/asr-term
-                 (SymbolTable 42 {:main 'main})))    true)
+                   (SymbolTable 42 {:main 'main}))    true))
   (is (= (s/valid? ::asr/SymbolTable
-                 (SymbolTable 42 {:main 'main})))    true)
+                   (SymbolTable 42 {:main 'main}))    true))
   (is (= (s/valid? ::asr/SymbolTable
-                 (SymbolTable 'foo {:main 'main})))  false)
+                   (SymbolTable 'foo {:main 'main}))  false))
   (is (= (s/valid? ::asr/SymbolTable
-                 (SymbolTable 42 [:main 'main])))    false))
+                   (SymbolTable 42 [:main 'main]))    false)))
 
 
 ;;  ___             _   _        _____
@@ -870,10 +878,10 @@
      (is (= (s/valid? ::asr/expr            alv) true))
      (is (= (s/valid? ::asr/LogicalConstant alv) true))
 
-     (is (= (alv (LogicalConstant true))))
-     (is (= (alv (LogicalConstant true (Logical 4 [])))))
-     (is (= (alv (LogicalConstant true (Logical 4)))))
-     (is (= (alv (LogicalConstant true (Logical)))))
+     (is (= alv (LogicalConstant true)))
+     (is (= alv (LogicalConstant true (Logical 4 []))))
+     (is (= alv (LogicalConstant true (Logical 4))))
+     (is (= alv (LogicalConstant true (Logical))))
      ))
 
   ;; invalid
@@ -900,16 +908,16 @@
             ::asr/asr-expr-head
             {::asr/expr-head  ::asr/Var
              ::asr/symtab-id  2
-             ::asr/identifier 'x
+             ::asr/varnym     'x
              }}]
    (is (= (Var-- 2 'x) vlv))
    (is (= (Var   2  x) vlv))
    (is (= (Var-- 2 'x) (s/conform ::asr/Var   vlv)))
    (is (= (Var   2  x) (s/conform ::asr/Var   vlv)))
-   (is (= (s/conform ::asr/Var (Var-- 2 'x))) vlv)
-   (is (= (s/conform ::asr/Var (Var   2  x))) vlv)
-   (is (= (s/valid?  ::asr/asr-term vlv))     true)
-   (is (= (s/valid?  ::asr/Var      vlv))     true)))
+   (is (= (s/conform ::asr/Var (Var-- 2 'x))  vlv))
+   (is (= (s/conform ::asr/Var (Var   2  x))  vlv))
+   (is (= (s/valid?  ::asr/asr-term vlv)      true))
+   (is (= (s/valid?  ::asr/Var      vlv)      true))))
 
 
 ;;  _              _         _ ___ _      ___
@@ -1062,22 +1070,22 @@
           avl-2  (Variable- :varnym     'x
                             :symtab-id  2
                             :ttype      (Integer 42))]
-      (is (= a-var-light) (s/conform ::asr/asr-term a-var))
-      (is (= a-var-light) (s/conform ::asr/Variable a-var))
+      (is (= a-var-light (s/conform ::asr/asr-term a-var)))
+      (is (= a-var-light (s/conform ::asr/Variable a-var)))
 
-      (is (= (s/valid? ::asr/asr-symbol-head a-var-head)) true)
+      (is (= (s/valid? ::asr/asr-symbol-head a-var-head) true))
 
-      (is (= (s/valid? ::asr/asr-term a-var))             true)
-      (is (= (s/valid? ::asr/asr-term a-var-light))       true)
-      (is (= (s/valid? ::asr/asr-term avl-2))             false)
+      (is (= (s/valid? ::asr/asr-term a-var)             true))
+      (is (= (s/valid? ::asr/asr-term a-var-light)       true))
+      (is (= (s/valid? ::asr/asr-term avl-2)             false))
 
-      (is (= (s/valid? ::asr/symbol   a-var))             true)
-      (is (= (s/valid? ::asr/symbol   a-var-light))       true)
-      (is (= (s/valid? ::asr/symbol   avl-2))             false)
+      (is (= (s/valid? ::asr/symbol   a-var)             true))
+      (is (= (s/valid? ::asr/symbol   a-var-light)       true))
+      (is (= (s/valid? ::asr/symbol   avl-2)             false))
 
-      (is (= (s/valid? ::asr/Variable a-var))             true)
-      (is (= (s/valid? ::asr/Variable a-var-light))       true)
-      (is (= (s/valid? ::asr/Variable avl-2))             false)
+      (is (= (s/valid? ::asr/Variable a-var)             true))
+      (is (= (s/valid? ::asr/Variable a-var-light)       true))
+      (is (= (s/valid? ::asr/Variable avl-2)             false))
       ))
   (testing "light sugar"
     ;; fully spec'ced, order does not matter
@@ -1641,6 +1649,8 @@
                         main_program
                         []
                         [])))))
+  (is (= "Var(symbol_table stid, identifier varnym)"
+         (->asdl-type (Var 2 x))))
   (is (= "Assignment(expr target, expr value, stmt? overloaded)"
          (->asdl-type (legacy
                        (= (Var 2 a)

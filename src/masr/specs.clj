@@ -1099,10 +1099,23 @@
 ;; Var(symtab_id stid, identifier it)
 
 
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;;  p r e r e q u i s i t e   t y p e   a l i a s e s
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+
+(s/def ::varnym           ::identifier)
+
+
+;; -+-+-+-+-+-+-+-+-+-
+;;  f u l l   f o r m
+;; -+-+-+-+-+-+-+-+-+-
+
+
 (defmethod expr-head ::Var [_]
   (s/keys :req [::expr-head
                 ::symtab-id
-                ::identifier]))
+                ::varnym]))
 
 
 (def-term-head--entity-key expr Var)
@@ -1113,7 +1126,7 @@
              ::asr-expr-head
              {::expr-head  ::Var
               ::symtab-id  stid
-              ::identifier ident
+              ::varnym     ident
               }}]
     (if (s/invalid? cnf)
       :invalid-var
@@ -1150,9 +1163,9 @@
 
 (defmethod expr-head ::LogicalBinOp [_]
   (s/keys :req [::expr-head
-                ::expr-left     ;; check ::Logical
+                ::logical-left
                 ::logicalbinop
-                ::expr-right    ;; check ::Logical
+                ::logical-right
                 ::Logical
                 ::value
                 ]))
@@ -1166,19 +1179,20 @@
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-
 
 
-(s/def ::expr-left  ::expr)
-(s/def ::expr-right ::expr)
+;; TODO: check that the types of the exprs are ::Logical!
+(s/def ::logical-left  ::expr)
+(s/def ::logical-right ::expr)
 
 ;; heavy sugar
 (defn LogicalBinOp [left- lbo- right- tt- val-]
   (let [cnf {::term ::expr,
              ::asr-expr-head
-             {::expr-head    ::LogicalBinOp
-              ::expr-left    left-
-              ::logicalbinop lbo-
-              ::expr-right   right-
-              ::Logical      tt-
-              ::value        val-
+             {::expr-head     ::LogicalBinOp
+              ::logical-left  left-
+              ::logicalbinop  lbo-
+              ::logical-right right-
+              ::Logical       tt-
+              ::value         val-
               }}]
     (if (s/invalid? cnf)
       :invalid-logical-bin-op
@@ -1206,8 +1220,9 @@
 
 (defmethod expr-head ::LogicalCompare [_]
   (s/keys :req [::expr-head
-                ::expr-left
+                ::logical-left
                 ::logicalcmpop
+                ::logical-right
                 ::Logical
                 ::value]))
 
@@ -1218,12 +1233,12 @@
 (defn LogicalCompare [l- cmp- r- tt- val-]
   (let [cnf {::term ::expr,
              ::asr-expr-head
-             {::expr-head    ::LogicalCompare
-              ::expr-left    l-
-              ::logicalcmpop cmp-
-              ::expr-right   r-
-              ::Logical      tt-
-              ::value        val-}}]
+             {::expr-head     ::LogicalCompare
+              ::logical-left  l-
+              ::logicalcmpop  cmp-
+              ::logical-right r-
+              ::Logical       tt-
+              ::value         val-}}]
     (if (s/invalid? cnf)
       :invalid-logical-compare
       cnf)))
@@ -1403,7 +1418,7 @@
 
 
 (s/def ::value-attr       ::bool)
-(s/def ::varnym           ::identifier)
+;; varnym already defined for Var.
 ;; https://github.com/rebcabin/masr/issues/28
 (s/def ::type-declaration (s/nilable ::symtab-id))
 ;; TODO: there is ambiguity regarding identifier-sets and lists:
@@ -1862,11 +1877,14 @@
    ::lvalue       "expr target"
    ::rvalue       "expr value"
    ::overloaded   "stmt? overloaded"
+   ::logicalbinop "logicalbinop"
+   ::symtab-id    "symbol_table stid"  ;; TODO: this is TERRIBLE
+   ::varnym       "identifier varnym"
    })
 
 
 (defmacro asdl-type-string
-  ;; like "symbol" or "stmt" in quotes
+  ;; term is a string like "symbol" or "stmt" in quotes
   [it term]
   ;; like symbol-head or stmt-head
   (let [trm-head (symbol (str term "-head"))]
@@ -1889,15 +1907,6 @@
   (asdl-type-string it "symbol"))
 
 
-(legacy
- (= (Var 2 a)
-    (LogicalBinOp
-     (Var 2 b)
-     Or
-     (Var 2 b)
-     (Logical 4 []) ()) ()))
-
-
 (defmulti  stmt->asdl-type ::stmt-head)
 (defmethod stmt->asdl-type ::Assignment
   [{::keys [stmt-head
@@ -1907,7 +1916,20 @@
   (asdl-type-string it "stmt"))
 
 
-(defmulti expr->asdl-type ::expr-head)
+(defmulti  expr->asdl-type ::expr-head)
+(defmethod expr->asdl-type ::LogicalBinOp
+  [{::keys [expr-head
+            expr-left
+            logicalbinop
+            expr-right
+            Logical
+            Value] :as it}]
+  (asdl-type-string it "expr"))
+(defmethod expr->asdl-type ::Var
+  [{::keys [expr-head
+            symtab-id
+            varnym] :as it}]
+  (asdl-type-string it "expr"))
 
 
 (defmulti  ->asdl-type ::term)
@@ -1925,24 +1947,17 @@
         ;; don't put the namespace on "term";
         ;; nons-term is a const destructuring key.
         nons-trm (symbol "term")]
+    ;; (defmethod ->asdl-type :masr.specs/symbol
+    ;;   [#:masr.specs{:keys [term asr-symbol-head]}]
+    ;;   (symbol->asdl-type asr-symbol-head))
     `(defmethod ->asdl-type ~mthd-key
        [{~keys-key [~nons-trm ~nest-ksm]}]
        (~call-sym ~nest-ksm))))
 
-;; (defmethod ->asdl-type :masr.specs/symbol
-;;   [#:masr.specs{:keys [term asr-symbol-head]}]
-;;   (symbol->asdl-type asr-symbol-head))
-
-(term->asdl-type "symbol") ;; Don't expand in CIDER! console only
-(term->asdl-type "stmt")
-(term->asdl-type "expr")
+(term->asdl-type "symbol") ;; Don't expand in CIDER! console only.
+(term->asdl-type "stmt")   ;; CIDER macro-expand removes namespace.
+(term->asdl-type "expr")   ;;
 
 
-(->asdl-type (legacy
-              (= (Var 2 a)
-                 (LogicalBinOp
-                  (Var 2 b)
-                  Or
-                  (Var 2 b)
-                  (Logical 4 []) ()) ())))
+
 ;; => "Assignment(expr target, expr value, stmt? overloaded)"
