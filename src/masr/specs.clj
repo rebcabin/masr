@@ -118,15 +118,6 @@
 ;; are ::symbol.
 
 
-;; -+-+-+-+-+-+-+-+-+-+-
-;;  m u l t i - s p e c
-;; -+-+-+-+-+-+-+-+-+-+-
-
-
-;; See multi-spec in https://clojure.org/guides/spec
-;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
-
-
 ;; An asr-term is a map containing a ::term keyword,
 ;; i.e., :masr.specs/term, or ::asr/term if
 ;; masr.specs is aliased to asr, as in
@@ -153,7 +144,8 @@
 ;; the re-tagging function ::term. In our usage, the
 ;; re-tagging function is the same as the original
 ;; dispatcher. We don't need re-tagging.
-(s/def ::asr-term (s/multi-spec term ::term))
+(s/def ::asr-term
+  (s/multi-spec term ::term))
 
 
 ;;   __                           __  _ __         __
@@ -235,6 +227,321 @@
        (s/and ~art #(= ~hkw (-> % ~amh ~tmh))))))
 
 
+(defmethod term ::expr [_]
+  (s/keys :req [::term
+                ::asr-expr-head]))
+(def-term-entity-key expr)
+
+
+(defmethod term ::symbol [_]
+  (s/keys :req [::term
+                ::asr-symbol-head]))
+(def-term-entity-key symbol)
+
+
+(defmethod term ::ttype [_]
+  (s/keys :req [::term
+                ::asr-ttype-head]))
+(def-term-entity-key ttype)
+
+
+;; ================================================================
+;;      __    _    ____  ____  _        _______   ______  _____
+;;  ____\ \  / \  / ___||  _ \| |      |_   _\ \ / /  _ \| ____|
+;; |_____\ \/ _ \ \___ \| | | | |   _____| |  \ V /| |_) |  _|
+;; |_____/ / ___ \ ___) | |_| | |__|_____| |   | | |  __/| |___
+;;      /_/_/   \_\____/|____/|_____|    |_|   |_| |_|   |_____|
+
+;; Routines to find the ASDL type of any MASR instance. MASR
+;; instances are automatically type-checked.
+
+
+(def asdl-types
+  {
+   ::SymbolTable  "symbol_table stab"
+   ::body         "stmt* body"
+   ::dependencies "identifier* dependencies"
+   ::dimensions   "dimension* dims"
+   ::logical-kind "int kind"
+   ::logicalbinop "logicalbinop"
+   ::lvalue       "expr target"
+   ::overloaded   "stmt? overloaded"
+   ::prognym      "identifier program_name"
+   ::rvalue       "expr value"
+   ::symtab-id    "symbol_table stid"  ;; TODO: this is TERRIBLE
+   ::varnym       "identifier varnym"
+   })
+
+
+(defmacro asdl-type-string
+  "Construct a string like this
+  Assignment(expr target, expr value, stmt? overloaded)"
+  ;; term is a string like "symbol" or "stmt" in quotes
+  [term sqkeysyms]
+  (let [ns "masr.specs"
+        ;; like symbol-head or stmt-head
+        str-head (str    term "-head")
+        trm-head (symbol str-head)
+        seq-keys (map    #(keyword ns (str %)) sqkeysyms)]
+    ;; Strip the namespace inserted by backtick. symbol-head
+    ;; becomes a bound symbol in context, bound to Program or
+    ;; Variable or whatever.
+    `(let [head#   (name ~trm-head)
+           params# (str/join ", "
+                    (map asdl-types (list ~@seq-keys)))]
+       (str head# "(" params# ")"))))
+
+
+(defmacro head-term-keyseq->asdl-type
+  "Get rid of repetition in some expression like this:
+
+  (defmethod stmt->asdl-type ::Assignment
+      [{::keys [stmt-head
+                lvalue        ;;  <~~~ this bit gets repeated
+                rvalue        ;;  <~~~ this bit gets repeated
+                overloaded]}] ;;  <~~~ this bit gets repeated
+      (asdl-type-string \"stmt\" (lvalue     ;; <~~~ repeated
+                                  rvalue     ;; <~~~ repeated
+                                  overloaded ;; <~~~ repeated
+                                  )))
+
+  and this (the whole key list is just a transform of the
+  sym-list above)
+
+  (defmethod symbol-head ::Program [_]
+    (s/keys :req [::symbol-head  ;; <~~~ repetitive
+                  ::SymbolTable  ;; <~~~ repetitive
+                  ::prognym      ;; <~~~ repetitive
+                  ::dependencies ;; <~~~ repetitive
+                  ::body]        ;; <~~~ repetitive
+            ))
+  "
+  [head, term, keyseq]
+  (let [ns "masr.specs"
+        ;; like ::Program
+        head-key  (keyword ns (str head))
+        ;; ::keys
+        keys-key  (keyword ns "keys")
+        ;; like symbol-head
+        term-head (symbol (str term "-head"))
+        ;; like symbol->asdl-type
+        mthd-nym  (symbol (str term "->asdl-type"))
+        ;; like (symbol-head, SymbolTable, ..., body)
+        sym-list  (conj keyseq term-head)
+        ;; like [symbol-head, SymbolTable, ..., body]
+        ;; for destructuring
+        parm-vec  (vec sym-list)
+        ;; like (::symbol-head, ::SymbolTable, ..., ::body)
+        ;; for entity specs via s/keys
+        key-list  (map #(keyword ns (str %)) sym-list)
+        ;; like [::symbol-head, ::SymbolTable, ..., ::body]
+        ;; for entity specs via s/keys
+        key-vec   (vec key-list)
+        ]
+
+    `(do (defmethod ~mthd-nym ~head-key
+           [{~keys-key ~parm-vec}]
+           (asdl-type-string ~term ~keyseq))
+         (defmethod ~term-head ~head-key [_#]
+           (s/keys :req ~key-vec))
+         )))
+
+
+;;            _ _   _
+;;  _ __ _  _| | |_(_)___ ____ __  ___ __ ___
+;; | '  \ || | |  _| |___(_-< '_ \/ -_) _(_-<
+;; |_|_|_\_,_|_|\__|_|   /__/ .__/\___\__/__/
+;;                          |_|
+
+
+;; See multi-spec in https://clojure.org/guides/spec
+;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
+
+
+;; All multi-spec names in MASR, nested or not,
+;; begin with
+;; ::asr-<the_rest_of_the_name>, as
+;; in ::asr-term (not nested)
+;; and ::asr-ttype-head (nested in ttypes).
+
+
+;; At first, a multi-spec needs a dispatcher,
+;; ttype-head in this case:
+
+
+;; nested multi-spec
+(do (defmulti ttype-head ::ttype-head)
+    ;;        ----------
+    ;; name of this multi-spec
+    ;; \                     /
+    ;;  `---------.---------'
+    ;;            |
+    ;;      .-----^------,
+    ;;     /              \
+    (s/def ::asr-ttype-head
+      (s/multi-spec ttype-head ::ttype-head)))
+
+
+(do (defmulti symbol-head ::symbol-head)
+    (s/def ::asr-symbol-head
+      (s/multi-spec symbol-head ::symbol-head)))
+
+
+(do (defmulti expr-head ::expr-head)
+    (s/def ::asr-expr-head
+      (s/multi-spec expr-head ::expr-head)))
+
+
+(do (defmulti stmt-head ::stmt-head)
+    (s/def ::asr-stmt-head
+      (s/multi-spec stmt-head ::stmt-head)))
+
+
+(do (defmulti unit-head ::unit-head)
+    (s/def ::asr-unit-head
+      (s/multi-spec unit-head ::unit-head)))
+
+
+(defmulti  unit->asdl-type ::unit-head)
+
+(head-term-keyseq->asdl-type
+ TranslationUnit unit
+ (SymbolTable
+  nodes))
+
+
+(defmulti  symbol->asdl-type ::symbol-head)
+
+(head-term-keyseq->asdl-type
+ Program symbol
+ (SymbolTable
+  prognym
+  dependencies
+  body))
+
+(head-term-keyseq->asdl-type
+ Variable symbol
+ (symbol-head
+  symtab-id        varnym          dependencies
+  intent           symbolic-value  value
+  storage-type     ttype           abi
+  access           presence        value-attr
+  type-declaration))
+
+(head-term-keyseq->asdl-type
+ Module symbol
+ [symbol-head
+  SymbolTable
+  modulenym
+  dependencies
+  loaded-from-mod
+  intrinsic])
+
+(head-term-keyseq->asdl-type
+ Function symbol
+ (symbol-head
+
+  SymbolTable ;; not a symtab-id!
+
+  function-name
+  function-signature
+  dependencies
+
+  params
+  body
+  return-var
+
+  access
+  deterministic
+  side-effect-free
+  ))
+
+(defmulti  stmt->asdl-type ::stmt-head)
+
+(head-term-keyseq->asdl-type
+ Assignment stmt
+ (lvalue
+  rvalue
+  overloaded))
+
+
+(defmulti  expr->asdl-type ::expr-head)
+
+;; TODO: check that the types of the exprs are ::Logical!
+(s/def ::logical-left  ::expr)
+(s/def ::logical-right ::expr)
+
+(head-term-keyseq->asdl-type
+ LogicalBinOp expr
+ (logical-left
+  logicalbinop
+  logical-right
+  Logical
+  value))
+
+(head-term-keyseq->asdl-type
+ LogicalCompare expr
+ (expr-head
+  logical-left
+  logicalcmpop
+  logical-right
+  Logical
+  value))
+
+(head-term-keyseq->asdl-type
+ LogicalConstant expr
+ (bool
+  Logical))
+
+(head-term-keyseq->asdl-type
+ Var expr
+ (symtab-id
+  varnym))
+
+
+(defmulti  ttype->asdl-type ::ttype-head)
+
+(head-term-keyseq->asdl-type
+ Logical ttype
+ (logical-kind
+  dimensions))
+
+
+;;     __                _ _     _
+;;  ___\ \   __ _ ___ __| | |___| |_ _  _ _ __  ___
+;; |___|> > / _` (_-</ _` | |___|  _| || | '_ \/ -_)
+;; |___/_/  \__,_/__/\__,_|_|    \__|\_, | .__/\___|
+;;                                   |__/|_|
+
+
+(defmulti  ->asdl-type ::term)
+(defmacro term->asdl-type [term]
+  (let [ns "masr.specs"
+        ;; like ::keys
+        keys-key (keyword ns "keys")
+        ;; like ::symbol or ::stmt, value of term
+        mthd-key (keyword ns term)
+        ;; like asr-symbol-head or asr-stmt-head, a key-symbol
+        ;; for destructuring
+        nest-ksm (symbol (str "asr-" term "-head"))
+        ;; like symbol->asdl-type or stmt->asdl-type
+        call-sym (symbol (str term "->asdl-type"))
+        ;; don't put the namespace on "term";
+        ;; nons-term is a const destructuring key.
+        nons-trm (symbol "term")]
+    ;; (defmethod ->asdl-type :masr.specs/symbol
+    ;;   [#:masr.specs{:keys [term asr-symbol-head]}]
+    ;;   (symbol->asdl-type asr-symbol-head))
+    `(defmethod ->asdl-type ~mthd-key
+       [{~keys-key [~nons-trm ~nest-ksm]}]
+       (~call-sym ~nest-ksm))))
+
+(term->asdl-type "symbol") ;; Don't expand in CIDER! console only.
+(term->asdl-type "stmt")   ;; CIDER macro-expand removes namespace.
+(term->asdl-type "expr")   ;;
+(term->asdl-type "ttype")
+
+
 ;;     _ _                   _
 ;;  __| (_)_ __  ___ _ _  __(_)___ _ _
 ;; / _` | | '  \/ -_) ' \(_-< / _ \ ' \
@@ -281,7 +588,8 @@
 ;; hash-map with keys ::term and
 ;; ::dimension-content.
 (defmethod term ::dimension [_]
-  (s/keys :req [::term ::dimension-content]))
+  (s/keys :req [::term
+                ::dimension-content]))
 
 
 ;; As usual, we need a term-entity key for
@@ -615,30 +923,6 @@
 ;;                                                     |_|
 
 
-;; All multi-spec names in MASR, nested or not,
-;; begin with
-;; ::asr-<the_rest_of_the_name>, as
-;; in ::asr-term (not nested)
-;; and ::asr-ttype-head (nested in ttypes).
-
-
-;; At first, a multi-spec needs a dispatcher,
-;; ttype-head in this case:
-
-
-;; nested multi-spec
-(do (defmulti ttype-head ::ttype-head)
-    ;;        ----------
-    ;; name of this multi-spec
-    ;; \                     /
-    ;;  `---------.---------'
-    ;;            |
-    ;;      .-----^------,
-    ;;     /              \
-    (s/def ::asr-ttype-head
-      (s/multi-spec ttype-head ::ttype-head)))
-
-
 ;; Then, we need functions-to-dispatch-to, i.e.,
 ;; methods or defmethods. The next macro eliminates
 ;; the repetitive syntax in writing out defmethods
@@ -646,13 +930,6 @@
 ;; Character.
 
 ;; Now, the asr-term defmethod spec for ttype.
-(defmethod term ::ttype [_]
-  (s/keys :req [::term ::asr-ttype-head]))
-
-
-(def-term-entity-key ttype)
-
-
 ;; -+-+-+-+-+-+-+-+-+-+-+-
 ;;  p l u r a l i t i e s
 ;; -+-+-+-+-+-+-+-+-+-+-+-
@@ -663,13 +940,13 @@
 
 ;; consider a regex-spec
 (s/def ::ttypes (s/coll-of ::ttype
-                          :min-count MIN-NUMBER-OF-TTYPES
-                          :max-count MAX-NUMBER-OF-TTYPES))
+                           :min-count MIN-NUMBER-OF-TTYPES
+                           :max-count MAX-NUMBER-OF-TTYPES))
 
 ;; consider a regex-spec
 (s/def ::ttypeq (s/coll-of ::ttype
-                          :min-count 0
-                          :max-count 1))
+                           :min-count 0
+                           :max-count 1))
 ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -886,13 +1163,14 @@
 (s/def ::inline          ::bool)
 (s/def ::static          ::bool)
 (s/def ::type-params     ::ttypes)
+
+
 ;; symbol* is written "symbols," and restrictions
 ;; is a type alias for symbols.
 ;;
 ;; forward reference. Can only test empty symbol*
 ;; restrictions until symbol is properly defined
 ;; below.
-(def-term-entity-key symbol)
 
 
 ;; -+-+-+-+-+-+-+-+-+-+-+-
@@ -1004,19 +1282,6 @@
 ;; |_____/_/\_\_|   |_| \_\
 
 
-;; nested multi-spec
-(do (defmulti expr-head ::expr-head)
-    (s/def ::asr-expr-head
-      (s/multi-spec expr-head ::expr-head)))
-
-;; Employ the nested multi-spec:
-(defmethod term ::expr [_]
-  (s/keys :req [::term ::asr-expr-head]))
-
-
-(def-term-entity-key expr)
-
-
 ;; -+-+-+-+-+-+-+-+-+-+-+-
 ;;  p l u r a l i t i e s
 ;; -+-+-+-+-+-+-+-+-+-+-+-
@@ -1051,12 +1316,6 @@
 ;;           |___/
 
 ;; (LogicalConstant true (Logical 4 []))
-
-
-(defmethod expr-head ::LogicalConstant [_]
-  (s/keys :req [::expr-head
-                ::bool
-                ::Logical]))
 
 
 (def-term-head--entity-key expr LogicalConstant)
@@ -1111,12 +1370,6 @@
 ;; -+-+-+-+-+-+-+-+-+-
 
 
-(defmethod expr-head ::Var [_]
-  (s/keys :req [::expr-head
-                ::symtab-id
-                ::varnym]))
-
-
 (def-term-head--entity-key expr Var)
 
 ;; heavy sugar
@@ -1160,16 +1413,6 @@
 ;;  (Logical 4 []) ())
 
 
-(defmethod expr-head ::LogicalBinOp [_]
-  (s/keys :req [::expr-head
-                ::logical-left
-                ::logicalbinop
-                ::logical-right
-                ::Logical
-                ::value
-                ]))
-
-
 (def-term-head--entity-key expr LogicalBinOp)
 
 
@@ -1177,10 +1420,6 @@
 ;;  t y p e   a l i a s e s
 ;; -+-+-+-+-+-+-+-+-+-+-+-+-
 
-
-;; TODO: check that the types of the exprs are ::Logical!
-(s/def ::logical-left  ::expr)
-(s/def ::logical-right ::expr)
 
 ;; heavy sugar
 (defn LogicalBinOp [left- lbo- right- tt- val-]
@@ -1215,15 +1454,6 @@
 ;;                  expr right,  ;; must have type ::Logical
 ;;                  ttype type,
 ;;                  expr? value)
-
-
-(defmethod expr-head ::LogicalCompare [_]
-  (s/keys :req [::expr-head
-                ::logical-left
-                ::logicalcmpop
-                ::logical-right
-                ::Logical
-                ::value]))
 
 
 (def-term-head--entity-key expr LogicalCompare)
@@ -1320,13 +1550,6 @@
 (s/def ::overloaded ::stmtq)
 
 
-(defmethod stmt-head ::Assignment [_]
-  (s/keys :req [::stmt-head
-                ::lvalue
-                ::rvalue
-                ::overloaded]))
-
-
 (def-term-head--entity-key stmt Assignment)
 
 ;; heavy sugar
@@ -1359,24 +1582,7 @@
 ;; |_||_\___/__/\__\___\__,_| |_|_|_\_,_|_|\__|_|   /__/ .__/\___\__|
 ;;                                                     |_|
 
-;; nested multi-spec
-
-
-(do (defmulti symbol-head ::symbol-head)
-    (s/def ::asr-symbol-head
-      (s/multi-spec symbol-head ::symbol-head)))
-
-;; Employ the nested multi-spec:
-(defmethod term ::symbol [_]
-  (s/keys :req [::term
-                ::asr-symbol-head]))
-
-
-;; (def-term-entity-key symbol) moved
-;; above FunctionType
 ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
 ;; __   __        _      _    _
 ;; \ \ / /_ _ _ _(_)__ _| |__| |___
 ;;  \ V / _` | '_| / _` | '_ \ / -_)
@@ -1427,16 +1633,6 @@
 ;; -+-+-+-+-+-+-+-+-+-
 ;;  f u l l   f o r m
 ;; -+-+-+-+-+-+-+-+-+-
-
-
-(defmethod symbol-head ::Variable [_]
-  (s/keys :req [::symbol-head
-                ::symtab-id        ::varnym          ::dependencies
-                ::intent           ::symbolic-value  ::value
-                ::storage-type     ::ttype           ::abi
-                ::access           ::presence        ::value-attr
-                ::type-declaration
-                ]))
 
 
 (def-term-head--entity-key symbol Variable)
@@ -1604,15 +1800,6 @@
 (s/def ::intrinsic       ::bool)
 
 
-(defmethod symbol-head ::Module [_]
-  (s/keys :req [::symbol-head
-                ::SymbolTable
-                ::modulenym
-                ::dependencies
-                ::loaded-from-mod
-                ::intrinsic]))
-
-
 (def-term-head--entity-key symbol Module)
 
 
@@ -1668,25 +1855,6 @@
 ;; access is already defined
 (s/def ::deterministic      ::bool)
 (s/def ::side-effect-free   ::bool)
-
-
-(defmethod symbol-head ::Function [_]
-  (s/keys :req [::symbol-head
-
-                ::SymbolTable  ;; not a symtab-id!
-
-                ::function-name
-                ::function-signature
-                ::dependencies
-
-                ::params
-                ::body
-                ::return-var
-
-                ::access
-                ::deterministic
-                ::side-effect-free
-                ]))
 
 
 (def-term-head--entity-key symbol Function)
@@ -1756,14 +1924,6 @@
 ;; -+-+-+-+-+-+-+-+-+-
 
 
-(defmethod symbol-head ::Program [_]
-  (s/keys :req [::symbol-head
-                ::SymbolTable
-                ::prognym
-                ::dependencies
-                ::body]))
-
-
 (def-term-head--entity-key symbol Program)
 
 
@@ -1802,11 +1962,6 @@
 
 (def-term-entity-key unit)
 
-;; Unit has only one nested term-head spec, but we follow the pattern.
-(do (defmulti unit-head ::unit-head)
-    (s/def ::asr-unit-head
-      (s/multi-spec unit-head ::unit-head)))
-
 
 (s/def ::node (s/or :expr   ::expr
                     :stmt   ::stmt
@@ -1828,12 +1983,6 @@
   (s/and (s/coll-of ::node
                     :min-count MIN-NODE-COUNT,
                     :max-count MAX-NODE-COUNT)))
-
-
-(defmethod unit-head ::TranslationUnit [_]
-  (s/keys :req [::unit-head
-                ::SymbolTable
-                ::nodes]))
 
 
 (def-term-head--entity-key unit TranslationUnit)
@@ -1858,133 +2007,3 @@
     (if (s/invalid? cnf)
       :invalid-translation-unit
       fixed)))
-
-
-;; ================================================================
-;;      __    _    ____  ____  _        _______   ______  _____
-;;  ____\ \  / \  / ___||  _ \| |      |_   _\ \ / /  _ \| ____|
-;; |_____\ \/ _ \ \___ \| | | | |   _____| |  \ V /| |_) |  _|
-;; |_____/ / ___ \ ___) | |_| | |__|_____| |   | | |  __/| |___
-;;      /_/_/   \_\____/|____/|_____|    |_|   |_| |_|   |_____|
-
-
-(def asdl-types
-  {
-   ::SymbolTable  "symbol_table stab"
-   ::body         "stmt* body"
-   ::dependencies "identifier* dependencies"
-   ::dimensions   "dimension* dims"
-   ::logical-kind "int kind"
-   ::logicalbinop "logicalbinop"
-   ::lvalue       "expr target"
-   ::overloaded   "stmt? overloaded"
-   ::prognym      "identifier program_name"
-   ::rvalue       "expr value"
-   ::symtab-id    "symbol_table stid"  ;; TODO: this is TERRIBLE
-   ::varnym       "identifier varnym"
-   })
-
-
-(defmacro asdl-type-string
-  "Construct a string like this
-  Assignment(expr target, expr value, stmt? overloaded)"
-  ;; term is a string like "symbol" or "stmt" in quotes
-  [term sqkeysyms]
-  (let [ns "masr.specs"
-        ;; like symbol-head or stmt-head
-        str-head (str    term "-head")
-        trm-head (symbol str-head)
-        seq-keys (map    #(keyword ns (str %)) sqkeysyms)]
-    ;; Strip the namespace inserted by backtick. symbol-head
-    ;; becomes a bound symbol in context, bound to Program or
-    ;; Variable or whatever.
-    `(let [head#   (name ~trm-head)
-           params# (str/join ", "
-                    (map asdl-types (list ~@seq-keys)))]
-       (str head# "(" params# ")"))))
-
-
-(defmacro head-term-keyseq->asdl-type
-  "Get rid of repetition in some expression like this:
-
-  (defmethod stmt->asdl-type ::Assignment
-      [{::keys [stmt-head
-                lvalue        ;;  <~~~ this bit gets repeated
-                rvalue        ;;  <~~~ this bit gets repeated
-                overloaded]}] ;;  <~~~ this bit gets repeated
-      (asdl-type-string \"stmt\" (lvalue     ;; <~~~ repeated
-                                  rvalue     ;; <~~~ repeated
-                                  overloaded ;; <~~~ repeated
-                                  )))"
-  [head, term, keyseq]
-  (let [ns "masr.specs"
-        head-key  (keyword ns (str head))
-        keys-key  (keyword ns "keys")
-        term-head (symbol (str term "-head"))
-        mthd-nym  (symbol (str term "->asdl-type"))
-        parm-vec  (vec (conj keyseq term-head))]
-    `(defmethod ~mthd-nym ~head-key
-       [{~keys-key ~parm-vec}]
-       (asdl-type-string ~term ~keyseq))))
-
-
-(defmulti  symbol->asdl-type ::symbol-head)
-(head-term-keyseq->asdl-type
- Program symbol (SymbolTable
-                 prognym
-                 dependencies
-                 body))
-(defmulti  stmt->asdl-type ::stmt-head)
-(head-term-keyseq->asdl-type
- Assignment stmt (lvalue
-                  rvalue
-                  overloaded))
-(defmulti  expr->asdl-type ::expr-head)
-(head-term-keyseq->asdl-type
- LogicalBinOp expr (expr-left
-                    logicalbinop
-                    expr-right
-                    Logical
-                    Value))
-(head-term-keyseq->asdl-type
- Var expr (symtab-id
-           varnym))
-(defmulti  ttype->asdl-type ::ttype-head)
-(head-term-keyseq->asdl-type
- Logical ttype (logical-kind
-                dimensions))
-
-
-;;     __                _ _     _
-;;  ___\ \   __ _ ___ __| | |___| |_ _  _ _ __  ___
-;; |___|> > / _` (_-</ _` | |___|  _| || | '_ \/ -_)
-;; |___/_/  \__,_/__/\__,_|_|    \__|\_, | .__/\___|
-;;                                   |__/|_|
-
-
-(defmulti  ->asdl-type ::term)
-(defmacro term->asdl-type [term]
-  (let [ns "masr.specs"
-        ;; like ::keys
-        keys-key (keyword ns "keys")
-        ;; like ::symbol or ::stmt, value of term
-        mthd-key (keyword ns term)
-        ;; like asr-symbol-head or asr-stmt-head, a key-symbol
-        ;; for destructuring
-        nest-ksm (symbol (str "asr-" term "-head"))
-        ;; like symbol->asdl-type or stmt->asdl-type
-        call-sym (symbol (str term "->asdl-type"))
-        ;; don't put the namespace on "term";
-        ;; nons-term is a const destructuring key.
-        nons-trm (symbol "term")]
-    ;; (defmethod ->asdl-type :masr.specs/symbol
-    ;;   [#:masr.specs{:keys [term asr-symbol-head]}]
-    ;;   (symbol->asdl-type asr-symbol-head))
-    `(defmethod ->asdl-type ~mthd-key
-       [{~keys-key [~nons-trm ~nest-ksm]}]
-       (~call-sym ~nest-ksm))))
-
-(term->asdl-type "symbol") ;; Don't expand in CIDER! console only.
-(term->asdl-type "stmt")   ;; CIDER macro-expand removes namespace.
-(term->asdl-type "expr")   ;;
-(term->asdl-type "ttype")
