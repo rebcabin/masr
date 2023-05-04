@@ -15,7 +15,8 @@ Radiation. Yes, it's a physics pun. We like physics puns.
 
 # Read
 
-`masr-summary.pdf`, `masr-reference.pdf`
+The code is well commented. More formal documentation
+awaits the time when we have more development.
 
 # Modify
 
