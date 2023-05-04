@@ -444,6 +444,15 @@
 ;; further processing.
 
 
+;; The discriminating subtype-specs are defined via
+;; s/def near each particular case, i.e., near
+;; Function, Near LogicalBinOp, etc. The following
+;; defmasrtypes can refer to those more
+;; discriminating types, like prognym and
+;; left-logical, as binding symbols before they're
+;; defined as specs via s/def.
+
+
 (defmulti  unit->asdl-type ::unit-head)
 
 (defmasrtype
@@ -567,10 +576,12 @@
        [{~keys-key [~nons-trm ~nest-ksm]}]
        (~call-sym ~nest-ksm))))
 
+
 (term->asdl-type symbol) ;; Don't expand in CIDER! console only.
 (term->asdl-type stmt)   ;; CIDER macro-expand removes namespace.
 (term->asdl-type expr)   ;;
 (term->asdl-type ttype)
+(term->asdl-type unit)
 
 
 ;;     _ _                   _
@@ -580,12 +591,8 @@
 
 ;; Dimension is a term. Dimensions [sic] is not a
 ;; term. Dimensions stands for dimension*, a
-;; plurality of dimension.
-
-
-;; -+-+-+-+-+-+-+-+-+-
-;;  f u l l   f o r m
-;; -+-+-+-+-+-+-+-+-+-
+;; plurality of dimension. MASR has discriminating
+;; types for both dimension and dimensions.
 
 
 ;; original ASDL:
