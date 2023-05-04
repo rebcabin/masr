@@ -100,6 +100,7 @@
 (deftest dimension-test
   (testing "better syntax"
     (is (s/valid? ::asr/asr-term (dimension '(1 60))))
+    (is (s/valid? ::asr/asr-term (dimension [1 60])))
     (is (s/valid? ::asr/asr-term (dimension '())))
     (is (s/valid? ::asr/asr-term (dimension  ())))
     (is (not (s/valid? ::asr/asr-term (dimension '(0)))))
@@ -115,6 +116,7 @@
     (is (not (s/valid? ::asr/asr-term {})))
     (is (not (s/valid? ::asr/asr-term #{})))
     (is (not (s/valid? ::asr/asr-term '(1))))
+    (is (not (s/valid? ::asr/asr-term [1])))
     (is (not (s/valid? ::asr/asr-term {1 2})))
     (is (not (s/valid? ::asr/asr-term #{3 4})))
     (is (not (s/valid? ::asr/asr-term (dimension {}))))
@@ -135,6 +137,7 @@
                  [606 66979216746710640882869059905284213752707])))))
     (testing "refined type ::asr/dimension"
       (is (s/valid? ::asr/dimension (dimension '(1 60))))
+      (is (s/valid? ::asr/dimension (dimension [1 60])))
       (is (s/valid? ::asr/dimension (dimension '())))
       (is (s/valid? ::asr/dimension (dimension  ())))
       (is (not (s/valid? ::asr/dimension (dimension '(0)))))
@@ -150,6 +153,7 @@
       (is (not (s/valid? ::asr/dimension {})))
       (is (not (s/valid? ::asr/dimension #{})))
       (is (not (s/valid? ::asr/dimension '(1))))
+      (is (not (s/valid? ::asr/dimension [1])))
       (is (not (s/valid? ::asr/dimension {1 2})))
       (is (not (s/valid? ::asr/dimension #{3 4})))
       (is (not (s/valid? ::asr/dimension (dimension {}))))
