@@ -176,9 +176,8 @@
 
 
 (defmacro def-term-entity-key
-  "Define entity key like ::symbol or ::expr, which
-  is an ::asr-term, a top-level production in the
-  grammar."
+  "Define spec for entity key like ::symbol or ::expr, which is
+  an ::asr-term, a top-level production in the grammar."
   [term]
   (let [ns "masr.specs"
         tkw (keyword ns (str term))]
@@ -1887,6 +1886,8 @@
 
 
 (defmacro asdl-type-string
+  "Construct a string like this
+  Assignment(expr target, expr value, stmt? overloaded)"
   ;; term is a string like "symbol" or "stmt" in quotes
   [term sqkeysyms]
   (let [ns "masr.specs"
@@ -1894,64 +1895,64 @@
         str-head (str    term "-head")
         trm-head (symbol str-head)
         seq-keys (map    #(keyword ns (str %)) sqkeysyms)]
+    ;; Strip the namespace inserted by backtick. symbol-head
+    ;; becomes a bound symbol in context, bound to Program or
+    ;; Variable or whatever.
     `(let [head#   (name ~trm-head)
            params# (str/join ", "
                     (map asdl-types (list ~@seq-keys)))]
        (str head# "(" params# ")"))))
 
 
+(defmacro head-term-keyseq->asdl-type
+  "Get rid of repetition in some expression like this:
+
+  (defmethod stmt->asdl-type ::Assignment
+      [{::keys [stmt-head
+                lvalue        ;;  <~~~ this bit gets repeated
+                rvalue        ;;  <~~~ this bit gets repeated
+                overloaded]}] ;;  <~~~ this bit gets repeated
+      (asdl-type-string \"stmt\" (lvalue     ;; <~~~ repeated
+                                  rvalue     ;; <~~~ repeated
+                                  overloaded ;; <~~~ repeated
+                                  )))"
+  [head, term, keyseq]
+  (let [ns "masr.specs"
+        head-key  (keyword ns (str head))
+        keys-key  (keyword ns "keys")
+        term-head (symbol (str term "-head"))
+        mthd-nym  (symbol (str term "->asdl-type"))
+        parm-vec  (vec (conj keyseq term-head))]
+    `(defmethod ~mthd-nym ~head-key
+       [{~keys-key ~parm-vec}]
+       (asdl-type-string ~term ~keyseq))))
+
+
 (defmulti  symbol->asdl-type ::symbol-head)
-(defmethod symbol->asdl-type ::Program
-  [{::keys [symbol-head
-            SymbolTable
-            prognym
-            dependencies
-            body] :as it}]
-  (asdl-type-string "symbol" (SymbolTable
-                              prognym
-                              dependencies
-                              body)))
-
-
+(head-term-keyseq->asdl-type
+ Program symbol (SymbolTable
+                 prognym
+                 dependencies
+                 body))
 (defmulti  stmt->asdl-type ::stmt-head)
-(defmethod stmt->asdl-type ::Assignment
-  [{::keys [stmt-head
-            lvalue
-            rvalue
-            overloaded] :as it}]
-  (asdl-type-string "stmt" (lvalue
-                            rvalue
-                            overloaded)))
-
-
+(head-term-keyseq->asdl-type
+ Assignment stmt (lvalue
+                  rvalue
+                  overloaded))
 (defmulti  expr->asdl-type ::expr-head)
-(defmethod expr->asdl-type ::LogicalBinOp
-  [{::keys [expr-head
-            expr-left
-            logicalbinop
-            expr-right
-            Logical
-            Value] :as it}]
-  (asdl-type-string "expr" (expr-left
-                            logicalbinop
-                            expr-right
-                            Logical
-                            Value)))
-(defmethod expr->asdl-type ::Var
-  [{::keys [expr-head
-            symtab-id
-            varnym] :as it}]
-  (asdl-type-string "expr" (symtab-id
-                            varnym)))
-
-
+(head-term-keyseq->asdl-type
+ LogicalBinOp expr (expr-left
+                    logicalbinop
+                    expr-right
+                    Logical
+                    Value))
+(head-term-keyseq->asdl-type
+ Var expr (symtab-id
+           varnym))
 (defmulti  ttype->asdl-type ::ttype-head)
-(defmethod ttype->asdl-type ::Logical
-  [{::keys [ttype-head
-            logical-kind
-            dimensions] :as it}]
-  (asdl-type-string "ttype" (logical-kind
-                             dimensions)))
+(head-term-keyseq->asdl-type
+ Logical ttype (logical-kind
+                dimensions))
 
 
 ;;     __                _ _     _
