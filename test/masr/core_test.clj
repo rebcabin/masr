@@ -1658,4 +1658,8 @@
                            (Var 2 b)
                            Or
                            (Var 2 b)
-                           (Logical 4 []) ()) ()))))))
+                           (Logical 4 []) ()) ())))))
+  (is (= "Logical(int kind, dimension* dims)"
+         (->asdl-type (Logical 4 []))))
+  (is (= "Logical(int kind, dimension* dims)"
+         (->asdl-type (Logical 4 [[6 60] []]))))  )

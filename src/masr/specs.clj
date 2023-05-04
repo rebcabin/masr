@@ -1870,14 +1870,17 @@
 
 
 (def asdl-types
-  {::SymbolTable  "symbol_table stab"
-   ::prognym      "identifier program_name"
-   ::dependencies "identifier* dependencies"
+  {
+   ::SymbolTable  "symbol_table stab"
    ::body         "stmt* body"
-   ::lvalue       "expr target"
-   ::rvalue       "expr value"
-   ::overloaded   "stmt? overloaded"
+   ::dependencies "identifier* dependencies"
+   ::dimensions   "dimension* dims"
+   ::logical-kind "int kind"
    ::logicalbinop "logicalbinop"
+   ::lvalue       "expr target"
+   ::overloaded   "stmt? overloaded"
+   ::prognym      "identifier program_name"
+   ::rvalue       "expr value"
    ::symtab-id    "symbol_table stid"  ;; TODO: this is TERRIBLE
    ::varnym       "identifier varnym"
    })
@@ -1885,15 +1888,15 @@
 
 (defmacro asdl-type-string
   ;; term is a string like "symbol" or "stmt" in quotes
-  [it term]
-  ;; like symbol-head or stmt-head
-  (let [trm-head (symbol (str term "-head"))]
-    `(let [ks# (keys ~it),
-           params# (str/join
-                    ", "
-                    (for [k# (rest ks#)]
-                      (str (asdl-types k#)))),
-           head# (name ~trm-head)]
+  [term sqkeysyms]
+  (let [ns "masr.specs"
+        ;; like symbol-head or stmt-head
+        str-head (str    term "-head")
+        trm-head (symbol str-head)
+        seq-keys (map    #(keyword ns (str %)) sqkeysyms)]
+    `(let [head#   (name ~trm-head)
+           params# (str/join ", "
+                    (map asdl-types (list ~@seq-keys)))]
        (str head# "(" params# ")"))))
 
 
@@ -1904,7 +1907,10 @@
             prognym
             dependencies
             body] :as it}]
-  (asdl-type-string it "symbol"))
+  (asdl-type-string "symbol" (SymbolTable
+                              prognym
+                              dependencies
+                              body)))
 
 
 (defmulti  stmt->asdl-type ::stmt-head)
@@ -1913,7 +1919,9 @@
             lvalue
             rvalue
             overloaded] :as it}]
-  (asdl-type-string it "stmt"))
+  (asdl-type-string "stmt" (lvalue
+                            rvalue
+                            overloaded)))
 
 
 (defmulti  expr->asdl-type ::expr-head)
@@ -1924,12 +1932,33 @@
             expr-right
             Logical
             Value] :as it}]
-  (asdl-type-string it "expr"))
+  (asdl-type-string "expr" (expr-left
+                            logicalbinop
+                            expr-right
+                            Logical
+                            Value)))
 (defmethod expr->asdl-type ::Var
   [{::keys [expr-head
             symtab-id
             varnym] :as it}]
-  (asdl-type-string it "expr"))
+  (asdl-type-string "expr" (symtab-id
+                            varnym)))
+
+
+(defmulti  ttype->asdl-type ::ttype-head)
+(defmethod ttype->asdl-type ::Logical
+  [{::keys [ttype-head
+            logical-kind
+            dimensions] :as it}]
+  (asdl-type-string "ttype" (logical-kind
+                             dimensions)))
+
+
+;;     __                _ _     _
+;;  ___\ \   __ _ ___ __| | |___| |_ _  _ _ __  ___
+;; |___|> > / _` (_-</ _` | |___|  _| || | '_ \/ -_)
+;; |___/_/  \__,_/__/\__,_|_|    \__|\_, | .__/\___|
+;;                                   |__/|_|
 
 
 (defmulti  ->asdl-type ::term)
@@ -1957,7 +1986,4 @@
 (term->asdl-type "symbol") ;; Don't expand in CIDER! console only.
 (term->asdl-type "stmt")   ;; CIDER macro-expand removes namespace.
 (term->asdl-type "expr")   ;;
-
-
-
-;; => "Assignment(expr target, expr value, stmt? overloaded)"
+(term->asdl-type "ttype")
