@@ -200,28 +200,43 @@
 
 (defmacro defmasrnested
   "Define specs for terms with nested multi-specs,
-  like ::expr, ::symbol, ::ttype, ::stmt. Automate
-  constructions like
+  like ::expr, ::symbol, ::ttype, ::stmt. Also define
+  the defmulti's for the nested multi-specs themselves.
+  Automate constructions like:
 
       (defmethod term ::expr [_]
-      (s/keys :req [::term
-                    ::asr-expr-head]))
+        (s/keys :req [::term
+                      ::asr-expr-head]))
       (def-term-entity-key expr)
+
+      ;; nested multi-spec:
+      (defmulti expr-head ::expr-head)
+      (s/def ::asr-expr-head
+        (s/multi-spec expr-head ::exprhead
 
   Remove repetitive wordage."
   [term]
   (let [ns "masr.specs"
         ttrm (keyword ns "term") ;; like ::term
         tcst (symbol "term")     ;; like term (no ns!?!)
-        tstr (str term)          ;; like expr
+
+        tstr (str term)          ;; like "expr"
         tkwd (keyword ns tstr)   ;; like ::expr
         tsym (symbol (name (symbol tstr))) ;; like expr -- caution
+
+        estr (str term "-head")  ;; like "expr-head"
+        ekwd (keyword ns estr)   ;; like ::expr-head
+        esym (symbol (name (symbol estr))) ;; like expr-head
+
         ;; like ::asr-expr-head
         akwd (keyword ns (str "asr-" (name term) "-head"))
         ]
     `(do (defmethod ~tcst ~tkwd [_#]
            (s/keys :req [~ttrm ~akwd]))
          (def-term-entity-key ~tsym) ;; caution
+         (defmulti ~esym ~ekwd)
+         (s/def ~akwd
+           (s/multi-spec ~esym ~ekwd))
          )))
 
 
@@ -382,52 +397,11 @@
          )))
 
 
-;;            _ _   _
-;;  _ __ _  _| | |_(_)___ ____ __  ___ __ ___
-;; | '  \ || | |  _| |___(_-< '_ \/ -_) _(_-<
-;; |_|_|_\_,_|_|\__|_|   /__/ .__/\___\__/__/
-;;                          |_|
-
-
-;; See multi-spec in https://clojure.org/guides/spec
-;; and https://clojure.github.io/spec.alpha/clojure.spec.alpha-api.html#clojure.spec.alpha/multi-spec
-
-
-;; At first, a multi-spec needs a dispatcher,
-;; ttype-head in this case:
-
-
-;; nested multi-spec
-(do (defmulti ttype-head ::ttype-head)
-    ;;        ----------
-    ;; name of this multi-spec
-    ;; \                     /
-    ;;  `---------.---------'
-    ;;            |
-    ;;      .-----^------,
-    ;;     /              \
-    (s/def ::asr-ttype-head
-      (s/multi-spec ttype-head ::ttype-head)))
-
-
-(do (defmulti symbol-head ::symbol-head)
-    (s/def ::asr-symbol-head
-      (s/multi-spec symbol-head ::symbol-head)))
-
-
-(do (defmulti expr-head ::expr-head)
-    (s/def ::asr-expr-head
-      (s/multi-spec expr-head ::expr-head)))
-
-
-(do (defmulti stmt-head ::stmt-head)
-    (s/def ::asr-stmt-head
-      (s/multi-spec stmt-head ::stmt-head)))
-
-
-(do (defmulti unit-head ::unit-head)
-    (s/def ::asr-unit-head
-      (s/multi-spec unit-head ::unit-head)))
+;;     __                _ _     _
+;;  ___\ \   __ _ ___ __| | |___| |_ _  _ _ __  ___
+;; |___|> > / _` (_-</ _` | |___|  _| || | '_ \/ -_)
+;; |___/_/  \__,_/__/\__,_|_|    \__|\_, | .__/\___|
+;;                                   |__/|_|
 
 
 (defmulti  unit->asdl-type ::unit-head)
@@ -1227,6 +1201,7 @@
 
 
 (def-term-head--entity-key ttype FunctionType)
+
 
 ;; heavy sugar
 (defn FunctionType [param-types-     return-var-type-  abi-
