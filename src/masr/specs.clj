@@ -32,7 +32,6 @@
 ;; Lein test and lein run produce unmaskable
 ;; warnings. Access original "deftype"
 ;; as "clojure.core/deftype".
-
 (ns-unmap *ns* 'Integer)
 (ns-unmap *ns* 'Character)
 (ns-unmap *ns* 'deftype)
@@ -44,9 +43,14 @@
 ;; ASDL symbol_tables are Clojure maps.
 
 
-;; In general, these Clojure specs are more
-;; discriminating, precise, and detailed than ASDL
-;; permits.
+;; In general, MASR specs are more discriminating,
+;; precise, and detailed than ASDL could ever
+;; permit.
+
+
+;; full ASDL : ASR_2023_APR_06_snapshot.asdl
+;; https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
+
 
 ;; terms (nodes) in the ASDL grammar (things to the left of equals signs):
 ;;
@@ -111,53 +115,61 @@
 ;; An asr-term is a hash-map containing a ::term
 ;; keyword, i.e., :masr.specs/term, or ::asr/term if
 ;; masr.specs is aliased to asr, as in
-;; (:use [masr.specs :as asr]) in core_tests.clj.
+;; (:use [masr.specs :as asr]) in core_tests.clj. Example:
+;;
+;;     {::asr/term        ::asr/intent,
+;;      ::asr/intent-enum 'Unspecified}
+
+
+;; ::term is both a qualified keyword _and_ a
+;; tag-fetching function that picks the value for
+;; the key ::term from any hash-map. As a qualified
+;; keyword, it can name a Clojure spec. Clojure
+;; specs can do type-checking of instances like the
+;; hash-map above.
 
 
 ;; like ::intent, ::symbol, ::expr, ...
 (s/def ::term qualified-keyword?)
 
 
-;; ::term is both a qualified keyword _and_ a fn
-;; that picks the value for the key ::term from a
-;; hash-map. "defmulti" defines a name, say "term"
-;; for a collection of "defmethods", and links the
-;; name "term" to a dispatcher function, here
-;; ::term. Each defmethod of term is tagged by the
-;; value fetched from an instance hash-map by
-;; the ::term function.
+;; "defmulti" defines a name, say "term" (no colons),
+;; for a collection of "defmethods". The defmulti
+;; links the name "term" to a dispatcher function,
+;; here ::term (with colons). Each defmethod of term
+;; is tagged by the value fetched from an instance
+;; hash-map by ::term function in its role as tag-
+;; fetching function.
 (defmulti term ::term)
 
 
-;; Here is the multi-spec, named ::asr-term.
-;; A multi-spec ties together the defmulti term and
-;; the re-tagging function ::term. In our usage, the
-;; re-tagging function is the same as the original
-;; dispatcher. We don't need re-tagging.
+;; Here is the multi-spec, named ::asr-term, a
+;; qualified keyword. A multi-spec ties together the
+;; defmulti term and the tag-fetching
+;; function, ::term.
 (s/def ::asr-term
   (s/multi-spec term ::term))
 
 
 ;; All multi-spec names in MASR, nested or not,
-;; begin with ::asr-<the_rest_of_the_name>, as
-;; in ::asr-term _not nested_ and ::asr-ttype-head
-;; _nested in ttypes_.
+;; begin with ::asr-..., as in ::asr-term _not
+;; nested_ and ::asr-ttype-head _nested in ttypes_.
 
 
-;; A given instance hash-map may be
-;; an ::asr-term (any term), a
-;; ::symbol (one of the several terms), and
-;; a ::Variable (one of the several symbols). These
-;; three specs, ::term, ::symbol, ::Variable, are of
-;; increasing precision and discrimination.
+;; A given instance hash-map may be an ::asr-term --
+;; any term, a ::symbol -- one of the several terms,
+;; and a ::Variable -- one of the several symbols.
+;; These three specs, ::term, ::symbol, ::Variable,
+;; are of increasing precision and discrimination.
 
 
-;; Vertically, both ::symbol and ::Variable
-;; are ::asr-term. Horizontally, both ::Variable
-;; and ::Function are ::symbol, and both are
-;; also ::asr-term. For another example, vertically,
-;; both ::expr and ::LogicalBinOp are ::asr-term.
-;; Horizontally, both ::LogicalBinOp
+;; Vertically, in increasing precition,
+;; both ::symbol and ::Variable are ::asr-term.
+;; Horizontally, as siblings of equal precision
+;; both ::Variable and ::Function are ::symbol, and
+;; both are also ::asr-term. For another example,
+;; vertically, both ::expr and ::LogicalBinOp
+;; are ::asr-term. Horizontally, both ::LogicalBinOp
 ;; and ::LogicalCompare are ::expr, and both
 ;; are ::asr-term.
 
@@ -170,10 +182,11 @@
 
 
 ;; For recursive conformance in multi-specs. Each
-;; term, like symbol, needs its own spec, named
-;; by a qualified keyword like ::symbol. That is so
-;; fields in hash-maps with keys like ::symbol can
-;; be checked by specs named ::symbol.
+;; term, like symbol, needs its own spec, named by a
+;; qualified keyword like ::symbol. Recursive
+;; conformance means that fields in hash-map
+;; instances with keys like ::symbol can be checked
+;; by specs named ::symbol.
 
 
 (defn term-selector-spec [kwd]
@@ -194,14 +207,19 @@
 ;; Now automate construction of the nested
 ;; multi-specs, removing all duplicated wordage.
 ;; This is a tricky macro, like many macros, due
-;; mostly to insertion and deletion of namespaces,
-;; which is not easily predictable.
+;; mostly to Clojure's implicit insertion and
+;; deletion of namespaces, which is not easily
+;; predictable. Implicit namespacing is a good
+;; design, overall, but we must be aware of it
+;; and step around it when necessary. We step
+;; around it via the built-in name function.
 
 
 (defmacro defmasrnested
   "Define specs for terms with nested multi-specs,
   like ::expr, ::symbol, ::ttype, ::stmt. Also define
   the defmulti's for the nested multi-specs themselves.
+
   Automate constructions like:
 
       (defmethod term ::expr [_]
@@ -261,23 +279,23 @@
 (defmacro def-term-head--entity-key
   "Define entity key like ::Variable, which is an
    ::asr-symbol-head by the nested head multi-spec.
-   From term = symbol and head = Variable,
+   From term, symbol, and head, Variable,
    generate a spec s/def like
 
-   (s/def ::Variable               ;; head entity key
-     (s/and ::asr-term             ;; top multi-spec
-       #(= ::Variable              ;; nested tag
-           (-> % ::asr-symbol-head ;; nested multi-spec
-                 ::symbol-head)))) ;; tag fetcher
+       (s/def ::Variable               ;; head entity key
+         (s/and ::asr-term             ;; top multi-spec
+           #(= ::Variable              ;; nested tag
+               (-> % ::asr-symbol-head ;; nested multi-spec
+                     ::symbol-head)))) ;; tag fetcher
 
-   From term = stmt and head = Assignment, generate
+   From term, stmt, and head, Assignment, generate
    a spec s/def like
 
-   (s/def ::Assignment             ;; head entity key
-     (s/and ::asr-term             ;; top multi-spec
-       #(= ::Assignment            ;; nested tag
-           (-> % ::asr-stmt-head   ;; nested multi-spec
-                 ::stmt-head       ;; tag fetcher
+       (s/def ::Assignment             ;; head entity key
+         (s/and ::asr-term             ;; top multi-spec
+           #(= ::Assignment            ;; nested tag
+               (-> % ::asr-stmt-head   ;; nested multi-spec
+                     ::stmt-head       ;; tag fetcher
   "
   [term, ;; like symbol
    head  ;; like Variable
@@ -302,8 +320,13 @@
 ;; |____/|_____|_|   |_|  |_/_/   \_\____/|_| \_\|_|   |_| |_|   |_____|
 
 
-;; Routines to find the ASDL type of any MASR instance. MASR
-;; instances are automatically type-checked.
+;; defmasrtype creates both (1) the specs for
+;; particular heads like Variable and Assignment,
+;; and creates a function, ->asdl-type, that
+;; extracts the ASDL type from any instance
+;; hash-map. MASR automatically type-checks instance
+;; hash-maps before projecting them back to the less
+;; precise and unchecked ASDL types.
 
 
 (def asdl-types
@@ -343,28 +366,28 @@
 
 
 (defmacro defmasrtype
-  "Get rid of repetition in some expression like this:
+  "Get rid of repetition in an expression like
 
-  (defmethod stmt->asdl-type ::Assignment
-      [{::keys [stmt-head
-                lvalue        ;;  <~~~ this bit gets repeated
-                rvalue        ;;  <~~~ this bit gets repeated
-                overloaded]}] ;;  <~~~ this bit gets repeated
-      (asdl-type-string \"stmt\" (lvalue     ;; <~~~ repeated
-                                  rvalue     ;; <~~~ repeated
-                                  overloaded ;; <~~~ repeated
-                                  )))
+      (defmethod stmt->asdl-type ::Assignment
+          [{::keys [stmt-head     ;; symbol-binding list
+                    lvalue        ;;  <~~~ this bit gets repeated
+                    rvalue        ;;  <~~~ this bit gets repeated
+                    overloaded]}] ;;  <~~~ this bit gets repeated
+          (asdl-type-string \"stmt\" (lvalue     ;; <~~~ repeated
+                                      rvalue     ;; <~~~ repeated
+                                      overloaded ;; <~~~ repeated
+                                      )))
 
   and this (the whole key list is just a transform of the
-  sym-list above)
+  symbol-binding list above)
 
-  (defmethod symbol-head ::Program [_]
-    (s/keys :req [::symbol-head  ;; <~~~ repetitive
-                  ::SymbolTable  ;; <~~~ repetitive
-                  ::prognym      ;; <~~~ repetitive
-                  ::dependencies ;; <~~~ repetitive
-                  ::body]        ;; <~~~ repetitive
-            ))
+      (defmethod symbol-head ::Program [_]
+        (s/keys :req [::symbol-head  ;; <~~~ repetitive
+                      ::SymbolTable  ;; <~~~ repetitive
+                      ::prognym      ;; <~~~ repetitive
+                      ::dependencies ;; <~~~ repetitive
+                      ::body]        ;; <~~~ repetitive
+                ))
   "
   [head, term, keyseq]
   (let [ns "masr.specs"
@@ -402,6 +425,23 @@
 ;; |___|> > / _` (_-</ _` | |___|  _| || | '_ \/ -_)
 ;; |___/_/  \__,_/__/\__,_|_|    \__|\_, | .__/\___|
 ;;                                   |__/|_|
+
+
+;; The function ->asdl-type relies on multimethods
+;; for each term with a nested multi-spec. The
+;; multimethods dispatch on the head keys,
+;; like ::symbol-head and ::expr-head, of each term
+;; that has a nested multi-spec.
+
+
+;; The following blocks of code are as close to the
+;; ASDL specs as we care to get in MASR. MASR is more
+;; discriminating than ASDL. For example, the spec
+;; for Program in ASDL declares that the name of the
+;; Program is an identifier, but MASR specs the name
+;; as a prognym, giving both a finer-grained name to
+;; the type of a Program name and an opportunity for
+;; further processing.
 
 
 (defmulti  unit->asdl-type ::unit-head)
@@ -505,20 +545,13 @@
   dimensions))
 
 
-;;     __                _ _     _
-;;  ___\ \   __ _ ___ __| | |___| |_ _  _ _ __  ___
-;; |___|> > / _` (_-</ _` | |___|  _| || | '_ \/ -_)
-;; |___/_/  \__,_/__/\__,_|_|    \__|\_, | .__/\___|
-;;                                   |__/|_|
-
-
 (defmulti  ->asdl-type ::term)
 (defmacro term->asdl-type [term]
   (let [ns "masr.specs"
         ;; like ::keys
         keys-key (keyword ns "keys")
         ;; like ::symbol or ::stmt, value of term
-        mthd-key (keyword ns term)
+        mthd-key (keyword ns (str term))
         ;; like asr-symbol-head or asr-stmt-head, a key-symbol
         ;; for destructuring
         nest-ksm (symbol (str "asr-" term "-head"))
@@ -534,10 +567,10 @@
        [{~keys-key [~nons-trm ~nest-ksm]}]
        (~call-sym ~nest-ksm))))
 
-(term->asdl-type "symbol") ;; Don't expand in CIDER! console only.
-(term->asdl-type "stmt")   ;; CIDER macro-expand removes namespace.
-(term->asdl-type "expr")   ;;
-(term->asdl-type "ttype")
+(term->asdl-type symbol) ;; Don't expand in CIDER! console only.
+(term->asdl-type stmt)   ;; CIDER macro-expand removes namespace.
+(term->asdl-type expr)   ;;
+(term->asdl-type ttype)
 
 
 ;;     _ _                   _
