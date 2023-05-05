@@ -23,6 +23,7 @@
 
 
 ;; lightweight, load-time testing:
+
 (hyperfiddle.rcf/enable!)
 
 
@@ -32,6 +33,7 @@
 ;; Lein test and lein run produce unmaskable
 ;; warnings. Access original "deftype"
 ;; as "clojure.core/deftype".
+
 (ns-unmap *ns* 'Integer)
 (ns-unmap *ns* 'Character)
 (ns-unmap *ns* 'deftype)
@@ -188,10 +190,13 @@
 ;; As a qualified keyword, ::term can name a Clojure
 ;; spec. The following spec will check
 ;; whether ::intent is a ::term:
+
 (s/def ::term qualified-keyword?)
 
 ;; EXAMPLE: "intent" is a valid "term"
+
 (s/valid? ::term ::intent)
+
 ;; => true
 
 
@@ -222,6 +227,7 @@
 ;; term. The implementations differ from one to the
 ;; other. That's the meaning of "polymorphism" --
 ;; one interface, many implementations.
+
 (defmulti term ::term)
 
 
@@ -264,6 +270,7 @@
 ;; All multi-spec names in MASR, nested or not,
 ;; begin with ::asr-..., as in ::asr-term (not
 ;; nested) and ::asr-ttype-head (nested in ttypes).
+
 (s/def ::asr-term
   (s/multi-spec term ::term))
 
@@ -722,6 +729,13 @@
   rvalue
   overloaded))
 
+(defmasrtype
+  SoubroutineCall stmt
+  (subr-nym
+   orig-nym
+   args
+   dt))
+
 
 ;; ## EXPR
 
@@ -922,6 +936,7 @@
 ;; The next spec says that a ::dimension-content is
 ;; a collection of ::nat with either two or zero
 ;; elements. TODO Consider a regex-spec.
+
 (s/def ::dimension-content
   (s/and
    (s/coll-of ::nat
@@ -934,6 +949,7 @@
 ;; The next spec says that a dimension in full-form
 ;; is an entity hash-map with keys ::term and
 ;; ::dimension-content.
+
 (defmethod term ::dimension [_]
   (s/keys :req [::term
                 ::dimension-content]))
@@ -941,15 +957,19 @@
 
 ;; As usual, we need a term-entity key, ::dimension,
 ;; for recursive type-checking.
+
 (def-term-entity-key dimension)
 
 
 ;; This spec can generate samples.
+
 #_
 (gen/sample (s/gen ::dimension-content) 3)
+
 ;; => (() (0 0) (1 1))
 
 ;; heavy sugar
+
 (defn dimension [candidate-contents]
   (if (or (not (coll? candidate-contents))
           (set? candidate-contents)
@@ -978,6 +998,7 @@
 (def MAX-NUMBER-OF-DIMENSIONS 9)
 
 ;; TODO Consider a regex-spec.
+
 (s/def ::dimensions
   (s/coll-of (term-selector-spec ::dimension)
              :min-count MIN-NUMBER-OF-DIMENSIONS,
@@ -987,9 +1008,11 @@
 
 ;; Generation of test cases does not currently work
 ;; TODO https://github.com/rebcabin/masr/issues/14
+
 #_(gen/sample (s/gen ::dimensions) 3)
 
 ;; heavy sugar
+
 (defn dimensions
   [candidate-contents]
   (if (or (not (coll? candidate-contents))
@@ -1022,7 +1045,8 @@
 
 (s/def ::symtab-id ::nat)
 
-;; sugar
+;; heavy sugar
+
 (defn symtab-id [it]
   (let [cnf (s/conform ::symtab-id it)]
     (if (s/invalid? cnf)
@@ -1049,7 +1073,8 @@
 
 (def-term-entity-key SymbolTable)
 
-;; sugar
+;; heavy sugar
+
 (defn SymbolTable [id, hash-map]
   (let [st {::term      ::SymbolTable
             ::symtab-id id
@@ -1184,6 +1209,7 @@
 (s/def ::abi-external ::bool)
 
 ;; full-form
+
 (defmethod term ::abi [_]
   (s/with-gen
     (s/and
@@ -1204,6 +1230,7 @@
 (def-term-entity-key abi)
 
 ;; heavy sugar
+
 (defn abi
   ;; arity 1 --- default "external"
   ([the-enum]
@@ -1244,15 +1271,18 @@
 ;; etc., have additional structure we automate here.
 
 ;; pluralities
+
 (def MIN-NUMBER-OF-TTYPES    0)
 (def MAX-NUMBER-OF-TTYPES 1024)
 
 ;; TODO: Consider a regex-spec.
+
 (s/def ::ttypes (s/coll-of ::ttype
                            :min-count MIN-NUMBER-OF-TTYPES
                            :max-count MAX-NUMBER-OF-TTYPES))
 
 ;; TODO: Consider a regex-spec.
+
 (s/def ::ttypeq (s/coll-of ::ttype
                            :min-count 0
                            :max-count 1))
@@ -1277,6 +1307,7 @@
 ;;     default logical.)
 
 ;; support specs for subtypes
+
 (s/def ::integer-kind   #{1 2 4 8 16})
 (s/def ::real-kind      #{4 8})
 (s/def ::complex-kind   #{4 8})
@@ -1330,6 +1361,7 @@
 ;; (def-ttype-head Character)
 
 ;; heavy sugar
+
 (defn ttype
   "Given a conforming full-form ::asr-type-head
   subtype like
@@ -1354,6 +1386,7 @@
       cnf)))
 
 ;; light sugar and heavy sugar
+
 (defmacro def-ttype-and-head
   "Define light-sugar functions Integer-, Real-,
   etc., that take a full hash-map of arguments,
@@ -1471,10 +1504,13 @@
 ;;                    bool    is_restriction)
 
 ;; prerequisite type aliases:
+
 (s/def ::param-types     ::ttypes)
 (s/def ::return-var-type ::ttypeq)
+
 ;; ABI is already good enough.
 ;; deftype is found above
+
 (s/def ::bindc-name      (s/nilable string?))
 (s/def ::elemental       ::bool)
 (s/def ::pure            ::bool)
@@ -1491,21 +1527,25 @@
 ;; forward reference. Can only test empty symbol*
 ;; restrictions until symbol is properly defined
 ;; below.
+
 (def MIN-NUMBER-OF-SYMBOLS   0)
 (def MAX-NUMBER-OF-SYMBOLS 128)
 
 ;; TODO: Consider a regex-spec.
+
 (s/def ::symbols (s/coll-of ::symbol
                             :min-count MIN-NUMBER-OF-SYMBOLS
                             :max-count MAX-NUMBER-OF-SYMBOLS))
 
 ;; symbol? is written "symbolq."
 ;; TODO: Consider a regex-spec.
+
 (s/def ::symbolq (s/coll-of ::symbol :min-count 0, :max-count 1))
 (s/def ::restrictions    ::symbols)
 (s/def ::is-restriction  ::bool)
 
 ;; heavy sugar
+
 (defn FunctionType
   [param-types-     return-var-type-  abi-
    deftype-         bindc-name-       elemental-
@@ -1547,6 +1587,7 @@
 (s/def ::symbolic-value empty?)
 
 ;; sugar
+
 (def symbolic-value identity)
 
 
@@ -1556,6 +1597,7 @@
 (s/def ::value empty?)
 
 ;; sugar
+
 (def value identity)
 
 
@@ -1563,15 +1605,18 @@
 
 
 ;; pluralities
+
 (def MIN-NUMBER-OF-EXPRS    0)
 (def MAX-NUMBER-OF-EXPRS 1024)
 
 ;; TODO: Consider a regex-spec.
+
 (s/def ::exprs (s/coll-of ::expr
                           :min-count MIN-NUMBER-OF-EXPRS
                           :max-count MAX-NUMBER-OF-EXPRS))
 
 ;; TODO: Consider a regex-spec.
+
 (s/def ::exprq (s/coll-of ::expr
                           :min-count 0
                           :max-count 1))
@@ -1583,6 +1628,7 @@
 ;; (LogicalConstant true (Logical 4 []))
 
 ;; heavy sugar
+
 (defn LogicalConstant
   ;; arity-2
   ([a-bool, a-ttype]
@@ -1617,9 +1663,11 @@
 ;; Var(symtab_id stid, identifier it)
 
 ;; prerequisite type alias:
+
 (s/def ::varnym           ::identifier)
 
 ;; heavy sugar
+
 (defn Var-- [stid, ident]
   (let [cnf {::term ::expr,
              ::asr-expr-head
@@ -1632,6 +1680,7 @@
       cnf)))
 
 ;; legacy sugar
+
 (defmacro Var [stid, unquoted-ident]
   `(Var-- ~stid '~unquoted-ident))
 
@@ -1658,10 +1707,12 @@
 
 ;; prerequisite type aliases:
 ;; TODO: check that the types of the exprs are ::Logical!
+
 (s/def ::logical-left  ::expr)
 (s/def ::logical-right ::expr)
 
 ;; heavy sugar
+
 (defn LogicalBinOp [left- lbo- right- tt- val-]
   (let [cnf {::term ::expr,
              ::asr-expr-head
@@ -1693,6 +1744,7 @@
 ;;   (Logical 4 []) ())
 
 ;; heavy sugar
+
 (defn LogicalCompare [l- cmp- r- tt- val-]
   (let [cnf {::term ::expr,
              ::asr-expr-head
@@ -1711,15 +1763,18 @@
 
 
 ;; pluralities
+
 (def MIN-NUMBER-OF-STMTS    0)
 (def MAX-NUMBER-OF-STMTS 1024)
 
 ;; TODO: Consider a regex-spec.
+
 (s/def ::stmts (s/coll-of ::stmt
                           :min-count MIN-NUMBER-OF-STMTS
                           :max-count MAX-NUMBER-OF-STMTS))
 
 ;; TODO: Consider a regex-spec.
+
 (s/def ::stmtq (s/coll-of ::stmt
                           :min-count 0
                           :max-count 1))
@@ -1741,11 +1796,13 @@
 ;; prerequisite type aliases:
 ;; TODO: more cases for lvalue, and an s/or
 ;; with "second" hack
+
 (s/def ::lvalue     ::Var)
 (s/def ::rvalue     ::expr)
 (s/def ::overloaded ::stmtq)
 
 ;; heavy sugar
+
 (defn Assignment-- [lhs, rhs, unk]
   (let [cnf {::term ::stmt,
              ::asr-stmt-head
@@ -1756,6 +1813,16 @@
     (if (s/invalid? cnf)
       :invalid-assignment
       cnf)))
+
+
+;; ## SUBROUTINE CALL
+
+
+;; | SubroutineCall(symbol name,
+;;                  symbol? original_name,
+;;                  call_arg* args,
+;; expr? dt)
+
 
 
 ;; # SYMBOL
@@ -1779,7 +1846,7 @@
 
 ;; (Variable                ;   head, term: symbol
 ;;  2                       ;   symbol_table    parent-symtab-id
-                            ;     TODO: NOT SYMBOL-TABLE!
+                                        ;     TODO: NOT SYMBOL-TABLE!
 ;;  x                       ;   identifier      nym
 ;;  []                      ;   identifier *    dependencies
 ;;  Local                   ;   intent          intent
@@ -1793,14 +1860,20 @@
 ;;  .false.)})              ;   bool            value-attr
 
 ;; prerequisite type aliases:
+
 (s/def ::value-attr       ::bool)
+
 ;; varnym already defined for Var.
 ;; https://github.com/rebcabin/masr/issues/28
+
 (s/def ::type-declaration (s/nilable ::symtab-id))
+
 ;; TODO: there is ambiguity regarding identifier-sets and lists:
+
 (s/def ::dependencies     ::identifier-set)
 
 ;; light sugar
+
 (defn Variable-
   [& {:keys [ ;; required
              symtab-id,          varnym,         ttype,
@@ -1850,6 +1923,7 @@
       cnf)))
 
 ;; heavy sugar
+
 (defn Variable--
   "Heavy sugar; parameters that collide with functions
   have trailing hyphens."
@@ -1897,6 +1971,7 @@
       cnf)))
 
 ;; legacy sugar
+
 (defmacro Variable
   "Honor legacy parameter order of
   lpython/src/libasr/ASR.asdl as of 25 April 2023.
@@ -1929,11 +2004,13 @@
 ;;                       bool loaded_from_mod, bool intrinsic)
 
 ;; prerequisite type aliases:
+
 (s/def ::modulenym       ::identifier)
 (s/def ::loaded-from-mod ::bool)
 (s/def ::intrinsic       ::bool)
 
 ;; heavy sugar
+
 (defn Module [symtab, modnym, deps, loaded, intrinsic-]
   (let [cnf {::term ::symbol
              ::asr-symbol-head
@@ -1968,13 +2045,18 @@
 ;; prerequisite type aliases:
 
 ;; SymbolTable is already defined
+
 (s/def ::function-name      ::identifier)
 (s/def ::function-signature ::FunctionType)
+
 ;; dependencies is already defined
+
 (s/def ::params             ::exprs) ;; renamed from args
 (s/def ::body               ::stmts)
 (s/def ::return-var         ::exprq)
+
 ;; access is already defined
+
 (s/def ::deterministic      ::bool)
 (s/def ::side-effect-free   ::bool)
 
@@ -1982,6 +2064,7 @@
 (def-term-head--entity-key symbol Function)
 
 ;; heavy sugar
+
 (defn Function-- [symtab,
                   fnnym,   fnsig,  deps,
                   params-, body-,  retvar,
@@ -2030,9 +2113,11 @@
 ;;           stmt*        body)
 
 ;; prerequisite type alias:
+
 (s/def ::prognym ::identifier)
 
 ;; heavy sugar
+
 (defn Program-- [stab, nym, deps, body-]
   (let [cnf (s/conform ::Program
                        {::term ::symbol,
@@ -2046,7 +2131,8 @@
       ::invalid-program
       cnf)))
 
-;; legacy macro
+;; legacy sugar
+
 (defmacro Program
   "Quote the nym."
   [stab, nym, deps, body-]
@@ -2057,6 +2143,9 @@
 
 
 ;; prerequisite type aliases:
+;; s/conform slips in the tag keys in from s/or,
+;; requiring a step in heavy sugar to remove them.
+
 (s/def ::node (s/or :expr   ::expr
                     :stmt   ::stmt
                     :symbol ::symbol))
@@ -2073,6 +2162,7 @@
 (def MAX-NODE-COUNT 4096)
 
 ;; TODO: Consider a regex-spec.
+
 (s/def ::nodes
   (s/and (s/coll-of ::node
                     :min-count MIN-NODE-COUNT,
@@ -2082,9 +2172,10 @@
 ;; ## TRANSLATION UNIT
 
 ;; heavy sugar
+
 (defn TranslationUnit [stab, node-preimages]
   (let [node-cnf (map node node-preimages)
-        ;; the s/conform slips back in the tag keys
+        ;; the s/conform slips back in the tag keys from s/or
         cnf
         (s/conform
          ::unit
