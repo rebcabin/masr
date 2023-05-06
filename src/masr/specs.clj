@@ -58,7 +58,7 @@
 ;; seem similar at first glance."
 
 
-;; full ASDL : ASR_2023_APR_06_snapshot.asdl
+;; full ASDL : `ASR_2023_APR_06_snapshot.asdl`
 ;; https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
 
 
@@ -108,40 +108,36 @@
 ;;  0 identifier      = specified below
 
 
-;; ================================================================
-;;     _    ____  ____     _____ _____ ____  __  __
-;;    / \  / ___||  _ \   |_   _| ____|  _ \|  \/  |
-;;   / _ \ \___ \| |_) |____| | |  _| | |_) | |\/| |
-;;  / ___ \ ___) |  _ <_____| | | |___|  _ <| |  | |
-;; /_/   \_\____/|_| \_\    |_| |_____|_| \_\_|  |_|
-
-
 ;; # FULL-FORM
 
 
-;; A MASR asr-term in _full-form_ is an instance
-;; hash-map, aka _entity_, that contains a ::term
-;; keyword (or equivalent; see EXAMPLE).
+;; A MASR `asr-term` in _full-form_ is an instance
+;; hash-map, aka _entity_, that contains a `::term`
+;; keyword (or equivalent; see EXAMPLE below).
 
 
-;; Every MASR asr-term has a full-form. Most have
+;; Every MASR `asr-term` has a full-form. Most have
 ;; sugared forms that are (1) easier for humans to
 ;; read and write (2) compatible with ASDL output
-;; from --show-asr in lpython and lfortran.
+;; from `--show-asr` in lpython and lfortran.
 
 
 ;; # SUGAR
 
 
-;; Sugar comes in two flavors: light sugar and heavy
-;; sugar. Light sugar employs keyword arguments with
+;; Sugar comes in three flavors: light, heavy, and
+;; legacy Light sugar employs keyword arguments with
 ;; defaults. Heavy sugar employs positional
 ;; arguments with defaults for some tail arguments.
 ;; Light sugar is unambiguous but more verbose than
-;; heavy sugar. Heavy sugar is the shortest and most
+;; heavy sugar. Heavy sugar is the shortest and more
 ;; compatible with ASDL, but more risky to write and
 ;; much harder to read, especially for long argument
-;; lists as with, say, Variable and FunctionType.
+;; lists as with, say, `Variable` and
+;; `FunctionType.` Legacy sugar is just like heavy
+;; sugar, just requiring fewer tick marks on
+;; symbols. Legacy sugar is the most compatible with
+;; ASDL output from `--show-asr`.
 
 
 ;; # WHAT ARE TERMS?
@@ -180,11 +176,11 @@
 ;; # QUALIFIED KEYWORDS AND ::TERM
 
 
-;; ::term is both a qualified keyword _and_ a
+;; `::term` is both a qualified keyword _and_ a
 ;; tag-fetching function, which picks the value of
-;; the key ::term from any hash-map. For example,
-;; (::term {... the instance above ...}) produces
-;; ::intent.
+;; the key `::term` from any hash-map. For example,
+;; `(::term {... the instance above ...})` produces
+;; `::intent.`
 
 
 ;; As a qualified keyword, ::term can name a Clojure
@@ -203,7 +199,7 @@
 ;; # SPECS ARE A TYPE SYSTEM FOR MASR
 
 
-;; Specs can have arbitrary logic and formalize
+;; Specs can have arbitrary logic. Specs formalize
 ;; type-checking for entities of any depth and
 ;; richness.
 
@@ -211,17 +207,17 @@
 ;; # POLYMORPHIC SPECS FOR TERMS
 
 
-;; "defmulti" defines a name, say "term" (no colons),
-;; for a collection of "defmethods" with the same
-;; name. The defmulti links the defmulti-defmethod
-;; name "term" to a dispatcher function, here
-;; exactly the tag-fetcher ::term (with colons),
-;; with the qualified keyword acting in its role of
-;; tag-fetcher. Each defmethod of "term" is also
-;; tagged by the value fetched from an entity
-;; via ::term in its role as tag-fetching function.
+;; `defmulti` defines a name, say `term` (no
+;; colons), for a collection of `defmethods` with
+;; the same name. The `defmulti` links the
+;; defmulti-defmethod name `term` to a dispatcher
+;; function, here exactly the tag-fetcher
+;; `::term` (with colons), with this qualified
+;; keyword acting in its role of tag-fetcher. Each
+;; defmethod of `term` is also tagged by the value
+;; fetched from an entity via `::term`.`
 ;; defmulti/defmethod is a Clojure idiom for
-;; _polymorphism_, a defmulti function interface
+;; _polymorphism_, a `defmulti` function interface
 ;; with many implementations. The interface is the
 ;; same for all implementations -- it just accepts a
 ;; term. The implementations differ from one to the
@@ -233,13 +229,13 @@
 
 ;; MASR handles _alternatives_ -- to the right-hand
 ;; sides of equals signs in the grammar -- via
-;; multi-specs. Multi-specs are to specs as
+;; _multi-specs_. Multi-specs are to specs as
 ;; defmethods are to functions -- one spec interface
 ;; to many implementations.
 
 
 ;; The name of the multi-spec for all terms
-;; is ::asr-term, a qualified keyword, as must be
+;; is `::asr-term`, a qualified keyword, as must be
 ;; the names of all Clojure specs. Multi-specs act
 ;; like tagged unions in C -- polymorphic structs.
 
@@ -248,28 +244,28 @@
 
 
 ;; At the top level, term multi-specs dispatch on
-;; values of the ::term key, values
-;; like ::intent, ::symbol, ::unit, etc. Defmethods
+;; values of the `::term` key, values like
+;; `::intent`, `::symbol`, `::unit`, etc. Defmethods
 ;; for those values specify the required keys for
 ;; entities that conform to the particular
 ;; implementation of the multi-spec.
 
 
-;; Some defmethods like ::intent are very simple,
-;; just checking that an instance like 'Local or
-;; 'ReturnVar inhabits a set of allowed intents.
-;; Others, like ::symbol, have _nested multi-specs_
-;; that dispatch on _heads_, like Variable or
-;; Program. MASR handles nested multi-specs via some
+;; Some defmethods like `::intent` are very simple,
+;; just checking that an instance like `'Local` or
+;; `'ReturnVar` inhabits a set of allowed intents.
+;; Others, like `::symbol`, have _nested multi-specs_
+;; that dispatch on _heads_, like `Variable` or
+;; `Program`. MASR handles nested multi-specs via some
 ;; techniques shown below.
 
 
 ;; # NAMING CONVENTION FOR MASR MULTI-SPECS
 
 
-;; All multi-spec names in MASR, nested or not,
-;; begin with ::asr-..., as in ::asr-term (not
-;; nested) and ::asr-ttype-head (nested in ttypes).
+;; All multi-spec names in MASR, nested or not, begin
+;; with `::asr-...`, as in `::asr-term` (not nested)
+;; and `::asr-ttype-head` (nested in ttypes).
 
 (s/def ::asr-term
   (s/multi-spec term ::term))
@@ -279,36 +275,41 @@
 
 
 ;; A given entity (instance hash-map) may be
-;; an ::asr-term -- any one of the terms, a ::symbol
-;; -- a particular one of the several terms, and
-;; a ::Variable -- a particular one of the several
-;; symbols. These three telescoping
-;; specs, ::term, ::symbol, ::Variable, are of
-;; increasing precision and discrimination.
+;;
+;; * an `::asr-term` -- any one of the terms
+;;
+;; * a `::symbol` -- a particular one of the several
+;; terms,
+;;
+;; * and a `::Variable` -- a particular one of the
+;; several symbols.
+;;
+;; These three telescoping specs, `::term`, `::symbol`,
+;; `::Variable`, are of increasing precision and
+;; discrimination.
 
 
-;; Vertically, in increasing precision,
-;; both ::Variable and ::symbol are ::asr-term
-;; and ::Variable is a ::symbol. Horizontally, as
-;; siblings of equal precision, both ::Variable
-;; and ::Function are ::symbol, and both are
-;; also ::asr-term. For another example, vertically,
-;; both ::LogicalBinOp and ::expr are ::asr-term,
-;; and ::LogicalBinOp is an ::expr. Horizontally,
-;; both ::LogicalBinOp and ::LogicalCompare
-;; are ::expr, and both are ::asr-term.
+;; Vertically, in increasing precision, both
+;; `::Variable` and `::symbol` are `::asr-term` and
+;; `::Variable` is a `::symbol`. Horizontally, as
+;; siblings of equal precision, both `::Variable` and
+;; `::Function` are `::symbol`, and both are also
+;; `::asr-term`. For another example, vertically, both
+;; `::LogicalBinOp` and `::expr` are `::asr-term`, and
+;; `::LogicalBinOp` is an `::expr`. Horizontally, both
+;; `::LogicalBinOp` and `::LogicalCompare` are
+;; `::expr`, and both are `::asr-term`.
 
 
 ;; # TERM ENTITY KEY
 
 
-;; Each term, like symbol, needs its own spec, named
-;; by a qualified keyword like ::symbol. MASR
-;; recursively checks specs when entity keys
-;; like ::symbol have their own specs. Said another
-;; way, recursive conformance means that ::symbol
-;; fields in other entities are checked by ::symbol
-;; specs.
+;; Each term, like symbol, needs its own spec, named by
+;; a qualified keyword like `::symbol`. MASR
+;; recursively checks specs when entity keys like
+;; `::symbol` have their own specs. Said another way,
+;; recursive conformance means that `::symbol` fields
+;; in other entities are checked by `::symbol` specs.
 
 
 (defn term-selector-spec
@@ -415,7 +416,7 @@
 
 
 ;; We need specs for each nested multi-spec
-;; like ::Variable and ::FunctionType.
+;; like `::Variable` and `::FunctionType`.
 
 
 (defmacro def-term-head--entity-key
@@ -458,17 +459,17 @@
 ;; # DEFMASRTYPE
 
 
-;; defmasrtype is the primary way to add new specs
+;; `defmasrtype` is the primary way to add new specs
 ;; to MASR, that is, for incremental, test-driven
-;; development of MASR. Use defmasrtype to define
+;; development of MASR. Use `defmasrtype` to define
 ;; new specs for terms with nested multi-specs.
 ;; Terms without nested multi-specs are few. They
 ;; are special cases with hand-written specs.
 
 
-;; defmasrtype creates both (1) the specs for
-;; particular heads like Variable and Assignment,
-;; and (2) a function, ->asdl-type, that extracts
+;; `defmasrtype` creates both (1) the specs for
+;; particular heads like `Variable` and `Assignment`,
+;; and (2) a function, `->asdl-type`, that extracts
 ;; the ASDL type from any instance hash-map.
 
 
@@ -586,11 +587,11 @@
 ;; # ->ASDL-TYPE
 
 
-;; The function ->asdl-type relies on multimethods
+;; The function `->asdl-type` relies on multimethods
 ;; for terms that have a nested multi-spec. The
 ;; multimethods dispatch on the "head" keys of each
-;; term-with-nested-multi-spec, terms
-;; like ::symbol-head and ::expr-head.
+;; term-with-nested-multi-spec, terms like
+;; `::symbol-head` and `::expr-head`.
 
 
 (defmulti  ->asdl-type ::term)
@@ -633,22 +634,22 @@
 ;; The following blocks of code are as close to the
 ;; ASDL specs as we care to get in MASR. MASR is
 ;; more discriminating than ASDL. For example, the
-;; spec for "Program" in ASDL declares that the name
+;; spec for `Program` in ASDL declares that the name
 ;; of the Program is an identifier, but MASR
-;; specifies the name as a prognym, giving both a
+;; specifies the name as a `prognym`, giving both a
 ;; finer-grained name to the type of a Program name
 ;; and an opportunity for further processing.
 
 
 ;; The discriminating subtype-specs are defined via
-;; s/def near each particular case, i.e., near
-;; Function, Near LogicalBinOp, etc. The following
+;; `s/def` near each particular case, i.e., near
+;; `Function`, Near `LogicalBinOp`, etc. The following
 ;; defmasrtypes just set up the multi-method and
 ;; multi-spec infrastructure for further refinement.
 ;; These defmasrtypes can refer to those more
-;; discriminating types, like "prognym" and
-;; "left-logical", before they're defined as specs
-;; via s/def.
+;; discriminating types, like `prognym` and
+;; `left-logical`, before they're defined as specs
+;; via `s/def`.
 
 
 ;; # ADD NEW DEFINITIONS HERE
@@ -835,14 +836,13 @@
 ;; MASR is integrated with LCompilers.
 
 
-;; The names of light-sugar functions, like
-;; `Integer-`, have a single trailing hyphen. The
-;; keyword arguments of light-sugar functions are
-;; partitioned into required and
-;; optional-with-defaults. The keyword argument
-;; lists of light-sugar functions do not depend on
-;; order. The following two examples both conform to
-;; =::asr-term= and to =::ttype=:
+;; The names of light-sugar functions, like `Integer-`,
+;; have a single trailing hyphen. The keyword arguments
+;; of light-sugar functions are partitioned into
+;; required and optional-with-defaults. The keyword
+;; argument lists of light-sugar functions do not
+;; depend on order. The following two examples both
+;; conform to `::asr-term` and to `::ttype`:
 
 
 ;;     (Integer- {:dimensions [], :kind 4})
@@ -911,7 +911,7 @@
 ;; # DIMENSION
 
 
-;; Dimension is a term without nested multi-specs.
+;; `Dimension` is a term without nested multi-specs.
 ;; It is a handwritten special case.
 
 
@@ -919,10 +919,10 @@
 ;; dimension = (expr? start, expr? length)
 
 
-;; The ASDL is imprecise. The real spec, realized
-;; only in secret C++ code, is that we have either
-;; both start and length or we just have nothing.
-;; MASR makes exposes this secret explicitly.
+;; The ASDL is imprecise. The real spec, realized only
+;; in secret C++ code, is that we have either both
+;; `start` and `length` or we just have nothing. MASR
+;; makes exposes this secret explicitly.
 
 
 ;; Case with 1 index is disallowed.
@@ -933,8 +933,8 @@
 (def MAX-DIMENSION-COUNT 2)
 
 
-;; The next spec says that a ::dimension-content is
-;; a collection of ::nat with either two or zero
+;; The next spec says that a `::dimension-content` is
+;; a collection of `::nat` with either two or zero
 ;; elements. TODO Consider a regex-spec.
 
 (s/def ::dimension-content
@@ -946,16 +946,16 @@
    (fn [it] (not (= 1 (count it))))))
 
 
-;; The next spec says that a dimension in full-form
-;; is an entity hash-map with keys ::term and
-;; ::dimension-content.
+;; The next spec says that a `dimension` in full-form
+;; is an entity hash-map with keys `::term` and
+;; `::dimension-content.`
 
 (defmethod term ::dimension [_]
   (s/keys :req [::term
                 ::dimension-content]))
 
 
-;; As usual, we need a term-entity key, ::dimension,
+;; As usual, we need a term-entity key, `::dimension`,
 ;; for recursive type-checking.
 
 (def-term-entity-key dimension)
@@ -988,8 +988,8 @@
 ;; # DIMENSIONS
 
 
-;; Dimensions [sic] is not a term. Dimensions stands
-;; for dimension*, a plurality of dimension. We do a
+;; `Dimensions` [sic] is not a term. Dimensions stands
+;; for `dimension*`, a plurality of dimension. We do a
 ;; lot more pluralities later. This is just the first
 ;; example of a repeating pattern (TODO: macro?)
 
@@ -1033,14 +1033,14 @@
 ;; # SYMTAB-ID
 
 
-;; In ASDL, "symbol_table" sometimes means a
-;; SymbolTable, an unwritten spec, and sometimes
-;; means an integer id of a SymbolTable specified
-;; elsewhere. MASR does better. MASR ->asdl-type
-;; projects both of these types, SymbolTable and
-;; symtab-id, back into ASDL symbol_table, with
-;; its secret proviso. MASR exposes the secret.
-;; ASDL embraces the secret.
+;; In ASDL, `symbol_table` sometimes means a
+;; `SymbolTable`, an unwritten spec, and sometimes
+;; means an integer id of a `SymbolTable` specified
+;; elsewhere. MASR does better. MASR `->asdl-type`
+;; projects both of these types, `SymbolTable` and
+;; `symtab-id`, back into ASDL `symbol_table`, with its
+;; secret proviso. MASR exposes the secret. ASDL
+;; embraces the secret.
 
 
 (s/def ::symtab-id ::nat)
@@ -1057,7 +1057,7 @@
 ;; # SYMBOL-TABLE
 
 
-;; SymbolTable is an unwritten term. It doesn't have
+;; `SymbolTable` is an unwritten term. It doesn't have
 ;; nested multi-specs. We'll write it out fully by
 ;; hand.
 
@@ -1089,10 +1089,31 @@
 
 ;; The `legacy` macro currently just converts `=`
 ;; into `Assignment` in a whole tree. Apply "legacy"
-;; to a whole expression. TODO: We might rework
-;; heavy sugar through the whole code-base because
-;; we must apply `legacy` anyway. For now,
-;; user-level code must call `legacy` when
+;; to a whole expression.
+
+
+;; TODO: ASDL output from `--show-asr` currently
+;; requires moving colons from the backs of keywords to
+;; the front. That is necessary because colons at the
+;; back fail the Clojure reader. We have a `sed` script
+;; for that: `fix-show-asr.sed`. The script also
+;; converts ASDL's `.false.` to `false` and `.true.` to
+;; `true`, but that could be done at the Clojure level.
+
+
+;; Here is `fix-show-asr.sed`:
+
+
+;; ```sed
+;; s/\(\([_a-zA-Z0-9]*\)\:\)/:\2/g
+;; s/\.\(false\)\./\1/g
+;; s/\.\(true\)\./\1/g
+;; ```
+
+
+;; TODO: We might rework heavy sugar through the whole
+;; code-base because we must apply `legacy` anyway. For
+;; now, user-level code must call `legacy` when
 ;; appropriate.
 
 
@@ -1142,8 +1163,8 @@
 ;; Many ASDL types are like enums: they are just a
 ;; set of alternative symbols, without parentheses
 ;; and without parameters _qua_ arguments. Example:
-;; ASDL "access" has two possibilities: "Public"
-;; and "Private". MASR automates all of enum-likes
+;; ASDL `access` has two possibilities: `Public`
+;; and `Private`. MASR automates all of enum-likes
 ;; via one macro.
 
 
@@ -1192,7 +1213,7 @@
 ;; ## ABI
 
 
-;; Abi is a special case of enum-like with rich logic
+;; `Abi` is a special case of enum-like with rich logic.
 
 
 (def external-abis
@@ -1265,9 +1286,9 @@
 ;; # TTYPE
 
 
-;; Ttype is a term with nested multi-specs, so it
-;; fits in the macro scheme written at the top of
-;; this file. Its subtypes, Integer, Real, Logical,
+;; `Ttype` is a term with nested multi-specs, so it
+;; fits in the macro scheme written at the top of this
+;; file. Its subtypes, `Integer`, `Real`, `Logical`,
 ;; etc., have additional structure we automate here.
 
 ;; pluralities
@@ -1357,8 +1378,8 @@
 (def-ttype-head Logical)
 
 
-;; TODO: Character is more rich
-;; (def-ttype-head Character)
+;; TODO: `Character` is more rich
+;; `(def-ttype-head Character)`
 
 ;; heavy sugar
 
@@ -1508,8 +1529,8 @@
 (s/def ::param-types     ::ttypes)
 (s/def ::return-var-type ::ttypeq)
 
-;; ABI is already good enough.
-;; deftype is found above
+;; `ABI` is already good enough.
+;; `deftype` is found above
 
 (s/def ::bindc-name      (s/nilable string?))
 (s/def ::elemental       ::bool)
@@ -1655,12 +1676,12 @@
 ;; Or just an identifier? #23
 ;; https://github.com/rebcabin/masr/issues/23
 
-;; Var(symbol v)
+;; `Var(symbol v)`
 
 ;; from ASR.asdl doesn't match the instance. Instead,
 ;; we probably need something like:
 
-;; Var(symtab_id stid, identifier it)
+;; `Var(symtab_id stid, identifier it)`
 
 ;; prerequisite type alias:
 
@@ -1706,7 +1727,7 @@
 ;;  (Logical 4 []) ())
 
 ;; prerequisite type aliases:
-;; TODO: check that the types of the exprs are ::Logical!
+;; TODO: check that the types of the exprs are `::Logical!`
 
 (s/def ::logical-left  ::expr)
 (s/def ::logical-right ::expr)
@@ -1794,8 +1815,9 @@
 
 
 ;; prerequisite type aliases:
-;; TODO: more cases for lvalue, and an s/or
-;; with "second" hack
+;; TODO: more cases for `lvalue`, and an `s/or`
+;; with `second` hack
+
 
 (s/def ::lvalue     ::Var)
 (s/def ::rvalue     ::expr)
@@ -1863,7 +1885,7 @@
 
 (s/def ::value-attr       ::bool)
 
-;; varnym already defined for Var.
+;; `varnym` already defined for Var.
 ;; https://github.com/rebcabin/masr/issues/28
 
 (s/def ::type-declaration (s/nilable ::symtab-id))
