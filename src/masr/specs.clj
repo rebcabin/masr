@@ -1304,9 +1304,10 @@
 
 ;; TODO: Consider a regex-spec.
 
-(s/def ::ttypeq (s/coll-of ::ttype
-                           :min-count 0
-                           :max-count 1))
+(s/def ::ttype?
+  (s/coll-of ::ttype
+             :min-count 0
+             :max-count 1))
 
 
 ;; kind: The `kind` member selects the kind of a
@@ -1527,7 +1528,7 @@
 ;; prerequisite type aliases:
 
 (s/def ::param-types     ::ttypes)
-(s/def ::return-var-type ::ttypeq)
+(s/def ::return-var-type ::ttype?)
 
 ;; `ABI` is already good enough.
 ;; `deftype` is found above
@@ -1558,10 +1559,12 @@
                             :min-count MIN-NUMBER-OF-SYMBOLS
                             :max-count MAX-NUMBER-OF-SYMBOLS))
 
-;; symbol? is written "symbolq."
 ;; TODO: Consider a regex-spec.
 
-(s/def ::symbolq (s/coll-of ::symbol :min-count 0, :max-count 1))
+(s/def ::symbol?
+  (s/coll-of ::symbol
+             :min-count 0,
+             :max-count 1))
 (s/def ::restrictions    ::symbols)
 (s/def ::is-restriction  ::bool)
 
@@ -1638,9 +1641,10 @@
 
 ;; TODO: Consider a regex-spec.
 
-(s/def ::exprq (s/coll-of ::expr
-                          :min-count 0
-                          :max-count 1))
+(s/def ::expr?
+  (s/coll-of ::expr
+             :min-count 0
+             :max-count 1))
 
 
 ;; ## LOGICAL CONSTANT
@@ -1796,9 +1800,10 @@
 
 ;; TODO: Consider a regex-spec.
 
-(s/def ::stmtq (s/coll-of ::stmt
-                          :min-count 0
-                          :max-count 1))
+(s/def ::stmt?
+  (s/coll-of ::stmt
+             :min-count 0
+             :max-count 1))
 
 
 ;; ## ASSIGNMENT
@@ -1821,7 +1826,7 @@
 
 (s/def ::lvalue     ::Var)
 (s/def ::rvalue     ::expr)
-(s/def ::overloaded ::stmtq)
+(s/def ::overloaded ::stmt?)
 
 ;; heavy sugar
 
@@ -1845,6 +1850,30 @@
 ;;                  call_arg* args,
 ;; expr? dt)
 
+
+;; See Issue #31 https://github.com/rebcabin/masr/issues/31
+
+
+;; `symbol`, here, is really a `symbol-ref`, an
+;; identifier that must match the name of a
+;; `Function` defined elsewhere.
+
+
+;; prerequisite type aliases
+
+
+(s/def ::symbol-ref ::identifier)
+
+
+;; pluralities
+
+
+;; TODO: Consider a regex-spec.
+
+(s/def ::symbol-ref?
+  (s/coll-of ::ttype
+             :min-count 0
+             :max-count 1))
 
 
 ;; # SYMBOL
@@ -2075,7 +2104,7 @@
 
 (s/def ::params             ::exprs) ;; renamed from args
 (s/def ::body               ::stmts)
-(s/def ::return-var         ::exprq)
+(s/def ::return-var         ::expr?)
 
 ;; access is already defined
 

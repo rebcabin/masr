@@ -1,32 +1,32 @@
 ```clojure
-    (ns masr.specs
-      (:require [clojure.spec.alpha            :as      s            ]
-                [clojure.set                   :as      set          ]
-                [clojure.spec.gen.alpha        :as      gen          ]
-                [clojure.test.check.generators :as      tgen         ]
-                [clojure.string                :as      str          ]
-                [clojure.pprint                :refer   [pprint     ]]
-                [clojure.walk                  :refer   [prewalk    ]]
-                #_[clojure.zip                 :as      z           ])
+(ns masr.specs
+  (:require [clojure.spec.alpha            :as      s            ]
+            [clojure.set                   :as      set          ]
+            [clojure.spec.gen.alpha        :as      gen          ]
+            [clojure.test.check.generators :as      tgen         ]
+            [clojure.string                :as      str          ]
+            [clojure.pprint                :refer   [pprint     ]]
+            [clojure.walk                  :refer   [prewalk    ]]
+            #_[clojure.zip                 :as      z           ])
 
-      (:require [hyperfiddle.rcf               :refer   [tests tap %]]
-                [blaster.clj-fstring           :refer   [f-str      ]])
+  (:require [hyperfiddle.rcf               :refer   [tests tap %]]
+            [blaster.clj-fstring           :refer   [f-str      ]])
 
-      (:require [masr.logic                    :refer   [iff implies]]
-                [masr.utils                    :refer   [plnecho
-                                                         dosafely   ]]
-                [masr.simplespecs              :refer   [nat
-                                                         identifier-list
-                                                         identifier-set
-                                                         identifier-suit
-                                                         identifier ]]
-                ))
+  (:require [masr.logic                    :refer   [iff implies]]
+            [masr.utils                    :refer   [plnecho
+                                                     dosafely   ]]
+            [masr.simplespecs              :refer   [nat
+                                                     identifier-list
+                                                     identifier-set
+                                                     identifier-suit
+                                                     identifier ]]
+            ))
 ```
 
 lightweight, load-time testing:
 
 ```clojure
-    (hyperfiddle.rcf/enable!)
+(hyperfiddle.rcf/enable!)
 ```
 
 Unmap "Integer" and "Character" so we can have
@@ -37,9 +37,9 @@ warnings. Access original "deftype"
 as "clojure.core/deftype".
 
 ```clojure
-    (ns-unmap *ns* 'Integer)
-    (ns-unmap *ns* 'Character)
-    (ns-unmap *ns* 'deftype)
+(ns-unmap *ns* 'Integer)
+(ns-unmap *ns* 'Character)
+(ns-unmap *ns* 'deftype)
 ```
 
 ASDL tuples like `(1 2)` are Clojure lists.
@@ -156,31 +156,31 @@ EXAMPLE -- all these full-forms mean the same:
 always acceptable, if verbose:
 
 ```clojure
-    {:masr.specs/term        :masr.specs/intent,
-     :masr.specs/intent-enum 'Unspecified}
+{:masr.specs/term        :masr.specs/intent,
+ :masr.specs/intent-enum 'Unspecified}
 ```
 
 shorter form, always acceptable:
 
 ```clojure
-    #:masr.specs{:term        :intent,
-                 :intent-enum 'Unspecified}
+#:masr.specs{:term        :intent,
+             :intent-enum 'Unspecified}
 ```
 
 when in this file or in namespace masr.specs,
 via the line (in-ns 'masr.specs):
 
 ```clojure
-    {::term        ::intent,
-     ::intent-enum 'Unspecified}
+{::term        ::intent,
+ ::intent-enum 'Unspecified}
 ```
 
 if masr.specs is aliased to asr, as
 in (:use [masr.specs :as asr]) in core_tests.clj
 
 ```clojure
-    {::asr/term        ::asr/intent,
-     ::asr/intent-enum 'Unspecified}
+{::asr/term        ::asr/intent,
+ ::asr/intent-enum 'Unspecified}
 ```
 
 # QUALIFIED KEYWORDS AND ::TERM
@@ -198,13 +198,13 @@ spec. The following spec will check
 whether ::intent is a ::term:
 
 ```clojure
-    (s/def ::term qualified-keyword?)
+(s/def ::term qualified-keyword?)
 ```
 
 EXAMPLE: "intent" is a valid "term"
 
 ```clojure
-    (s/valid? ::term ::intent)
+(s/valid? ::term ::intent)
 => true
 ```
 
@@ -236,7 +236,7 @@ the meaning of "polymorphism" -- one interface, many
 implementations.
 
 ```clojure
-    (defmulti term ::term)
+(defmulti term ::term)
 ```
 
 MASR handles _alternatives_ -- to the right-hand
@@ -280,8 +280,8 @@ with `::asr-...`, as in `::asr-term` (not nested)
 and `::asr-ttype-head` (nested in ttypes).
 
 ```clojure
-    (s/def ::asr-term
-      (s/multi-spec term ::term))
+(s/def ::asr-term
+  (s/multi-spec term ::term))
 ```
 
 # TELESCOPING SPECS
@@ -325,24 +325,24 @@ recursive conformance means that `::symbol` fields
 in other entities are checked by `::symbol` specs.
 
 ```clojure
-    (defn term-selector-spec
-      "Name a spec that checks that an asr-term entity
-      has a given kwd as the value, e.g., that the
-      ::term of an entity is ::symbol."
-      [kwd]
-      (s/and ::asr-term
-             #(= kwd (::term %))))
+(defn term-selector-spec
+  "Name a spec that checks that an asr-term entity
+  has a given kwd as the value, e.g., that the
+  ::term of an entity is ::symbol."
+  [kwd]
+  (s/and ::asr-term
+         #(= kwd (::term %))))
 
 
-    (defmacro def-term-entity-key
-      "Define spec for entity key like ::symbol or
-      ::expr, which is an ::asr-term, a top-level
-      production in the grammar."
-      [term]
-      (let [ns "masr.specs"
-            tkw (keyword ns (str term))]
-        `(s/def ~tkw    ;; like ::dimension or ::symbol
-           (term-selector-spec ~tkw))))
+(defmacro def-term-entity-key
+  "Define spec for entity key like ::symbol or
+  ::expr, which is an ::asr-term, a top-level
+  production in the grammar."
+  [term]
+  (let [ns "masr.specs"
+        tkw (keyword ns (str term))]
+    `(s/def ~tkw    ;; like ::dimension or ::symbol
+       (term-selector-spec ~tkw))))
 ```
 
 # DEFMASRNESTED
@@ -369,60 +369,60 @@ step around it when necessary. We step around it
 via the built-in "name" function.
 
 ```clojure
-    (defmacro defmasrnested
-      "Define specs for terms with nested multi-specs,
-      like ::expr, ::symbol, ::ttype, ::stmt. Also define
-      the defmulti's for the nested multi-specs themselves.
+(defmacro defmasrnested
+  "Define specs for terms with nested multi-specs,
+  like ::expr, ::symbol, ::ttype, ::stmt. Also define
+  the defmulti's for the nested multi-specs themselves.
 
-      Automate constructions like the following, which
-      pertain to certain ::term specs that have nested
-      multi-specs like ::expr, ::symbol, ::stmt, etc.
-      There is a lot of duplicated wordage like expr,
-      term, and head, in the constructions. The macro
-      eliminates this duplication. Right after the
-      definition of the macro are several examples of
-      its usage, one for each term in the grammar that
-      has a nested multi-spec.
+  Automate constructions like the following, which
+  pertain to certain ::term specs that have nested
+  multi-specs like ::expr, ::symbol, ::stmt, etc.
+  There is a lot of duplicated wordage like expr,
+  term, and head, in the constructions. The macro
+  eliminates this duplication. Right after the
+  definition of the macro are several examples of
+  its usage, one for each term in the grammar that
+  has a nested multi-spec.
 
-          (defmethod term ::expr [_]
-            (s/keys :req [::term
-                          ::asr-expr-head]))
-          (def-term-entity-key expr)
+      (defmethod term ::expr [_]
+        (s/keys :req [::term
+                      ::asr-expr-head]))
+      (def-term-entity-key expr)
 
-          ;; nested multi-spec:
-          (defmulti expr-head ::expr-head)
-          (s/def ::asr-expr-head
-            (s/multi-spec expr-head ::expr-head"
-      [term]
-      (let [ns "masr.specs"
-            ttrm (keyword ns "term") ;; like ::term
-            tcst (symbol "term")     ;; like term (no ns!?!)
+      ;; nested multi-spec:
+      (defmulti expr-head ::expr-head)
+      (s/def ::asr-expr-head
+        (s/multi-spec expr-head ::expr-head"
+  [term]
+  (let [ns "masr.specs"
+        ttrm (keyword ns "term") ;; like ::term
+        tcst (symbol "term")     ;; like term (no ns!?!)
 
-            tstr (str term)          ;; like "expr"
-            tkwd (keyword ns tstr)   ;; like ::expr
-            tsym (symbol (name (symbol tstr))) ;; like expr -- caution
+        tstr (str term)          ;; like "expr"
+        tkwd (keyword ns tstr)   ;; like ::expr
+        tsym (symbol (name (symbol tstr))) ;; like expr -- caution
 
-            estr (str term "-head")  ;; like "expr-head"
-            ekwd (keyword ns estr)   ;; like ::expr-head
-            esym (symbol (name (symbol estr))) ;; like expr-head
+        estr (str term "-head")  ;; like "expr-head"
+        ekwd (keyword ns estr)   ;; like ::expr-head
+        esym (symbol (name (symbol estr))) ;; like expr-head
 
-            ;; like ::asr-expr-head
-            akwd (keyword ns (str "asr-" (name term) "-head"))
-            ]
-        `(do (defmethod ~tcst ~tkwd [_#]
-               (s/keys :req [~ttrm ~akwd]))
-             (def-term-entity-key ~tsym) ;; caution
-             (defmulti ~esym ~ekwd)
-             (s/def ~akwd
-               (s/multi-spec ~esym ~ekwd))
-             )))
+        ;; like ::asr-expr-head
+        akwd (keyword ns (str "asr-" (name term) "-head"))
+        ]
+    `(do (defmethod ~tcst ~tkwd [_#]
+           (s/keys :req [~ttrm ~akwd]))
+         (def-term-entity-key ~tsym) ;; caution
+         (defmulti ~esym ~ekwd)
+         (s/def ~akwd
+           (s/multi-spec ~esym ~ekwd))
+         )))
 
 
-    (defmasrnested expr)
-    (defmasrnested stmt)
-    (defmasrnested symbol)
-    (defmasrnested ttype)
-    (defmasrnested unit)
+(defmasrnested expr)
+(defmasrnested stmt)
+(defmasrnested symbol)
+(defmasrnested ttype)
+(defmasrnested unit)
 ```
 
 # TERM-HEAD ENTITY KEY
@@ -432,41 +432,41 @@ We need specs for each nested multi-spec
 like `::Variable` and `::FunctionType`.
 
 ```clojure
-    (defmacro def-term-head--entity-key
-      "Define an entity key like ::Variable, which is an
-      ::asr-symbol-head nested multi-spec, again
-      eliminating duplicated wordage.
+(defmacro def-term-head--entity-key
+  "Define an entity key like ::Variable, which is an
+  ::asr-symbol-head nested multi-spec, again
+  eliminating duplicated wordage.
 
-      From a term, e.g., symbol, and head, e.g., Variable,
-      generate a spec s/def like
+  From a term, e.g., symbol, and head, e.g., Variable,
+  generate a spec s/def like
 
-          (s/def ::Variable               ;; head entity key
-            (s/and ::asr-term             ;; top multi-spec
-              #(= ::Variable              ;; nested tag
-                  (-> % ::asr-symbol-head ;; nested multi-spec
-                        ::symbol-head)))) ;; tag fetcher
+      (s/def ::Variable               ;; head entity key
+        (s/and ::asr-term             ;; top multi-spec
+          #(= ::Variable              ;; nested tag
+              (-> % ::asr-symbol-head ;; nested multi-spec
+                    ::symbol-head)))) ;; tag fetcher
 
-      From term \"stmt\", and head \"Assignment\", generate
-      a spec s/def like
+  From term \"stmt\", and head \"Assignment\", generate
+  a spec s/def like
 
-          (s/def ::Assignment             ;; head entity key
-            (s/and ::asr-term             ;; top multi-spec
-              #(= ::Assignment            ;; nested tag
-                  (-> % ::asr-stmt-head   ;; nested multi-spec
-                        ::stmt-head       ;; tag fetcher"
-      [term, ;; like symbol
-       head  ;; like Variable
-       ]
-      (let [ns "masr.specs"
-            trm (keyword ns "term")     ;; like ::term
-            art (keyword ns "asr-term") ;; like ::asr-term
-            hkw (keyword ns (str head)) ;; like ::Variable
-            tmh (keyword ns (str term "-head")) ;; like ::symbol-head
-            amh (keyword ns ;; for the multi-spec
-                         (str "asr-" term "-head")) ;; like ::asr-symbol-head
-            ]
-        `(s/def ~hkw
-           (s/and ~art #(= ~hkw (-> % ~amh ~tmh))))))
+      (s/def ::Assignment             ;; head entity key
+        (s/and ::asr-term             ;; top multi-spec
+          #(= ::Assignment            ;; nested tag
+              (-> % ::asr-stmt-head   ;; nested multi-spec
+                    ::stmt-head       ;; tag fetcher"
+  [term, ;; like symbol
+   head  ;; like Variable
+   ]
+  (let [ns "masr.specs"
+        trm (keyword ns "term")     ;; like ::term
+        art (keyword ns "asr-term") ;; like ::asr-term
+        hkw (keyword ns (str head)) ;; like ::Variable
+        tmh (keyword ns (str term "-head")) ;; like ::symbol-head
+        amh (keyword ns ;; for the multi-spec
+                     (str "asr-" term "-head")) ;; like ::asr-symbol-head
+        ]
+    `(s/def ~hkw
+       (s/and ~art #(= ~hkw (-> % ~amh ~tmh))))))
 ```
 
 # DEFMASRTYPE
@@ -499,102 +499,102 @@ multi-specs.
 # FOR EXTRACTING ASDL-TYPES FROM ENTITIES
 
 ```clojure
-    (def asdl-types
-      {
-       ::SymbolTable  "symbol_table stab"
-       ::body         "stmt* body"
-       ::dependencies "identifier* dependencies"
-       ::dimensions   "dimension* dims"
-       ::logical-kind "int kind"
-       ::logicalbinop "logicalbinop"
-       ::lvalue       "expr target"
-       ::overloaded   "stmt? overloaded"
-       ::prognym      "identifier program_name"
-       ::rvalue       "expr value"
-       ::symtab-id    "symbol_table stid" ;; TODO: this is TERRIBLE
-       ::varnym       "identifier varnym"
-       })
+(def asdl-types
+  {
+   ::SymbolTable  "symbol_table stab"
+   ::body         "stmt* body"
+   ::dependencies "identifier* dependencies"
+   ::dimensions   "dimension* dims"
+   ::logical-kind "int kind"
+   ::logicalbinop "logicalbinop"
+   ::lvalue       "expr target"
+   ::overloaded   "stmt? overloaded"
+   ::prognym      "identifier program_name"
+   ::rvalue       "expr value"
+   ::symtab-id    "symbol_table stid" ;; TODO: this is TERRIBLE
+   ::varnym       "identifier varnym"
+   })
 
 
-    (defmacro asdl-type-string
-      "Construct a string like this
-      Assignment(expr target, expr value, stmt? overloaded)"
-      ;; term is a string like "symbol" or "stmt" in quotes
-      [term sqkeysyms]
-      (let [ns "masr.specs"
-            ;; like symbol-head or stmt-head
-            str-head (str    term "-head")
-            trm-head (symbol str-head)
-            seq-keys (map    #(keyword ns (str %)) sqkeysyms)]
-        ;; Strip the namespace inserted by backtick. symbol-head
-        ;; becomes a bound symbol in context, bound to Program or
-        ;; Variable or whatever.
-        `(let [head#   (name ~trm-head)
-               params# (str/join ", "
-                        (map asdl-types (list ~@seq-keys)))]
-           (str head# "(" params# ")"))))
+(defmacro asdl-type-string
+  "Construct a string like this
+  Assignment(expr target, expr value, stmt? overloaded)"
+  ;; term is a string like "symbol" or "stmt" in quotes
+  [term sqkeysyms]
+  (let [ns "masr.specs"
+        ;; like symbol-head or stmt-head
+        str-head (str    term "-head")
+        trm-head (symbol str-head)
+        seq-keys (map    #(keyword ns (str %)) sqkeysyms)]
+    ;; Strip the namespace inserted by backtick. symbol-head
+    ;; becomes a bound symbol in context, bound to Program or
+    ;; Variable or whatever.
+    `(let [head#   (name ~trm-head)
+           params# (str/join ", "
+                    (map asdl-types (list ~@seq-keys)))]
+       (str head# "(" params# ")"))))
 
 
-    (defmacro defmasrtype
-      "Get rid of repetition in an expression like
+(defmacro defmasrtype
+  "Get rid of repetition in an expression like
 
-          (defmethod stmt->asdl-type ::Assignment
-              [{::keys [stmt-head     ;; symbol-binding list
-                        lvalue        ;;  <~~~ this bit gets repeated
-                        rvalue        ;;  <~~~ this bit gets repeated
-                        overloaded]}] ;;  <~~~ this bit gets repeated
-              (asdl-type-string \"stmt\" (lvalue     ;; <~~~ repeated
-                                          rvalue     ;; <~~~ repeated
-                                          overloaded ;; <~~~ repeated
-                                          )))
+      (defmethod stmt->asdl-type ::Assignment
+          [{::keys [stmt-head     ;; symbol-binding list
+                    lvalue        ;;  <~~~ this bit gets repeated
+                    rvalue        ;;  <~~~ this bit gets repeated
+                    overloaded]}] ;;  <~~~ this bit gets repeated
+          (asdl-type-string \"stmt\" (lvalue     ;; <~~~ repeated
+                                      rvalue     ;; <~~~ repeated
+                                      overloaded ;; <~~~ repeated
+                                      )))
 
-      and this (the whole key list is just a transform of the
-      symbol-binding list like the one above)
+  and this (the whole key list is just a transform of the
+  symbol-binding list like the one above)
 
-          (defmethod symbol-head ::Program [_]
-            (s/keys :req [::symbol-head  ;; <~~~ repetitive
-                          ::SymbolTable  ;; <~~~ repetitive
-                          ::prognym      ;; <~~~ repetitive
-                          ::dependencies ;; <~~~ repetitive
-                          ::body]        ;; <~~~ repetitive
-                    ))
-      "
-      [head, term, keyseq]
-      (let [ns "masr.specs"
-            ;; like "Program"
-            head-str  (str head)
-            ;; like ::Program
-            head-key  (keyword ns head-str)
-            ;; ::keys
-            keys-key  (keyword ns "keys")
-            ;; like Program
-            head-sym  (symbol head-str)
-            ;; like symbol
-            term-sym  (symbol (str term))
-            ;; like symbol-head
-            term-head (symbol (str term "-head"))
-            ;; like symbol->asdl-type
-            mthd-nym  (symbol (str term "->asdl-type"))
-            ;; like (symbol-head, SymbolTable, ..., body)
-            sym-list  (conj keyseq term-head)
-            ;; like [symbol-head, SymbolTable, ..., body]
-            ;; for destructuring
-            parm-vec  (vec sym-list)
-            ;; like (::symbol-head, ::SymbolTable, ..., ::body)
-            ;; for entity specs via s/keys
-            key-list  (map #(keyword ns (str %)) sym-list)
-            ;; like [::symbol-head, ::SymbolTable, ..., ::body]
-            ;; for entity specs via s/keys
-            key-vec   (vec key-list)
-            ]
+      (defmethod symbol-head ::Program [_]
+        (s/keys :req [::symbol-head  ;; <~~~ repetitive
+                      ::SymbolTable  ;; <~~~ repetitive
+                      ::prognym      ;; <~~~ repetitive
+                      ::dependencies ;; <~~~ repetitive
+                      ::body]        ;; <~~~ repetitive
+                ))
+  "
+  [head, term, keyseq]
+  (let [ns "masr.specs"
+        ;; like "Program"
+        head-str  (str head)
+        ;; like ::Program
+        head-key  (keyword ns head-str)
+        ;; ::keys
+        keys-key  (keyword ns "keys")
+        ;; like Program
+        head-sym  (symbol head-str)
+        ;; like symbol
+        term-sym  (symbol (str term))
+        ;; like symbol-head
+        term-head (symbol (str term "-head"))
+        ;; like symbol->asdl-type
+        mthd-nym  (symbol (str term "->asdl-type"))
+        ;; like (symbol-head, SymbolTable, ..., body)
+        sym-list  (conj keyseq term-head)
+        ;; like [symbol-head, SymbolTable, ..., body]
+        ;; for destructuring
+        parm-vec  (vec sym-list)
+        ;; like (::symbol-head, ::SymbolTable, ..., ::body)
+        ;; for entity specs via s/keys
+        key-list  (map #(keyword ns (str %)) sym-list)
+        ;; like [::symbol-head, ::SymbolTable, ..., ::body]
+        ;; for entity specs via s/keys
+        key-vec   (vec key-list)
+        ]
 
-        `(do (defmethod ~mthd-nym ~head-key
-               [{~keys-key ~parm-vec}]
-               (asdl-type-string ~term ~keyseq))
-             (defmethod ~term-head ~head-key [_#]
-               (s/keys :req ~key-vec))
-             (def-term-head--entity-key ~term-sym ~head-sym)
-             )))
+    `(do (defmethod ~mthd-nym ~head-key
+           [{~keys-key ~parm-vec}]
+           (asdl-type-string ~term ~keyseq))
+         (defmethod ~term-head ~head-key [_#]
+           (s/keys :req ~key-vec))
+         (def-term-head--entity-key ~term-sym ~head-sym)
+         )))
 ```
 
 # ->ASDL-TYPE
@@ -607,38 +607,38 @@ term-with-nested-multi-spec, terms like
 `::symbol-head` and `::expr-head`.
 
 ```clojure
-    (defmulti  ->asdl-type ::term)
-    (defmacro term->asdl-type
-      "Set up a method like
+(defmulti  ->asdl-type ::term)
+(defmacro term->asdl-type
+  "Set up a method like
 
-          (defmethod ->asdl-type ::symbol
-            ;; bind the symbol asr-symbol-head
-            [{::keys [::term ::asr-symbol-head]}]
-              (symbol->asdl-type asr-symbol-head))
+      (defmethod ->asdl-type ::symbol
+        ;; bind the symbol asr-symbol-head
+        [{::keys [::term ::asr-symbol-head]}]
+          (symbol->asdl-type asr-symbol-head))
 
-      for dispatching to functions that extract the ASDL
-      types from MASR entities: types from examples."
-      [term]
-      (let [ns "masr.specs"
-            ;; like ::keys
-            keys-key (keyword ns "keys")
-            ;; like ::symbol or ::stmt, value of term
-            mthd-key (keyword ns (str term))
-            ;; like asr-symbol-head or asr-stmt-head, a key-symbol
-            ;; for destructuring
-            nest-ksm (symbol (str "asr-" term "-head"))
-            ;; like symbol->asdl-type or stmt->asdl-type
-            call-sym (symbol (str term "->asdl-type"))
-            ;; don't put the namespace on "term";
-            ;; nons-term is a const destructuring key,
-            ;; exactly ::term.
-            nons-trm (symbol "term")]
-        ;; (defmethod ->asdl-type :masr.specs/symbol
-        ;;   [#:masr.specs{:keys [term asr-symbol-head]}]
-        ;;   (symbol->asdl-type asr-symbol-head))
-        `(defmethod ->asdl-type ~mthd-key
-           [{~keys-key [~nons-trm ~nest-ksm]}]
-           (~call-sym ~nest-ksm))))
+  for dispatching to functions that extract the ASDL
+  types from MASR entities: types from examples."
+  [term]
+  (let [ns "masr.specs"
+        ;; like ::keys
+        keys-key (keyword ns "keys")
+        ;; like ::symbol or ::stmt, value of term
+        mthd-key (keyword ns (str term))
+        ;; like asr-symbol-head or asr-stmt-head, a key-symbol
+        ;; for destructuring
+        nest-ksm (symbol (str "asr-" term "-head"))
+        ;; like symbol->asdl-type or stmt->asdl-type
+        call-sym (symbol (str term "->asdl-type"))
+        ;; don't put the namespace on "term";
+        ;; nons-term is a const destructuring key,
+        ;; exactly ::term.
+        nons-trm (symbol "term")]
+    ;; (defmethod ->asdl-type :masr.specs/symbol
+    ;;   [#:masr.specs{:keys [term asr-symbol-head]}]
+    ;;   (symbol->asdl-type asr-symbol-head))
+    `(defmethod ->asdl-type ~mthd-key
+       [{~keys-key [~nons-trm ~nest-ksm]}]
+       (~call-sym ~nest-ksm))))
 ```
 
 # TERMS WITH NESTED MULTI-SPECS
@@ -671,138 +671,138 @@ via `s/def`.
 ## UNIT
 
 ```clojure
-    (defmulti  unit->asdl-type ::unit-head)
-    (term->asdl-type unit)
+(defmulti  unit->asdl-type ::unit-head)
+(term->asdl-type unit)
 
-    (defmasrtype
-     TranslationUnit unit
-     (SymbolTable
-      nodes))
+(defmasrtype
+ TranslationUnit unit
+ (SymbolTable
+  nodes))
 ```
 
 ## SYMBOL
 
 ```clojure
-    (defmulti  symbol->asdl-type ::symbol-head)
-    (term->asdl-type symbol) ;; Don't expand in CIDER! console only.
+(defmulti  symbol->asdl-type ::symbol-head)
+(term->asdl-type symbol) ;; Don't expand in CIDER! console only.
 
-    (defmasrtype
-     Program symbol
-     (SymbolTable
-      prognym
-      dependencies
-      body))
+(defmasrtype
+ Program symbol
+ (SymbolTable
+  prognym
+  dependencies
+  body))
 
-    (defmasrtype
-     Variable symbol
-     (symbol-head
-      symtab-id        varnym          dependencies
-      intent           symbolic-value  value
-      storage-type     ttype           abi
-      access           presence        value-attr
-      type-declaration))
+(defmasrtype
+ Variable symbol
+ (symbol-head
+  symtab-id        varnym          dependencies
+  intent           symbolic-value  value
+  storage-type     ttype           abi
+  access           presence        value-attr
+  type-declaration))
 
-    (defmasrtype
-     Module symbol
-     [symbol-head
-      SymbolTable
-      modulenym
-      dependencies
-      loaded-from-mod
-      intrinsic])
+(defmasrtype
+ Module symbol
+ [symbol-head
+  SymbolTable
+  modulenym
+  dependencies
+  loaded-from-mod
+  intrinsic])
 
-    (defmasrtype
-     Function symbol
-     (symbol-head
-      ;;----------------
-      SymbolTable ;; not a symtab-id!
-      ;;----------------
-      function-name
-      function-signature
-      dependencies
-      ;;----------------
-      params
-      body
-      return-var
-      ;;----------------
-      access
-      deterministic
-      side-effect-free
-      ))
+(defmasrtype
+ Function symbol
+ (symbol-head
+  ;;----------------
+  SymbolTable ;; not a symtab-id!
+  ;;----------------
+  function-name
+  function-signature
+  dependencies
+  ;;----------------
+  params
+  body
+  return-var
+  ;;----------------
+  access
+  deterministic
+  side-effect-free
+  ))
 ```
 
 ## STMT
 
 ```clojure
-    (defmulti  stmt->asdl-type ::stmt-head)
-    (term->asdl-type stmt)   ;; CIDER macro-expand removes namespace.
+(defmulti  stmt->asdl-type ::stmt-head)
+(term->asdl-type stmt)   ;; CIDER macro-expand removes namespace.
 
-    (defmasrtype
-     Assignment stmt
-     (lvalue
-      rvalue
-      overloaded))
+(defmasrtype
+ Assignment stmt
+ (lvalue
+  rvalue
+  overloaded))
 
-    (defmasrtype
-      SoubroutineCall stmt
-      (subr-nym
-       orig-nym
-       args
-       dt))
+(defmasrtype
+  SoubroutineCall stmt
+  (subr-nym
+   orig-nym
+   args
+   dt))
 ```
 
 ## EXPR
 
 ```clojure
-    (defmulti  expr->asdl-type ::expr-head)
-    (term->asdl-type expr)   ;;
+(defmulti  expr->asdl-type ::expr-head)
+(term->asdl-type expr)   ;;
 
-    (defmasrtype
-     LogicalBinOp expr
-     (logical-left
-      logicalbinop
-      logical-right
-      Logical
-      value))
+(defmasrtype
+ LogicalBinOp expr
+ (logical-left
+  logicalbinop
+  logical-right
+  Logical
+  value))
 
-    (defmasrtype
-     LogicalCompare expr
-     (expr-head
-      logical-left
-      logicalcmpop
-      logical-right
-      Logical
-      value))
+(defmasrtype
+ LogicalCompare expr
+ (expr-head
+  logical-left
+  logicalcmpop
+  logical-right
+  Logical
+  value))
 
-    (defmasrtype
-     LogicalConstant expr
-     (bool
-      Logical))
+(defmasrtype
+ LogicalConstant expr
+ (bool
+  Logical))
 
-    (defmasrtype
-     Var expr
-     (symtab-id
-      varnym))
+(defmasrtype
+ Var expr
+ (symtab-id
+  varnym))
 ```
 
 ## TTYPE
 
 ```clojure
-    (defmulti  ttype->asdl-type ::ttype-head)
-    (term->asdl-type ttype)
+(defmulti  ttype->asdl-type ::ttype-head)
+(term->asdl-type ttype)
 
-    (defmasrtype
-     Logical ttype
-     (logical-kind
-      dimensions))
+(defmasrtype
+ Logical ttype
+ (logical-kind
+  dimensions))
 
-    (defmasrtype
-      FunctionType ttype
-      (param-types     return-var-type  abi
-       deftype         bindc-name       elemental
-       pure            module           inline
-       static          type-params      restrictions
-       is-restriction))
+(defmasrtype
+  FunctionType ttype
+  (param-types     return-var-type  abi
+   deftype         bindc-name       elemental
+   pure            module           inline
+   static          type-params      restrictions
+   is-restriction))
 ```
 
 # SPECIAL CASES AND SUGAR
@@ -819,9 +819,9 @@ dictionaries. When checked by multi-specs,
 hash-maps are called _entities_. For example,
 
 ```clojure
-    ;; key         value
-    {::term        ::intent,
-     ::intent-enum 'Local}
+;; key         value
+{::term        ::intent,
+ ::intent-enum 'Local}
 ```
 
 In MASR, all keys in all hash-maps are
@@ -858,8 +858,8 @@ depend on order. The following two examples both
 conform to `::asr-term` and to `::ttype`:
 
 ```clojure
-    (Integer- {:dimensions [], :kind 4})
-    (Integer- {:kind 4, :dimensions []})
+(Integer- {:dimensions [], :kind 4})
+(Integer- {:kind 4, :dimensions []})
 ```
 
 The names of heavy-sugar functions, like
@@ -881,11 +881,11 @@ desired form:
 Heavy Sugar:
 
 ```clojure
-    (Variable-- 2 'x (Integer 4)
-                nil [] Local
-                [] []  Default
-                Source Public Required
-                false)
+(Variable-- 2 'x (Integer 4)
+            nil [] Local
+            [] []  Default
+            Source Public Required
+            false)
 ```
 
 Here is a legacy version of the same instance:
@@ -894,10 +894,10 @@ Here is a legacy version of the same instance:
 Legacy Sugar:
 
 ```clojure
-    (Variable 2 x []
-              Local () ()
-              Default (Integer 4 []) Source
-              Public Required false)
+(Variable 2 x []
+          Local () ()
+          Default (Integer 4 []) Source
+          Public Required false)
 ```
 
 Notice NO QUOTE MARK on the name of the variable.
@@ -917,10 +917,10 @@ defaults. For example, the following examples
 conform to both `::asr-term` and to `::ttype`:
 
 ```clojure
-    (Integer)
-    (Integer 4)
-    (Integer 2 [])
-    (Integer 8 [[6 60] [1 42]])
+(Integer)
+(Integer 4)
+(Integer 2 [])
+(Integer 8 [[6 60] [1 42]])
 ```
 
 # DIMENSION
@@ -946,8 +946,8 @@ Case with 1 index is disallowed.
 https://github.com/rebcabin/masr/issues/5
 
 ```clojure
-    (def MIN-DIMENSION-COUNT 0)
-    (def MAX-DIMENSION-COUNT 2)
+(def MIN-DIMENSION-COUNT 0)
+(def MAX-DIMENSION-COUNT 2)
 ```
 
 The next spec says that a `::dimension-content` is
@@ -955,13 +955,13 @@ a collection of `::nat` with either two or zero
 elements. TODO Consider a regex-spec.
 
 ```clojure
-    (s/def ::dimension-content
-      (s/and
-       (s/coll-of ::nat
-                  :min-count MIN-DIMENSION-COUNT,
-                  :max-count MAX-DIMENSION-COUNT,
-                  :into ())
-       (fn [it] (not (= 1 (count it))))))
+(s/def ::dimension-content
+  (s/and
+   (s/coll-of ::nat
+              :min-count MIN-DIMENSION-COUNT,
+              :max-count MAX-DIMENSION-COUNT,
+              :into ())
+   (fn [it] (not (= 1 (count it))))))
 ```
 
 The next spec says that a `dimension` in full-form
@@ -969,9 +969,9 @@ is an entity hash-map with keys `::term` and
 `::dimension-content`.
 
 ```clojure
-    (defmethod term ::dimension [_]
-      (s/keys :req [::term
-                    ::dimension-content]))
+(defmethod term ::dimension [_]
+  (s/keys :req [::term
+                ::dimension-content]))
 ```
 
 As usual, we need a term-entity key, `::dimension`,
@@ -993,19 +993,19 @@ This spec can generate samples.
 heavy sugar
 
 ```clojure
-    (defn dimension [candidate-contents]
-      (if (or (not (coll? candidate-contents))
-              (set? candidate-contents)
-              (map? candidate-contents))
-        ::invalid-dimension  ;; return this,
-        ;; else
-        (let [cnf (s/conform
-                   ::dimension
-                   {::term ::dimension,
-                    ::dimension-content candidate-contents})]
-          (if (s/invalid? cnf)
-            ::invalid-dimension
-            cnf))))
+(defn dimension [candidate-contents]
+  (if (or (not (coll? candidate-contents))
+          (set? candidate-contents)
+          (map? candidate-contents))
+    ::invalid-dimension  ;; return this,
+    ;; else
+    (let [cnf (s/conform
+               ::dimension
+               {::term ::dimension,
+                ::dimension-content candidate-contents})]
+      (if (s/invalid? cnf)
+        ::invalid-dimension
+        cnf))))
 ```
 
 # DIMENSIONS
@@ -1017,45 +1017,45 @@ lot more pluralities later. This is just the first
 example of a repeating pattern (TODO: macro?)
 
 ```clojure
-    (def MIN-NUMBER-OF-DIMENSIONS 0)
-    (def MAX-NUMBER-OF-DIMENSIONS 9)
+(def MIN-NUMBER-OF-DIMENSIONS 0)
+(def MAX-NUMBER-OF-DIMENSIONS 9)
 ```
 
 TODO Consider a regex-spec.
 
 ```clojure
-    (s/def ::dimensions
-      (s/coll-of (term-selector-spec ::dimension)
-                 :min-count MIN-NUMBER-OF-DIMENSIONS,
-                 :max-count MAX-NUMBER-OF-DIMENSIONS,
-                 :into []))
+(s/def ::dimensions
+  (s/coll-of (term-selector-spec ::dimension)
+             :min-count MIN-NUMBER-OF-DIMENSIONS,
+             :max-count MAX-NUMBER-OF-DIMENSIONS,
+             :into []))
 ```
 
 Generation of test cases does not currently work
 TODO https://github.com/rebcabin/masr/issues/14
 
 ```clojure
-    #_(gen/sample (s/gen ::dimensions) 3)
+#_(gen/sample (s/gen ::dimensions) 3)
 ```
 
 heavy sugar
 
 ```clojure
-    (defn dimensions
-      [candidate-contents]
-      (if (or (not (coll? candidate-contents))
-              (set? candidate-contents)
-              (map? candidate-contents))
+(defn dimensions
+  [candidate-contents]
+  (if (or (not (coll? candidate-contents))
+          (set? candidate-contents)
+          (map? candidate-contents))
+    ::invalid-dimensions
+    ;; else
+    (let [dims-coll (map dimension candidate-contents)
+          dims-conf (s/conform ::dimensions dims-coll)]
+      (if (s/invalid? dims-conf)
         ::invalid-dimensions
-        ;; else
-        (let [dims-coll (map dimension candidate-contents)
-              dims-conf (s/conform ::dimensions dims-coll)]
-          (if (s/invalid? dims-conf)
-            ::invalid-dimensions
-            (let [dims-cont (map
-                             ::dimension-content
-                             dims-conf)]
-              (map dimension dims-cont))))))
+        (let [dims-cont (map
+                         ::dimension-content
+                         dims-conf)]
+          (map dimension dims-cont))))))
 ```
 
 # SYMTAB-ID
@@ -1071,17 +1071,17 @@ secret proviso. MASR exposes the secret. ASDL
 embraces the secret.
 
 ```clojure
-    (s/def ::symtab-id ::nat)
+(s/def ::symtab-id ::nat)
 ```
 
 heavy sugar
 
 ```clojure
-    (defn symtab-id [it]
-      (let [cnf (s/conform ::symtab-id it)]
-        (if (s/invalid? cnf)
-          ::invalid-symtab-id
-          cnf)))
+(defn symtab-id [it]
+  (let [cnf (s/conform ::symtab-id it)]
+    (if (s/invalid? cnf)
+      ::invalid-symtab-id
+      cnf)))
 ```
 
 # SYMBOL-TABLE
@@ -1092,28 +1092,28 @@ nested multi-specs. We'll write it out fully by
 hand.
 
 ```clojure
-    (s/def ::hash-map map?)
+(s/def ::hash-map map?)
 
 
-    (defmethod term ::SymbolTable [_]
-      (s/keys :req [::term
-                    ::symtab-id
-                    ::hash-map]))
+(defmethod term ::SymbolTable [_]
+  (s/keys :req [::term
+                ::symtab-id
+                ::hash-map]))
 
 
-    (def-term-entity-key SymbolTable)
+(def-term-entity-key SymbolTable)
 ```
 
 heavy sugar
 
 ```clojure
-    (defn SymbolTable [id, hash-map]
-      (let [st {::term      ::SymbolTable
-                ::symtab-id id
-                ::hash-map  hash-map}]
-        (if (s/invalid? st)
-          ::invalid-symbol-table
-          st)))
+(defn SymbolTable [id, hash-map]
+  (let [st {::term      ::SymbolTable
+            ::symtab-id id
+            ::hash-map  hash-map}]
+    (if (s/invalid? st)
+      ::invalid-symbol-table
+      st)))
 ```
 
 # LEGACY MACRO
@@ -1149,44 +1149,44 @@ now, user-level code must call `legacy` when
 appropriate.
 
 ```clojure
-    (defn rewrite-for-legacy
-      "Replace = with Assignment anywhere in a MASR
-      sugared expression."
-      [it]
-      (prewalk
-       (fn [x]
-         (if (list? x)
-           (replace {'= 'Assignment--} x)
-           x))
-       it))
+(defn rewrite-for-legacy
+  "Replace = with Assignment anywhere in a MASR
+  sugared expression."
+  [it]
+  (prewalk
+   (fn [x]
+     (if (list? x)
+       (replace {'= 'Assignment--} x)
+       x))
+   it))
 
 
-    (defmacro legacy
-      "DANGER: Call 'eval'."
-      [it]
-      `(do (in-ns 'masr.specs)
-           (eval (rewrite-for-legacy '~it))))
+(defmacro legacy
+  "DANGER: Call 'eval'."
+  [it]
+  `(do (in-ns 'masr.specs)
+       (eval (rewrite-for-legacy '~it))))
 
 
-    (defmacro symbolate
-      "ASDL Back-Channel: create unquoted constants such as
-      Local for 'Local."
-      [a-set-syms]
-      (let [a-set (eval a-set-syms)
-            cmds (for [e a-set] (list 'def e `'~e))]
-        `(list ~@cmds)))
+(defmacro symbolate
+  "ASDL Back-Channel: create unquoted constants such as
+  Local for 'Local."
+  [a-set-syms]
+  (let [a-set (eval a-set-syms)
+        cmds (for [e a-set] (list 'def e `'~e))]
+    `(list ~@cmds)))
 
 
-    (defmacro legacicate
-      "ASDL Back-Channel: create legacy function-calls
-      for each constant, such as Local for (intent 'Local).
-      This works only because all heads are unique -- no
-      collisions in ASR."
-      [term,       ;; like intent
-       a-set-syms] ;; like #{Local, In, Out, ,,,}
-      (let [a-set (eval a-set-syms)
-            cmds  (for [e a-set] (list 'def e `(~term '~e)))]
-        `(list ~@cmds)))
+(defmacro legacicate
+  "ASDL Back-Channel: create legacy function-calls
+  for each constant, such as Local for (intent 'Local).
+  This works only because all heads are unique -- no
+  collisions in ASR."
+  [term,       ;; like intent
+   a-set-syms] ;; like #{Local, In, Out, ,,,}
+  (let [a-set (eval a-set-syms)
+        cmds  (for [e a-set] (list 'def e `(~term '~e)))]
+    `(list ~@cmds)))
 ```
 
 # ENUM-LIKE
@@ -1200,46 +1200,46 @@ and `Private`. MASR automates all of enum-likes
 via one macro.
 
 ```clojure
-    (defmacro enum-like
-      "Convert a set of symbols into a multi-spec under
-      ::asr-term. Add an entity-key spec like ::intent,
-      and a heavy sugar function like intent."
-      [term, heads]
-      (let [ns "masr.specs"
-            trm (keyword ns "term")     ;; like ::term
-            art (keyword ns "asr-term") ;; like ::asr-term
-            tkw (keyword ns (str term)) ;; like ::intent
-            tke (keyword ns (str term "-enum")) ;; like ::intent-enum
-            tki (keyword ns (str "invalid-" term))]
-        `(do
-           (s/def ~tke ~heads)
-           ;; for the multi-spec
-           (defmethod term ~tkw [_#]
-             (s/keys :req [~trm ~tke]))
-           ;; the entity-key spec
-           (s/def ~tkw ;; like ::intent
-             (s/and ~art ;; like ::asr-term, i.e., the multi-spec
-                    ;; like the predicate #(= ::intent (::term %))
-                    (term-selector-spec ~tkw)))
-           (defn ~term [it#] ;; the sugar
-             (let [cnf# (s/conform ~art
-                                   {~trm ~tkw
-                                    ~tke it#})
-                   result# (if (s/invalid? cnf#) ~tki, cnf#)]
-               result#))
-           #_(symbolicate ~heads)
-           (legacicate ~term ~heads)
-           )))
+(defmacro enum-like
+  "Convert a set of symbols into a multi-spec under
+  ::asr-term. Add an entity-key spec like ::intent,
+  and a heavy sugar function like intent."
+  [term, heads]
+  (let [ns "masr.specs"
+        trm (keyword ns "term")     ;; like ::term
+        art (keyword ns "asr-term") ;; like ::asr-term
+        tkw (keyword ns (str term)) ;; like ::intent
+        tke (keyword ns (str term "-enum")) ;; like ::intent-enum
+        tki (keyword ns (str "invalid-" term))]
+    `(do
+       (s/def ~tke ~heads)
+       ;; for the multi-spec
+       (defmethod term ~tkw [_#]
+         (s/keys :req [~trm ~tke]))
+       ;; the entity-key spec
+       (s/def ~tkw ;; like ::intent
+         (s/and ~art ;; like ::asr-term, i.e., the multi-spec
+                ;; like the predicate #(= ::intent (::term %))
+                (term-selector-spec ~tkw)))
+       (defn ~term [it#] ;; the sugar
+         (let [cnf# (s/conform ~art
+                               {~trm ~tkw
+                                ~tke it#})
+               result# (if (s/invalid? cnf#) ~tki, cnf#)]
+           result#))
+       #_(symbolicate ~heads)
+       (legacicate ~term ~heads)
+       )))
 
 
-    (enum-like logicalbinop #{'And  'Or  'Xor  'NEqv  'Eqv})
-    (enum-like cmpop        #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
-    (enum-like intent       #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
-    (enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
-    (enum-like logicalcmpop #{'Eq 'NotEq})
-    (enum-like access       #{'Public 'Private})
-    (enum-like presence     #{'Required 'Optional})
-    (enum-like deftype      #{'Implementation, 'Interface})
+(enum-like logicalbinop #{'And  'Or  'Xor  'NEqv  'Eqv})
+(enum-like cmpop        #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
+(enum-like intent       #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+(enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
+(enum-like logicalcmpop #{'Eq 'NotEq})
+(enum-like access       #{'Public 'Private})
+(enum-like presence     #{'Required 'Optional})
+(enum-like deftype      #{'Implementation, 'Interface})
 ```
 
 ## ABI
@@ -1248,74 +1248,74 @@ via one macro.
 `Abi` is a special case of enum-like with rich logic.
 
 ```clojure
-    (def external-abis
-      #{'LFortranModule, 'GFortranModule,
-        'BindC, 'Interactive, 'Intrinsic})
+(def external-abis
+  #{'LFortranModule, 'GFortranModule,
+    'BindC, 'Interactive, 'Intrinsic})
 
 
-    (def internal-abis #{'Source})
+(def internal-abis #{'Source})
 
 
-    (s/def ::abi-enum (set/union external-abis internal-abis))
+(s/def ::abi-enum (set/union external-abis internal-abis))
 
 
-    (s/def ::abi-external ::bool)
+(s/def ::abi-external ::bool)
 ```
 
 full-form
 
 ```clojure
-    (defmethod term ::abi [_]
-      (s/with-gen
-        (s/and
-         #(iff (= 'Source (::abi-enum %)) (not (::abi-external %)))
-         (s/keys :req [::term ::abi-enum ::abi-external]))
-        (fn []
-          (tgen/one-of
-           [(tgen/hash-map
-             ::term         (gen/return ::abi)
-             ::abi-enum     (s/gen external-abis)
-             ::abi-external (gen/return true))
-            (tgen/hash-map
-             ::term         (gen/return ::abi)
-             ::abi-enum     (s/gen internal-abis)
-             ::abi-external (gen/return false))] ))))
+(defmethod term ::abi [_]
+  (s/with-gen
+    (s/and
+     #(iff (= 'Source (::abi-enum %)) (not (::abi-external %)))
+     (s/keys :req [::term ::abi-enum ::abi-external]))
+    (fn []
+      (tgen/one-of
+       [(tgen/hash-map
+         ::term         (gen/return ::abi)
+         ::abi-enum     (s/gen external-abis)
+         ::abi-external (gen/return true))
+        (tgen/hash-map
+         ::term         (gen/return ::abi)
+         ::abi-enum     (s/gen internal-abis)
+         ::abi-external (gen/return false))] ))))
 
 
-    (def-term-entity-key abi)
+(def-term-entity-key abi)
 ```
 
 heavy sugar
 
 ```clojure
-    (defn abi
-      ;; arity 1 --- default "external"
-      ([the-enum]
-       (abi the-enum
-            :external (not (= the-enum 'Source))))
-      ;; arity 2 --- invalid
-      ([the-enum, crap]
-       ::invalid-abi)
-      ;; arity 3 --- light sugar
-      ([the-enum, ext-kw, the-bool]
-       (cond
-         (not (= ext-kw :external)) ::invalid-abi
-         :else
-         (let [cnf (s/conform ::abi
-                              {::term         ::abi,
-                               ::abi-enum     the-enum,
-                               ::abi-external the-bool})]
-           (if (s/invalid? cnf)
-             ::invalid-abi
-             cnf)))))
+(defn abi
+  ;; arity 1 --- default "external"
+  ([the-enum]
+   (abi the-enum
+        :external (not (= the-enum 'Source))))
+  ;; arity 2 --- invalid
+  ([the-enum, crap]
+   ::invalid-abi)
+  ;; arity 3 --- light sugar
+  ([the-enum, ext-kw, the-bool]
+   (cond
+     (not (= ext-kw :external)) ::invalid-abi
+     :else
+     (let [cnf (s/conform ::abi
+                          {::term         ::abi,
+                           ::abi-enum     the-enum,
+                           ::abi-external the-bool})]
+       (if (s/invalid? cnf)
+         ::invalid-abi
+         cnf)))))
 
 
-    (def LFortranModule (abi 'LFortranModule :external true))
-    (def GFortranModule (abi 'GFortranModule :external true))
-    (def BindC          (abi 'BindC          :external true))
-    (def Interactive    (abi 'Interactive    :external true))
-    (def Intrinsic      (abi 'Intrinsic      :external true))
-    (def Source         (abi 'Source         :external false))
+(def LFortranModule (abi 'LFortranModule :external true))
+(def GFortranModule (abi 'GFortranModule :external true))
+(def BindC          (abi 'BindC          :external true))
+(def Interactive    (abi 'Interactive    :external true))
+(def Intrinsic      (abi 'Intrinsic      :external true))
+(def Source         (abi 'Source         :external false))
 ```
 
 # TTYPE
@@ -1329,24 +1329,24 @@ etc., have additional structure we automate here.
 pluralities
 
 ```clojure
-    (def MIN-NUMBER-OF-TTYPES    0)
-    (def MAX-NUMBER-OF-TTYPES 1024)
+(def MIN-NUMBER-OF-TTYPES    0)
+(def MAX-NUMBER-OF-TTYPES 1024)
 ```
 
 TODO: Consider a regex-spec.
 
 ```clojure
-    (s/def ::ttypes (s/coll-of ::ttype
-                               :min-count MIN-NUMBER-OF-TTYPES
-                               :max-count MAX-NUMBER-OF-TTYPES))
+(s/def ::ttypes (s/coll-of ::ttype
+                           :min-count MIN-NUMBER-OF-TTYPES
+                           :max-count MAX-NUMBER-OF-TTYPES))
 ```
 
 TODO: Consider a regex-spec.
 
 ```clojure
-    (s/def ::ttypeq (s/coll-of ::ttype
-                               :min-count 0
-                               :max-count 1))
+(s/def ::ttype? (s/coll-of ::ttype
+                           :min-count 0
+                           :max-count 1))
 ```
 
 kind: The `kind` member selects the kind of a
@@ -1374,11 +1374,11 @@ given type. We currently support the following:
 support specs for subtypes
 
 ```clojure
-    (s/def ::integer-kind   #{1 2 4 8 16})
-    (s/def ::real-kind      #{4 8})
-    (s/def ::complex-kind   #{4 8})
-    (s/def ::logical-kind   #{1 2 4})
-    (s/def ::character-kind #{1})
+(s/def ::integer-kind   #{1 2 4 8 16})
+(s/def ::real-kind      #{4 8})
+(s/def ::complex-kind   #{4 8})
+(s/def ::logical-kind   #{1 2 4})
+(s/def ::character-kind #{1})
 ```
 
 Here are the first four ttypes, which all follow
@@ -1394,34 +1394,34 @@ ttype
 ```
 
 ```clojure
-    (defmacro def-ttype-head
-      "Defmethods for defmulti ttype-head, requiring
-      entity keywords ::ttype-head and ::dimensions.
-      Automates expressions like
+(defmacro def-ttype-head
+  "Defmethods for defmulti ttype-head, requiring
+  entity keywords ::ttype-head and ::dimensions.
+  Automates expressions like
 
-          (defmethod ttype-head ::Integer [_]
-            (s/keys :req [::ttype-head
-                          ::integer-kind ;; see specs above
-                          ::dimensions]))"
-      [it]
-      (let [ns     "masr.specs"
-            ;; Like "integer"
-            strit  (str it)
-            ;; Like ::Integer
-            method (keyword ns (str/capitalize strit))
-            ;; Like ::integer-kind
-            kind   (keyword ns (str (str/lower-case strit) "-kind"))]
-        `(defmethod ttype-head ~method [_#]
-           (s/keys :req [::ttype-head ~kind ::dimensions]))))
+      (defmethod ttype-head ::Integer [_]
+        (s/keys :req [::ttype-head
+                      ::integer-kind ;; see specs above
+                      ::dimensions]))"
+  [it]
+  (let [ns     "masr.specs"
+        ;; Like "integer"
+        strit  (str it)
+        ;; Like ::Integer
+        method (keyword ns (str/capitalize strit))
+        ;; Like ::integer-kind
+        kind   (keyword ns (str (str/lower-case strit) "-kind"))]
+    `(defmethod ttype-head ~method [_#]
+       (s/keys :req [::ttype-head ~kind ::dimensions]))))
 ```
 
 ## INTEGER, REAL, COMPLEX, LOGICAL
 
 ```clojure
-    (def-ttype-head Integer)
-    (def-ttype-head Real)
-    (def-ttype-head Complex)
-    (def-ttype-head Logical)
+(def-ttype-head Integer)
+(def-ttype-head Real)
+(def-ttype-head Complex)
+(def-ttype-head Logical)
 ```
 
 TODO: `Character` is more rich
@@ -1430,170 +1430,170 @@ TODO: `Character` is more rich
 heavy sugar
 
 ```clojure
-    (defn ttype
-      "Given a conforming full-form ::asr-type-head
-      subtype like
+(defn ttype
+  "Given a conforming full-form ::asr-type-head
+  subtype like
 
-          {::ttype-head   ::Integer,
-           ::integer-kind 4,
-           ::dimensions   []}
+      {::ttype-head   ::Integer,
+       ::integer-kind 4,
+       ::dimensions   []}
 
-      produce a conforming ttype like
+  produce a conforming ttype like
 
-          {::term ::ttype,
-           ::asr-ttype-head
-           {::ttype-head   ::Integer,
-            ::integer-kind 4,
-            ::dimensions   []}}"
-      [it]
-      (let [cnf (s/conform ::ttype
-                           {::term ::ttype,
-                            ::asr-ttype-head it})]
-        (if (s/invalid? cnf)
-          ::invalid-ttype
-          cnf)))
+      {::term ::ttype,
+       ::asr-ttype-head
+       {::ttype-head   ::Integer,
+        ::integer-kind 4,
+        ::dimensions   []}}"
+  [it]
+  (let [cnf (s/conform ::ttype
+                       {::term ::ttype,
+                        ::asr-ttype-head it})]
+    (if (s/invalid? cnf)
+      ::invalid-ttype
+      cnf)))
 ```
 
 light sugar and heavy sugar
 
 ```clojure
-    (defmacro def-ttype-and-head
-      "Define light-sugar functions Integer-, Real-,
-      etc., that take a full hash-map of arguments,
-      e.g.,
+(defmacro def-ttype-and-head
+  "Define light-sugar functions Integer-, Real-,
+  etc., that take a full hash-map of arguments,
+  e.g.,
 
-          (Integer- {:kind 4, :dimensions []})
+      (Integer- {:kind 4, :dimensions []})
 
-      Define heavy-sugar functions like Integer, Real,
-      etc., that take positional arguments, with defaults,
-      e.g.,
+  Define heavy-sugar functions like Integer, Real,
+  etc., that take positional arguments, with defaults,
+  e.g.,
 
-          (Integer 4 [])
-          (Integer 4) ;; default scalar ttype
-          (Integer)   ;; default 4-byte scalar ttype"
-      [it]
-      (let [ns  "masr.specs"
-            cap (str/capitalize (str it)) ;; like "Integer"
-            scp (symbol cap)              ;; Like Integer  (heavy sugar)
-            lcp (symbol (str cap "-"))    ;; like Integer- (light sugar)
-            tth (keyword ns cap)          ;; like ::Integer
-            kdh (keyword ns (str/lower-case (str it "-kind")))
-            ;; ... like ::integer-kind
-            ivh (keyword ns (str/lower-case
-                             (str "invalid-" it "-ttype")))
-            ;; ... like ::invalid-integer-ttype
-            dfk 4  ;; default kind
-            dfd [] ;; default dimensions
-            _   (case scp
-                  Integer true
-                  Real    true
-                  Complex true
-                  Logical true
-                  (throw (java.lang.IllegalArgumentException.
-                          (f-str "Can't define sugar for {cap}."))))]
-        `(do
-           ;; Define the LIGHT-SUGAR fns Integer-,
-           ;; Real-, Complex- Logical-, that require a
-           ;; full map of arguments, like
-           ;; (Integer- {:kind 4 :dimensions []}
-           (defn ~lcp ;; like Integer-
-             [{kind# :kind, dims# :dimensions}]
-             (let [cnf# (s/conform
-                         ::asr-ttype-head
-                         {::ttype-head ~tth,  ;; like ::Integer
-                          ~kdh         kind#, ;; like ::integer-kind
-                          ::dimensions (dimensions dims#)})]
-               (if (s/invalid? cnf#) ~ivh, (ttype cnf#))))
-           ;; Define the HEAVY-SUGAR fns Integer, Real,
-           ;; Complex Logical, Character that take
-           ;; positional arguments, like
-           ;; (Integer 4 []), (Integer 4), (Integer)
-           (defn ~scp ;; like Integer
-             ;; arity-2
-             ([kindx# dimsx#]
-              (~lcp {:kind kindx# :dimensions dimsx#}))
-             ;; arity-1
-             ([kindy#]
-              (~lcp {:kind kindy# :dimensions ~dfd}))
-             ;; dfk = 4  is the default kinds for
-             ;;          Integer, Real, Complex, Logical
-             ;; dfd = [] is the default dimensions
-             ;; arity-0
-             ([]
-              (~lcp {:kind ~dfk   :dimensions ~dfd})))
-           ;; TODO ? entity keywords for ::Integer, ::Real, etc.
-           )))
-
-
-    (def-ttype-and-head Integer)
-    (def-ttype-and-head Real)
-    (def-ttype-and-head Complex)
-    (def-ttype-and-head Logical)
+      (Integer 4 [])
+      (Integer 4) ;; default scalar ttype
+      (Integer)   ;; default 4-byte scalar ttype"
+  [it]
+  (let [ns  "masr.specs"
+        cap (str/capitalize (str it)) ;; like "Integer"
+        scp (symbol cap)              ;; Like Integer  (heavy sugar)
+        lcp (symbol (str cap "-"))    ;; like Integer- (light sugar)
+        tth (keyword ns cap)          ;; like ::Integer
+        kdh (keyword ns (str/lower-case (str it "-kind")))
+        ;; ... like ::integer-kind
+        ivh (keyword ns (str/lower-case
+                         (str "invalid-" it "-ttype")))
+        ;; ... like ::invalid-integer-ttype
+        dfk 4  ;; default kind
+        dfd [] ;; default dimensions
+        _   (case scp
+              Integer true
+              Real    true
+              Complex true
+              Logical true
+              (throw (java.lang.IllegalArgumentException.
+                      (f-str "Can't define sugar for {cap}."))))]
+    `(do
+       ;; Define the LIGHT-SUGAR fns Integer-,
+       ;; Real-, Complex- Logical-, that require a
+       ;; full map of arguments, like
+       ;; (Integer- {:kind 4 :dimensions []}
+       (defn ~lcp ;; like Integer-
+         [{kind# :kind, dims# :dimensions}]
+         (let [cnf# (s/conform
+                     ::asr-ttype-head
+                     {::ttype-head ~tth,  ;; like ::Integer
+                      ~kdh         kind#, ;; like ::integer-kind
+                      ::dimensions (dimensions dims#)})]
+           (if (s/invalid? cnf#) ~ivh, (ttype cnf#))))
+       ;; Define the HEAVY-SUGAR fns Integer, Real,
+       ;; Complex Logical, Character that take
+       ;; positional arguments, like
+       ;; (Integer 4 []), (Integer 4), (Integer)
+       (defn ~scp ;; like Integer
+         ;; arity-2
+         ([kindx# dimsx#]
+          (~lcp {:kind kindx# :dimensions dimsx#}))
+         ;; arity-1
+         ([kindy#]
+          (~lcp {:kind kindy# :dimensions ~dfd}))
+         ;; dfk = 4  is the default kinds for
+         ;;          Integer, Real, Complex, Logical
+         ;; dfd = [] is the default dimensions
+         ;; arity-0
+         ([]
+          (~lcp {:kind ~dfk   :dimensions ~dfd})))
+       ;; TODO ? entity keywords for ::Integer, ::Real, etc.
+       )))
 
 
-    (def-term-head--entity-key ttype Integer)
-    (def-term-head--entity-key ttype Real)
-    (def-term-head--entity-key ttype Complex)
-    (def-term-head--entity-key ttype Logical)
+(def-ttype-and-head Integer)
+(def-ttype-and-head Real)
+(def-ttype-and-head Complex)
+(def-ttype-and-head Logical)
+
+
+(def-term-head--entity-key ttype Integer)
+(def-term-head--entity-key ttype Real)
+(def-term-head--entity-key ttype Complex)
+(def-term-head--entity-key ttype Logical)
 ```
 
 TODO the rest of the ttypes
 
 ```c
-    >>> Integer, Real, Complex, Logical are already done ...
-    >>> FunctionType is done.
-    >>> Here are the rest of the ttypes.
-    | Character(int kind, int len, expr? len_expr, dimension* dims)
-    | Set(ttype type)
-    | List(ttype type)
-    | Tuple(ttype* type)
-    | Struct(symbol derived_type, dimension* dims)
-    | Enum(symbol enum_type, dimension *dims)
-    | Union(symbol union_type, dimension *dims)
-    | Class(symbol class_type, dimension* dims)
-    | Dict(ttype key_type, ttype value_type)
-    | Pointer(ttype type)
-    | Const(ttype type)
-    | CPtr()
-    | TypeParameter(identifier param, dimension* dims)
+>>> Integer, Real, Complex, Logical are already done ...
+>>> FunctionType is done.
+>>> Here are the rest of the ttypes.
+| Character(int kind, int len, expr? len_expr, dimension* dims)
+| Set(ttype type)
+| List(ttype type)
+| Tuple(ttype* type)
+| Struct(symbol derived_type, dimension* dims)
+| Enum(symbol enum_type, dimension *dims)
+| Union(symbol union_type, dimension *dims)
+| Class(symbol class_type, dimension* dims)
+| Dict(ttype key_type, ttype value_type)
+| Pointer(ttype type)
+| Const(ttype type)
+| CPtr()
+| TypeParameter(identifier param, dimension* dims)
 ```
 
 ## FUNCTION-TYPE
 
 ```c
-    | FunctionType(ttype*  arg_types,       ;; rename param-types
-                   ttype?  return_var_type,
-                   abi     abi,
-                   deftype deftype,
-                   string? bindc_name,
-                   bool    elemental,
-                   bool    pure,
-                   bool    module,
-                   bool    inline,
-                   bool    static,
-                   ttype*  type_params,
-                   symbol* restrictions,
-                   bool    is_restriction)
+| FunctionType(ttype*  arg_types,       ;; rename param-types
+               ttype?  return_var_type,
+               abi     abi,
+               deftype deftype,
+               string? bindc_name,
+               bool    elemental,
+               bool    pure,
+               bool    module,
+               bool    inline,
+               bool    static,
+               ttype*  type_params,
+               symbol* restrictions,
+               bool    is_restriction)
 ```
 
 prerequisite type aliases:
 
 ```clojure
-    (s/def ::param-types     ::ttypes)
-    (s/def ::return-var-type ::ttypeq)
+(s/def ::param-types     ::ttypes)
+(s/def ::return-var-type ::ttype?)
 ```
 
 * `ABI` is already good enough.
 * `deftype` is found above
 
 ```clojure
-    (s/def ::bindc-name      (s/nilable string?))
-    (s/def ::elemental       ::bool)
-    (s/def ::pure            ::bool)
-    (s/def ::module          ::bool)
-    (s/def ::inline          ::bool)
-    (s/def ::static          ::bool)
-    (s/def ::type-params     ::ttypes)
+(s/def ::bindc-name      (s/nilable string?))
+(s/def ::elemental       ::bool)
+(s/def ::pure            ::bool)
+(s/def ::module          ::bool)
+(s/def ::inline          ::bool)
+(s/def ::static          ::bool)
+(s/def ::type-params     ::ttypes)
 ```
 
 pluralities:
@@ -1606,61 +1606,59 @@ restrictions until `symbol` is properly defined
 below.
 
 ```clojure
-    (def MIN-NUMBER-OF-SYMBOLS   0)
-    (def MAX-NUMBER-OF-SYMBOLS 128)
+(def MIN-NUMBER-OF-SYMBOLS   0)
+(def MAX-NUMBER-OF-SYMBOLS 128)
 ```
 
 TODO: Consider a regex-spec.
 
 ```clojure
-    (s/def ::symbols (s/coll-of ::symbol
-                                :min-count MIN-NUMBER-OF-SYMBOLS
-                                :max-count MAX-NUMBER-OF-SYMBOLS))
+(s/def ::symbols (s/coll-of ::symbol
+                            :min-count MIN-NUMBER-OF-SYMBOLS
+                            :max-count MAX-NUMBER-OF-SYMBOLS))
 ```
-
-`symbol?` is written `symbolq`.
 
 TODO: Consider a regex-spec.
 
 ```clojure
-    (s/def ::symbolq (s/coll-of ::symbol :min-count 0, :max-count 1))
-    (s/def ::restrictions    ::symbols)
-    (s/def ::is-restriction  ::bool)
+(s/def ::symbol? (s/coll-of ::symbol :min-count 0, :max-count 1))
+(s/def ::restrictions    ::symbols)
+(s/def ::is-restriction  ::bool)
 ```
 
 heavy sugar
 
 ```clojure
-    (defn FunctionType
-      [param-types-     return-var-type-  abi-
-       deftype-         bindc-name-       elemental-
-       pure-            module-           inline-
-       static-          type-params-      restrictions-
-       is-restriction-  ]
-      (let [cnf {::term ::ttype
-                 ::asr-ttype-head
-                 {::ttype-head       ::FunctionType
+(defn FunctionType
+  [param-types-     return-var-type-  abi-
+   deftype-         bindc-name-       elemental-
+   pure-            module-           inline-
+   static-          type-params-      restrictions-
+   is-restriction-  ]
+  (let [cnf {::term ::ttype
+             ::asr-ttype-head
+             {::ttype-head       ::FunctionType
 
-                  ::param-types      param-types-
-                  ::return-var-type  return-var-type-
-                  ::abi              abi-
+              ::param-types      param-types-
+              ::return-var-type  return-var-type-
+              ::abi              abi-
 
-                  ::deftype          deftype-
-                  ::bindc-name       (if (empty? bindc-name-) nil bindc-name-)
-                  ::elemental        elemental-
+              ::deftype          deftype-
+              ::bindc-name       (if (empty? bindc-name-) nil bindc-name-)
+              ::elemental        elemental-
 
-                  ::pure             pure-
-                  ::module           module-
-                  ::inline           inline-
+              ::pure             pure-
+              ::module           module-
+              ::inline           inline-
 
-                  ::static           static-
-                  ::type-params      type-params-
-                  ::restrictions     restrictions-
+              ::static           static-
+              ::type-params      type-params-
+              ::restrictions     restrictions-
 
-                  ::is-restriction   is-restriction-}}]
-        (if (s/invalid? cnf)
-          :invalid-function-type
-          cnf)))
+              ::is-restriction   is-restriction-}}]
+    (if (s/invalid? cnf)
+      :invalid-function-type
+      cnf)))
 ```
 
 # PLACEHOLDERS
@@ -1669,25 +1667,25 @@ heavy sugar
 ## SYMBOLIC VALUE
 
 ```clojure
-    (s/def ::symbolic-value empty?)
+(s/def ::symbolic-value empty?)
 ```
 
 sugar
 
 ```clojure
-    (def symbolic-value identity)
+(def symbolic-value identity)
 ```
 
 ## VALUE
 
 ```clojure
-    (s/def ::value empty?)
+(s/def ::value empty?)
 ```
 
 sugar
 
 ```clojure
-    (def value identity)
+(def value identity)
 ```
 
 # EXPR
@@ -1696,24 +1694,24 @@ sugar
 pluralities
 
 ```clojure
-    (def MIN-NUMBER-OF-EXPRS    0)
-    (def MAX-NUMBER-OF-EXPRS 1024)
+(def MIN-NUMBER-OF-EXPRS    0)
+(def MAX-NUMBER-OF-EXPRS 1024)
 ```
 
 TODO: Consider a regex-spec.
 
 ```clojure
-    (s/def ::exprs (s/coll-of ::expr
-                              :min-count MIN-NUMBER-OF-EXPRS
-                              :max-count MAX-NUMBER-OF-EXPRS))
+(s/def ::exprs (s/coll-of ::expr
+                          :min-count MIN-NUMBER-OF-EXPRS
+                          :max-count MAX-NUMBER-OF-EXPRS))
 ```
 
 TODO: Consider a regex-spec.
 
 ```clojure
-    (s/def ::exprq (s/coll-of ::expr
-                              :min-count 0
-                              :max-count 1))
+(s/def ::expr? (s/coll-of ::expr
+                          :min-count 0
+                          :max-count 1))
 ```
 
 ## LOGICAL CONSTANT
@@ -1725,20 +1723,20 @@ TODO: Consider a regex-spec.
 heavy sugar
 
 ```clojure
-    (defn LogicalConstant
-      ;; arity-2
-      ([a-bool, a-ttype]
-       (let [cnf {::term ::expr,
-                  ::asr-expr-head
-                  {::expr-head ::LogicalConstant
-                   ::bool      a-bool
-                   ::Logical   a-ttype}}]
-         (if (s/invalid? cnf)
-           :invalid-logical-constant
-           cnf)))
-      ;; arity-1
-      ([a-bool]
-       (LogicalConstant a-bool (Logical))))
+(defn LogicalConstant
+  ;; arity-2
+  ([a-bool, a-ttype]
+   (let [cnf {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ::LogicalConstant
+               ::bool      a-bool
+               ::Logical   a-ttype}}]
+     (if (s/invalid? cnf)
+       :invalid-logical-constant
+       cnf)))
+  ;; arity-1
+  ([a-bool]
+   (LogicalConstant a-bool (Logical))))
 ```
 
 ## VAR
@@ -1764,29 +1762,29 @@ Var(symtab_id stid, identifier it)
 prerequisite type alias:
 
 ```clojure
-    (s/def ::varnym           ::identifier)
+(s/def ::varnym           ::identifier)
 ```
 
 heavy sugar
 
 ```clojure
-    (defn Var-- [stid, ident]
-      (let [cnf {::term ::expr,
-                 ::asr-expr-head
-                 {::expr-head  ::Var
-                  ::symtab-id  stid
-                  ::varnym     ident
-                  }}]
-        (if (s/invalid? cnf)
-          :invalid-var
-          cnf)))
+(defn Var-- [stid, ident]
+  (let [cnf {::term ::expr,
+             ::asr-expr-head
+             {::expr-head  ::Var
+              ::symtab-id  stid
+              ::varnym     ident
+              }}]
+    (if (s/invalid? cnf)
+      :invalid-var
+      cnf)))
 ```
 
 legacy sugar
 
 ```clojure
-    (defmacro Var [stid, unquoted-ident]
-      `(Var-- ~stid '~unquoted-ident))
+(defmacro Var [stid, unquoted-ident]
+  `(Var-- ~stid '~unquoted-ident))
 ```
 
 TODO: make it look up a value in the
@@ -1816,26 +1814,27 @@ prerequisite type aliases:
 TODO: check that the types of the exprs are `::Logical`!
 
 ```clojure
-    (s/def ::logical-left  ::expr)
-    (s/def ::logical-right ::expr)
+(s/def ::logical-left  ::expr)
+(s/def ::logical-right ::expr)
 ```
 
 heavy sugar
 
-    (defn LogicalBinOp [left- lbo- right- tt- val-]
-      (let [cnf {::term ::expr,
-                 ::asr-expr-head
-                 {::expr-head     ::LogicalBinOp
-                  ::logical-left  left-
-                  ::logicalbinop  lbo-
-                  ::logical-right right-
-                  ::Logical       tt-
-                  ::value         val-
-                  }}]
-        (if (s/invalid? cnf)
-          :invalid-logical-bin-op
-          cnf)))
-
+```clojure
+(defn LogicalBinOp [left- lbo- right- tt- val-]
+  (let [cnf {::term ::expr,
+             ::asr-expr-head
+             {::expr-head     ::LogicalBinOp
+              ::logical-left  left-
+              ::logicalbinop  lbo-
+              ::logical-right right-
+              ::Logical       tt-
+              ::value         val-
+              }}]
+    (if (s/invalid? cnf)
+      :invalid-logical-bin-op
+      cnf)))
+```
 
 ## LOGICAL COMPARE
 
@@ -1858,18 +1857,18 @@ heavy sugar
 heavy sugar
 
 ```clojure
-    (defn LogicalCompare [l- cmp- r- tt- val-]
-      (let [cnf {::term ::expr,
-                 ::asr-expr-head
-                 {::expr-head     ::LogicalCompare
-                  ::logical-left  l-
-                  ::logicalcmpop  cmp-
-                  ::logical-right r-
-                  ::Logical       tt-
-                  ::value         val-}}]
-        (if (s/invalid? cnf)
-          :invalid-logical-compare
-          cnf)))
+(defn LogicalCompare [l- cmp- r- tt- val-]
+  (let [cnf {::term ::expr,
+             ::asr-expr-head
+             {::expr-head     ::LogicalCompare
+              ::logical-left  l-
+              ::logicalcmpop  cmp-
+              ::logical-right r-
+              ::Logical       tt-
+              ::value         val-}}]
+    (if (s/invalid? cnf)
+      :invalid-logical-compare
+      cnf)))
 ```
 
 
@@ -1879,24 +1878,24 @@ heavy sugar
 pluralities
 
 ```clojure
-    (def MIN-NUMBER-OF-STMTS    0)
-    (def MAX-NUMBER-OF-STMTS 1024)
+(def MIN-NUMBER-OF-STMTS    0)
+(def MAX-NUMBER-OF-STMTS 1024)
 ```
 
 TODO: Consider a regex-spec.
 
 ```clojure
-    (s/def ::stmts (s/coll-of ::stmt
-                              :min-count MIN-NUMBER-OF-STMTS
-                              :max-count MAX-NUMBER-OF-STMTS))
+(s/def ::stmts (s/coll-of ::stmt
+                          :min-count MIN-NUMBER-OF-STMTS
+                          :max-count MAX-NUMBER-OF-STMTS))
 ```
 
 TODO: Consider a regex-spec.
 
 ```clojure
-    (s/def ::stmtq (s/coll-of ::stmt
-                              :min-count 0
-                              :max-count 1))
+(s/def ::stmt? (s/coll-of ::stmt
+                          :min-count 0
+                          :max-count 1))
 ```
 
 
@@ -1920,24 +1919,24 @@ TODO: more cases for `lvalue`, and an `s/or`
 with `second` hack
 
 ```clojure
-    (s/def ::lvalue     ::Var)
-    (s/def ::rvalue     ::expr)
-    (s/def ::overloaded ::stmtq)
+(s/def ::lvalue     ::Var)
+(s/def ::rvalue     ::expr)
+(s/def ::overloaded ::stmt?)
 ```
 
 heavy sugar
 
 ```clojure
-    (defn Assignment-- [lhs, rhs, unk]
-      (let [cnf {::term ::stmt,
-                 ::asr-stmt-head
-                 {::stmt-head   ::Assignment
-                  ::lvalue      lhs
-                  ::rvalue      rhs
-                  ::overloaded  unk}}]
-        (if (s/invalid? cnf)
-          :invalid-assignment
-          cnf)))
+(defn Assignment-- [lhs, rhs, unk]
+  (let [cnf {::term ::stmt,
+             ::asr-stmt-head
+             {::stmt-head   ::Assignment
+              ::lvalue      lhs
+              ::rvalue      rhs
+              ::overloaded  unk}}]
+    (if (s/invalid? cnf)
+      :invalid-assignment
+      cnf)))
 ```
 
 ## SUBROUTINE CALL
@@ -1990,151 +1989,151 @@ heavy sugar
 prerequisite type aliases:
 
 ```clojure
-    (s/def ::value-attr       ::bool)
+(s/def ::value-attr       ::bool)
 ```
 
 `varnym` already defined for Var.
 https://github.com/rebcabin/masr/issues/28
 
 ```clojure
-    (s/def ::type-declaration (s/nilable ::symtab-id))
+(s/def ::type-declaration (s/nilable ::symtab-id))
 ```
 
 TODO: there is ambiguity regarding identifier-sets and lists:
 
 ```clojure
-    (s/def ::dependencies     ::identifier-set)
+(s/def ::dependencies     ::identifier-set)
 ```
 
 light sugar
 
 ```clojure
-    (defn Variable-
-      [& {:keys [ ;; required
-                 symtab-id,          varnym,         ttype,
-                 ;; defaulted
-                 type-declaration,   dependencies,   intent,
-                 symbolic-value,     value,          storage-type,
-                 abi,                access,         presence,
-                 value-attr
-                 ]
-          :or {type-declaration nil
-               dependencies     ()
-               intent           (intent 'Local)
+(defn Variable-
+  [& {:keys [ ;; required
+             symtab-id,          varnym,         ttype,
+             ;; defaulted
+             type-declaration,   dependencies,   intent,
+             symbolic-value,     value,          storage-type,
+             abi,                access,         presence,
+             value-attr
+             ]
+      :or {type-declaration nil
+           dependencies     ()
+           intent           (intent 'Local)
 
-               symbolic-value   ()
-               value            ()
-               storage-type     (storage-type 'Default)
+           symbolic-value   ()
+           value            ()
+           storage-type     (storage-type 'Default)
 
-               abi              Source
-               access           Public
-               presence         Required
-               value-attr       false}}]
-      (let [cnf (s/conform ::Variable
-                           {::term              ::symbol,
-                            ::asr-symbol-head
-                            {::symbol-head      ::Variable,
+           abi              Source
+           access           Public
+           presence         Required
+           value-attr       false}}]
+  (let [cnf (s/conform ::Variable
+                       {::term              ::symbol,
+                        ::asr-symbol-head
+                        {::symbol-head      ::Variable,
 
-                             ::symtab-id        symtab-id,
-                             ::varnym           varnym,
-                             ::ttype            ttype,
+                         ::symtab-id        symtab-id,
+                         ::varnym           varnym,
+                         ::ttype            ttype,
 
-                             ::type-declaration type-declaration,
-                             ::dependencies     dependencies,
-                             ::intent           intent,
+                         ::type-declaration type-declaration,
+                         ::dependencies     dependencies,
+                         ::intent           intent,
 
-                             ::symbolic-value   symbolic-value,
-                             ::value            value,
-                             ::storage-type     storage-type,
+                         ::symbolic-value   symbolic-value,
+                         ::value            value,
+                         ::storage-type     storage-type,
 
-                             ::abi              abi,
-                             ::access           access,
-                             ::presence         presence,
+                         ::abi              abi,
+                         ::access           access,
+                         ::presence         presence,
 
-                             ::value-attr       value-attr,
-                             }})]
-        (if (s/invalid? cnf)
-          ::invalid-variable
-          cnf)))
+                         ::value-attr       value-attr,
+                         }})]
+    (if (s/invalid? cnf)
+      ::invalid-variable
+      cnf)))
 ```
 
 heavy sugar
 
 ```clojure
-    (defn Variable--
-      "Heavy sugar; parameters that collide with functions
-      have trailing hyphens."
-      [symtab-id-,         varnym-,        ttype-,
-       typedecl-,          dependencies-,  intent-,
-       symbolic-value-,    value-,         storage-type-,
-       abi-,               access-,        presence-,
-       value-attr-]
-      (let [cnf (s/conform
-                 ::Variable
-                 {::term              ::symbol,
-                  ::asr-symbol-head
-                  {::symbol-head      ::Variable,
+(defn Variable--
+  "Heavy sugar; parameters that collide with functions
+  have trailing hyphens."
+  [symtab-id-,         varnym-,        ttype-,
+   typedecl-,          dependencies-,  intent-,
+   symbolic-value-,    value-,         storage-type-,
+   abi-,               access-,        presence-,
+   value-attr-]
+  (let [cnf (s/conform
+             ::Variable
+             {::term              ::symbol,
+              ::asr-symbol-head
+              {::symbol-head      ::Variable,
 
-                   ::symtab-id        symtab-id-,
-                   ::varnym           varnym-,
-                   ::ttype            ttype-, ;; already wrapped!
+               ::symtab-id        symtab-id-,
+               ::varnym           varnym-,
+               ::ttype            ttype-, ;; already wrapped!
 
-                   ;; https://github.com/rebcabin/masr/issues/28
-                   ::type-declaration typedecl-
-                   ::dependencies     dependencies-,
-                   ::intent           (if (symbol? intent-)
-                                        (intent  intent-)
-                                        intent-),
+               ;; https://github.com/rebcabin/masr/issues/28
+               ::type-declaration typedecl-
+               ::dependencies     dependencies-,
+               ::intent           (if (symbol? intent-)
+                                    (intent  intent-)
+                                    intent-),
 
-                   ::symbolic-value   symbolic-value-,
-                   ::value            value-,
-                   ::storage-type     (if (symbol? storage-type-)
-                                        (storage-type storage-type-)
-                                        storage-type-),
+               ::symbolic-value   symbolic-value-,
+               ::value            value-,
+               ::storage-type     (if (symbol? storage-type-)
+                                    (storage-type storage-type-)
+                                    storage-type-),
 
-                   ::abi              (if (symbol? abi-)
-                                        (abi abi-)
-                                        abi-),
-                   ::access           (if (symbol? access-)
-                                        (access access-)
-                                        access-),
-                   ::presence         (if (symbol? presence-)
-                                        (presence presence-)
-                                        presence-),
+               ::abi              (if (symbol? abi-)
+                                    (abi abi-)
+                                    abi-),
+               ::access           (if (symbol? access-)
+                                    (access access-)
+                                    access-),
+               ::presence         (if (symbol? presence-)
+                                    (presence presence-)
+                                    presence-),
 
-                   ::value-attr       value-attr-,
-                   }})]
-        (if (s/invalid? cnf)
-          ::invalid-variable
-          cnf)))
+               ::value-attr       value-attr-,
+               }})]
+    (if (s/invalid? cnf)
+      ::invalid-variable
+      cnf)))
 ```
 
 legacy sugar
 
 ```clojure
-    (defmacro Variable
-      "Honor legacy parameter order of
-      lpython/src/libasr/ASR.asdl as of 25 April 2023.
-      Quote the varnym and pass along all other params."
-      [symtab-id-,     varnym-,          dependencies-,
-       intent-,        symbolic-value-,  value-,
-       storage-type-,  ttype-,           abi-,
-       access-,        presence-,        value-attr-]
-      `(Variable-- ;; heavy sugar
-        ~symtab-id-
-        '~varnym-  ;; notice the tick mark
-        ~ttype-    ;; moved up from between storage type and abi
-        nil ;; legacy doesn't have type-declaration
-        ~dependencies-
-        ~intent-
-        ~symbolic-value-
-        ~value-
-        ~storage-type-
-        ;; ttype goes here in legacy
-        ~abi-
-        ~access-
-        ~presence-
-        ~value-attr-))
+(defmacro Variable
+  "Honor legacy parameter order of
+  lpython/src/libasr/ASR.asdl as of 25 April 2023.
+  Quote the varnym and pass along all other params."
+  [symtab-id-,     varnym-,          dependencies-,
+   intent-,        symbolic-value-,  value-,
+   storage-type-,  ttype-,           abi-,
+   access-,        presence-,        value-attr-]
+  `(Variable-- ;; heavy sugar
+    ~symtab-id-
+    '~varnym-  ;; notice the tick mark
+    ~ttype-    ;; moved up from between storage type and abi
+    nil ;; legacy doesn't have type-declaration
+    ~dependencies-
+    ~intent-
+    ~symbolic-value-
+    ~value-
+    ~storage-type-
+    ;; ttype goes here in legacy
+    ~abi-
+    ~access-
+    ~presence-
+    ~value-attr-))
 ```
 
 
@@ -2149,26 +2148,26 @@ legacy sugar
 prerequisite type aliases:
 
 ```clojure
-    (s/def ::modulenym       ::identifier)
-    (s/def ::loaded-from-mod ::bool)
-    (s/def ::intrinsic       ::bool)
+(s/def ::modulenym       ::identifier)
+(s/def ::loaded-from-mod ::bool)
+(s/def ::intrinsic       ::bool)
 ```
 
 heavy sugar
 
 ```clojure
-    (defn Module [symtab, modnym, deps, loaded, intrinsic-]
-      (let [cnf {::term ::symbol
-                 ::asr-symbol-head
-                 {::symbol-head     ::Module
-                  ::SymbolTable     symtab
-                  ::modulenym       modnym
-                  ::dependencies    deps
-                  ::loaded-from-mod loaded
-                  ::intrinsic       intrinsic-}}]
-        (if (s/invalid? cnf)
-          :invalid-module
-          cnf)))
+(defn Module [symtab, modnym, deps, loaded, intrinsic-]
+  (let [cnf {::term ::symbol
+             ::asr-symbol-head
+             {::symbol-head     ::Module
+              ::SymbolTable     symtab
+              ::modulenym       modnym
+              ::dependencies    deps
+              ::loaded-from-mod loaded
+              ::intrinsic       intrinsic-}}]
+    (if (s/invalid? cnf)
+      :invalid-module
+      cnf)))
 ```
 
 ## FUNCTION
@@ -2193,70 +2192,70 @@ prerequisite type aliases:
 * `SymbolTable` is already defined
 
 ```clojure
-    (s/def ::function-name      ::identifier)
-    (s/def ::function-signature ::FunctionType)
+(s/def ::function-name      ::identifier)
+(s/def ::function-signature ::FunctionType)
 ```
 
 * `dependencies` is already defined
 
 ```clojure
-    (s/def ::params             ::exprs) ;; renamed from args
-    (s/def ::body               ::stmts)
-    (s/def ::return-var         ::exprq)
+(s/def ::params             ::exprs) ;; renamed from args
+(s/def ::body               ::stmts)
+(s/def ::return-var         ::expr?)
 ```
 
 * `access` is already defined
 
 ```clojure
-    (s/def ::deterministic      ::bool)
-    (s/def ::side-effect-free   ::bool)
+(s/def ::deterministic      ::bool)
+(s/def ::side-effect-free   ::bool)
 
-    (def-term-head--entity-key symbol Function)
+(def-term-head--entity-key symbol Function)
 ```
 
 heavy sugar
 
 ```clojure
-    (defn Function-- [symtab,
-                      fnnym,   fnsig,  deps,
-                      params-, body-,  retvar,
-                      access-, determ, sefree]
-      (let [cnf {::term ::symbol
-                 ::asr-symbol-head
-                 {::symbol-head         ::Function
+(defn Function-- [symtab,
+                  fnnym,   fnsig,  deps,
+                  params-, body-,  retvar,
+                  access-, determ, sefree]
+  (let [cnf {::term ::symbol
+             ::asr-symbol-head
+             {::symbol-head         ::Function
 
-                  ::SymbolTable         symtab
+              ::SymbolTable         symtab
 
-                  ::function-name       fnnym
-                  ::function-signature  fnsig
-                  ::dependencies        deps
+              ::function-name       fnnym
+              ::function-signature  fnsig
+              ::dependencies        deps
 
-                  ::params              params-
-                  ::body                body-
-                  ::return-var          retvar
+              ::params              params-
+              ::body                body-
+              ::return-var          retvar
 
-                  ::access              access-
-                  ::deterministic       determ
-                  ::side-effect-free    sefree
-                  }}]
-        (if (s/invalid? cnf)
-          :invalid-function
-          cnf)))
+              ::access              access-
+              ::deterministic       determ
+              ::side-effect-free    sefree
+              }}]
+    (if (s/invalid? cnf)
+      :invalid-function
+      cnf)))
 ```
 
 legacy sugar
 
 ```clojure
-    (defmacro Function
-      "Quote the fnnym."
-      [symtab,
-       fnnym,   fnsig,  deps,
-       params-, body-,  retvar,
-       access-, determ, sefree]
-      `(Function-- ~symtab,
-                   '~fnnym,  ~fnsig,  ~deps,
-                   ~params-, ~body-,  ~retvar,
-                   ~access-, ~determ, ~sefree))
+(defmacro Function
+  "Quote the fnnym."
+  [symtab,
+   fnnym,   fnsig,  deps,
+   params-, body-,  retvar,
+   access-, determ, sefree]
+  `(Function-- ~symtab,
+               '~fnnym,  ~fnsig,  ~deps,
+               ~params-, ~body-,  ~retvar,
+               ~access-, ~determ, ~sefree))
 ```
 
 ## PROGRAM
@@ -2271,33 +2270,33 @@ legacy sugar
 prerequisite type alias:
 
 ```clojure
-    (s/def ::prognym ::identifier)
+(s/def ::prognym ::identifier)
 ```
 
 heavy sugar
 
 ```clojure
-    (defn Program-- [stab, nym, deps, body-]
-      (let [cnf (s/conform ::Program
-                           {::term ::symbol,
-                            ::asr-symbol-head
-                            {::symbol-head  ::Program
-                             ::SymbolTable  stab
-                             ::prognym      nym
-                             ::dependencies deps
-                             ::body         body-}})]
-        (if (s/invalid? cnf)
-          ::invalid-program
-          cnf)))
+(defn Program-- [stab, nym, deps, body-]
+  (let [cnf (s/conform ::Program
+                       {::term ::symbol,
+                        ::asr-symbol-head
+                        {::symbol-head  ::Program
+                         ::SymbolTable  stab
+                         ::prognym      nym
+                         ::dependencies deps
+                         ::body         body-}})]
+    (if (s/invalid? cnf)
+      ::invalid-program
+      cnf)))
 ```
 
 legacy sugar
 
 ```clojure
-    (defmacro Program
-      "Quote the nym."
-      [stab, nym, deps, body-]
-      `(Program-- ~stab, '~nym, ~deps, ~body-))
+(defmacro Program
+  "Quote the nym."
+  [stab, nym, deps, body-]
+  `(Program-- ~stab, '~nym, ~deps, ~body-))
 ```
 
 # UNIT
@@ -2309,29 +2308,29 @@ prerequisite type aliases:
 requiring a step in heavy sugar to remove them.
 
 ```clojure
-    (s/def ::node (s/or :expr   ::expr
-                        :stmt   ::stmt
-                        :symbol ::symbol))
+(s/def ::node (s/or :expr   ::expr
+                    :stmt   ::stmt
+                    :symbol ::symbol))
 
 
-    (defn node [candidate]
-      (let [cnf (s/conform ::node candidate)]
-        (if (s/invalid? cnf)
-          :invalid-node
-          (second cnf))))
+(defn node [candidate]
+  (let [cnf (s/conform ::node candidate)]
+    (if (s/invalid? cnf)
+      :invalid-node
+      (second cnf))))
 
 
-    (def MIN-NODE-COUNT    0)
-    (def MAX-NODE-COUNT 4096)
+(def MIN-NODE-COUNT    0)
+(def MAX-NODE-COUNT 4096)
 ```
 
 TODO: Consider a regex-spec.
 
 ```clojure
-    (s/def ::nodes
-      (s/and (s/coll-of ::node
-                        :min-count MIN-NODE-COUNT,
-                        :max-count MAX-NODE-COUNT)))
+(s/def ::nodes
+  (s/and (s/coll-of ::node
+                    :min-count MIN-NODE-COUNT,
+                    :max-count MAX-NODE-COUNT)))
 ```
 
 ## TRANSLATION UNIT
@@ -2339,23 +2338,23 @@ TODO: Consider a regex-spec.
 heavy sugar
 
 ```clojure
-    (defn TranslationUnit [stab, node-preimages]
-      (let [node-cnf (map node node-preimages)
-            ;; the s/conform slips back in the tag keys from s/or
-            cnf
-            (s/conform
-             ::unit
-             {::term          ::unit
-              ::asr-unit-head
-              {::unit-head    ::TranslationUnit
-               ::SymbolTable  stab
-               ::nodes        node-cnf}})
-            ;; snip the tag keys
-            fixed
-            (assoc-in cnf
-                      [::asr-unit-head ::nodes]
-                      node-cnf)]
-        (if (s/invalid? cnf)
-          :invalid-translation-unit
-          fixed)))
+(defn TranslationUnit [stab, node-preimages]
+  (let [node-cnf (map node node-preimages)
+        ;; the s/conform slips back in the tag keys from s/or
+        cnf
+        (s/conform
+         ::unit
+         {::term          ::unit
+          ::asr-unit-head
+          {::unit-head    ::TranslationUnit
+           ::SymbolTable  stab
+           ::nodes        node-cnf}})
+        ;; snip the tag keys
+        fixed
+        (assoc-in cnf
+                  [::asr-unit-head ::nodes]
+                  node-cnf)]
+    (if (s/invalid? cnf)
+      :invalid-translation-unit
+      fixed)))
 ```
