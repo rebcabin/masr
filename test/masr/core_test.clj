@@ -1052,21 +1052,25 @@
 
 (deftest symbol-ref-test
   (is (s/valid? ::asr/symbol-ref {::asr/identifier 'foobar
-                              ::asr/symtab-id  42}))
+                                  ::asr/symtab-id  42}))
 
   (is (s/valid? ::asr/symbol-ref {::asr/identifier 'foobar
-                              ::asr/symtab-id  42
-                              ::asr/extra-noise "obi-wan"}))
+                                  ::asr/symtab-id  42
+                                  ::asr/extra-noise "obi-wan"}))
 
   (is (not (s/valid? ::asr/symbol-ref {::asr/identifier "baadbeef"
-                               ::asr/symtab-id 42})))
+                                       ::asr/symtab-id 42})))
 
   (is (not (s/valid? ::asr/symbol-ref {::asr/identifier 'foobar})))
 
-  (is (not (s/valid? ::asr/symbol-ref {::asr/symtab-id  42}))))
-
-
-
+  (is (not (s/valid? ::asr/symbol-ref {::asr/symtab-id  42})))
+  (let [vsr {::asr/identifier 'foobar
+             ::asr/symtab-id  42}]
+    (is (s/valid? ::asr/symbol-ref? [vsr]))
+    (is (s/valid? ::asr/symbol-ref? []))
+    (is (s/valid? ::asr/symbol-ref? ()))
+    (is (not (s/valid? ::asr/symbol-ref? [vsr, vsr]))))
+  )
 
 
 ;; __   __        _      _    _

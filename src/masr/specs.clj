@@ -2243,6 +2243,17 @@
 
 ;; 
 ;; 
+;; ### Pluralities
+;; 
+;; 
+
+(s/def ::symbol-ref?
+  (s/coll-of ::symbol-ref
+             :min-count 0
+             :max-count 1))
+
+;; 
+;; 
 ;; # SYMBOL
 ;; 
 ;; 

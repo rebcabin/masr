@@ -2243,6 +2243,17 @@ abuses the word `symbol` to mean a `symbol-ref
 ```
 
 
+### Pluralities
+
+
+```clojure
+(s/def ::symbol-ref?
+  (s/coll-of ::symbol-ref
+             :min-count 0
+             :max-count 1))
+```
+
+
 # SYMBOL
 
 
