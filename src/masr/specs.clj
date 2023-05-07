@@ -1854,9 +1854,10 @@
 ;; See Issue #31 https://github.com/rebcabin/masr/issues/31
 
 
-;; `symbol`, here, is really a `symbol-ref`, an
-;; identifier that must match the name of a
-;; `Function` defined elsewhere.
+;; `symbol`, here, is really a `symbol-ref`, a pair
+;; of an identifier and a symtab-id. The identifier
+;; must match an the name of a `Function` defined
+;; elsewhere.
 
 
 ;; prerequisite type aliases
@@ -1871,7 +1872,7 @@
 ;; TODO: Consider a regex-spec.
 
 (s/def ::symbol-ref?
-  (s/coll-of ::ttype
+  (s/coll-of ::symbol-ref
              :min-count 0
              :max-count 1))
 
@@ -1946,29 +1947,30 @@
            access           Public
            presence         Required
            value-attr       false}}]
-  (let [cnf (s/conform ::Variable
-                       {::term              ::symbol,
-                        ::asr-symbol-head
-                        {::symbol-head      ::Variable,
+  (let [cnf (s/conform
+             ::Variable
+             {::term              ::symbol,
+              ::asr-symbol-head
+              {::symbol-head      ::Variable,
 
-                         ::symtab-id        symtab-id,
-                         ::varnym           varnym,
-                         ::ttype            ttype,
+               ::symtab-id        symtab-id,
+               ::varnym           varnym,
+               ::ttype            ttype,
 
-                         ::type-declaration type-declaration,
-                         ::dependencies     dependencies,
-                         ::intent           intent,
+               ::type-declaration type-declaration,
+               ::dependencies     dependencies,
+               ::intent           intent,
 
-                         ::symbolic-value   symbolic-value,
-                         ::value            value,
-                         ::storage-type     storage-type,
+               ::symbolic-value   symbolic-value,
+               ::value            value,
+               ::storage-type     storage-type,
 
-                         ::abi              abi,
-                         ::access           access,
-                         ::presence         presence,
+               ::abi              abi,
+               ::access           access,
+               ::presence         presence,
 
-                         ::value-attr       value-attr,
-                         }})]
+               ::value-attr       value-attr,
+               }})]
     (if (s/invalid? cnf)
       ::invalid-variable
       cnf)))
@@ -1983,40 +1985,42 @@
    symbolic-value-,    value-,         storage-type-,
    abi-,               access-,        presence-,
    value-attr-]
-  (let [cnf (s/conform ::Variable
-                       {::term              ::symbol,
-                        ::asr-symbol-head
-                        {::symbol-head      ::Variable,
+  (let [cnf
+        (s/conform
+         ::Variable
+         {::term              ::symbol,
+          ::asr-symbol-head
+          {::symbol-head      ::Variable,
 
-                         ::symtab-id        symtab-id-,
-                         ::varnym           varnym-,
-                         ::ttype            ttype-, ;; already wrapped!
+           ::symtab-id        symtab-id-,
+           ::varnym           varnym-,
+           ::ttype            ttype-, ;; already wrapped!
 
-                         ;; https://github.com/rebcabin/masr/issues/28
-                         ::type-declaration typedecl-
-                         ::dependencies     dependencies-,
-                         ::intent           (if (symbol? intent-)
-                                              (intent  intent-)
-                                              intent-),
+           ;; https://github.com/rebcabin/masr/issues/28
+           ::type-declaration typedecl-
+           ::dependencies     dependencies-,
+           ::intent           (if (symbol? intent-)
+                                (intent  intent-)
+                                intent-),
 
-                         ::symbolic-value   symbolic-value-,
-                         ::value            value-,
-                         ::storage-type     (if (symbol? storage-type-)
-                                              (storage-type storage-type-)
-                                              storage-type-),
+           ::symbolic-value   symbolic-value-,
+           ::value            value-,
+           ::storage-type     (if (symbol? storage-type-)
+                                (storage-type storage-type-)
+                                storage-type-),
 
-                         ::abi              (if (symbol? abi-)
-                                              (abi abi-)
-                                              abi-),
-                         ::access           (if (symbol? access-)
-                                              (access access-)
-                                              access-),
-                         ::presence         (if (symbol? presence-)
-                                              (presence presence-)
-                                              presence-),
+           ::abi              (if (symbol? abi-)
+                                (abi abi-)
+                                abi-),
+           ::access           (if (symbol? access-)
+                                (access access-)
+                                access-),
+           ::presence         (if (symbol? presence-)
+                                (presence presence-)
+                                presence-),
 
-                         ::value-attr       value-attr-,
-                         }})]
+           ::value-attr       value-attr-,
+           }})]
     (if (s/invalid? cnf)
       ::invalid-variable
       cnf)))
@@ -2143,6 +2147,7 @@
       cnf)))
 
 ;; legacy sugar
+
 (defmacro Function
   "Quote the fnnym."
   [symtab,

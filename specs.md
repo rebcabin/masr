@@ -1,3 +1,12 @@
+# PROLOGUE
+
+
+This file is semi-literate programming. It is
+supposed to be synchronized with `specs.clj`. This
+first bit declares dependencies for the code in this
+file.
+
+
 ```clojure
 (ns masr.specs
   (:require [clojure.spec.alpha            :as      s            ]
@@ -23,11 +32,13 @@
             ))
 ```
 
-lightweight, load-time testing:
+Lightweight, load-time testing:
+
 
 ```clojure
 (hyperfiddle.rcf/enable!)
 ```
+
 
 Unmap "Integer" and "Character" so we can have
 those symbols in ttypes. Access the originals
@@ -36,37 +47,41 @@ Lein test and lein run produce unmaskable
 warnings. Access original "deftype"
 as "clojure.core/deftype".
 
+
 ```clojure
 (ns-unmap *ns* 'Integer)
 (ns-unmap *ns* 'Character)
 (ns-unmap *ns* 'deftype)
 ```
 
-ASDL tuples like `(1 2)` are Clojure lists.
-ASDL lists are ASDL tuples.
-ASDL vectors like `[expr? stmt*]` are Clojure vectors.
-ASDL symbol_tables are Clojure maps.
+# OVERVIEW & BACKGROUND
 
 
-In general, MASR specs are more discriminating,
-precise, and detailed than ASDL could ever
-permit.
+Begin the semi-literate narrative.
 
 
-"Spec" is short for "specification." The
-noun "specification" derives from the verb "to
-specify." "Specify" means "to make specific, to
-state clearly and precisely, unambiguously. To
-discriminate an object from others that might
-seem similar at first glance."
+## MASR IS A TYPE SYSTEM
 
 
-full ASDL : `ASR_2023_APR_06_snapshot`.asdl
+MASR is "Meta Abstract Semantics Representation,"
+and also a physics pun, "Microwave Amplification
+by Stimulated emission of Radiation." It is a
+work-in-progress, intended to replace the
+specification of ASR in ASDL by a more precise and
+discriminating type system written in Clojure.
+
+
+We begin the mapping with a precis of the full ASDL
+specification, or at least, a snapshot of it:
+`ASR_2023_APR_06_snapshot`.asdl
 https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
 
+
+### Terms (Nodes) in the ASDL Grammar
+
+i.e., things to the left of equals signs:
+
 ```c
-terms (nodes) in the ASDL grammar (things to the left of equals signs):
-    ;;
  1 unit            = TranslationUnit(symbol_table, node*)
  2 symbol          = ... many heads ...
  3 storage_type    = Default | Save | Parameter | Allocatable
@@ -97,19 +112,83 @@ terms (nodes) in the ASDL grammar (things to the left of equals signs):
 28 case_stmt       = CaseStmt(expr*, stmt*) | CaseStmt_Range( ... )
 29 type_stmt       = TypeStmtName(symbol, stmt*) | ...
 30 enumtype        = IntegerConsecutiveFromZero | ... | NonInteger
+```
 
+### Terms not Specified in ASDL
 
-terms not specified in ASDL:
-    ;;
+```c
 31 symbol_table    = a clojure map
 32 dimensions      = dimension*, see below
+```
 
+### Term-Like Things that are not Terms
 
-term-like things that are not terms:
-    ;;
+```c
  0 atoms           = int, float, bool, nat, bignat
  0 identifier      = specified below
 ```
+
+### Mappings from ASDL to MASR
+
+* ASDL tuples like `(1 2)` are Clojure lists.
+
+* ASDL lists are ASDL tuples.
+
+* ASDL vectors like `[expr? stmt*]` are Clojure vectors.
+
+* ASDL symbol_tables are Clojure maps.
+
+
+In general, MASR specs are more discriminating,
+precise, and detailed than ASDL could ever
+permit. That means ASR in MASR
+
+* is less ambiguous than ASDL
+
+* is more explicit than ASDL
+
+* has fewer overloaded specs, e.g. `symbol` and
+  `symbol_table`
+
+* exposes secret semantics lifted from the current
+  C++ implementation into the specification level
+
+
+# WHAT IS A _SPECIFICATION_?
+
+
+_Spec_ is short for _specification_. The_ noun
+"specification" derives from the verb "to specify."
+"Specify" means "to describe specifically, to state
+clearly, precisely, unambiguously. To distinguish a
+class of objects from others that might seem similar
+at first glance, say ships from boats"
+
+
+A major use-case for specification is checking
+instances against specs: "does this instance
+hash-map meet the general specification of hash-maps
+of this type?" For example, "does `(Integer 4 [])`
+meet the specification of an ASR `ttype`, which
+describes an infinite class of instances?"
+
+
+Another use-case is for checking specs for sub-set
+relationships. For example, one may check whether
+every `::ttype` is also an `::asr-term`.
+
+
+Clojure specs are arbitrary predicate functions.
+They suffice for advanced types like dependency
+types and concurrency types.
+
+
+MASR types are recursive. Bigger types are defined
+in terms of smaller types, all the way to some
+primitives. All the fields of big entities are
+checked against specs, all the way down to the
+atoms.
+
 
 # FULL-FORM
 
@@ -120,82 +199,92 @@ keyword (or equivalent; see EXAMPLE).
 
 
 Every MASR `asr-term` has a full-form. Most have
-sugared forms that are (1) easier for humans to
-read and write (2) compatible with ASDL output
-from `--show-asr` in lpython and lfortran.
+sugared forms that are
+
+1. easier for humans to read and write
+
+2. compatible with ASDL output from `--show-asr` in
+   lpython and lfortran.
 
 
 # SUGAR
 
 
 Sugar comes in three flavors: light, heavy, and
-legacy Light sugar employs keyword arguments with
-defaults. Heavy sugar employs positional
-arguments with defaults for some tail arguments.
-Light sugar is unambiguous but more verbose than
-heavy sugar. Heavy sugar is the shortest and more
-compatible with ASDL, but more risky to write and
-much harder to read, especially for long argument
-lists as with, say, `Variable` and
-`FunctionType.` Legacy sugar is just like heavy
-sugar, just requiring fewer tick marks on
-symbols. Legacy sugar is the most compatible with
-ASDL output from `--show-asr`.
+legacy.
+
+1. Light sugar employs keyword arguments with
+   defaults. Light sugar is unambiguous but more
+   verbose than heavy sugar.
+
+2. Heavy sugar employs positional arguments with
+   defaults for some tail arguments. Heavy sugar is
+   short and mostly compatible with ASDL output from
+   `--show-asr`. Heavy sugar is more risky to write
+   and much harder to read than light sugar,
+   especially for long argument lists as with, say,
+   `Variable` and `FunctionType`.
+
+3. Legacy sugar is just like heavy sugar, just
+   requiring fewer tick marks on symbols. Legacy
+   sugar is the most compatible with ASDL output
+   from `--show-asr`.
 
 
 # WHAT ARE TERMS?
 
 
-MASR _terms_ are models of terms or productions
-in the ASDL grammar, items to the left of equals
-signs like symbol or stmt in the list above.
+MASR _terms_ are models of terms or productions in
+the ASDL grammar, items to the left of equals signs
+like symbol or stmt in the list above and in the
+snapshot cited above.
 
 
 EXAMPLE -- all these full-forms mean the same:
 
-always acceptable, if verbose:
+* always acceptable, if verbose:
 
 ```clojure
 {:masr.specs/term        :masr.specs/intent,
  :masr.specs/intent-enum 'Unspecified}
 ```
 
-shorter form, always acceptable:
+* shorter form, always acceptable:
 
 ```clojure
 #:masr.specs{:term        :intent,
              :intent-enum 'Unspecified}
 ```
 
-when in this file or in namespace masr.specs,
-via the line (in-ns 'masr.specs):
+* when in this file or in namespace masr.specs, via
+  the line (in-ns 'masr.specs):
 
 ```clojure
 {::term        ::intent,
  ::intent-enum 'Unspecified}
 ```
 
-if masr.specs is aliased to asr, as
-in (:use [masr.specs :as asr]) in core_tests.clj
+* if `masr.specs` is aliased to `asr`, as in `(:use
+  [masr.specs :as asr])` in `core_tests.clj`
 
 ```clojure
 {::asr/term        ::asr/intent,
  ::asr/intent-enum 'Unspecified}
 ```
 
-# QUALIFIED KEYWORDS AND ::TERM
+# QUALIFIED KEYWORDS AND `::TERM`
 
 
-::term is both a qualified keyword _and_ a
+`::term` is both a qualified keyword _and_ a
 tag-fetching function, which picks the value of
-the key ::term from any hash-map. For example,
-(::term {... the instance above ...}) produces
-::intent.
+the key :`:term` from any hash-map. For example,
+`(::term {... the instance above ...})` produces
+`::intent`.
 
 
-As a qualified keyword, ::term can name a Clojure
+As a qualified keyword, `::term` can name a Clojure
 spec. The following spec will check
-whether ::intent is a ::term:
+whether `::intent` is a `::term`:
 
 ```clojure
 (s/def ::term qualified-keyword?)
@@ -208,14 +297,6 @@ EXAMPLE: "intent" is a valid "term"
 => true
 ```
 
-# SPECS ARE A TYPE SYSTEM FOR MASR
-
-
-Specs can have arbitrary logic. Specs formalize
-type-checking for entities of any depth and
-richness.
-
-
 # POLYMORPHIC SPECS FOR TERMS
 
 
@@ -226,7 +307,7 @@ The `defmulti` links the defmulti-defmethod name
 tag-fetcher `::term` (with colons), with this
 qualified keyword acting in its role of tag-fetcher.
 Each defmethod of `term` is also tagged by the value
-fetched from an entity via `::term`.`
+fetched from an entity via `::term`.
 defmulti/defmethod is a Clojure idiom for
 _polymorphism_, a `defmulti` function interface with
 many implementations. The interface is the same for
@@ -272,7 +353,7 @@ that dispatch on _heads_, like `Variable` or
 techniques shown below.
 
 
-# NAMING CONVENTION FOR MASR MULTI-SPECS
+# NAMING CONVENTION FOR MULTI-SPECS
 
 
 All multi-spec names in MASR, nested or not, begin
