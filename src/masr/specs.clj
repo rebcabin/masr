@@ -107,33 +107,34 @@
 ;;     - [Original ASDL](#original-asdl-8)
 ;;     - [Prerequisite Types and Aliases](#prerequisite-types-and-aliases)
 ;;     - [Pluralities](#pluralities-6)
+;;     - [Heavy Sugar](#heavy-sugar-12)
 ;; - [SYMBOL](#symbol-1)
 ;;   - [VARIABLE](#variable)
 ;;     - [Original ASDL](#original-asdl-9)
 ;;     - [EXAMPLE](#example-2)
 ;;     - [Prerequisite Type Aliases](#prerequisite-type-aliases-3)
 ;;     - [Light Sugar](#light-sugar)
-;;     - [Heavy Sugar](#heavy-sugar-12)
+;;     - [Heavy Sugar](#heavy-sugar-13)
 ;;     - [Legacy Sugar](#legacy-sugar-2)
 ;;   - [MODULE](#module)
 ;;     - [Original ASDL](#original-asdl-10)
 ;;     - [Prerequisite Type Aliases](#prerequisite-type-aliases-4)
-;;     - [Heavy Sugar](#heavy-sugar-13)
+;;     - [Heavy Sugar](#heavy-sugar-14)
 ;;   - [FUNCTION](#function)
 ;;     - [Original ASDL](#original-asdl-11)
 ;;     - [Prerequisite Type Aliases](#prerequisite-type-aliases-5)
-;;     - [Heavy Sugar](#heavy-sugar-14)
+;;     - [Heavy Sugar](#heavy-sugar-15)
 ;;     - [Legacy Sugar](#legacy-sugar-3)
 ;;   - [PROGRAM](#program)
 ;;     - [Original ASDL](#original-asdl-12)
 ;;     - [Prerequisite Type Alias](#prerequisite-type-alias-1)
-;;     - [Heavy Sugar](#heavy-sugar-15)
+;;     - [Heavy Sugar](#heavy-sugar-16)
 ;;     - [Legacy Sugar](#legacy-sugar-4)
 ;; - [UNIT](#unit-1)
 ;;   - [Prerequisite Type Aliases](#prerequisite-type-aliases-6)
 ;;   - [Pluralities](#pluralities-7)
 ;;   - [TRANSLATION UNIT](#translation-unit)
-;;     - [Heavy Sugar](#heavy-sugar-16)
+;;     - [Heavy Sugar](#heavy-sugar-17)
 ;; # PROLOGUE
 ;; 
 ;; 
@@ -1082,10 +1083,10 @@
   overloaded))
 
 (defmasrtype
-  SoubroutineCall stmt
+  SubroutineCall stmt
   (subr-nym
    orig-nym
-   args
+   call-args
    dt))
 
 ;; 
@@ -2371,6 +2372,19 @@
 
 ;; 
 ;; 
+;; ### EXAMPLE
+;; 
+;; 
+
+#_(SubroutineCall
+ 7 test_fn1
+ ()
+ []
+ ()
+ )
+
+;; 
+;; 
 ;; ### Prerequisite Types and Aliases
 ;; 
 ;; 
@@ -2378,6 +2392,20 @@
 (s/def ::symbol-ref
   (s/keys :req [::identifier
                 ::symtab-id]))
+
+;; 
+
+(defn symbol-ref [ident, stid]
+  {::identifier ident,
+   ::symbtab-id stid})
+
+;; 
+
+(s/def ::dt ::expr?)
+
+;; 
+
+(s/def ::call-args ::exprs)
 
 ;; 
 ;; 
@@ -2389,6 +2417,26 @@
   (s/coll-of ::symbol-ref
              :min-count 0
              :max-count 1))
+
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
+
+(defn SubroutineCall--
+  [subr-nym orig-nym args dt]
+  (let [cnf (s/conform ::SubroutineCall
+                       {::term ::stmt,
+                        ::asr-stmt-head
+                        {::stmt-head ::SubroutineCall
+                         ::subr-nym (apply symbol-ref subr-nym)
+                         ::orig-nym  orig-nym
+                         ::call-args args
+                         ::dt        dt
+                         }})]
+    (if (s/invalid? cnf)
+      :invalid-subroutine-call
+      cnf)))
 
 ;; 
 ;; 
