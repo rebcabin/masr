@@ -1,3 +1,31 @@
+;; # PROLOGUE
+;; 
+;; 
+;; This file is semi-literate programming. Synchronize
+;; the code from this Markdown file via the following
+;; shell command:
+;; 
+;; 
+;; ```bash
+;; awk -f code4md.awk < specs.md > ./src/masr/specs.clj
+
+;; 
+;; 
+;; "Semi-literate" means that code blocks in the
+;; Markdown file are live. However, they may not refer
+;; to things that aren't defined yet. That's not the
+;; optimal order for narrative, but we'll live with it.
+;; Blocks that contain not-yet-defined code may contain
+;; comments or `#_` escapes that cause Clojure to parse
+;; but ignore the escaped expression.
+;; 
+;; 
+;; Since we must define things before using them, we
+;; must first declare Clojure dependencies for the rest
+;; of the code in this file.
+;; 
+;; 
+
 (ns masr.specs
   (:require [clojure.spec.alpha            :as      s            ]
             [clojure.set                   :as      set          ]
@@ -21,49 +49,57 @@
                                                      identifier ]]
             ))
 
-
-;; lightweight, load-time testing:
+;; 
+;; Lightweight, load-time testing:
+;; 
+;; 
 
 (hyperfiddle.rcf/enable!)
 
-
+;; 
+;; 
 ;; Unmap "Integer" and "Character" so we can have
 ;; those symbols in ttypes. Access the originals
 ;; via "java.lang.Integer" "java.lang.Character."
 ;; Lein test and lein run produce unmaskable
 ;; warnings. Access original "deftype"
 ;; as "clojure.core/deftype".
+;; 
+;; 
 
 (ns-unmap *ns* 'Integer)
 (ns-unmap *ns* 'Character)
 (ns-unmap *ns* 'deftype)
 
-
-;; ASDL tuples like `(1 2)` are Clojure lists.
-;; ASDL lists are ASDL tuples.
-;; ASDL vectors like `[expr? stmt*]` are Clojure vectors.
-;; ASDL symbol_tables are Clojure maps.
-
-
-;; In general, MASR specs are more discriminating,
-;; precise, and detailed than ASDL could ever
-;; permit.
-
-
-;; "Spec" is short for "specification." The
-;; noun "specification" derives from the verb "to
-;; specify." "Specify" means "to make specific, to
-;; state clearly and precisely, unambiguously. To
-;; discriminate an object from others that might
-;; seem similar at first glance."
-
-
-;; full ASDL : `ASR_2023_APR_06_snapshot.asdl`
+;; 
+;; # OVERVIEW & BACKGROUND
+;; 
+;; 
+;; Begin the semi-literate narrative.
+;; 
+;; 
+;; ## MASR IS A TYPE SYSTEM
+;; 
+;; 
+;; MASR is "Meta Abstract Semantics Representation,"
+;; and also a physics pun, "Microwave Amplification
+;; by Stimulated emission of Radiation." It is a
+;; work-in-progress, intended to replace the
+;; specification of ASR in ASDL by a more precise and
+;; discriminating type system written in Clojure.
+;; 
+;; 
+;; We begin the mapping with a precis of the full ASDL
+;; specification, or at least, a snapshot of it:
+;; `ASR_2023_APR_06_snapshot`.asdl
 ;; https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
-
-
-;; terms (nodes) in the ASDL grammar (things to the left of equals signs):
-;;
+;; 
+;; 
+;; ### Terms (Nodes) in the ASDL Grammar
+;; 
+;; i.e., things to the left of equals signs:
+;; 
+;; ```c
 ;;  1 unit            = TranslationUnit(symbol_table, node*)
 ;;  2 symbol          = ... many heads ...
 ;;  3 storage_type    = Default | Save | Parameter | Allocatable
@@ -95,162 +131,337 @@
 ;; 29 type_stmt       = TypeStmtName(symbol, stmt*) | ...
 ;; 30 enumtype        = IntegerConsecutiveFromZero | ... | NonInteger
 
-
-;; terms not specified in ASDL:
-;;
+;; 
+;; ### Terms not Specified in ASDL
+;; 
+;; ```c
 ;; 31 symbol_table    = a clojure map
 ;; 32 dimensions      = dimension*, see below
 
-
-;; term-like things that are not terms:
-;;
+;; 
+;; ### Term-Like Things that are not Terms
+;; 
+;; ```c
 ;;  0 atoms           = int, float, bool, nat, bignat
 ;;  0 identifier      = specified below
 
-
+;; 
+;; ### Mappings from ASDL to MASR
+;; 
+;; * ASDL tuples like `(1 2)` are Clojure lists.
+;; 
+;; * ASDL lists are ASDL tuples.
+;; 
+;; * ASDL vectors like `[expr? stmt*]` are Clojure vectors.
+;; 
+;; * ASDL symbol_tables are Clojure maps.
+;; 
+;; 
+;; In general, MASR specs are more discriminating,
+;; precise, and detailed than ASDL could ever
+;; permit. That means ASR in MASR
+;; 
+;; * is less ambiguous than ASDL
+;; 
+;; * is more explicit than ASDL
+;; 
+;; * has fewer overloaded specs, e.g. `symbol` and
+;;   `symbol_table`
+;; 
+;; * exposes secret semantics lifted from the current
+;;   C++ implementation into the specification level
+;; 
+;; 
+;; # WHAT IS A _SPECIFICATION_?
+;; 
+;; 
+;; _Spec_ is short for _specification_. The_ noun
+;; "specification" derives from the verb "to specify."
+;; "Specify" means "to describe specifically, to state
+;; clearly, precisely, unambiguously. To distinguish a
+;; class of objects from others that might seem similar
+;; at first glance, say ships from boats"
+;; 
+;; 
+;; A major use-case for specification is checking
+;; instances against specs: "does this instance
+;; hash-map meet the general specification of hash-maps
+;; of this type?" For example, "does `(Integer 4 [])`
+;; meet the specification of an ASR `ttype`, which
+;; describes an infinite class of instances?"
+;; 
+;; 
+;; Another use-case is for checking specs for sub-set
+;; relationships. For example, one may check whether
+;; every `::ttype` is also an `::asr-term`.
+;; 
+;; 
+;; Clojure specs are arbitrary predicate functions.
+;; They suffice for advanced types like dependency
+;; types and concurrency types.
+;; 
+;; 
+;; MASR types are recursive. Bigger types are defined
+;; in terms of smaller types, all the way to some
+;; primitives. All the fields of big entities are
+;; checked against specs, all the way down to the
+;; atoms.
+;; 
+;; 
 ;; # FULL-FORM
+;; 
+;; 
+;; Every MASR `asr-term` has a full-form. A full-form
+;; is a Clojure _hash-map_ that contains the key
+;; `::term`. Clojure hash-maps are collections of
+;; key-value pairs like Python
+;; dictionaries.[https://clojuredocs.org/clojure.core/hash-map]
+;; 
+;; Full-forms that are checked against Clojure specs
+;; are called _entities_. For example,
+;; 
 
+;; key         value
+{::term        ::intent,
+ ::intent-enum 'Local}
 
-;; A MASR `asr-term` in _full-form_ is an instance
-;; hash-map, aka _entity_, that contains a `::term`
-;; keyword (or equivalent; see EXAMPLE below).
-
-
-;; Every MASR `asr-term` has a full-form. Most have
-;; sugared forms that are (1) easier for humans to
-;; read and write (2) compatible with ASDL output
-;; from `--show-asr` in lpython and lfortran.
-
-
+;; 
+;; is an entity checked against specs for `::term`,
+;; `::intent`, and `::intent-enum`. In MASR, all keys
+;; in all hash-maps are namespace-qualified keywords
+;; with double-colon prefixes. Such keys may have specs
+;; registered for them, or not. When a spec is
+;; registered for a key, automatic recursive
+;; type-checking is invoked.
+;; 
+;; 
 ;; # SUGAR
-
-
+;; 
+;; 
+;; Most entities have sugared forms that are
+;; 
+;; 1. easier for humans to read and write
+;; 
+;; 2. compatible with ASDL output from `--show-asr` in
+;;    lpython and lfortran.
+;; 
+;; 
 ;; Sugar comes in three flavors: light, heavy, and
-;; legacy Light sugar employs keyword arguments with
-;; defaults. Heavy sugar employs positional
-;; arguments with defaults for some tail arguments.
-;; Light sugar is unambiguous but more verbose than
-;; heavy sugar. Heavy sugar is the shortest and more
-;; compatible with ASDL, but more risky to write and
-;; much harder to read, especially for long argument
-;; lists as with, say, `Variable` and
-;; `FunctionType.` Legacy sugar is just like heavy
-;; sugar, just requiring fewer tick marks on
-;; symbols. Legacy sugar is the most compatible with
-;; ASDL output from `--show-asr`.
+;; legacy.
+;; 
+;; 
+;; 1. Light sugar employs keyword arguments with
+;;    defaults. Light sugar is unambiguous but more
+;;    verbose than heavy sugar.
+;; 
+;; 2. Heavy sugar employs positional arguments with
+;;    defaults for some tail arguments. Heavy sugar is
+;;    short and mostly compatible with ASDL output from
+;;    `--show-asr`. Heavy sugar is more risky to write
+;;    and much harder to read than light sugar,
+;;    especially for long argument lists as with, say,
+;;    `Variable` and `FunctionType`.
+;; 
+;; 3. Legacy sugar is just like heavy sugar, just
+;;    requiring fewer tick marks on symbols. Legacy
+;;    sugar is the most compatible with ASDL output
+;;    from `--show-asr`.
+;; 
+;; 
+;; ## SUGAR NAMING CONVENTION
+;; 
+;; 
+;; The names of light-sugar functions, like `Integer-`,
+;; have a single trailing hyphen. The keyword arguments
+;; of light-sugar functions are partitioned into
+;; required and optional-with-defaults. The keyword
+;; argument lists of light-sugar functions do not
+;; depend on order. The following two examples both
+;; conform to `::asr-term` and to `::ttype`:
+;; 
+;; 
 
+#_(Integer- {:dimensions [], :kind 4})
+#_(Integer- {:kind 4, :dimensions []})
 
+;; 
+;; 
+;; The names of heavy-sugar functions, like
+;; `Integer` or `Variable--`, have either zero or
+;; two trailing hyphens. The difference concerns
+;; legacy. If a legacy sugar is needed for a term,
+;; the legacy sugar has the name with no hyphens,
+;; like `Variable` and the heavy sugar has the name
+;; with two hyphens, like `Variable--`. Both legacy
+;; sugar and heavy sugar produce identical
+;; full-forms.
+;; 
+;; 
+;; For example, The following is heavy sugar for a
+;; `Variable`, representing the more progressive,
+;; desired form:
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+
+#_(Variable-- 2 'x (Integer 4)
+            nil [] Local
+            [] []  Default
+            Source Public Required
+            false)
+
+;; 
+;; Here is a legacy version of the same instance:
+;; 
+;; 
+;; ### Legacy Sugar
+;; 
+
+#_(Variable 2 x []
+          Local () ()
+          Default (Integer 4 []) Source
+          Public Required false)
+
+;; 
+;; 
+;; Notice NO QUOTE MARK on the name of the variable.
+;; That's the way `--show-asr` prints it. That's the
+;; only difference between heavy sugar and legacy
+;; sugar for _Variable_.
+;; 
+;; 
+;; For specs where MASR heavy sugar and ASDL legacy
+;; are identical, like `Integer`, there is only one
+;; function with no trailing hyphens in its name.
+;; 
+;; 
+;; Heavy-sugar functions employ positional arguments
+;; that depend on order. Final arguments may have
+;; defaults. For example, the following examples
+;; conform to both `::asr-term` and to `::ttype`:
+;; 
+;; 
+
+#_(Integer)
+#_(Integer 4)
+#_(Integer 2 [])
+#_(Integer 8 [[6 60] [1 42]])
+
+;; 
 ;; # WHAT ARE TERMS?
-
-
-;; MASR _terms_ are models of terms or productions
-;; in the ASDL grammar, items to the left of equals
-;; signs like symbol or stmt in the list above.
-
-
+;; 
+;; 
+;; MASR _terms_ are models of terms or productions in
+;; the ASDL grammar, items to the left of equals signs
+;; like symbol or stmt in the list above and in the
+;; snapshot cited above.
+;; 
+;; 
 ;; EXAMPLE -- all these full-forms mean the same:
-;;
-;; always acceptable, if verbose:
-;;
-;;     {:masr.specs/term        :masr.specs/intent,
-;;      :masr.specs/intent-enum 'Unspecified}
-;;
-;; shorter form, always acceptable:
-;;
-;;     #:masr.specs{:term        :intent,
-;;                  :intent-enum 'Unspecified}
-;;
-;; when in this file or in namespace masr.specs,
-;; via the line (in-ns 'masr.specs):
-;;
-;;     {::term        ::intent,
-;;      ::intent-enum 'Unspecified}
-;;
-;; if masr.specs is aliased to asr, as
-;; in (:use [masr.specs :as asr]) in core_tests.clj
-;;
-;;     {::asr/term        ::asr/intent,
-;;      ::asr/intent-enum 'Unspecified}
+;; 
+;; * always acceptable, if verbose:
+;; 
 
+{:masr.specs/term        :masr.specs/intent,
+ :masr.specs/intent-enum 'Unspecified}
 
-;; # QUALIFIED KEYWORDS AND ::TERM
+;; 
+;; * shorter form, always acceptable:
+;; 
 
+#:masr.specs{:term        :intent,
+             :intent-enum 'Unspecified}
 
+;; 
+;; * when in this file or in namespace masr.specs, via
+;;   the line (in-ns 'masr.specs):
+;; 
+
+{::term        ::intent,
+ ::intent-enum 'Unspecified}
+
+;; 
+;; * if `masr.specs` is aliased to `asr`, as in `(:use
+;;   [masr.specs :as asr])` in `core_tests.clj`
+;; 
+
+;; {::asr/term        ::asr/intent,
+;;  ::asr/intent-enum 'Unspecified}
+
+;; 
+;; # QUALIFIED KEYWORDS AND `::TERM`
+;; 
+;; 
 ;; `::term` is both a qualified keyword _and_ a
 ;; tag-fetching function, which picks the value of
-;; the key `::term` from any hash-map. For example,
+;; the key :`:term` from any hash-map. For example,
 ;; `(::term {... the instance above ...})` produces
-;; `::intent.`
-
-
-;; As a qualified keyword, ::term can name a Clojure
+;; `::intent`.
+;; 
+;; 
+;; As a qualified keyword, `::term` can name a Clojure
 ;; spec. The following spec will check
-;; whether ::intent is a ::term:
+;; whether `::intent` is a `::term`:
+;; 
 
 (s/def ::term qualified-keyword?)
 
+;; 
 ;; EXAMPLE: "intent" is a valid "term"
+;; 
 
 (s/valid? ::term ::intent)
-
 ;; => true
 
-
-;; # SPECS ARE A TYPE SYSTEM FOR MASR
-
-
-;; Specs can have arbitrary logic. Specs formalize
-;; type-checking for entities of any depth and
-;; richness.
-
-
+;; 
 ;; # POLYMORPHIC SPECS FOR TERMS
-
-
-;; `defmulti` defines a name, say `term` (no
-;; colons), for a collection of `defmethods` with
-;; the same name. The `defmulti` links the
-;; defmulti-defmethod name `term` to a dispatcher
-;; function, here exactly the tag-fetcher
-;; `::term` (with colons), with this qualified
-;; keyword acting in its role of tag-fetcher. Each
-;; defmethod of `term` is also tagged by the value
-;; fetched from an entity via `::term`.`
+;; 
+;; 
+;; `defmulti` defines a name, say `term` (no colons),
+;; for a collection of `defmethods` with the same name.
+;; The `defmulti` links the defmulti-defmethod name
+;; `term` to a dispatcher function, here exactly the
+;; tag-fetcher `::term` (with colons), with this
+;; qualified keyword acting in its role of tag-fetcher.
+;; Each defmethod of `term` is also tagged by the value
+;; fetched from an entity via `::term`.
 ;; defmulti/defmethod is a Clojure idiom for
-;; _polymorphism_, a `defmulti` function interface
-;; with many implementations. The interface is the
-;; same for all implementations -- it just accepts a
-;; term. The implementations differ from one to the
-;; other. That's the meaning of "polymorphism" --
-;; one interface, many implementations.
+;; _polymorphism_, a `defmulti` function interface with
+;; many implementations. The interface is the same for
+;; all implementations -- it just accepts a term. The
+;; implementations differ from one to the other. That's
+;; the meaning of "polymorphism" -- one interface, many
+;; implementations.
+;; 
 
 (defmulti term ::term)
 
-
+;; 
 ;; MASR handles _alternatives_ -- to the right-hand
 ;; sides of equals signs in the grammar -- via
 ;; _multi-specs_. Multi-specs are to specs as
 ;; defmethods are to functions -- one spec interface
 ;; to many implementations.
-
-
+;; 
+;; 
 ;; The name of the multi-spec for all terms
 ;; is `::asr-term`, a qualified keyword, as must be
 ;; the names of all Clojure specs. Multi-specs act
 ;; like tagged unions in C -- polymorphic structs.
-
-
+;; 
+;; 
 ;; # NESTED MULTI-SPECS
-
-
+;; 
+;; 
 ;; At the top level, term multi-specs dispatch on
-;; values of the `::term` key, values like
-;; `::intent`, `::symbol`, `::unit`, etc. Defmethods
-;; for those values specify the required keys for
-;; entities that conform to the particular
-;; implementation of the multi-spec.
-
-
+;; values of the `::term` key, values like `::intent`,
+;; `::symbol`, `::unit`, etc. Defmethods for those
+;; values specify the required keys for entities that
+;; conform to the particular implementation of the
+;; multi-spec.
+;; 
+;; 
 ;; Some defmethods like `::intent` are very simple,
 ;; just checking that an instance like `'Local` or
 ;; `'ReturnVar` inhabits a set of allowed intents.
@@ -258,37 +469,38 @@
 ;; that dispatch on _heads_, like `Variable` or
 ;; `Program`. MASR handles nested multi-specs via some
 ;; techniques shown below.
-
-
-;; # NAMING CONVENTION FOR MASR MULTI-SPECS
-
-
+;; 
+;; 
+;; # NAMING CONVENTION FOR MULTI-SPECS
+;; 
+;; 
 ;; All multi-spec names in MASR, nested or not, begin
 ;; with `::asr-...`, as in `::asr-term` (not nested)
 ;; and `::asr-ttype-head` (nested in ttypes).
+;; 
 
 (s/def ::asr-term
   (s/multi-spec term ::term))
 
-
+;; 
 ;; # TELESCOPING SPECS
-
-
+;; 
+;; 
 ;; A given entity (instance hash-map) may be
-;;
+;; 
 ;; * an `::asr-term` -- any one of the terms
-;;
+;; 
 ;; * a `::symbol` -- a particular one of the several
-;; terms,
-;;
+;;   terms,
+;; 
 ;; * and a `::Variable` -- a particular one of the
-;; several symbols.
-;;
+;;   several symbols.
+;; 
 ;; These three telescoping specs, `::term`, `::symbol`,
 ;; `::Variable`, are of increasing precision and
 ;; discrimination.
-
-
+;; 
+;; 
 ;; Vertically, in increasing precision, both
 ;; `::Variable` and `::symbol` are `::asr-term` and
 ;; `::Variable` is a `::symbol`. Horizontally, as
@@ -299,18 +511,18 @@
 ;; `::LogicalBinOp` is an `::expr`. Horizontally, both
 ;; `::LogicalBinOp` and `::LogicalCompare` are
 ;; `::expr`, and both are `::asr-term`.
-
-
+;; 
+;; 
 ;; # TERM ENTITY KEY
-
-
+;; 
+;; 
 ;; Each term, like symbol, needs its own spec, named by
 ;; a qualified keyword like `::symbol`. MASR
 ;; recursively checks specs when entity keys like
 ;; `::symbol` have their own specs. Said another way,
 ;; recursive conformance means that `::symbol` fields
 ;; in other entities are checked by `::symbol` specs.
-
+;; 
 
 (defn term-selector-spec
   "Name a spec that checks that an asr-term entity
@@ -331,19 +543,19 @@
     `(s/def ~tkw    ;; like ::dimension or ::symbol
        (term-selector-spec ~tkw))))
 
-
+;; 
 ;; # DEFMASRNESTED
-
-
+;; 
+;; 
 ;; Automate construction of nested multi-specs,
 ;; removing all duplicated wordage. The docstring of
 ;; defmasrnested shows an example with all the
 ;; duplicated verbiage that the macro eliminates.
-
-
+;; 
+;; 
 ;; READ ALL DOCSTRINGS.
-
-
+;; 
+;; 
 ;; It is not necessary to understand the
 ;; implementation of the macro unless you are
 ;; maintaining it. The implementation of the macro
@@ -354,7 +566,7 @@
 ;; design, overall, but we must be aware of it and
 ;; step around it when necessary. We step around it
 ;; via the built-in "name" function.
-
+;; 
 
 (defmacro defmasrnested
   "Define specs for terms with nested multi-specs,
@@ -411,13 +623,13 @@
 (defmasrnested ttype)
 (defmasrnested unit)
 
-
+;; 
 ;; # TERM-HEAD ENTITY KEY
-
-
+;; 
+;; 
 ;; We need specs for each nested multi-spec
 ;; like `::Variable` and `::FunctionType`.
-
+;; 
 
 (defmacro def-term-head--entity-key
   "Define an entity key like ::Variable, which is an
@@ -455,36 +667,36 @@
     `(s/def ~hkw
        (s/and ~art #(= ~hkw (-> % ~amh ~tmh))))))
 
-
+;; 
 ;; # DEFMASRTYPE
-
-
+;; 
+;; 
 ;; `defmasrtype` is the primary way to add new specs
 ;; to MASR, that is, for incremental, test-driven
 ;; development of MASR. Use `defmasrtype` to define
 ;; new specs for terms with nested multi-specs.
 ;; Terms without nested multi-specs are few. They
 ;; are special cases with hand-written specs.
-
-
+;; 
+;; 
 ;; `defmasrtype` creates both (1) the specs for
 ;; particular heads like `Variable` and `Assignment`,
 ;; and (2) a function, `->asdl-type`, that extracts
 ;; the ASDL type from any instance hash-map.
-
-
-;; # AUTOMATED RECURSIVE TYPE CHECKING, AGAIN
-
-
+;; 
+;; 
+;; # RECURSIVE TYPE CHECKING, AGAIN
+;; 
+;; 
 ;; MASR automatically type-checks entities before
 ;; projecting them back to the less discriminating
 ;; and unchecked ASDL types. Recursive type-checking
 ;; pertains to terms with and without nested
 ;; multi-specs.
-
-
-;; # FOR EXTRACTING ASDL-TYPES FROM ENTITIES
-
+;; 
+;; 
+;; # EXTRACTING ASDL FROM MASR
+;; 
 
 (def asdl-types
   {
@@ -502,6 +714,7 @@
    ::varnym       "identifier varnym"
    })
 
+;; 
 
 (defmacro asdl-type-string
   "Construct a string like this
@@ -521,6 +734,7 @@
                     (map asdl-types (list ~@seq-keys)))]
        (str head# "(" params# ")"))))
 
+;; 
 
 (defmacro defmasrtype
   "Get rid of repetition in an expression like
@@ -544,8 +758,7 @@
                       ::prognym      ;; <~~~ repetitive
                       ::dependencies ;; <~~~ repetitive
                       ::body]        ;; <~~~ repetitive
-                ))
-  "
+                ))"
   [head, term, keyseq]
   (let [ns "masr.specs"
         ;; like "Program"
@@ -583,16 +796,16 @@
          (def-term-head--entity-key ~term-sym ~head-sym)
          )))
 
-
+;; 
 ;; # ->ASDL-TYPE
-
-
+;; 
+;; 
 ;; The function `->asdl-type` relies on multimethods
 ;; for terms that have a nested multi-spec. The
 ;; multimethods dispatch on the "head" keys of each
 ;; term-with-nested-multi-spec, terms like
 ;; `::symbol-head` and `::expr-head`.
-
+;; 
 
 (defmulti  ->asdl-type ::term)
 (defmacro term->asdl-type
@@ -627,10 +840,10 @@
        [{~keys-key [~nons-trm ~nest-ksm]}]
        (~call-sym ~nest-ksm))))
 
-
+;; 
 ;; # TERMS WITH NESTED MULTI-SPECS
-
-
+;; 
+;; 
 ;; The following blocks of code are as close to the
 ;; ASDL specs as we care to get in MASR. MASR is
 ;; more discriminating than ASDL. For example, the
@@ -639,8 +852,8 @@
 ;; specifies the name as a `prognym`, giving both a
 ;; finer-grained name to the type of a Program name
 ;; and an opportunity for further processing.
-
-
+;; 
+;; 
 ;; The discriminating subtype-specs are defined via
 ;; `s/def` near each particular case, i.e., near
 ;; `Function`, Near `LogicalBinOp`, etc. The following
@@ -650,13 +863,13 @@
 ;; discriminating types, like `prognym` and
 ;; `left-logical`, before they're defined as specs
 ;; via `s/def`.
-
-
+;; 
+;; 
 ;; # ADD NEW DEFINITIONS HERE
-
-
+;; 
+;; 
 ;; ## UNIT
-
+;; 
 
 (defmulti  unit->asdl-type ::unit-head)
 (term->asdl-type unit)
@@ -666,9 +879,9 @@
  (SymbolTable
   nodes))
 
-
+;; 
 ;; ## SYMBOL
-
+;; 
 
 (defmulti  symbol->asdl-type ::symbol-head)
 (term->asdl-type symbol) ;; Don't expand in CIDER! console only.
@@ -717,9 +930,9 @@
   side-effect-free
   ))
 
-
+;; 
 ;; ## STMT
-
+;; 
 
 (defmulti  stmt->asdl-type ::stmt-head)
 (term->asdl-type stmt)   ;; CIDER macro-expand removes namespace.
@@ -737,9 +950,9 @@
    args
    dt))
 
-
+;; 
 ;; ## EXPR
-
+;; 
 
 (defmulti  expr->asdl-type ::expr-head)
 (term->asdl-type expr)   ;;
@@ -771,9 +984,9 @@
  (symtab-id
   varnym))
 
-
+;; 
 ;; ## TTYPE
-
+;; 
 
 (defmulti  ttype->asdl-type ::ttype-head)
 (term->asdl-type ttype)
@@ -791,151 +1004,115 @@
    static          type-params      restrictions
    is-restriction))
 
+;; 
+;; 
+;; 
+;; # LEGACY MACRO
+;; 
+;; 
+;; The `legacy` macro currently just converts `=`
+;; into `Assignment` in a whole tree. Apply "legacy"
+;; to a whole expression.
+;; 
+;; 
+;; TODO: ASDL output from `--show-asr` currently
+;; requires moving colons from the backs of keywords to
+;; the front. That is necessary because colons at the
+;; back fail the Clojure reader. We have a `sed` script
+;; for that: `fix-show-asr.sed`. The script also
+;; converts ASDL's `.false.` to `false` and `.true.` to
+;; `true`, but that could be done at the Clojure level.
+;; 
+;; 
+;; Here is `fix-show-asr.sed`:
+;; 
+;; 
+;; ```sed
+;; s/\(\([_a-zA-Z0-9]*\)\:\)/:\2/g
+;; s/\.\(false\)\./\1/g
+;; s/\.\(true\)\./\1/g
 
-;; # SPECIAL CASES AND SUGAR
+;; 
+;; 
+;; TODO: We might rework heavy sugar through the whole
+;; code-base because we must apply `legacy` anyway. For
+;; now, user-level code must call `legacy` when
+;; appropriate.
+;; 
+;; 
+;; 
 
+(defn rewrite-for-legacy
+  "Replace = with Assignment anywhere in a MASR
+  sugared expression."
+  [it]
+  (prewalk
+   (fn [x]
+     (if (list? x)
+       (replace {'= 'Assignment--} x)
+       x))
+   it))
 
-;; ## FULL-FORM
+;; 
+;; 
 
+(defmacro legacy
+  "DANGER: Call 'eval'."
+  [it]
+  `(do (in-ns 'masr.specs)
+       (eval (rewrite-for-legacy '~it))))
 
-;; Full-form entities that are checked against specs
-;; are Clojure
-;; _hash-maps_:[https://clojuredocs.org/clojure.core/hash-map]
-;; collections of key-value pairs like Python
-;; dictionaries. When checked by multi-specs,
-;; hash-maps are called _entities_. For example,
-
-
-;;     ;; key         value
-;;     {::term        ::intent,
-;;      ::intent-enum 'Local}
-
-
-;; In MASR, all keys in all hash-maps are
-;; namespace-qualified keywords. Such keys may have
-;; specs registered for them, or not. When a spec is
-;; registered for a key, automatic recursive
-;; type-checking is invoked.
-
-
-;; ## LIGHT SUGAR, HEAVY SUGAR, LEGACY SUGAR
-
-
-;; _Light-sugar_ forms are shorter than full-form,
-;; but longer and more explicit than _heavy-sugar_.
-;; Light sugar employs functions with keyword
-;; arguments and defaults. Heavy sugar employs
-;; functions with positional arguments and defaults
-;; only at the end of an argument list. Heavy-sugar
-;; functions are thus more brittle, especially for
-;; long specs with many arguments, with high risk of
-;; writing arguments out of order. _Legacy sugar_ is
-;; order-dependent, no keywords, no defaults, and
-;; compatible with `--show-asr` output from current
-;; LCompilers. Legacy sugaar will be deprecated when
-;; MASR is integrated with LCompilers.
-
-
-;; The names of light-sugar functions, like `Integer-`,
-;; have a single trailing hyphen. The keyword arguments
-;; of light-sugar functions are partitioned into
-;; required and optional-with-defaults. The keyword
-;; argument lists of light-sugar functions do not
-;; depend on order. The following two examples both
-;; conform to `::asr-term` and to `::ttype`:
-
-
-;;     (Integer- {:dimensions [], :kind 4})
-;;     (Integer- {:kind 4, :dimensions []})
-
-
-;; The names of heavy-sugar functions, like
-;; `Integer` or `Variable--`, have either zero or
-;; two trailing hyphens. The difference concerns
-;; legacy. If a legacy sugar is needed for a term,
-;; the legacy sugar has the name with no hyphens,
-;; like `Variable` and the heavy sugar has the name
-;; with two hyphens, like `Variable--`. Both legacy
-;; sugar and heavy sugar produce identical
-;; full-forms.
-
-
-;; For example, The following is heavy sugar for a
-;; `Variable`, representing the more progressive,
-;; desired form:
-
-
-;; Heavy Sugar:
-;;
-;;     (Variable-- 2 'x (Integer 4)
-;;                 nil [] Local
-;;                 [] []  Default
-;;                 Source Public Required
-;;                 false)
-
-
-;; Here is a legacy version of the same instance:
-
-
-;; Legacy Sugar:
-;;
-;;     (Variable 2 x []
-;;               Local () ()
-;;               Default (Integer 4 []) Source
-;;               Public Required false)
-
-
-;; Notice NO QUOTE MARK on the name of the variable.
-;; That's the way `--show-asr` prints it. That's the
-;; only difference between heavy sugar and legacy
-;; sugar for _Variable_.
-
-
-;; For specs where MASR heavy sugar and ASDL legacy
-;; are identical, like `Integer`, there is only one
-;; function with no trailing hyphens in its name.
-
-
-;; Heavy-sugar functions employ positional arguments
-;; that depend on order. Final arguments may have
-;; defaults. For example, the following examples
-;; conform to both `::asr-term` and to `::ttype`:
-
-
-;;     (Integer)
-;;     (Integer 4)
-;;     (Integer 2 [])
-;;     (Integer 8 [[6 60] [1 42]])
-
-
+;; 
+;; 
+;; # IMPLEMENTATIONS
+;; 
+;; 
+;; The remaining sections of this document describe
+;; detailed implementations for every term in MASR.
+;; 
+;; 
 ;; # DIMENSION
-
-
+;; 
+;; 
 ;; `Dimension` is a term without nested multi-specs.
-;; It is a handwritten special case.
-
-
-;; original ASDL:
+;; It is a handwritten special case, not defined via
+;; `defmasrtype`.
+;; 
+;; 
+;; ## Original ASDL
+;; 
+;; 
+;; ```c
 ;; dimension = (expr? start, expr? length)
 
-
+;; 
+;; 
 ;; The ASDL is imprecise. The real spec, realized only
 ;; in secret C++ code, is that we have either both
 ;; `start` and `length` or we just have nothing. MASR
 ;; makes exposes this secret explicitly.
-
-
+;; 
+;; 
+;; ## Pluralities
+;; 
+;; 
 ;; Case with 1 index is disallowed.
 ;; https://github.com/rebcabin/masr/issues/5
-
+;; 
 
 (def MIN-DIMENSION-COUNT 0)
 (def MAX-DIMENSION-COUNT 2)
 
-
+;; 
+;; 
+;; ## Dimension-Content
+;; 
+;; 
 ;; The next spec says that a `::dimension-content` is
 ;; a collection of `::nat` with either two or zero
 ;; elements. TODO Consider a regex-spec.
+;; 
+;; 
 
 (s/def ::dimension-content
   (s/and
@@ -945,30 +1122,39 @@
               :into ())
    (fn [it] (not (= 1 (count it))))))
 
-
+;; 
+;; 
+;; ## Full-Form
+;; 
+;; 
 ;; The next spec says that a `dimension` in full-form
 ;; is an entity hash-map with keys `::term` and
-;; `::dimension-content.`
+;; `::dimension-content`.
+;; 
 
 (defmethod term ::dimension [_]
   (s/keys :req [::term
                 ::dimension-content]))
 
-
+;; 
 ;; As usual, we need a term-entity key, `::dimension`,
 ;; for recursive type-checking.
+;; 
 
-(def-term-entity-key dimension)
+    (def-term-entity-key dimension)
 
-
+;; 
 ;; This spec can generate samples.
+;; 
 
 #_
 (gen/sample (s/gen ::dimension-content) 3)
 
 ;; => (() (0 0) (1 1))
 
-;; heavy sugar
+;; 
+;; ## Heavy Sugar
+;; 
 
 (defn dimension [candidate-contents]
   (if (or (not (coll? candidate-contents))
@@ -984,20 +1170,27 @@
         ::invalid-dimension
         cnf))))
 
-
+;; 
+;; 
 ;; # DIMENSIONS
-
-
+;; 
+;; 
 ;; `Dimensions` [sic] is not a term. Dimensions stands
 ;; for `dimension*`, a plurality of dimension. We do a
 ;; lot more pluralities later. This is just the first
 ;; example of a repeating pattern (TODO: macro?)
-
+;; 
+;; 
+;; ## Pluralities
+;; 
+;; 
 
 (def MIN-NUMBER-OF-DIMENSIONS 0)
 (def MAX-NUMBER-OF-DIMENSIONS 9)
 
+;; 
 ;; TODO Consider a regex-spec.
+;; 
 
 (s/def ::dimensions
   (s/coll-of (term-selector-spec ::dimension)
@@ -1005,13 +1198,18 @@
              :max-count MAX-NUMBER-OF-DIMENSIONS,
              :into []))
 
-
+;; 
 ;; Generation of test cases does not currently work
 ;; TODO https://github.com/rebcabin/masr/issues/14
+;; 
 
 #_(gen/sample (s/gen ::dimensions) 3)
 
-;; heavy sugar
+;; 
+;; 
+;; ## Heavy Sugar
+;; 
+;; 
 
 (defn dimensions
   [candidate-contents]
@@ -1029,23 +1227,28 @@
                          dims-conf)]
           (map dimension dims-cont))))))
 
-
+;; 
 ;; # SYMTAB-ID
-
-
+;; 
+;; 
 ;; In ASDL, `symbol_table` sometimes means a
-;; `SymbolTable`, an unwritten spec, and sometimes
-;; means an integer id of a `SymbolTable` specified
-;; elsewhere. MASR does better. MASR `->asdl-type`
-;; projects both of these types, `SymbolTable` and
-;; `symtab-id`, back into ASDL `symbol_table`, with its
-;; secret proviso. MASR exposes the secret. ASDL
-;; embraces the secret.
-
+;; `SymbolTable` and sometimes means an integer id of a
+;; `SymbolTable` that is specified elsewhere. MASR does
+;; better. MASR `->asdl-type` projects both of these
+;; types, `SymbolTable` and `symtab-id`, back into ASDL
+;; `symbol_table`, with its secret proviso. MASR
+;; exposes the secret. ASDL embraces the secret.
+;; 
+;; 
+;; 
 
 (s/def ::symtab-id ::nat)
 
-;; heavy sugar
+;; 
+;; 
+;; ## Heavy Sugar
+;; 
+;; 
 
 (defn symtab-id [it]
   (let [cnf (s/conform ::symtab-id it)]
@@ -1053,17 +1256,17 @@
       ::invalid-symtab-id
       cnf)))
 
-
+;; 
+;; 
 ;; # SYMBOL-TABLE
-
-
+;; 
+;; 
 ;; `SymbolTable` is an unwritten term. It doesn't have
-;; nested multi-specs. We'll write it out fully by
-;; hand.
-
+;; nested multi-specs. Write it out fully by hand.
+;; 
+;; 
 
 (s/def ::hash-map map?)
-
 
 (defmethod term ::SymbolTable [_]
   (s/keys :req [::term
@@ -1073,7 +1276,9 @@
 
 (def-term-entity-key SymbolTable)
 
-;; heavy sugar
+;; 
+;; ## Heavy Sugar
+;; 
 
 (defn SymbolTable [id, hash-map]
   (let [st {::term      ::SymbolTable
@@ -1083,58 +1288,21 @@
       ::invalid-symbol-table
       st)))
 
-
-;; # LEGACY MACRO
-
-
-;; The `legacy` macro currently just converts `=`
-;; into `Assignment` in a whole tree. Apply "legacy"
-;; to a whole expression.
-
-
-;; TODO: ASDL output from `--show-asr` currently
-;; requires moving colons from the backs of keywords to
-;; the front. That is necessary because colons at the
-;; back fail the Clojure reader. We have a `sed` script
-;; for that: `fix-show-asr.sed`. The script also
-;; converts ASDL's `.false.` to `false` and `.true.` to
-;; `true`, but that could be done at the Clojure level.
-
-
-;; Here is `fix-show-asr.sed`:
-
-
-;; ```sed
-;; s/\(\([_a-zA-Z0-9]*\)\:\)/:\2/g
-;; s/\.\(false\)\./\1/g
-;; s/\.\(true\)\./\1/g
-;; ```
-
-
-;; TODO: We might rework heavy sugar through the whole
-;; code-base because we must apply `legacy` anyway. For
-;; now, user-level code must call `legacy` when
-;; appropriate.
-
-
-(defn rewrite-for-legacy
-  "Replace = with Assignment anywhere in a MASR
-  sugared expression."
-  [it]
-  (prewalk
-   (fn [x]
-     (if (list? x)
-       (replace {'= 'Assignment--} x)
-       x))
-   it))
-
-
-(defmacro legacy
-  "DANGER: Call 'eval'."
-  [it]
-  `(do (in-ns 'masr.specs)
-       (eval (rewrite-for-legacy '~it))))
-
+;; 
+;; # ENUM-LIKE
+;; 
+;; 
+;; Many ASDL types are like enums: they are just a
+;; set of alternative symbols, without parentheses
+;; and without parameters _qua_ arguments. Example:
+;; ASDL `access` has two possibilities: `Public`
+;; and `Private`. MASR automates all of enum-likes
+;; via one macro, `enum-like`.
+;; 
+;; 
+;; ## Helpers for Enum-Like
+;; 
+;; 
 
 (defmacro symbolate
   "ASDL Back-Channel: create unquoted constants such as
@@ -1144,6 +1312,8 @@
         cmds (for [e a-set] (list 'def e `'~e))]
     `(list ~@cmds)))
 
+;; 
+;; 
 
 (defmacro legacicate
   "ASDL Back-Channel: create legacy function-calls
@@ -1156,17 +1326,11 @@
         cmds  (for [e a-set] (list 'def e `(~term '~e)))]
     `(list ~@cmds)))
 
-
-;; # ENUM-LIKE
-
-
-;; Many ASDL types are like enums: they are just a
-;; set of alternative symbols, without parentheses
-;; and without parameters _qua_ arguments. Example:
-;; ASDL `access` has two possibilities: `Public`
-;; and `Private`. MASR automates all of enum-likes
-;; via one macro.
-
+;; 
+;; 
+;; ## Enum-Like, Proper
+;; 
+;; 
 
 (defmacro enum-like
   "Convert a set of symbols into a multi-spec under
@@ -1199,6 +1363,10 @@
        (legacicate ~term ~heads)
        )))
 
+;; 
+;; ## Most Enum-Likes
+;; 
+;; 
 
 (enum-like logicalbinop #{'And  'Or  'Xor  'NEqv  'Eqv})
 (enum-like cmpop        #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
@@ -1209,27 +1377,28 @@
 (enum-like presence     #{'Required 'Optional})
 (enum-like deftype      #{'Implementation, 'Interface})
 
-
-;; ## ABI
-
-
+;; 
+;; ## Abi
+;; 
+;; 
 ;; `Abi` is a special case of enum-like with rich logic.
-
+;; 
 
 (def external-abis
   #{'LFortranModule, 'GFortranModule,
     'BindC, 'Interactive, 'Intrinsic})
 
-
 (def internal-abis #{'Source})
-
 
 (s/def ::abi-enum (set/union external-abis internal-abis))
 
-
 (s/def ::abi-external ::bool)
 
-;; full-form
+;; 
+;; 
+;; ### Full-Form
+;; 
+;; 
 
 (defmethod term ::abi [_]
   (s/with-gen
@@ -1247,10 +1416,13 @@
          ::abi-enum     (s/gen internal-abis)
          ::abi-external (gen/return false))] ))))
 
-
 (def-term-entity-key abi)
 
-;; heavy sugar
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn abi
   ;; arity 1 --- default "external"
@@ -1273,62 +1445,86 @@
          ::invalid-abi
          cnf)))))
 
+;; 
+;; 
+;; ### The ABIs
+;; 
+;; 
 
 (def LFortranModule (abi 'LFortranModule :external true))
 (def GFortranModule (abi 'GFortranModule :external true))
 (def BindC          (abi 'BindC          :external true))
 (def Interactive    (abi 'Interactive    :external true))
 (def Intrinsic      (abi 'Intrinsic      :external true))
-
 (def Source         (abi 'Source         :external false))
 
-
+;; 
 ;; # TTYPE
-
-
+;; 
+;; 
 ;; `Ttype` is a term with nested multi-specs, so it
 ;; fits in the macro scheme written at the top of this
 ;; file. Its subtypes, `Integer`, `Real`, `Logical`,
 ;; etc., have additional structure we automate here.
-
-;; pluralities
+;; 
+;; 
+;; ## Pluralities
+;; 
+;; 
 
 (def MIN-NUMBER-OF-TTYPES    0)
 (def MAX-NUMBER-OF-TTYPES 1024)
 
+;; 
 ;; TODO: Consider a regex-spec.
+;; 
 
-(s/def ::ttypes (s/coll-of ::ttype
-                           :min-count MIN-NUMBER-OF-TTYPES
-                           :max-count MAX-NUMBER-OF-TTYPES))
+(s/def ::ttypes
+  (s/coll-of ::ttype
+             :min-count MIN-NUMBER-OF-TTYPES
+             :max-count MAX-NUMBER-OF-TTYPES))
 
+;; 
 ;; TODO: Consider a regex-spec.
+;; 
 
 (s/def ::ttype?
   (s/coll-of ::ttype
              :min-count 0
              :max-count 1))
 
-
-;; kind: The `kind` member selects the kind of a
-;; given type. We currently support the following:
-;;
-;; Integer kinds: 1 (i8), 2 (i16), 4 (i32), 8 (i64)
-;; Real kinds: 4 (f32), 8 (f64)
-;; Complex kinds: 4 (c32), 8 (c64)
-;; Character kinds: 1 (utf8 string)
-;; Logical kinds: 1, 2, 4: (boolean represented by
-;;     1, 2, 4 bytes; the default kind is 4, just
-;;     like the default integer kind, consistent
-;;     with Python and Fortran: in Python "Booleans
-;;     in Python are implemented as a subclass of
-;;     integers", in Fortran the "default logical
-;;     kind has the same storage size as the default
-;;     integer"; we currently use kind=4 as default
-;;     integer, so we also use kind=4 for the
-;;     default logical.)
-
-;; support specs for subtypes
+;; 
+;; 
+;; ## Kind
+;; 
+;; 
+;; The `kind` member selects the kind of a given `ttype`.
+;; MASR currently supports the following:
+;; 
+;; - `Integer` kinds: `1 (i8)`, `2 (i16)`, `4 (i32)`, `8 (i64)`
+;; 
+;; - `Real` kinds: `4 (f32)`, `8 (f64)`
+;; 
+;; - `Complex` kinds: `4 (c32)`, `8 (c64)`
+;; 
+;; - `Character` kinds: `1 (utf8 string)`
+;; 
+;; - `Logical` kinds: 1, 2, 4:
+;; 
+;;    Boolean represented by 1, 2, 4 bytes; the default
+;;    Logical kind is 4, just like the default Integer
+;;    kind, consistent with Python and Fortran: in
+;;    Python "Booleans in Python are implemented as a
+;;    subclass of integers", in Fortran the "default
+;;    logical kind has the same storage size as the
+;;    default integer"; we currently use `kind=4` as
+;;    default for Integer, so we also use `kind=4` as
+;;    default for Logical.
+;; 
+;; 
+;; ## Support Specs For Kinds
+;; 
+;; 
 
 (s/def ::integer-kind   #{1 2 4 8 16})
 (s/def ::real-kind      #{4 8})
@@ -1336,18 +1532,34 @@
 (s/def ::logical-kind   #{1 2 4})
 (s/def ::character-kind #{1})
 
-
+;; 
+;; 
+;; ## Original ASDL
+;; 
+;; 
 ;; Here are the first four ttypes, which all follow
 ;; a common pattern captured in macros. There are
 ;; more ttypes later that don't follow that pattern.
-
-
+;; 
+;; 
+;; ```c
 ;; ttype
 ;;     = Integer(int kind, dimension* dims)
 ;;     | Real(int kind, dimension* dims)
 ;;     | Complex(int kind, dimension* dims)
 ;;     | Logical(int kind, dimension* dims)
 
+;; 
+;; 
+;; ## Full-Form
+;; 
+;; 
+;; Because the full-forms for `Integer`, `Real`,
+;; `Complex`, and `Logical` are almost identical with
+;; one another, a Clojure macro is the appropriate
+;; implementation of these four `ttypes`.
+;; 
+;; 
 
 (defmacro def-ttype-head
   "Defmethods for defmulti ttype-head, requiring
@@ -1369,20 +1581,29 @@
     `(defmethod ttype-head ~method [_#]
        (s/keys :req [::ttype-head ~kind ::dimensions]))))
 
-
+;; 
+;; 
 ;; ## INTEGER, REAL, COMPLEX, LOGICAL
-
+;; 
+;; 
 
 (def-ttype-head Integer)
 (def-ttype-head Real)
 (def-ttype-head Complex)
 (def-ttype-head Logical)
 
-
+;; 
+;; 
+;; ## CHARACTER
+;; 
+;; 
 ;; TODO: `Character` is more rich
 ;; `(def-ttype-head Character)`
-
-;; heavy sugar
+;; 
+;; 
+;; ## Heavy Sugar for `ttype`
+;; 
+;; 
 
 (defn ttype
   "Given a conforming full-form ::asr-type-head
@@ -1407,7 +1628,11 @@
       ::invalid-ttype
       cnf)))
 
-;; light sugar and heavy sugar
+;; 
+;; 
+;; ## Sugar for the Kinds
+;; 
+;; 
 
 (defmacro def-ttype-and-head
   "Define light-sugar functions Integer-, Real-,
@@ -1476,62 +1701,86 @@
        ;; TODO ? entity keywords for ::Integer, ::Real, etc.
        )))
 
+;; 
+;; 
 
 (def-ttype-and-head Integer)
 (def-ttype-and-head Real)
 (def-ttype-and-head Complex)
 (def-ttype-and-head Logical)
 
+;; 
+;; 
 
 (def-term-head--entity-key ttype Integer)
 (def-term-head--entity-key ttype Real)
 (def-term-head--entity-key ttype Complex)
 (def-term-head--entity-key ttype Logical)
 
+;; 
+;; 
+;; ## TODO The Rest of the `ttypes`
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
+;; >>> Integer, Real, Complex, Logical are already done ...
+;; >>> FunctionType is done.
+;; >>> Here are the rest of the ttypes.
+;; | Character(int kind, int len, expr? len_expr, dimension* dims)
+;; | Set(ttype type)
+;; | List(ttype type)
+;; | Tuple(ttype* type)
+;; | Struct(symbol derived_type, dimension* dims)
+;; | Enum(symbol enum_type, dimension *dims)
+;; | Union(symbol union_type, dimension *dims)
+;; | Class(symbol class_type, dimension* dims)
+;; | Dict(ttype key_type, ttype value_type)
+;; | Pointer(ttype type)
+;; | Const(ttype type)
+;; | CPtr()
+;; | TypeParameter(identifier param, dimension* dims)
 
-;; TODO the rest of the ttypes
-;;     >>> Integer, Real, Complex, Logical are already done ...
-;;     >>> FunctionType is done.
-;;     >>> Here are the rest of the ttypes.
-;;     | Character(int kind, int len, expr? len_expr, dimension* dims)
-;;     | Set(ttype type)
-;;     | List(ttype type)
-;;     | Tuple(ttype* type)
-;;     | Struct(symbol derived_type, dimension* dims)
-;;     | Enum(symbol enum_type, dimension *dims)
-;;     | Union(symbol union_type, dimension *dims)
-;;     | Class(symbol class_type, dimension* dims)
-;;     | Dict(ttype key_type, ttype value_type)
-;;     | Pointer(ttype type)
-;;     | Const(ttype type)
-;;     | CPtr()
-;;     | TypeParameter(identifier param, dimension* dims)
-
-
+;; 
 ;; ## FUNCTION-TYPE
+;; 
+;; 
+;; This is a rich `ttype` that we spell out by hand.
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
+;; | FunctionType(ttype*  arg_types,       ;; rename param-types
+;;                ttype?  return_var_type,
+;;                abi     abi,
+;;                deftype deftype,
+;;                string? bindc_name,
+;;                bool    elemental,
+;;                bool    pure,
+;;                bool    module,
+;;                bool    inline,
+;;                bool    static,
+;;                ttype*  type_params,
+;;                symbol* restrictions,
+;;                bool    is_restriction)
 
-
-;;     | FunctionType(ttype*  arg_types,       ;; rename param-types
-;;                    ttype?  return_var_type,
-;;                    abi     abi,
-;;                    deftype deftype,
-;;                    string? bindc_name,
-;;                    bool    elemental,
-;;                    bool    pure,
-;;                    bool    module,
-;;                    bool    inline,
-;;                    bool    static,
-;;                    ttype*  type_params,
-;;                    symbol* restrictions,
-;;                    bool    is_restriction)
-
-;; prerequisite type aliases:
+;; 
+;; 
+;; ### Prerequisite Type Aliases
+;; 
+;; 
 
 (s/def ::param-types     ::ttypes)
 (s/def ::return-var-type ::ttype?)
 
-;; `ABI` is already good enough.
-;; `deftype` is found above
+;; 
+;; * `ABI` is already good enough.
+;; * `deftype` is found above
+;; 
 
 (s/def ::bindc-name      (s/nilable string?))
 (s/def ::elemental       ::bool)
@@ -1541,25 +1790,40 @@
 (s/def ::static          ::bool)
 (s/def ::type-params     ::ttypes)
 
-;; pluralities:
-;;
-;; symbol* is written "symbols," and restrictions
-;; is a type alias for symbols.
-;;
-;; forward reference. Can only test empty symbol*
-;; restrictions until symbol is properly defined
+;; 
+;; 
+;; ### Pluralities
+;; 
+;; 
+;; `symbol*` is written `symbols`, and `restrictions`
+;; is a type alias for `symbols`.
+;; 
+;; 
+;; ### Forward Reference
+;; 
+;; 
+;; Can only test empty `symbol*`
+;; restrictions until `symbol` is properly defined
 ;; below.
+;; 
+;; 
 
 (def MIN-NUMBER-OF-SYMBOLS   0)
 (def MAX-NUMBER-OF-SYMBOLS 128)
 
+;; 
 ;; TODO: Consider a regex-spec.
+;; 
 
-(s/def ::symbols (s/coll-of ::symbol
-                            :min-count MIN-NUMBER-OF-SYMBOLS
-                            :max-count MAX-NUMBER-OF-SYMBOLS))
+(s/def ::symbols
+  (s/coll-of ::symbol
+             :min-count MIN-NUMBER-OF-SYMBOLS
+             :max-count MAX-NUMBER-OF-SYMBOLS))
 
+;; 
 ;; TODO: Consider a regex-spec.
+;; 
+;; 
 
 (s/def ::symbol?
   (s/coll-of ::symbol
@@ -1568,7 +1832,10 @@
 (s/def ::restrictions    ::symbols)
 (s/def ::is-restriction  ::bool)
 
-;; heavy sugar
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn FunctionType
   [param-types-     return-var-type-  abi-
@@ -1601,58 +1868,85 @@
       :invalid-function-type
       cnf)))
 
-
+;; 
 ;; # PLACEHOLDERS
-
-
+;; 
+;; 
 ;; ## SYMBOLIC VALUE
-
+;; 
+;; 
 
 (s/def ::symbolic-value empty?)
 
-;; sugar
+;; 
+;; 
+;; ### Sugar
+;; 
+;; 
 
 (def symbolic-value identity)
 
-
+;; 
+;; 
 ;; ## VALUE
-
+;; 
+;; 
 
 (s/def ::value empty?)
 
-;; sugar
+;; 
+;; 
+;; ### Sugar
+;; 
 
 (def value identity)
 
-
+;; 
+;; 
 ;; # EXPR
-
-
-;; pluralities
+;; 
+;; 
+;; ## Pluralities
+;; 
+;; 
 
 (def MIN-NUMBER-OF-EXPRS    0)
 (def MAX-NUMBER-OF-EXPRS 1024)
 
+;; 
 ;; TODO: Consider a regex-spec.
+;; 
 
-(s/def ::exprs (s/coll-of ::expr
-                          :min-count MIN-NUMBER-OF-EXPRS
-                          :max-count MAX-NUMBER-OF-EXPRS))
+(s/def ::exprs
+  (s/coll-of ::expr
+             :min-count MIN-NUMBER-OF-EXPRS
+             :max-count MAX-NUMBER-OF-EXPRS))
 
+;; 
 ;; TODO: Consider a regex-spec.
+;; 
 
 (s/def ::expr?
   (s/coll-of ::expr
              :min-count 0
              :max-count 1))
 
-
+;; 
+;; 
 ;; ## LOGICAL CONSTANT
-
-
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
 ;; (LogicalConstant true (Logical 4 []))
 
-;; heavy sugar
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn LogicalConstant
   ;; arity-2
@@ -1669,29 +1963,42 @@
   ([a-bool]
    (LogicalConstant a-bool (Logical))))
 
-
+;; 
+;; 
 ;; ## VAR
-
-
-;;
-;; Workaround; See Issue #23
-;;
-;; Is the parameter symbol for Var really a symbol?
+;; 
+;; 
+;; ### Issue #23
+;; 
+;; 
+;; Is the parameter `symbol` for `Var` really a `symbol`?
 ;; Or just an identifier? #23
 ;; https://github.com/rebcabin/masr/issues/23
+;; The original ASDL
+;; 
+;; ```c
+;; Var(symbol v)
 
-;; `Var(symbol v)`
-
-;; from ASR.asdl doesn't match the instance. Instead,
+;; 
+;; from `ASR.asdl` doesn't match the instance. Instead,
 ;; we probably need something like:
+;; 
+;; ```c
+;; Var(symtab_id stid, identifier it)
 
-;; `Var(symtab_id stid, identifier it)`
-
-;; prerequisite type alias:
+;; 
+;; 
+;; ### Prerequisite Type Alias
+;; 
+;; 
 
 (s/def ::varnym           ::identifier)
 
-;; heavy sugar
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn Var-- [stid, ident]
   (let [cnf {::term ::expr,
@@ -1704,39 +2011,63 @@
       :invalid-var
       cnf)))
 
-;; legacy sugar
+;; 
+;; 
+;; ### Legacy Sugar
+;; 
+;; 
 
 (defmacro Var [stid, unquoted-ident]
   `(Var-- ~stid '~unquoted-ident))
 
-
+;; 
 ;; TODO: make it look up a value in the
 ;; symbol-table! That's part of abstract execution.
-
-
+;; 
+;; 
 ;; ## LOGICAL BINOP
-
-
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
 ;; | LogicalBinOp(expr left, logicalbinop op, expr
 ;;   right, ttype type, expr? value)
 
-;; (LogicalBinOp
-;;  (Var 2 a)
-;;  And
-;;  (LogicalCompare
-;;   (Var 2 b)
-;;   Eq
-;;   (Var 2 b)
-;;   (Logical 4 []) ())
-;;  (Logical 4 []) ())
+;; 
+;; 
+;; ### EXAMPLE
+;; 
+;; 
 
-;; prerequisite type aliases:
-;; TODO: check that the types of the exprs are `::Logical!`
+#_
+(LogicalBinOp
+ (Var 2 a)
+ And
+ (LogicalCompare
+  (Var 2 b)
+  Eq
+  (Var 2 b)
+  (Logical 4 []) ())
+ (Logical 4 []) ())
+
+;; 
+;; ### Prerequisite Type Aliases
+;; 
+;; 
+;; TODO: check that the types of the exprs are `::Logical`!
+;; 
+;; 
 
 (s/def ::logical-left  ::expr)
 (s/def ::logical-right ::expr)
 
-;; heavy sugar
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn LogicalBinOp [left- lbo- right- tt- val-]
   (let [cnf {::term ::expr,
@@ -1752,23 +2083,38 @@
       :invalid-logical-bin-op
       cnf)))
 
-
+;; 
 ;; ## LOGICAL COMPARE
-
-
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
 ;; | LogicalCompare(expr left,   ;; must have type ::Logical
 ;;                  cmpop op,    ;; not all cmpop, only Eq and NotEq
 ;;                  expr right,  ;; must have type ::Logical
 ;;                  ttype type,
 ;;                  expr? value)
 
-;;  (LogicalCompare
-;;   (Var 2 b)
-;;   Eq
-;;   (Var 2 b)
-;;   (Logical 4 []) ())
+;; 
+;; 
+;; ### EXAMPLE
+;; 
+;; 
 
-;; heavy sugar
+#_
+(LogicalCompare
+  (Var 2 b)
+  Eq
+  (Var 2 b)
+  (Logical 4 []) ())
+
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn LogicalCompare [l- cmp- r- tt- val-]
   (let [cnf {::term ::expr,
@@ -1783,52 +2129,77 @@
       :invalid-logical-compare
       cnf)))
 
-
+;; 
+;; 
 ;; # STMT
-
-
-;; pluralities
+;; 
+;; 
+;; ## Pluralities
+;; 
+;; 
 
 (def MIN-NUMBER-OF-STMTS    0)
 (def MAX-NUMBER-OF-STMTS 1024)
 
+;; 
+;; 
 ;; TODO: Consider a regex-spec.
+;; 
 
-(s/def ::stmts (s/coll-of ::stmt
-                          :min-count MIN-NUMBER-OF-STMTS
-                          :max-count MAX-NUMBER-OF-STMTS))
+(s/def ::stmts
+  (s/coll-of ::stmt
+             :min-count MIN-NUMBER-OF-STMTS
+             :max-count MAX-NUMBER-OF-STMTS))
 
+;; 
+;; 
 ;; TODO: Consider a regex-spec.
+;; 
 
 (s/def ::stmt?
   (s/coll-of ::stmt
              :min-count 0
              :max-count 1))
 
-
+;; 
+;; 
 ;; ## ASSIGNMENT
-
-
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
 ;; | Assignment(expr target, expr value, stmt? overloaded)
 ;;          --- Var ---
 
-;; See Issues
-;;
+;; 
+;; 
+;; ### Issues
+;; 
+;; 
 ;; https://github.com/rebcabin/masr/issues/21
 ;; https://github.com/rebcabin/masr/issues/22
 ;; https://github.com/rebcabin/masr/issues/26
-
-
-;; prerequisite type aliases:
+;; 
+;; 
+;; ### Prerequisite Type Aliases:
+;; 
+;; 
 ;; TODO: more cases for `lvalue`, and an `s/or`
 ;; with `second` hack
-
+;; 
+;; 
 
 (s/def ::lvalue     ::Var)
 (s/def ::rvalue     ::expr)
 (s/def ::overloaded ::stmt?)
 
-;; heavy sugar
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn Assignment-- [lhs, rhs, unk]
   (let [cnf {::term ::stmt,
@@ -1841,48 +2212,32 @@
       :invalid-assignment
       cnf)))
 
-
+;; 
+;; 
 ;; ## SUBROUTINE CALL
-
-
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
 ;; | SubroutineCall(symbol name,
 ;;                  symbol? original_name,
 ;;                  call_arg* args,
-;; expr? dt)
+;;                  expr? dt)
 
-
-;; See Issue #31 https://github.com/rebcabin/masr/issues/31
-
-
-;; `symbol`, here, is really a `symbol-ref`, a pair
-;; of an identifier and a symtab-id. The identifier
-;; must match an the name of a `Function` defined
-;; elsewhere.
-
-
-;; prerequisite type aliases
-
-
-(s/def ::symbol-ref ::identifier)
-
-
-;; pluralities
-
-
-;; TODO: Consider a regex-spec.
-
-(s/def ::symbol-ref?
-  (s/coll-of ::symbol-ref
-             :min-count 0
-             :max-count 1))
-
-
+;; 
+;; 
 ;; # SYMBOL
-
-
+;; 
+;; 
 ;; ## VARIABLE
-
-
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
 ;; | Variable(symbol_table   parent_symtab,   ;; really an integer id
 ;;            identifier     name,
 ;;            identifier   * dependencies,    ;; vector of dependency
@@ -1896,35 +2251,58 @@
 ;;            presence       presence,
 ;;            bool           value_attr)
 
-;; (Variable                ;   head, term: symbol
-;;  2                       ;   symbol_table    parent-symtab-id
-                                        ;     TODO: NOT SYMBOL-TABLE!
-;;  x                       ;   identifier      nym
-;;  []                      ;   identifier *    dependencies
-;;  Local                   ;   intent          intent
-;;  ()                      ;   expr ?          symbolic-value
-;;  ()                      ;   expr ?          value
-;;  Default                 ;   storage_type    storage
-;;  (Integer 4 [])          ;   ttype           tipe
-;;  Source                  ;   abi             abi
-;;  Public                  ;   access          access
-;;  Required                ;   presence        presence
-;;  .false.)})              ;   bool            value-attr
+;; 
+;; 
+;; ### EXAMPLE
+;; 
+;; 
 
-;; prerequisite type aliases:
+#_
+(Variable                ;   head, term: symbol
+ 2                       ;   symbol_table    parent-symtab-id
+                                            ;     TODO: NOT SYMBOL-TABLE!
+ x                       ;   identifier      nym
+ []                      ;   identifier *    dependencies
+ Local                   ;   intent          intent
+ ()                      ;   expr ?          symbolic-value
+ ()                      ;   expr ?          value
+ Default                 ;   storage_type    storage
+ (Integer 4 [])          ;   ttype           tipe
+ Source                  ;   abi             abi
+ Public                  ;   access          access
+ Required                ;   presence        presence
+ .false.)                ;   bool            value-attr
+
+;; 
+;; 
+;; ### Prerequisite Type Aliases
+;; 
+;; 
 
 (s/def ::value-attr       ::bool)
 
+;; 
+;; 
 ;; `varnym` already defined for Var.
 ;; https://github.com/rebcabin/masr/issues/28
+;; 
+;; 
 
 (s/def ::type-declaration (s/nilable ::symtab-id))
 
+;; 
+;; 
 ;; TODO: there is ambiguity regarding identifier-sets and lists:
+;; 
+;; 
 
 (s/def ::dependencies     ::identifier-set)
 
-;; light sugar
+;; 
+;; 
+;; ### Light Sugar
+;; 
+;; 
 
 (defn Variable-
   [& {:keys [ ;; required
@@ -1947,35 +2325,38 @@
            access           Public
            presence         Required
            value-attr       false}}]
-  (let [cnf (s/conform
-             ::Variable
-             {::term              ::symbol,
-              ::asr-symbol-head
-              {::symbol-head      ::Variable,
+  (let [cnf (s/conform ::Variable
+                       {::term              ::symbol,
+                        ::asr-symbol-head
+                        {::symbol-head      ::Variable,
 
-               ::symtab-id        symtab-id,
-               ::varnym           varnym,
-               ::ttype            ttype,
+                         ::symtab-id        symtab-id,
+                         ::varnym           varnym,
+                         ::ttype            ttype,
 
-               ::type-declaration type-declaration,
-               ::dependencies     dependencies,
-               ::intent           intent,
+                         ::type-declaration type-declaration,
+                         ::dependencies     dependencies,
+                         ::intent           intent,
 
-               ::symbolic-value   symbolic-value,
-               ::value            value,
-               ::storage-type     storage-type,
+                         ::symbolic-value   symbolic-value,
+                         ::value            value,
+                         ::storage-type     storage-type,
 
-               ::abi              abi,
-               ::access           access,
-               ::presence         presence,
+                         ::abi              abi,
+                         ::access           access,
+                         ::presence         presence,
 
-               ::value-attr       value-attr,
-               }})]
+                         ::value-attr       value-attr,
+                         }})]
     (if (s/invalid? cnf)
       ::invalid-variable
       cnf)))
 
-;; heavy sugar
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn Variable--
   "Heavy sugar; parameters that collide with functions
@@ -1985,47 +2366,50 @@
    symbolic-value-,    value-,         storage-type-,
    abi-,               access-,        presence-,
    value-attr-]
-  (let [cnf
-        (s/conform
-         ::Variable
-         {::term              ::symbol,
-          ::asr-symbol-head
-          {::symbol-head      ::Variable,
+  (let [cnf (s/conform
+             ::Variable
+             {::term              ::symbol,
+              ::asr-symbol-head
+              {::symbol-head      ::Variable,
 
-           ::symtab-id        symtab-id-,
-           ::varnym           varnym-,
-           ::ttype            ttype-, ;; already wrapped!
+               ::symtab-id        symtab-id-,
+               ::varnym           varnym-,
+               ::ttype            ttype-, ;; already wrapped!
 
-           ;; https://github.com/rebcabin/masr/issues/28
-           ::type-declaration typedecl-
-           ::dependencies     dependencies-,
-           ::intent           (if (symbol? intent-)
-                                (intent  intent-)
-                                intent-),
+               ;; https://github.com/rebcabin/masr/issues/28
+               ::type-declaration typedecl-
+               ::dependencies     dependencies-,
+               ::intent           (if (symbol? intent-)
+                                    (intent  intent-)
+                                    intent-),
 
-           ::symbolic-value   symbolic-value-,
-           ::value            value-,
-           ::storage-type     (if (symbol? storage-type-)
-                                (storage-type storage-type-)
-                                storage-type-),
+               ::symbolic-value   symbolic-value-,
+               ::value            value-,
+               ::storage-type     (if (symbol? storage-type-)
+                                    (storage-type storage-type-)
+                                    storage-type-),
 
-           ::abi              (if (symbol? abi-)
-                                (abi abi-)
-                                abi-),
-           ::access           (if (symbol? access-)
-                                (access access-)
-                                access-),
-           ::presence         (if (symbol? presence-)
-                                (presence presence-)
-                                presence-),
+               ::abi              (if (symbol? abi-)
+                                    (abi abi-)
+                                    abi-),
+               ::access           (if (symbol? access-)
+                                    (access access-)
+                                    access-),
+               ::presence         (if (symbol? presence-)
+                                    (presence presence-)
+                                    presence-),
 
-           ::value-attr       value-attr-,
-           }})]
+               ::value-attr       value-attr-,
+               }})]
     (if (s/invalid? cnf)
       ::invalid-variable
       cnf)))
 
-;; legacy sugar
+;; 
+;; 
+;; ### Legacy Sugar
+;; 
+;; 
 
 (defmacro Variable
   "Honor legacy parameter order of
@@ -2051,20 +2435,33 @@
     ~presence-
     ~value-attr-))
 
-
+;; 
+;; 
 ;; ## MODULE
-
-
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
 ;; | Module(symbol_table symtab, identifier name, identifier* dependencies,
 ;;                       bool loaded_from_mod, bool intrinsic)
 
-;; prerequisite type aliases:
+;; 
+;; 
+;; ### Prerequisite Type Aliases
+;; 
+;; 
 
 (s/def ::modulenym       ::identifier)
 (s/def ::loaded-from-mod ::bool)
 (s/def ::intrinsic       ::bool)
 
-;; heavy sugar
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn Module [symtab, modnym, deps, loaded, intrinsic-]
   (let [cnf {::term ::symbol
@@ -2079,46 +2476,61 @@
       :invalid-module
       cnf)))
 
-
+;; 
+;; 
 ;; ## FUNCTION
-
-
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
 ;; | Function(symbol_table symtab,
-;;
 ;;            identifier   name,
 ;;            ttype        function_signature,
 ;;            identifier*  dependencies,
-;;
+;; 
 ;;            expr*        args,              ;; rename ::params
 ;;            stmt*        body,
 ;;            expr?        return_var,
-;;
+;; 
 ;;            access       access,
 ;;            bool         deterministic,
 ;;            bool         side_effect_free)
 
-;; prerequisite type aliases:
-
-;; SymbolTable is already defined
+;; 
+;; 
+;; ### Prerequisite Type Aliases
+;; 
+;; 
+;; * `SymbolTable` is already defined
+;; 
 
 (s/def ::function-name      ::identifier)
 (s/def ::function-signature ::FunctionType)
 
-;; dependencies is already defined
+;; 
+;; * `dependencies` is already defined
+;; 
 
 (s/def ::params             ::exprs) ;; renamed from args
 (s/def ::body               ::stmts)
 (s/def ::return-var         ::expr?)
 
-;; access is already defined
+;; 
+;; * `access` is already defined
+;; 
 
 (s/def ::deterministic      ::bool)
 (s/def ::side-effect-free   ::bool)
 
-
 (def-term-head--entity-key symbol Function)
 
-;; heavy sugar
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn Function-- [symtab,
                   fnnym,   fnsig,  deps,
@@ -2146,7 +2558,11 @@
       :invalid-function
       cnf)))
 
-;; legacy sugar
+;; 
+;; 
+;; ### Legacy Sugar
+;; 
+;; 
 
 (defmacro Function
   "Quote the fnnym."
@@ -2159,20 +2575,31 @@
                ~params-, ~body-,  ~retvar,
                ~access-, ~determ, ~sefree))
 
-
+;; 
+;; 
 ;; ## PROGRAM
-
-
+;; 
+;; 
+;; ### Original ASDL
+;; 
+;; 
+;; ```c
 ;; = Program(symbol_table symtab,
 ;;           identifier   name,
 ;;           identifier*  dependencies,
 ;;           stmt*        body)
 
-;; prerequisite type alias:
+;; 
+;; 
+;; ### Prerequisite Type Alias
+;; 
 
 (s/def ::prognym ::identifier)
 
-;; heavy sugar
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
 
 (defn Program-- [stab, nym, deps, body-]
   (let [cnf (s/conform ::Program
@@ -2187,25 +2614,31 @@
       ::invalid-program
       cnf)))
 
-;; legacy sugar
+;; 
+;; 
+;; ### Legacy Sugar
+;; 
+;; 
 
 (defmacro Program
   "Quote the nym."
   [stab, nym, deps, body-]
   `(Program-- ~stab, '~nym, ~deps, ~body-))
 
-
+;; 
 ;; # UNIT
-
-
-;; prerequisite type aliases:
-;; s/conform slips in the tag keys in from s/or,
+;; 
+;; 
+;; ## Prerequisite Type Aliases
+;; 
+;; 
+;; `s/conform` slips in the tag keys in from `s/or`,
 ;; requiring a step in heavy sugar to remove them.
+;; 
 
 (s/def ::node (s/or :expr   ::expr
                     :stmt   ::stmt
                     :symbol ::symbol))
-
 
 (defn node [candidate]
   (let [cnf (s/conform ::node candidate)]
@@ -2213,21 +2646,29 @@
       :invalid-node
       (second cnf))))
 
+;; 
+;; ## Pluralities
+;; 
 
 (def MIN-NODE-COUNT    0)
 (def MAX-NODE-COUNT 4096)
 
+;; 
 ;; TODO: Consider a regex-spec.
+;; 
 
 (s/def ::nodes
   (s/and (s/coll-of ::node
                     :min-count MIN-NODE-COUNT,
                     :max-count MAX-NODE-COUNT)))
 
-
+;; 
 ;; ## TRANSLATION UNIT
-
-;; heavy sugar
+;; 
+;; 
+;; ### Heavy Sugar
+;; 
+;; 
 
 (defn TranslationUnit [stab, node-preimages]
   (let [node-cnf (map node node-preimages)
@@ -2248,3 +2689,4 @@
     (if (s/invalid? cnf)
       :invalid-translation-unit
       fixed)))
+

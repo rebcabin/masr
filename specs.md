@@ -1,10 +1,28 @@
 # PROLOGUE
 
 
-This file is semi-literate programming. It is
-supposed to be synchronized with `specs.clj`. This
-first bit declares dependencies for the code in this
-file.
+This file is semi-literate programming. Synchronize
+the code from this Markdown file via the following
+shell command:
+
+
+```bash
+awk -f code4md.awk < specs.md > ./src/masr/specs.clj
+```
+
+
+"Semi-literate" means that code blocks in the
+Markdown file are live. However, they may not refer
+to things that aren't defined yet. That's not the
+optimal order for narrative, but we'll live with it.
+Blocks that contain not-yet-defined code may contain
+comments or `#_` escapes that cause Clojure to parse
+but ignore the escaped expression.
+
+
+Since we must define things before using them, we
+must first declare Clojure dependencies for the rest
+of the code in this file.
 
 
 ```clojure
@@ -193,13 +211,34 @@ atoms.
 # FULL-FORM
 
 
-A MASR `asr-term` in _full-form_ is an instance
-hash-map, aka _entity_, that contains a `::term`
-keyword (or equivalent; see EXAMPLE).
+Every MASR `asr-term` has a full-form. A full-form
+is a Clojure _hash-map_ that contains the key
+`::term`. Clojure hash-maps are collections of
+key-value pairs like Python
+dictionaries.[https://clojuredocs.org/clojure.core/hash-map]
+
+Full-forms that are checked against Clojure specs
+are called _entities_. For example,
+
+```clojure
+;; key         value
+{::term        ::intent,
+ ::intent-enum 'Local}
+```
+
+is an entity checked against specs for `::term`,
+`::intent`, and `::intent-enum`. In MASR, all keys
+in all hash-maps are namespace-qualified keywords
+with double-colon prefixes. Such keys may have specs
+registered for them, or not. When a spec is
+registered for a key, automatic recursive
+type-checking is invoked.
 
 
-Every MASR `asr-term` has a full-form. Most have
-sugared forms that are
+# SUGAR
+
+
+Most entities have sugared forms that are
 
 1. easier for humans to read and write
 
@@ -207,11 +246,9 @@ sugared forms that are
    lpython and lfortran.
 
 
-# SUGAR
-
-
 Sugar comes in three flavors: light, heavy, and
 legacy.
+
 
 1. Light sugar employs keyword arguments with
    defaults. Light sugar is unambiguous but more
@@ -230,6 +267,87 @@ legacy.
    sugar is the most compatible with ASDL output
    from `--show-asr`.
 
+
+## SUGAR NAMING CONVENTION
+
+
+The names of light-sugar functions, like `Integer-`,
+have a single trailing hyphen. The keyword arguments
+of light-sugar functions are partitioned into
+required and optional-with-defaults. The keyword
+argument lists of light-sugar functions do not
+depend on order. The following two examples both
+conform to `::asr-term` and to `::ttype`:
+
+
+```clojure
+#_(Integer- {:dimensions [], :kind 4})
+#_(Integer- {:kind 4, :dimensions []})
+```
+
+
+The names of heavy-sugar functions, like
+`Integer` or `Variable--`, have either zero or
+two trailing hyphens. The difference concerns
+legacy. If a legacy sugar is needed for a term,
+the legacy sugar has the name with no hyphens,
+like `Variable` and the heavy sugar has the name
+with two hyphens, like `Variable--`. Both legacy
+sugar and heavy sugar produce identical
+full-forms.
+
+
+For example, The following is heavy sugar for a
+`Variable`, representing the more progressive,
+desired form:
+
+
+### Heavy Sugar
+
+```clojure
+#_(Variable-- 2 'x (Integer 4)
+            nil [] Local
+            [] []  Default
+            Source Public Required
+            false)
+```
+
+Here is a legacy version of the same instance:
+
+
+### Legacy Sugar
+
+```clojure
+#_(Variable 2 x []
+          Local () ()
+          Default (Integer 4 []) Source
+          Public Required false)
+```
+
+
+Notice NO QUOTE MARK on the name of the variable.
+That's the way `--show-asr` prints it. That's the
+only difference between heavy sugar and legacy
+sugar for _Variable_.
+
+
+For specs where MASR heavy sugar and ASDL legacy
+are identical, like `Integer`, there is only one
+function with no trailing hyphens in its name.
+
+
+Heavy-sugar functions employ positional arguments
+that depend on order. Final arguments may have
+defaults. For example, the following examples
+conform to both `::asr-term` and to `::ttype`:
+
+
+```clojure
+#_(Integer)
+#_(Integer 4)
+#_(Integer 2 [])
+#_(Integer 8 [[6 60] [1 42]])
+```
 
 # WHAT ARE TERMS?
 
@@ -268,8 +386,8 @@ EXAMPLE -- all these full-forms mean the same:
   [masr.specs :as asr])` in `core_tests.clj`
 
 ```clojure
-{::asr/term        ::asr/intent,
- ::asr/intent-enum 'Unspecified}
+;; {::asr/term        ::asr/intent,
+;;  ::asr/intent-enum 'Unspecified}
 ```
 
 # QUALIFIED KEYWORDS AND `::TERM`
@@ -294,7 +412,7 @@ EXAMPLE: "intent" is a valid "term"
 
 ```clojure
 (s/valid? ::term ::intent)
-=> true
+;; => true
 ```
 
 # POLYMORPHIC SPECS FOR TERMS
@@ -887,305 +1005,7 @@ via `s/def`.
    is-restriction))
 ```
 
-# SPECIAL CASES AND SUGAR
 
-
-## FULL-FORM
-
-
-Full-form entities that are checked against specs
-are Clojure
-_hash-maps_:[https://clojuredocs.org/clojure.core/hash-map]
-collections of key-value pairs like Python
-dictionaries. When checked by multi-specs,
-hash-maps are called _entities_. For example,
-
-```clojure
-;; key         value
-{::term        ::intent,
- ::intent-enum 'Local}
-```
-
-In MASR, all keys in all hash-maps are
-namespace-qualified keywords. Such keys may have
-specs registered for them, or not. When a spec is
-registered for a key, automatic recursive
-type-checking is invoked.
-
-
-## SUGAR NAMING CONVENTIONS
-
-
-The names of light-sugar functions, like `Integer-`,
-have a single trailing hyphen. The keyword arguments
-of light-sugar functions are partitioned into
-required and optional-with-defaults. The keyword
-argument lists of light-sugar functions do not
-depend on order. The following two examples both
-conform to `::asr-term` and to `::ttype`:
-
-
-```clojure
-(Integer- {:dimensions [], :kind 4})
-(Integer- {:kind 4, :dimensions []})
-```
-
-
-The names of heavy-sugar functions, like
-`Integer` or `Variable--`, have either zero or
-two trailing hyphens. The difference concerns
-legacy. If a legacy sugar is needed for a term,
-the legacy sugar has the name with no hyphens,
-like `Variable` and the heavy sugar has the name
-with two hyphens, like `Variable--`. Both legacy
-sugar and heavy sugar produce identical
-full-forms.
-
-
-For example, The following is heavy sugar for a
-`Variable`, representing the more progressive,
-desired form:
-
-
-Heavy Sugar:
-
-```clojure
-(Variable-- 2 'x (Integer 4)
-            nil [] Local
-            [] []  Default
-            Source Public Required
-            false)
-```
-
-Here is a legacy version of the same instance:
-
-
-Legacy Sugar:
-
-```clojure
-(Variable 2 x []
-          Local () ()
-          Default (Integer 4 []) Source
-          Public Required false)
-```
-
-
-Notice NO QUOTE MARK on the name of the variable.
-That's the way `--show-asr` prints it. That's the
-only difference between heavy sugar and legacy
-sugar for _Variable_.
-
-
-For specs where MASR heavy sugar and ASDL legacy
-are identical, like `Integer`, there is only one
-function with no trailing hyphens in its name.
-
-
-Heavy-sugar functions employ positional arguments
-that depend on order. Final arguments may have
-defaults. For example, the following examples
-conform to both `::asr-term` and to `::ttype`:
-
-
-```clojure
-(Integer)
-(Integer 4)
-(Integer 2 [])
-(Integer 8 [[6 60] [1 42]])
-```
-
-# DIMENSION
-
-
-`Dimension` is a term without nested multi-specs.
-It is a handwritten special case.
-
-
-original ASDL:
-
-```c
-dimension = (expr? start, expr? length)
-```
-
-The ASDL is imprecise. The real spec, realized only
-in secret C++ code, is that we have either both
-`start` and `length` or we just have nothing. MASR
-makes exposes this secret explicitly.
-
-
-Case with 1 index is disallowed.
-https://github.com/rebcabin/masr/issues/5
-
-```clojure
-(def MIN-DIMENSION-COUNT 0)
-(def MAX-DIMENSION-COUNT 2)
-```
-
-The next spec says that a `::dimension-content` is
-a collection of `::nat` with either two or zero
-elements. TODO Consider a regex-spec.
-
-```clojure
-(s/def ::dimension-content
-  (s/and
-   (s/coll-of ::nat
-              :min-count MIN-DIMENSION-COUNT,
-              :max-count MAX-DIMENSION-COUNT,
-              :into ())
-   (fn [it] (not (= 1 (count it))))))
-```
-
-The next spec says that a `dimension` in full-form
-is an entity hash-map with keys `::term` and
-`::dimension-content`.
-
-```clojure
-(defmethod term ::dimension [_]
-  (s/keys :req [::term
-                ::dimension-content]))
-```
-
-As usual, we need a term-entity key, `::dimension`,
-for recursive type-checking.
-
-```clojure
-    (def-term-entity-key dimension)
-```
-
-This spec can generate samples.
-
-```clojure
-    #_
-    (gen/sample (s/gen ::dimension-content) 3)
-
-=> (() (0 0) (1 1))
-```
-
-heavy sugar
-
-```clojure
-(defn dimension [candidate-contents]
-  (if (or (not (coll? candidate-contents))
-          (set? candidate-contents)
-          (map? candidate-contents))
-    ::invalid-dimension  ;; return this,
-    ;; else
-    (let [cnf (s/conform
-               ::dimension
-               {::term ::dimension,
-                ::dimension-content candidate-contents})]
-      (if (s/invalid? cnf)
-        ::invalid-dimension
-        cnf))))
-```
-
-# DIMENSIONS
-
-
-`Dimensions` [sic] is not a term. Dimensions stands
-for `dimension*`, a plurality of dimension. We do a
-lot more pluralities later. This is just the first
-example of a repeating pattern (TODO: macro?)
-
-```clojure
-(def MIN-NUMBER-OF-DIMENSIONS 0)
-(def MAX-NUMBER-OF-DIMENSIONS 9)
-```
-
-TODO Consider a regex-spec.
-
-```clojure
-(s/def ::dimensions
-  (s/coll-of (term-selector-spec ::dimension)
-             :min-count MIN-NUMBER-OF-DIMENSIONS,
-             :max-count MAX-NUMBER-OF-DIMENSIONS,
-             :into []))
-```
-
-Generation of test cases does not currently work
-TODO https://github.com/rebcabin/masr/issues/14
-
-```clojure
-#_(gen/sample (s/gen ::dimensions) 3)
-```
-
-heavy sugar
-
-```clojure
-(defn dimensions
-  [candidate-contents]
-  (if (or (not (coll? candidate-contents))
-          (set? candidate-contents)
-          (map? candidate-contents))
-    ::invalid-dimensions
-    ;; else
-    (let [dims-coll (map dimension candidate-contents)
-          dims-conf (s/conform ::dimensions dims-coll)]
-      (if (s/invalid? dims-conf)
-        ::invalid-dimensions
-        (let [dims-cont (map
-                         ::dimension-content
-                         dims-conf)]
-          (map dimension dims-cont))))))
-```
-
-# SYMTAB-ID
-
-
-In ASDL, `symbol_table` sometimes means a
-`SymbolTable`, an unwritten spec, and sometimes
-means an integer id of a `SymbolTable` specified
-elsewhere. MASR does better. MASR `->asdl-type`
-projects both of these types, `SymbolTable` and
-`symtab-id`, back into ASDL `symbol_table`, with its
-secret proviso. MASR exposes the secret. ASDL
-embraces the secret.
-
-```clojure
-(s/def ::symtab-id ::nat)
-```
-
-heavy sugar
-
-```clojure
-(defn symtab-id [it]
-  (let [cnf (s/conform ::symtab-id it)]
-    (if (s/invalid? cnf)
-      ::invalid-symtab-id
-      cnf)))
-```
-
-# SYMBOL-TABLE
-
-
-`SymbolTable` is an unwritten term. It doesn't have
-nested multi-specs. We'll write it out fully by
-hand.
-
-```clojure
-(s/def ::hash-map map?)
-
-
-(defmethod term ::SymbolTable [_]
-  (s/keys :req [::term
-                ::symtab-id
-                ::hash-map]))
-
-
-(def-term-entity-key SymbolTable)
-```
-
-heavy sugar
-
-```clojure
-(defn SymbolTable [id, hash-map]
-  (let [st {::term      ::SymbolTable
-            ::symtab-id id
-            ::hash-map  hash-map}]
-    (if (s/invalid? st)
-      ::invalid-symbol-table
-      st)))
-```
 
 # LEGACY MACRO
 
@@ -1219,6 +1039,8 @@ code-base because we must apply `legacy` anyway. For
 now, user-level code must call `legacy` when
 appropriate.
 
+
+
 ```clojure
 (defn rewrite-for-legacy
   "Replace = with Assignment anywhere in a MASR
@@ -1230,15 +1052,258 @@ appropriate.
        (replace {'= 'Assignment--} x)
        x))
    it))
+```
 
 
+```clojure
 (defmacro legacy
   "DANGER: Call 'eval'."
   [it]
   `(do (in-ns 'masr.specs)
        (eval (rewrite-for-legacy '~it))))
+```
 
 
+# IMPLEMENTATIONS
+
+
+The remaining sections of this document describe
+detailed implementations for every term in MASR.
+
+
+# DIMENSION
+
+
+`Dimension` is a term without nested multi-specs.
+It is a handwritten special case, not defined via
+`defmasrtype`.
+
+
+## Original ASDL
+
+
+```c
+dimension = (expr? start, expr? length)
+```
+
+
+The ASDL is imprecise. The real spec, realized only
+in secret C++ code, is that we have either both
+`start` and `length` or we just have nothing. MASR
+makes exposes this secret explicitly.
+
+
+## Pluralities
+
+
+Case with 1 index is disallowed.
+https://github.com/rebcabin/masr/issues/5
+
+```clojure
+(def MIN-DIMENSION-COUNT 0)
+(def MAX-DIMENSION-COUNT 2)
+```
+
+
+## Dimension-Content
+
+
+The next spec says that a `::dimension-content` is
+a collection of `::nat` with either two or zero
+elements. TODO Consider a regex-spec.
+
+
+```clojure
+(s/def ::dimension-content
+  (s/and
+   (s/coll-of ::nat
+              :min-count MIN-DIMENSION-COUNT,
+              :max-count MAX-DIMENSION-COUNT,
+              :into ())
+   (fn [it] (not (= 1 (count it))))))
+```
+
+
+## Full-Form
+
+
+The next spec says that a `dimension` in full-form
+is an entity hash-map with keys `::term` and
+`::dimension-content`.
+
+```clojure
+(defmethod term ::dimension [_]
+  (s/keys :req [::term
+                ::dimension-content]))
+```
+
+As usual, we need a term-entity key, `::dimension`,
+for recursive type-checking.
+
+```clojure
+    (def-term-entity-key dimension)
+```
+
+This spec can generate samples.
+
+```clojure
+#_
+(gen/sample (s/gen ::dimension-content) 3)
+
+;; => (() (0 0) (1 1))
+```
+
+## Heavy Sugar
+
+```clojure
+(defn dimension [candidate-contents]
+  (if (or (not (coll? candidate-contents))
+          (set? candidate-contents)
+          (map? candidate-contents))
+    ::invalid-dimension  ;; return this,
+    ;; else
+    (let [cnf (s/conform
+               ::dimension
+               {::term ::dimension,
+                ::dimension-content candidate-contents})]
+      (if (s/invalid? cnf)
+        ::invalid-dimension
+        cnf))))
+```
+
+
+# DIMENSIONS
+
+
+`Dimensions` [sic] is not a term. Dimensions stands
+for `dimension*`, a plurality of dimension. We do a
+lot more pluralities later. This is just the first
+example of a repeating pattern (TODO: macro?)
+
+
+## Pluralities
+
+
+```clojure
+(def MIN-NUMBER-OF-DIMENSIONS 0)
+(def MAX-NUMBER-OF-DIMENSIONS 9)
+```
+
+TODO Consider a regex-spec.
+
+```clojure
+(s/def ::dimensions
+  (s/coll-of (term-selector-spec ::dimension)
+             :min-count MIN-NUMBER-OF-DIMENSIONS,
+             :max-count MAX-NUMBER-OF-DIMENSIONS,
+             :into []))
+```
+
+Generation of test cases does not currently work
+TODO https://github.com/rebcabin/masr/issues/14
+
+```clojure
+#_(gen/sample (s/gen ::dimensions) 3)
+```
+
+
+## Heavy Sugar
+
+
+```clojure
+(defn dimensions
+  [candidate-contents]
+  (if (or (not (coll? candidate-contents))
+          (set? candidate-contents)
+          (map? candidate-contents))
+    ::invalid-dimensions
+    ;; else
+    (let [dims-coll (map dimension candidate-contents)
+          dims-conf (s/conform ::dimensions dims-coll)]
+      (if (s/invalid? dims-conf)
+        ::invalid-dimensions
+        (let [dims-cont (map
+                         ::dimension-content
+                         dims-conf)]
+          (map dimension dims-cont))))))
+```
+
+# SYMTAB-ID
+
+
+In ASDL, `symbol_table` sometimes means a
+`SymbolTable` and sometimes means an integer id of a
+`SymbolTable` that is specified elsewhere. MASR does
+better. MASR `->asdl-type` projects both of these
+types, `SymbolTable` and `symtab-id`, back into ASDL
+`symbol_table`, with its secret proviso. MASR
+exposes the secret. ASDL embraces the secret.
+
+
+
+```clojure
+(s/def ::symtab-id ::nat)
+```
+
+
+## Heavy Sugar
+
+
+```clojure
+(defn symtab-id [it]
+  (let [cnf (s/conform ::symtab-id it)]
+    (if (s/invalid? cnf)
+      ::invalid-symtab-id
+      cnf)))
+```
+
+
+# SYMBOL-TABLE
+
+
+`SymbolTable` is an unwritten term. It doesn't have
+nested multi-specs. Write it out fully by hand.
+
+
+```clojure
+(s/def ::hash-map map?)
+
+(defmethod term ::SymbolTable [_]
+  (s/keys :req [::term
+                ::symtab-id
+                ::hash-map]))
+
+
+(def-term-entity-key SymbolTable)
+```
+
+## Heavy Sugar
+
+```clojure
+(defn SymbolTable [id, hash-map]
+  (let [st {::term      ::SymbolTable
+            ::symtab-id id
+            ::hash-map  hash-map}]
+    (if (s/invalid? st)
+      ::invalid-symbol-table
+      st)))
+```
+
+# ENUM-LIKE
+
+
+Many ASDL types are like enums: they are just a
+set of alternative symbols, without parentheses
+and without parameters _qua_ arguments. Example:
+ASDL `access` has two possibilities: `Public`
+and `Private`. MASR automates all of enum-likes
+via one macro, `enum-like`.
+
+
+## Helpers for Enum-Like
+
+
+```clojure
 (defmacro symbolate
   "ASDL Back-Channel: create unquoted constants such as
   Local for 'Local."
@@ -1246,8 +1311,10 @@ appropriate.
   (let [a-set (eval a-set-syms)
         cmds (for [e a-set] (list 'def e `'~e))]
     `(list ~@cmds)))
+```
 
 
+```clojure
 (defmacro legacicate
   "ASDL Back-Channel: create legacy function-calls
   for each constant, such as Local for (intent 'Local).
@@ -1260,15 +1327,9 @@ appropriate.
     `(list ~@cmds)))
 ```
 
-# ENUM-LIKE
 
+## Enum-Like, Proper
 
-Many ASDL types are like enums: they are just a
-set of alternative symbols, without parentheses
-and without parameters _qua_ arguments. Example:
-ASDL `access` has two possibilities: `Public`
-and `Private`. MASR automates all of enum-likes
-via one macro.
 
 ```clojure
 (defmacro enum-like
@@ -1301,8 +1362,12 @@ via one macro.
        #_(symbolicate ~heads)
        (legacicate ~term ~heads)
        )))
+```
+
+## Most Enum-Likes
 
 
+```clojure
 (enum-like logicalbinop #{'And  'Or  'Xor  'NEqv  'Eqv})
 (enum-like cmpop        #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
 (enum-like intent       #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
@@ -1313,7 +1378,7 @@ via one macro.
 (enum-like deftype      #{'Implementation, 'Interface})
 ```
 
-## ABI
+## Abi
 
 
 `Abi` is a special case of enum-like with rich logic.
@@ -1323,17 +1388,16 @@ via one macro.
   #{'LFortranModule, 'GFortranModule,
     'BindC, 'Interactive, 'Intrinsic})
 
-
 (def internal-abis #{'Source})
 
-
 (s/def ::abi-enum (set/union external-abis internal-abis))
-
 
 (s/def ::abi-external ::bool)
 ```
 
-full-form
+
+### Full-Form
+
 
 ```clojure
 (defmethod term ::abi [_]
@@ -1352,11 +1416,12 @@ full-form
          ::abi-enum     (s/gen internal-abis)
          ::abi-external (gen/return false))] ))))
 
-
 (def-term-entity-key abi)
 ```
 
-heavy sugar
+
+### Heavy Sugar
+
 
 ```clojure
 (defn abi
@@ -1379,8 +1444,13 @@ heavy sugar
        (if (s/invalid? cnf)
          ::invalid-abi
          cnf)))))
+```
 
 
+### The ABIs
+
+
+```clojure
 (def LFortranModule (abi 'LFortranModule :external true))
 (def GFortranModule (abi 'GFortranModule :external true))
 (def BindC          (abi 'BindC          :external true))
@@ -1397,7 +1467,9 @@ fits in the macro scheme written at the top of this
 file. Its subtypes, `Integer`, `Real`, `Logical`,
 etc., have additional structure we automate here.
 
-pluralities
+
+## Pluralities
+
 
 ```clojure
 (def MIN-NUMBER-OF-TTYPES    0)
@@ -1407,42 +1479,51 @@ pluralities
 TODO: Consider a regex-spec.
 
 ```clojure
-(s/def ::ttypes (s/coll-of ::ttype
-                           :min-count MIN-NUMBER-OF-TTYPES
-                           :max-count MAX-NUMBER-OF-TTYPES))
+(s/def ::ttypes
+  (s/coll-of ::ttype
+             :min-count MIN-NUMBER-OF-TTYPES
+             :max-count MAX-NUMBER-OF-TTYPES))
 ```
 
 TODO: Consider a regex-spec.
 
 ```clojure
-(s/def ::ttype? (s/coll-of ::ttype
-                           :min-count 0
-                           :max-count 1))
+(s/def ::ttype?
+  (s/coll-of ::ttype
+             :min-count 0
+             :max-count 1))
 ```
 
-kind: The `kind` member selects the kind of a
-given type. We currently support the following:
 
-- Integer kinds: 1 (i8), 2 (i16), 4 (i32), 8 (i64)
+## Kind
 
-- Real kinds: 4 (f32), 8 (f64)
 
-- Complex kinds: 4 (c32), 8 (c64)
+The `kind` member selects the kind of a given `ttype`.
+MASR currently supports the following:
 
-- Character kinds: 1 (utf8 string)
+- `Integer` kinds: `1 (i8)`, `2 (i16)`, `4 (i32)`, `8 (i64)`
 
-- Logical kinds: 1, 2, 4: (boolean represented by
-    1, 2, 4 bytes; the default kind is 4, just
-    like the default integer kind, consistent
-    with Python and Fortran: in Python "Booleans
-    in Python are implemented as a subclass of
-    integers", in Fortran the "default logical
-    kind has the same storage size as the default
-    integer"; we currently use kind=4 as default
-    integer, so we also use kind=4 for the
-    default logical.)
+- `Real` kinds: `4 (f32)`, `8 (f64)`
 
-support specs for subtypes
+- `Complex` kinds: `4 (c32)`, `8 (c64)`
+
+- `Character` kinds: `1 (utf8 string)`
+
+- `Logical` kinds: 1, 2, 4:
+
+   Boolean represented by 1, 2, 4 bytes; the default
+   Logical kind is 4, just like the default Integer
+   kind, consistent with Python and Fortran: in
+   Python "Booleans in Python are implemented as a
+   subclass of integers", in Fortran the "default
+   logical kind has the same storage size as the
+   default integer"; we currently use `kind=4` as
+   default for Integer, so we also use `kind=4` as
+   default for Logical.
+
+
+## Support Specs For Kinds
+
 
 ```clojure
 (s/def ::integer-kind   #{1 2 4 8 16})
@@ -1452,9 +1533,14 @@ support specs for subtypes
 (s/def ::character-kind #{1})
 ```
 
+
+## Original ASDL
+
+
 Here are the first four ttypes, which all follow
 a common pattern captured in macros. There are
 more ttypes later that don't follow that pattern.
+
 
 ```c
 ttype
@@ -1463,6 +1549,16 @@ ttype
     | Complex(int kind, dimension* dims)
     | Logical(int kind, dimension* dims)
 ```
+
+
+## Full-Form
+
+
+Because the full-forms for `Integer`, `Real`,
+`Complex`, and `Logical` are almost identical with
+one another, a Clojure macro is the appropriate
+implementation of these four `ttypes`.
+
 
 ```clojure
 (defmacro def-ttype-head
@@ -1486,7 +1582,9 @@ ttype
        (s/keys :req [::ttype-head ~kind ::dimensions]))))
 ```
 
+
 ## INTEGER, REAL, COMPLEX, LOGICAL
+
 
 ```clojure
 (def-ttype-head Integer)
@@ -1495,10 +1593,16 @@ ttype
 (def-ttype-head Logical)
 ```
 
+
+## CHARACTER
+
+
 TODO: `Character` is more rich
 `(def-ttype-head Character)`
 
-heavy sugar
+
+## Heavy Sugar for `ttype`
+
 
 ```clojure
 (defn ttype
@@ -1525,7 +1629,9 @@ heavy sugar
       cnf)))
 ```
 
-light sugar and heavy sugar
+
+## Sugar for the Kinds
+
 
 ```clojure
 (defmacro def-ttype-and-head
@@ -1594,21 +1700,30 @@ light sugar and heavy sugar
           (~lcp {:kind ~dfk   :dimensions ~dfd})))
        ;; TODO ? entity keywords for ::Integer, ::Real, etc.
        )))
+```
 
 
+```clojure
 (def-ttype-and-head Integer)
 (def-ttype-and-head Real)
 (def-ttype-and-head Complex)
 (def-ttype-and-head Logical)
+```
 
 
+```clojure
 (def-term-head--entity-key ttype Integer)
 (def-term-head--entity-key ttype Real)
 (def-term-head--entity-key ttype Complex)
 (def-term-head--entity-key ttype Logical)
 ```
 
-TODO the rest of the ttypes
+
+## TODO The Rest of the `ttypes`
+
+
+### Original ASDL
+
 
 ```c
 >>> Integer, Real, Complex, Logical are already done ...
@@ -1631,6 +1746,13 @@ TODO the rest of the ttypes
 
 ## FUNCTION-TYPE
 
+
+This is a rich `ttype` that we spell out by hand.
+
+
+### Original ASDL
+
+
 ```c
 | FunctionType(ttype*  arg_types,       ;; rename param-types
                ttype?  return_var_type,
@@ -1647,7 +1769,9 @@ TODO the rest of the ttypes
                bool    is_restriction)
 ```
 
-prerequisite type aliases:
+
+### Prerequisite Type Aliases
+
 
 ```clojure
 (s/def ::param-types     ::ttypes)
@@ -1667,14 +1791,21 @@ prerequisite type aliases:
 (s/def ::type-params     ::ttypes)
 ```
 
-pluralities:
 
-`symbol*` is written `symbols`, and restrictions
-is a type alias for symbols.
+### Pluralities
 
-forward reference. Can only test empty `symbol*`
+
+`symbol*` is written `symbols`, and `restrictions`
+is a type alias for `symbols`.
+
+
+### Forward Reference
+
+
+Can only test empty `symbol*`
 restrictions until `symbol` is properly defined
 below.
+
 
 ```clojure
 (def MIN-NUMBER-OF-SYMBOLS   0)
@@ -1684,20 +1815,26 @@ below.
 TODO: Consider a regex-spec.
 
 ```clojure
-(s/def ::symbols (s/coll-of ::symbol
-                            :min-count MIN-NUMBER-OF-SYMBOLS
-                            :max-count MAX-NUMBER-OF-SYMBOLS))
+(s/def ::symbols
+  (s/coll-of ::symbol
+             :min-count MIN-NUMBER-OF-SYMBOLS
+             :max-count MAX-NUMBER-OF-SYMBOLS))
 ```
 
 TODO: Consider a regex-spec.
 
+
 ```clojure
-(s/def ::symbol? (s/coll-of ::symbol :min-count 0, :max-count 1))
+(s/def ::symbol?
+  (s/coll-of ::symbol
+             :min-count 0,
+             :max-count 1))
 (s/def ::restrictions    ::symbols)
 (s/def ::is-restriction  ::bool)
 ```
 
-heavy sugar
+### Heavy Sugar
+
 
 ```clojure
 (defn FunctionType
@@ -1737,32 +1874,40 @@ heavy sugar
 
 ## SYMBOLIC VALUE
 
+
 ```clojure
 (s/def ::symbolic-value empty?)
 ```
 
-sugar
+
+### Sugar
+
 
 ```clojure
 (def symbolic-value identity)
 ```
 
+
 ## VALUE
+
 
 ```clojure
 (s/def ::value empty?)
 ```
 
-sugar
+
+### Sugar
 
 ```clojure
 (def value identity)
 ```
 
+
 # EXPR
 
 
-pluralities
+## Pluralities
+
 
 ```clojure
 (def MIN-NUMBER-OF-EXPRS    0)
@@ -1772,26 +1917,35 @@ pluralities
 TODO: Consider a regex-spec.
 
 ```clojure
-(s/def ::exprs (s/coll-of ::expr
-                          :min-count MIN-NUMBER-OF-EXPRS
-                          :max-count MAX-NUMBER-OF-EXPRS))
+(s/def ::exprs
+  (s/coll-of ::expr
+             :min-count MIN-NUMBER-OF-EXPRS
+             :max-count MAX-NUMBER-OF-EXPRS))
 ```
 
 TODO: Consider a regex-spec.
 
 ```clojure
-(s/def ::expr? (s/coll-of ::expr
-                          :min-count 0
-                          :max-count 1))
+(s/def ::expr?
+  (s/coll-of ::expr
+             :min-count 0
+             :max-count 1))
 ```
 
+
 ## LOGICAL CONSTANT
+
+
+### Original ASDL
+
 
 ```c
 (LogicalConstant true (Logical 4 []))
 ```
 
-heavy sugar
+
+### Heavy Sugar
+
 
 ```clojure
 (defn LogicalConstant
@@ -1810,33 +1964,40 @@ heavy sugar
    (LogicalConstant a-bool (Logical))))
 ```
 
+
 ## VAR
 
 
-Workaround; See Issue #23
+### Issue #23
+
 
 Is the parameter `symbol` for `Var` really a `symbol`?
 Or just an identifier? #23
 https://github.com/rebcabin/masr/issues/23
+The original ASDL
 
 ```c
 Var(symbol v)
 ```
 
-from ASR.asdl doesn't match the instance. Instead,
+from `ASR.asdl` doesn't match the instance. Instead,
 we probably need something like:
 
 ```c
 Var(symtab_id stid, identifier it)
 ```
 
-prerequisite type alias:
+
+### Prerequisite Type Alias
+
 
 ```clojure
 (s/def ::varnym           ::identifier)
 ```
 
-heavy sugar
+
+### Heavy Sugar
+
 
 ```clojure
 (defn Var-- [stid, ident]
@@ -1851,7 +2012,9 @@ heavy sugar
       cnf)))
 ```
 
-legacy sugar
+
+### Legacy Sugar
+
 
 ```clojure
 (defmacro Var [stid, unquoted-ident]
@@ -1864,12 +2027,21 @@ symbol-table! That's part of abstract execution.
 
 ## LOGICAL BINOP
 
+
+### Original ASDL
+
+
 ```c
 | LogicalBinOp(expr left, logicalbinop op, expr
   right, ttype type, expr? value)
 ```
 
+
+### EXAMPLE
+
+
 ```clojure
+#_
 (LogicalBinOp
  (Var 2 a)
  And
@@ -1881,15 +2053,20 @@ symbol-table! That's part of abstract execution.
  (Logical 4 []) ())
 ```
 
-prerequisite type aliases:
+### Prerequisite Type Aliases
+
+
 TODO: check that the types of the exprs are `::Logical`!
+
 
 ```clojure
 (s/def ::logical-left  ::expr)
 (s/def ::logical-right ::expr)
 ```
 
-heavy sugar
+
+### Heavy Sugar
+
 
 ```clojure
 (defn LogicalBinOp [left- lbo- right- tt- val-]
@@ -1909,6 +2086,10 @@ heavy sugar
 
 ## LOGICAL COMPARE
 
+
+### Original ASDL
+
+
 ```c
 | LogicalCompare(expr left,   ;; must have type ::Logical
                  cmpop op,    ;; not all cmpop, only Eq and NotEq
@@ -1917,15 +2098,22 @@ heavy sugar
                  expr? value)
 ```
 
+
+### EXAMPLE
+
+
 ```clojure
- (LogicalCompare
+#_
+(LogicalCompare
   (Var 2 b)
   Eq
   (Var 2 b)
   (Logical 4 []) ())
 ```
 
-heavy sugar
+
+### Heavy Sugar
+
 
 ```clojure
 (defn LogicalCompare [l- cmp- r- tt- val-]
@@ -1946,48 +2134,61 @@ heavy sugar
 # STMT
 
 
-pluralities
+## Pluralities
+
 
 ```clojure
 (def MIN-NUMBER-OF-STMTS    0)
 (def MAX-NUMBER-OF-STMTS 1024)
 ```
 
+
 TODO: Consider a regex-spec.
 
 ```clojure
-(s/def ::stmts (s/coll-of ::stmt
-                          :min-count MIN-NUMBER-OF-STMTS
-                          :max-count MAX-NUMBER-OF-STMTS))
+(s/def ::stmts
+  (s/coll-of ::stmt
+             :min-count MIN-NUMBER-OF-STMTS
+             :max-count MAX-NUMBER-OF-STMTS))
 ```
 
+
 TODO: Consider a regex-spec.
 
 ```clojure
-(s/def ::stmt? (s/coll-of ::stmt
-                          :min-count 0
-                          :max-count 1))
+(s/def ::stmt?
+  (s/coll-of ::stmt
+             :min-count 0
+             :max-count 1))
 ```
 
 
 ## ASSIGNMENT
+
+
+### Original ASDL
+
 
 ```c
 | Assignment(expr target, expr value, stmt? overloaded)
          --- Var ---
 ```
 
-See Issues
+
+### Issues
+
 
 https://github.com/rebcabin/masr/issues/21
 https://github.com/rebcabin/masr/issues/22
 https://github.com/rebcabin/masr/issues/26
 
 
-prerequisite type aliases:
+### Prerequisite Type Aliases:
+
 
 TODO: more cases for `lvalue`, and an `s/or`
 with `second` hack
+
 
 ```clojure
 (s/def ::lvalue     ::Var)
@@ -1995,7 +2196,9 @@ with `second` hack
 (s/def ::overloaded ::stmt?)
 ```
 
-heavy sugar
+
+### Heavy Sugar
+
 
 ```clojure
 (defn Assignment-- [lhs, rhs, unk]
@@ -2010,7 +2213,12 @@ heavy sugar
       cnf)))
 ```
 
+
 ## SUBROUTINE CALL
+
+
+### Original ASDL
+
 
 ```c
 | SubroutineCall(symbol name,
@@ -2024,6 +2232,10 @@ heavy sugar
 
 
 ## VARIABLE
+
+
+### Original ASDL
+
 
 ```c
 | Variable(symbol_table   parent_symtab,   ;; really an integer id
@@ -2040,7 +2252,12 @@ heavy sugar
            bool           value_attr)
 ```
 
+
+### EXAMPLE
+
+
 ```clojure
+#_
 (Variable                ;   head, term: symbol
  2                       ;   symbol_table    parent-symtab-id
                                             ;     TODO: NOT SYMBOL-TABLE!
@@ -2054,29 +2271,37 @@ heavy sugar
  Source                  ;   abi             abi
  Public                  ;   access          access
  Required                ;   presence        presence
- .false.)})              ;   bool            value-attr
+ .false.)                ;   bool            value-attr
 ```
 
-prerequisite type aliases:
+
+### Prerequisite Type Aliases
+
 
 ```clojure
 (s/def ::value-attr       ::bool)
 ```
 
+
 `varnym` already defined for Var.
 https://github.com/rebcabin/masr/issues/28
+
 
 ```clojure
 (s/def ::type-declaration (s/nilable ::symtab-id))
 ```
 
+
 TODO: there is ambiguity regarding identifier-sets and lists:
+
 
 ```clojure
 (s/def ::dependencies     ::identifier-set)
 ```
 
-light sugar
+
+### Light Sugar
+
 
 ```clojure
 (defn Variable-
@@ -2128,7 +2353,9 @@ light sugar
       cnf)))
 ```
 
-heavy sugar
+
+### Heavy Sugar
+
 
 ```clojure
 (defn Variable--
@@ -2179,7 +2406,9 @@ heavy sugar
       cnf)))
 ```
 
-legacy sugar
+
+### Legacy Sugar
+
 
 ```clojure
 (defmacro Variable
@@ -2211,12 +2440,17 @@ legacy sugar
 ## MODULE
 
 
+### Original ASDL
+
+
 ```c
 | Module(symbol_table symtab, identifier name, identifier* dependencies,
                       bool loaded_from_mod, bool intrinsic)
 ```
 
-prerequisite type aliases:
+
+### Prerequisite Type Aliases
+
 
 ```clojure
 (s/def ::modulenym       ::identifier)
@@ -2224,7 +2458,9 @@ prerequisite type aliases:
 (s/def ::intrinsic       ::bool)
 ```
 
-heavy sugar
+
+### Heavy Sugar
+
 
 ```clojure
 (defn Module [symtab, modnym, deps, loaded, intrinsic-]
@@ -2241,7 +2477,12 @@ heavy sugar
       cnf)))
 ```
 
+
 ## FUNCTION
+
+
+### Original ASDL
+
 
 ```c
 | Function(symbol_table symtab,
@@ -2258,7 +2499,9 @@ heavy sugar
            bool         side_effect_free)
 ```
 
-prerequisite type aliases:
+
+### Prerequisite Type Aliases
+
 
 * `SymbolTable` is already defined
 
@@ -2284,7 +2527,9 @@ prerequisite type aliases:
 (def-term-head--entity-key symbol Function)
 ```
 
-heavy sugar
+
+### Heavy Sugar
+
 
 ```clojure
 (defn Function-- [symtab,
@@ -2314,7 +2559,9 @@ heavy sugar
       cnf)))
 ```
 
-legacy sugar
+
+### Legacy Sugar
+
 
 ```clojure
 (defmacro Function
@@ -2329,7 +2576,12 @@ legacy sugar
                ~access-, ~determ, ~sefree))
 ```
 
+
 ## PROGRAM
+
+
+### Original ASDL
+
 
 ```c
 = Program(symbol_table symtab,
@@ -2338,13 +2590,15 @@ legacy sugar
           stmt*        body)
 ```
 
-prerequisite type alias:
+
+### Prerequisite Type Alias
 
 ```clojure
 (s/def ::prognym ::identifier)
 ```
 
-heavy sugar
+
+### Heavy Sugar
 
 ```clojure
 (defn Program-- [stab, nym, deps, body-]
@@ -2361,7 +2615,9 @@ heavy sugar
       cnf)))
 ```
 
-legacy sugar
+
+### Legacy Sugar
+
 
 ```clojure
 (defmacro Program
@@ -2373,7 +2629,8 @@ legacy sugar
 # UNIT
 
 
-prerequisite type aliases:
+## Prerequisite Type Aliases
+
 
 `s/conform` slips in the tag keys in from `s/or`,
 requiring a step in heavy sugar to remove them.
@@ -2383,14 +2640,16 @@ requiring a step in heavy sugar to remove them.
                     :stmt   ::stmt
                     :symbol ::symbol))
 
-
 (defn node [candidate]
   (let [cnf (s/conform ::node candidate)]
     (if (s/invalid? cnf)
       :invalid-node
       (second cnf))))
+```
 
+## Pluralities
 
+```clojure
 (def MIN-NODE-COUNT    0)
 (def MAX-NODE-COUNT 4096)
 ```
@@ -2406,7 +2665,9 @@ TODO: Consider a regex-spec.
 
 ## TRANSLATION UNIT
 
-heavy sugar
+
+### Heavy Sugar
+
 
 ```clojure
 (defn TranslationUnit [stab, node-preimages]
