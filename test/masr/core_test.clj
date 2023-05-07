@@ -1037,6 +1037,38 @@
                        (Logical 4 []) ()) ()))))    ))
 
 
+;;  ___      _                 _   _           ___      _ _
+;; / __|_  _| |__ _ _ ___ _  _| |_(_)_ _  ___ / __|__ _| | |
+;; \__ \ || | '_ \ '_/ _ \ || |  _| | ' \/ -_) (__/ _` | | |
+;; |___/\_,_|_.__/_| \___/\_,_|\__|_|_||_\___|\___\__,_|_|_|
+
+
+;;                   __        __            ___
+;;   ___ __ ____ _  / /  ___  / /__________ / _/
+;;  (_-</ // /  ' \/ _ \/ _ \/ /___/ __/ -_) _/
+;; /___/\_, /_/_/_/_.__/\___/_/   /_/  \__/_/
+;;     /___/
+
+
+(deftest symbol-ref-test
+  (is (s/valid? ::asr/symbol-ref {::asr/identifier 'foobar
+                              ::asr/symtab-id  42}))
+
+  (is (s/valid? ::asr/symbol-ref {::asr/identifier 'foobar
+                              ::asr/symtab-id  42
+                              ::asr/extra-noise "obi-wan"}))
+
+  (is (not (s/valid? ::asr/symbol-ref {::asr/identifier "baadbeef"
+                               ::asr/symtab-id 42})))
+
+  (is (not (s/valid? ::asr/symbol-ref {::asr/identifier 'foobar})))
+
+  (is (not (s/valid? ::asr/symbol-ref {::asr/symtab-id  42}))))
+
+
+
+
+
 ;; __   __        _      _    _
 ;; \ \ / /_ _ _ _(_)__ _| |__| |___
 ;;  \ V / _` | '_| / _` | '_ \ / -_)
@@ -1302,42 +1334,42 @@
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval)))))
   (testing "legacy macro"
-   (let [v (Variable
-            2 a []
-            Local () ()
-            Default (Logical 4 []) Source
-            Public Required false)]
-     ;; using "legacicated" symbols:
-     (is (= v (Variable-- 2 'a (Logical 4)
-                          nil [] Local
-                          [] [] Default
-                          Source Public Required
-                          false)))
-     ;; using tick marks (quoted symbolic constants)
-     (is (= v (Variable-- 2 'a (Logical 4)
-                          nil [] 'Local
-                          [] [] 'Default
-                          'Source 'Public 'Required
-                          false)))
-     ;; using telescoping specs
-     (is (s/valid? ::asr/Variable v))
-     (is (s/valid? ::asr/symbol   v))
-     (is (s/valid? ::asr/asr-term v))))
+    (let [v (Variable
+             2 a []
+             Local () ()
+             Default (Logical 4 []) Source
+             Public Required false)]
+      ;; using "legacicated" symbols:
+      (is (= v (Variable-- 2 'a (Logical 4)
+                           nil [] Local
+                           [] [] Default
+                           Source Public Required
+                           false)))
+      ;; using tick marks (quoted symbolic constants)
+      (is (= v (Variable-- 2 'a (Logical 4)
+                           nil [] 'Local
+                           [] [] 'Default
+                           'Source 'Public 'Required
+                           false)))
+      ;; using telescoping specs
+      (is (s/valid? ::asr/Variable v))
+      (is (s/valid? ::asr/symbol   v))
+      (is (s/valid? ::asr/asr-term v))))
   (testing "SymbolTable with Variable"
-   (let [st (SymbolTable
-             2 {:a
-                (Variable
-                 2 a [] Local
-                 () () Default (Logical 4 [])
-                 Source Public Required false),
-                :b
-                (Variable
-                 2 b [] Local
-                 () () Default (Logical 4 [])
-                 Source Public Required false)})]
-     (is (not (s/valid? ::asr/symbol st)))
-     (is (s/valid? ::asr/SymbolTable st))
-     (is (s/valid? ::asr/asr-term    st))))
+    (let [st (SymbolTable
+              2 {:a
+                 (Variable
+                  2 a [] Local
+                  () () Default (Logical 4 [])
+                  Source Public Required false),
+                 :b
+                 (Variable
+                  2 b [] Local
+                  () () Default (Logical 4 [])
+                  Source Public Required false)})]
+      (is (not (s/valid? ::asr/symbol st)))
+      (is (s/valid? ::asr/SymbolTable st))
+      (is (s/valid? ::asr/asr-term    st))))
   )
 
 

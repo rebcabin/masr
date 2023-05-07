@@ -2217,6 +2217,11 @@
 ;; ## SUBROUTINE CALL
 ;; 
 ;; 
+;; `SoubroutineCall` is a special case because it
+;; abuses the word `symbol` to mean a `symbol-ref
+;; `.
+;; 
+;; 
 ;; ### Original ASDL
 ;; 
 ;; 
@@ -2225,6 +2230,16 @@
 ;;                  symbol? original_name,
 ;;                  call_arg* args,
 ;;                  expr? dt)
+
+;; 
+;; 
+;; ### Prerequisite Types and Aliases
+;; 
+;; 
+
+(s/def ::symbol-ref
+  (s/keys :req [::identifier
+                ::symtab-id]))
 
 ;; 
 ;; 
