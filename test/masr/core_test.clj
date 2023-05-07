@@ -1051,7 +1051,14 @@
                  ()
                  []
                  ()
-                 ))))
+                 )))
+  (is (s/valid? ::asr/SubroutineCall
+                (SubroutineCall
+                 7
+                 test_fn1
+                 ()
+                 []
+                 ()))))
 
 
 ;;                   __        __            ___

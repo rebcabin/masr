@@ -2484,19 +2484,35 @@ abuses the word `symbol` to mean a `symbol-ref
 
 ```clojure
 (defn SubroutineCall--
-  [subr-nym orig-nym args dt]
+  [subr-symref orig-symref args dt]
   (let [cnf (s/conform ::SubroutineCall
                        {::term ::stmt,
                         ::asr-stmt-head
                         {::stmt-head ::SubroutineCall
-                         ::subr-nym (apply symbol-ref subr-nym)
-                         ::orig-nym  orig-nym
+                         ::subr-nym (apply symbol-ref subr-symref)
+                         ::orig-nym  orig-symref ;; TODO
                          ::call-args args
                          ::dt        dt
                          }})]
     (if (s/invalid? cnf)
       :invalid-subroutine-call
       cnf)))
+```
+
+
+### Legacy Sugar
+
+
+```clojure
+(defmacro SubroutineCall
+  [stid, ident, orig-symref, args, dt]
+  `(SubroutineCall-- ['~ident ~stid]
+                     ~orig-symref
+                     ~args
+                     ~dt))
+
+(s/valid? ::SubroutineCall
+          (SubroutineCall 7 test_fn1 () [] ()))
 ```
 
 
