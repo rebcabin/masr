@@ -1,9 +1,12 @@
 - [PROLOGUE](#prologue)
+  - [Namespace Declaration](#namespace-declaration)
+  - [Lightweight, Load-Time Testing:](#lightweight-load-time-testing)
+  - [Unmap External Names](#unmap-external-names)
 - [OVERVIEW \& BACKGROUND](#overview--background)
   - [MASR IS A TYPE SYSTEM](#masr-is-a-type-system)
     - [Terms (Nodes) in the ASDL Grammar](#terms-nodes-in-the-asdl-grammar)
     - [Terms not Specified in ASDL](#terms-not-specified-in-asdl)
-    - [Term-Like Things that are not Terms](#term-like-things-that-are-not-terms)
+    - [Term-Like Things](#term-like-things)
     - [Mappings from ASDL to MASR](#mappings-from-asdl-to-masr)
 - [WHAT IS A _SPECIFICATION_?](#what-is-a-specification)
 - [FULL-FORM](#full-form)
@@ -105,13 +108,14 @@
     - [Heavy Sugar](#heavy-sugar-11)
   - [SUBROUTINE CALL](#subroutine-call)
     - [Original ASDL](#original-asdl-8)
+    - [EXAMPLE](#example-2)
     - [Prerequisite Types and Aliases](#prerequisite-types-and-aliases)
     - [Pluralities](#pluralities-6)
     - [Heavy Sugar](#heavy-sugar-12)
 - [SYMBOL](#symbol-1)
   - [VARIABLE](#variable)
     - [Original ASDL](#original-asdl-9)
-    - [EXAMPLE](#example-2)
+    - [EXAMPLE](#example-3)
     - [Prerequisite Type Aliases](#prerequisite-type-aliases-3)
     - [Light Sugar](#light-sugar)
     - [Heavy Sugar](#heavy-sugar-13)
@@ -148,6 +152,22 @@ awk -f code4md.awk < specs.md > ./src/masr/specs.clj
 ```
 
 
+Synchronize the Markdown file from the code via the
+following:
+
+
+```bash
+awk -f md4code.awk < ./src/masr/specs.clj > specs.md
+```
+
+
+Visual Studio Code maintains the Table of Contents
+through an extension called MarkdownForAll. To
+rebuild the table of contents, open the Markdown
+file in Visual Studio Code and follow instructions
+from the extension.
+
+
 "Semi-literate" means that blocks of code in the
 Markdown file are live, but they may not refer to
 things that aren't defined yet. That's not the
@@ -158,6 +178,9 @@ literate programming, but we'll live with it.
 Blocks that contain not-yet-defined code may contain
 comments or `#_` escapes that cause Clojure to parse
 but ignore the escaped expressions.
+
+
+## Namespace Declaration
 
 
 Since we must define things before using them, we
@@ -190,12 +213,16 @@ of the code in this file.
             ))
 ```
 
-Lightweight, load-time testing:
+
+## Lightweight, Load-Time Testing:
 
 
 ```clojure
 (hyperfiddle.rcf/enable!)
 ```
+
+
+## Unmap External Names
 
 
 Unmap `Integer` and `Character` so we can have those
@@ -212,9 +239,6 @@ original `deftype` as `clojure.core/deftype`.
 
 
 # OVERVIEW & BACKGROUND
-
-
-Begin the semi-literate narrative.
 
 
 ## MASR IS A TYPE SYSTEM
@@ -236,7 +260,9 @@ https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
 
 ### Terms (Nodes) in the ASDL Grammar
 
+
 i.e., things to the left of equals signs:
+
 
 ```c
  1 unit            = TranslationUnit(symbol_table, node*)
@@ -271,14 +297,18 @@ i.e., things to the left of equals signs:
 30 enumtype        = IntegerConsecutiveFromZero | ... | NonInteger
 ```
 
+
 ### Terms not Specified in ASDL
+
 
 ```c
 31 symbol_table    = a clojure map
 32 dimensions      = dimension*, see below
 ```
 
-### Term-Like Things that are not Terms
+
+### Term-Like Things
+
 
 ```c
  0 atoms           = int, float, bool, nat, bignat
@@ -286,6 +316,7 @@ i.e., things to the left of equals signs:
 ```
 
 ### Mappings from ASDL to MASR
+
 
 * ASDL tuples like `(1 2)` are Clojure lists.
 
@@ -356,14 +387,17 @@ is a Clojure _hash-map_ that contains the key
 key-value pairs like Python
 dictionaries.[https://clojuredocs.org/clojure.core/hash-map]
 
+
 Full-forms that are checked against Clojure specs
 are called _entities_. For example,
+
 
 ```clojure
 ;; key         value
 {::term        ::intent,
  ::intent-enum 'Local}
 ```
+
 
 is an entity checked against specs for `::term`,
 `::intent`, and `::intent-enum`. In MASR, all keys
@@ -387,7 +421,6 @@ Most entities have sugared forms that are
 
 Sugar comes in three flavors: light, heavy, and
 legacy.
-
 
 1. Light sugar employs keyword arguments with
    defaults. Light sugar is unambiguous but more
@@ -443,6 +476,7 @@ desired form:
 
 ### Heavy Sugar
 
+
 ```clojure
 #_(Variable-- 2 'x (Integer 4)
             nil [] Local
@@ -450,6 +484,7 @@ desired form:
             Source Public Required
             false)
 ```
+
 
 Here is a legacy version of the same instance:
 
@@ -529,6 +564,7 @@ EXAMPLE -- all these full-forms mean the same:
 ;;  ::asr/intent-enum 'Unspecified}
 ```
 
+
 # QUALIFIED KEYWORDS AND `::TERM`
 
 
@@ -553,6 +589,7 @@ EXAMPLE: "intent" is a valid "term"
 (s/valid? ::term ::intent)
 ;; => true
 ```
+
 
 # POLYMORPHIC SPECS FOR TERMS
 
@@ -622,6 +659,7 @@ and `::asr-ttype-head` (nested in ttypes).
   (s/multi-spec term ::term))
 ```
 
+
 # TELESCOPING SPECS
 
 
@@ -682,6 +720,7 @@ in other entities are checked by `::symbol` specs.
     `(s/def ~tkw    ;; like ::dimension or ::symbol
        (term-selector-spec ~tkw))))
 ```
+
 
 # DEFMASRNESTED
 
@@ -763,6 +802,7 @@ via the built-in "name" function.
 (defmasrnested unit)
 ```
 
+
 # TERM-HEAD ENTITY KEY
 
 
@@ -806,6 +846,7 @@ like `::Variable` and `::FunctionType`.
     `(s/def ~hkw
        (s/and ~art #(= ~hkw (-> % ~amh ~tmh))))))
 ```
+
 
 # DEFMASRTYPE
 
@@ -936,6 +977,7 @@ multi-specs.
          )))
 ```
 
+
 # TO ASDL-TYPE
 
 
@@ -979,6 +1021,7 @@ term-with-nested-multi-spec, terms like
        [{~keys-key [~nons-trm ~nest-ksm]}]
        (~call-sym ~nest-ksm))))
 ```
+
 
 # TERMS WITH NESTED MULTI-SPECS
 
@@ -1145,7 +1188,6 @@ via `s/def`.
 ```
 
 
-
 # LEGACY MACRO
 
 
@@ -1292,7 +1334,9 @@ This spec can generate samples.
 ;; => (() (0 0) (1 1))
 ```
 
+
 ## Heavy Sugar
+
 
 ```clojure
 (defn dimension [candidate-contents]
@@ -1367,6 +1411,7 @@ TODO https://github.com/rebcabin/masr/issues/14
           (map dimension dims-cont))))))
 ```
 
+
 # SYMTAB-ID
 
 
@@ -1416,7 +1461,9 @@ nested multi-specs. Write it out fully by hand.
 (def-term-entity-key SymbolTable)
 ```
 
+
 ## Heavy Sugar
+
 
 ```clojure
 (defn SymbolTable [id, hash-map]
@@ -1427,6 +1474,7 @@ nested multi-specs. Write it out fully by hand.
       ::invalid-symbol-table
       st)))
 ```
+
 
 # ENUM-LIKE
 
@@ -1503,6 +1551,7 @@ via one macro, `enum-like`.
        )))
 ```
 
+
 ## Most Enum-Likes
 
 
@@ -1516,6 +1565,7 @@ via one macro, `enum-like`.
 (enum-like presence     #{'Required 'Optional})
 (enum-like deftype      #{'Implementation, 'Interface})
 ```
+
 
 ## Abi
 
@@ -1597,6 +1647,7 @@ via one macro, `enum-like`.
 (def Intrinsic      (abi 'Intrinsic      :external true))
 (def Source         (abi 'Source         :external false))
 ```
+
 
 # TTYPE
 
@@ -1883,6 +1934,7 @@ TODO: `Character` is more rich
 | TypeParameter(identifier param, dimension* dims)
 ```
 
+
 ## FUNCTION-TYPE
 
 
@@ -1972,6 +2024,7 @@ TODO: Consider a regex-spec.
 (s/def ::is-restriction  ::bool)
 ```
 
+
 ### Heavy Sugar
 
 
@@ -2007,6 +2060,7 @@ TODO: Consider a regex-spec.
       :invalid-function-type
       cnf)))
 ```
+
 
 # PLACEHOLDERS
 
@@ -2192,6 +2246,7 @@ symbol-table! That's part of abstract execution.
  (Logical 4 []) ())
 ```
 
+
 ### Prerequisite Type Aliases
 
 
@@ -2222,6 +2277,7 @@ TODO: check that the types of the exprs are `::Logical`!
       :invalid-logical-bin-op
       cnf)))
 ```
+
 
 ## LOGICAL COMPARE
 
@@ -2394,15 +2450,18 @@ abuses the word `symbol` to mean a `symbol-ref
                 ::symtab-id]))
 ```
 
+
 ```clojure
 (defn symbol-ref [ident, stid]
   {::identifier ident,
    ::symbtab-id stid})
 ```
 
+
 ```clojure
 (s/def ::dt ::expr?)
 ```
+
 
 ```clojure
 (s/def ::call-args ::exprs)
@@ -2418,6 +2477,7 @@ abuses the word `symbol` to mean a `symbol-ref
              :min-count 0
              :max-count 1))
 ```
+
 
 ### Heavy Sugar
 
@@ -2805,12 +2865,14 @@ TODO: there is ambiguity regarding identifier-sets and lists:
 
 ### Prerequisite Type Alias
 
+
 ```clojure
 (s/def ::prognym ::identifier)
 ```
 
 
 ### Heavy Sugar
+
 
 ```clojure
 (defn Program-- [stab, nym, deps, body-]
@@ -2859,7 +2921,9 @@ requiring a step in heavy sugar to remove them.
       (second cnf))))
 ```
 
+
 ## Pluralities
+
 
 ```clojure
 (def MIN-NODE-COUNT    0)
@@ -2874,6 +2938,7 @@ TODO: Consider a regex-spec.
                     :min-count MIN-NODE-COUNT,
                     :max-count MAX-NODE-COUNT)))
 ```
+
 
 ## TRANSLATION UNIT
 
