@@ -567,7 +567,7 @@ and (2) a function, `->asdl-type`, that extracts
 the ASDL type from any instance hash-map.
 
 
-# AUTOMATED RECURSIVE TYPE CHECKING, AGAIN
+# RECURSIVE TYPE CHECKING, AGAIN
 
 
 MASR automatically type-checks entities before
@@ -577,7 +577,7 @@ pertains to terms with and without nested
 multi-specs.
 
 
-# FOR EXTRACTING ASDL-TYPES FROM ENTITIES
+# EXTRACTING ASDL FROM MASR
 
 ```clojure
 (def asdl-types
@@ -595,8 +595,9 @@ multi-specs.
    ::symtab-id    "symbol_table stid" ;; TODO: this is TERRIBLE
    ::varnym       "identifier varnym"
    })
+```
 
-
+```clojure
 (defmacro asdl-type-string
   "Construct a string like this
   Assignment(expr target, expr value, stmt? overloaded)"
@@ -614,8 +615,9 @@ multi-specs.
            params# (str/join ", "
                     (map asdl-types (list ~@seq-keys)))]
        (str head# "(" params# ")"))))
+```
 
-
+```clojure
 (defmacro defmasrtype
   "Get rid of repetition in an expression like
 
@@ -638,8 +640,7 @@ multi-specs.
                       ::prognym      ;; <~~~ repetitive
                       ::dependencies ;; <~~~ repetitive
                       ::body]        ;; <~~~ repetitive
-                ))
-  "
+                ))"
   [head, term, keyseq]
   (let [ns "masr.specs"
         ;; like "Program"
@@ -912,22 +913,7 @@ registered for a key, automatic recursive
 type-checking is invoked.
 
 
-## LIGHT SUGAR, HEAVY SUGAR, LEGACY SUGAR
-
-
-_Light-sugar_ forms are shorter than full-form,
-but longer and more explicit than _heavy-sugar_.
-Light sugar employs functions with keyword
-arguments and defaults. Heavy sugar employs
-functions with positional arguments and defaults
-only at the end of an argument list. Heavy-sugar
-functions are thus more brittle, especially for
-long specs with many arguments, with high risk of
-writing arguments out of order. _Legacy sugar_ is
-order-dependent, no keywords, no defaults, and
-compatible with `--show-asr` output from current
-LCompilers. Legacy sugaar will be deprecated when
-MASR is integrated with LCompilers.
+## SUGAR NAMING CONVENTIONS
 
 
 The names of light-sugar functions, like `Integer-`,
@@ -938,10 +924,12 @@ argument lists of light-sugar functions do not
 depend on order. The following two examples both
 conform to `::asr-term` and to `::ttype`:
 
+
 ```clojure
 (Integer- {:dimensions [], :kind 4})
 (Integer- {:kind 4, :dimensions []})
 ```
+
 
 The names of heavy-sugar functions, like
 `Integer` or `Variable--`, have either zero or
@@ -981,6 +969,7 @@ Legacy Sugar:
           Public Required false)
 ```
 
+
 Notice NO QUOTE MARK on the name of the variable.
 That's the way `--show-asr` prints it. That's the
 only difference between heavy sugar and legacy
@@ -996,6 +985,7 @@ Heavy-sugar functions employ positional arguments
 that depend on order. Final arguments may have
 defaults. For example, the following examples
 conform to both `::asr-term` and to `::ttype`:
+
 
 ```clojure
 (Integer)
