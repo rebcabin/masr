@@ -26,6 +26,4 @@ awaits the time when we have more development.
 
 # Modify
 
-- `masr-summary.org`, `masr-summary.org`
-
-- Write Clojure code in `specs.clj` and `core_tests.clj`
+- Write Clojure code and Markdown in `specs.md` and `core_tests.clj`
