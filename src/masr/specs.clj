@@ -11,13 +11,16 @@
 
 ;; 
 ;; 
-;; "Semi-literate" means that code blocks in the
-;; Markdown file are live. However, they may not refer
-;; to things that aren't defined yet. That's not the
-;; optimal order for narrative, but we'll live with it.
+;; "Semi-literate" means that blocks of code in the
+;; Markdown file are live, but they may not refer to
+;; things that aren't defined yet. That's not the
+;; optimal order for narrative, and not the way of full
+;; literate programming, but we'll live with it.
+;; 
+;; 
 ;; Blocks that contain not-yet-defined code may contain
 ;; comments or `#_` escapes that cause Clojure to parse
-;; but ignore the escaped expression.
+;; but ignore the escaped expressions.
 ;; 
 ;; 
 ;; Since we must define things before using them, we
@@ -58,12 +61,10 @@
 
 ;; 
 ;; 
-;; Unmap "Integer" and "Character" so we can have
-;; those symbols in ttypes. Access the originals
-;; via "java.lang.Integer" "java.lang.Character."
-;; Lein test and lein run produce unmaskable
-;; warnings. Access original "deftype"
-;; as "clojure.core/deftype".
+;; Unmap `Integer` and `Character` so we can have those
+;; symbols in `ttypes`. Access the originals via
+;; `java.lang.Integer` `java.lang.Character`. Access
+;; original `deftype` as `clojure.core/deftype`.
 ;; 
 ;; 
 
@@ -71,6 +72,7 @@
 (ns-unmap *ns* 'Character)
 (ns-unmap *ns* 'deftype)
 
+;; 
 ;; 
 ;; # OVERVIEW & BACKGROUND
 ;; 
