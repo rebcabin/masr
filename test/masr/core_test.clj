@@ -1045,20 +1045,22 @@
 
 (deftest SubroutineCall-test
 
-  (is (s/valid? ::asr/SubroutineCall
-                (SubroutineCall--
-                 ['test_fn1 7]
-                 ()
-                 []
-                 ()
-                 )))
-  (is (s/valid? ::asr/SubroutineCall
-                (SubroutineCall
-                 7
-                 test_fn1
-                 ()
-                 []
-                 ()))))
+  (testing "heavy sugar"
+    (is (s/valid? ::asr/SubroutineCall
+                 (SubroutineCall--
+                  ['test_fn1 7]
+                  ()
+                  []
+                  ()
+                  ))))
+  (testing "legacy sugar"
+    (is (s/valid? ::asr/SubroutineCall ;; le
+                 (SubroutineCall
+                  7
+                  test_fn1
+                  ()
+                  []
+                  ())))))
 
 
 ;;                   __        __            ___
@@ -2316,4 +2318,6 @@
   (is (= "Logical(int kind, dimension* dims)"
          (->asdl-type (Logical 4 []))))
   (is (= "Logical(int kind, dimension* dims)"
-         (->asdl-type (Logical 4 [[6 60] []]))))  )
+         (->asdl-type (Logical 4 [[6 60] []]))))
+  (is (= "SubroutineCall(symbol name, symbol? original_name, call_arg* args, expr? dt)"
+         (->asdl-type (SubroutineCall 7 test_fn1 () [] ())))))
