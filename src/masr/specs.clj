@@ -1,150 +1,3 @@
-;; - [1. PROLOGUE](#1-prologue)
-;;   - [1.1. Namespace Declaration](#11-namespace-declaration)
-;;   - [1.2. Lightweight, Load-Time Testing:](#12-lightweight-load-time-testing)
-;;   - [1.3. Unmap External Names](#13-unmap-external-names)
-;; - [2. OVERVIEW \& BACKGROUND](#2-overview--background)
-;;   - [2.1. MASR IS A TYPE SYSTEM](#21-masr-is-a-type-system)
-;;     - [2.1.1. Terms (Nodes) in the ASDL Grammar](#211-terms-nodes-in-the-asdl-grammar)
-;;     - [2.1.2. Terms not Specified in ASDL](#212-terms-not-specified-in-asdl)
-;;     - [2.1.3. Term-Like Things](#213-term-like-things)
-;;     - [2.1.4. Mappings from ASDL to MASR](#214-mappings-from-asdl-to-masr)
-;; - [3. WHAT IS A _SPECIFICATION_?](#3-what-is-a-specification)
-;; - [4. FULL-FORM](#4-full-form)
-;; - [5. SUGAR](#5-sugar)
-;;   - [5.1. SUGAR NAMING CONVENTION](#51-sugar-naming-convention)
-;;     - [5.1.1. Heavy Sugar](#511-heavy-sugar)
-;;     - [5.1.2. Legacy Sugar](#512-legacy-sugar)
-;; - [6. WHAT ARE TERMS?](#6-what-are-terms)
-;; - [7. QUALIFIED KEYWORDS AND `::TERM`](#7-qualified-keywords-and-term)
-;; - [8. POLYMORPHIC SPECS FOR TERMS](#8-polymorphic-specs-for-terms)
-;; - [9. NESTED MULTI-SPECS](#9-nested-multi-specs)
-;; - [10. NAMING CONVENTION FOR MULTI-SPECS](#10-naming-convention-for-multi-specs)
-;; - [11. TELESCOPING SPECS](#11-telescoping-specs)
-;; - [12. TERM ENTITY KEY](#12-term-entity-key)
-;; - [13. DEFMASRNESTED](#13-defmasrnested)
-;; - [14. TERM-HEAD ENTITY KEY](#14-term-head-entity-key)
-;; - [15. DEFMASRTYPE](#15-defmasrtype)
-;; - [16. RECURSIVE TYPE CHECKING, AGAIN](#16-recursive-type-checking-again)
-;; - [17. EXTRACTING ASDL FROM MASR](#17-extracting-asdl-from-masr)
-;; - [18. TO ASDL-TYPE](#18-to-asdl-type)
-;; - [19. TERMS WITH NESTED MULTI-SPECS](#19-terms-with-nested-multi-specs)
-;; - [20. ADD NEW DEFINITIONS HERE](#20-add-new-definitions-here)
-;;   - [20.1. UNIT](#201-unit)
-;;   - [20.2. SYMBOL](#202-symbol)
-;;   - [20.3. STMT](#203-stmt)
-;;   - [20.4. EXPR](#204-expr)
-;;   - [20.5. TTYPE](#205-ttype)
-;; - [21. LEGACY MACRO](#21-legacy-macro)
-;; - [22. IMPLEMENTATIONS](#22-implementations)
-;; - [23. DIMENSION](#23-dimension)
-;;   - [23.1. Original ASDL](#231-original-asdl)
-;;   - [23.2. Pluralities](#232-pluralities)
-;;   - [23.3. Dimension-Content](#233-dimension-content)
-;;   - [23.4. Full-Form](#234-full-form)
-;;   - [23.5. Heavy Sugar](#235-heavy-sugar)
-;; - [24. DIMENSIONS](#24-dimensions)
-;;   - [24.1. Pluralities](#241-pluralities)
-;;   - [24.2. Heavy Sugar](#242-heavy-sugar)
-;; - [25. SYMTAB-ID](#25-symtab-id)
-;;   - [25.1. Heavy Sugar](#251-heavy-sugar)
-;; - [26. SYMBOL-TABLE](#26-symbol-table)
-;;   - [26.1. Heavy Sugar](#261-heavy-sugar)
-;; - [27. ENUM-LIKE](#27-enum-like)
-;;   - [27.1. Helpers for Enum-Like](#271-helpers-for-enum-like)
-;;   - [27.2. Enum-Like, Proper](#272-enum-like-proper)
-;;   - [27.3. Most Enum-Likes](#273-most-enum-likes)
-;;   - [27.4. Abi](#274-abi)
-;;     - [27.4.1. Full-Form](#2741-full-form)
-;;     - [27.4.2. Heavy Sugar](#2742-heavy-sugar)
-;;     - [27.4.3. The ABIs](#2743-the-abis)
-;; - [28. TTYPE](#28-ttype)
-;;   - [28.1. Pluralities](#281-pluralities)
-;;   - [28.2. Kind](#282-kind)
-;;   - [28.3. Support Specs For Kinds](#283-support-specs-for-kinds)
-;;   - [28.4. Original ASDL](#284-original-asdl)
-;;   - [28.5. Full-Form](#285-full-form)
-;;   - [28.6. INTEGER, REAL, COMPLEX, LOGICAL](#286-integer-real-complex-logical)
-;;   - [28.7. CHARACTER](#287-character)
-;;   - [28.8. Heavy Sugar for `ttype`](#288-heavy-sugar-for-ttype)
-;;   - [28.9. Sugar for the Kinds](#289-sugar-for-the-kinds)
-;;   - [28.10. TODO The Rest of the `ttypes`](#2810-todo-the-rest-of-the-ttypes)
-;;     - [28.10.1. Original ASDL](#28101-original-asdl)
-;;   - [28.11. FUNCTION-TYPE](#2811-function-type)
-;;     - [28.11.1. Original ASDL](#28111-original-asdl)
-;;     - [28.11.2. Prerequisite Type Aliases](#28112-prerequisite-type-aliases)
-;;     - [28.11.3. Pluralities](#28113-pluralities)
-;;     - [28.11.4. Forward Reference](#28114-forward-reference)
-;;     - [28.11.5. Heavy Sugar](#28115-heavy-sugar)
-;; - [29. PLACEHOLDERS](#29-placeholders)
-;;   - [29.1. SYMBOLIC VALUE](#291-symbolic-value)
-;;     - [29.1.1. Sugar](#2911-sugar)
-;;   - [29.2. VALUE](#292-value)
-;;     - [29.2.1. Sugar](#2921-sugar)
-;; - [30. EXPR](#30-expr)
-;;   - [30.1. Pluralities](#301-pluralities)
-;;   - [30.2. LOGICAL CONSTANT](#302-logical-constant)
-;;     - [30.2.1. Original ASDL](#3021-original-asdl)
-;;     - [30.2.2. Heavy Sugar](#3022-heavy-sugar)
-;;   - [30.3. VAR](#303-var)
-;;     - [30.3.1. Issue #23](#3031-issue-23)
-;;     - [30.3.2. Prerequisite Type Alias](#3032-prerequisite-type-alias)
-;;     - [30.3.3. Heavy Sugar](#3033-heavy-sugar)
-;;     - [30.3.4. Legacy Sugar](#3034-legacy-sugar)
-;;   - [30.4. LOGICAL BINOP](#304-logical-binop)
-;;     - [30.4.1. Original ASDL](#3041-original-asdl)
-;;     - [30.4.2. Example](#3042-example)
-;;     - [30.4.3. Prerequisite Type Aliases](#3043-prerequisite-type-aliases)
-;;     - [30.4.4. Heavy Sugar](#3044-heavy-sugar)
-;;   - [30.5. LOGICAL COMPARE](#305-logical-compare)
-;;     - [30.5.1. Original ASDL](#3051-original-asdl)
-;;     - [30.5.2. Example](#3052-example)
-;;     - [30.5.3. Heavy Sugar](#3053-heavy-sugar)
-;; - [31. STMT](#31-stmt)
-;;   - [31.1. Pluralities](#311-pluralities)
-;;   - [31.2. ASSIGNMENT](#312-assignment)
-;;     - [31.2.1. Original ASDL](#3121-original-asdl)
-;;     - [31.2.2. Issues](#3122-issues)
-;;     - [31.2.3. Prerequisite Type Aliases:](#3123-prerequisite-type-aliases)
-;;     - [31.2.4. Heavy Sugar](#3124-heavy-sugar)
-;;   - [31.3. SUBROUTINE CALL](#313-subroutine-call)
-;;     - [31.3.1. Original ASDL](#3131-original-asdl)
-;;     - [31.3.2. Example](#3132-example)
-;;     - [31.3.3. Prerequisite Types and Aliases](#3133-prerequisite-types-and-aliases)
-;;     - [31.3.4. Pluralities](#3134-pluralities)
-;;     - [31.3.5. Heavy Sugar](#3135-heavy-sugar)
-;;     - [31.3.6. Legacy Sugar](#3136-legacy-sugar)
-;; - [32. SYMBOL](#32-symbol)
-;;   - [32.1. EXTERNAL SYMBOL](#321-external-symbol)
-;;     - [32.1.1. Original ASDL](#3211-original-asdl)
-;;     - [32.1.2. Example](#3212-example)
-;;     - [32.1.3. Prerequisite Types and Aliases](#3213-prerequisite-types-and-aliases)
-;;     - [32.1.4. Legacy Sugar](#3214-legacy-sugar)
-;;   - [32.2. VARIABLE](#322-variable)
-;;     - [32.2.1. Original ASDL](#3221-original-asdl)
-;;     - [32.2.2. Example](#3222-example)
-;;     - [32.2.3. Prerequisite Type Aliases](#3223-prerequisite-type-aliases)
-;;     - [32.2.4. Light Sugar](#3224-light-sugar)
-;;     - [32.2.5. Heavy Sugar](#3225-heavy-sugar)
-;;     - [32.2.6. Legacy Sugar](#3226-legacy-sugar)
-;;   - [32.3. MODULE](#323-module)
-;;     - [32.3.1. Original ASDL](#3231-original-asdl)
-;;     - [32.3.2. Prerequisite Type Aliases](#3232-prerequisite-type-aliases)
-;;     - [32.3.3. Heavy Sugar](#3233-heavy-sugar)
-;;   - [32.4. FUNCTION](#324-function)
-;;     - [32.4.1. Original ASDL](#3241-original-asdl)
-;;     - [32.4.2. Prerequisite Type Aliases](#3242-prerequisite-type-aliases)
-;;     - [32.4.3. Heavy Sugar](#3243-heavy-sugar)
-;;     - [32.4.4. Legacy Sugar](#3244-legacy-sugar)
-;;   - [32.5. PROGRAM](#325-program)
-;;     - [32.5.1. Original ASDL](#3251-original-asdl)
-;;     - [32.5.2. Prerequisite Type Alias](#3252-prerequisite-type-alias)
-;;     - [32.5.3. Heavy Sugar](#3253-heavy-sugar)
-;;     - [32.5.4. Legacy Sugar](#3254-legacy-sugar)
-;; - [33. UNIT](#33-unit)
-;;   - [33.1. Prerequisite Type Aliases](#331-prerequisite-type-aliases)
-;;   - [33.2. Pluralities](#332-pluralities)
-;;   - [33.3. TRANSLATION UNIT](#333-translation-unit)
-;;     - [33.3.1. Heavy Sugar](#3331-heavy-sugar)
 ;; # PROLOGUE
 ;;
 ;;
@@ -2778,10 +2631,11 @@
 ;; #+begin_src clojure
 
 (s/def ::nym           ::identifier)
-(s/def ::extern-symref ::symbol-ref)
+(s/def ::extern-symref ::symbol-ref?)
 ;; modulenym defined under Module
 (s/def ::scope-nyms    ::identifier-set)
 (s/def ::orig-nym      ::identifier)
+;; #+end_src
 
 
 ;;
@@ -2805,7 +2659,7 @@
                ::nym           nym-
                ::extern-symref (if (empty? extern-symref-)
                                  extern-symref-
-                                 (apply symbol-ref extern-symref-)),
+                                 [(apply symbol-ref extern-symref-)]),
 
                ::modulenym     modnym-
                ::scope-nyms    scope-nyms-,
@@ -2830,10 +2684,12 @@
 ;; #+begin_src clojure
 
 (defmacro ExternalSymbol
-  ([stid, nym,
+  (;; "eight-parameter overload"
+    [stid, nym,
     orig-symref-stid, orig-symref-ident,
     modnym, scope-nyms, orig-nym,
     access]
+
    `(ExternalSymbol--
      ~stid, '~nym,
      ['~orig-symref-ident, ~orig-symref-stid],
@@ -2841,7 +2697,8 @@
      ~scope-nyms, ;; TODO: distribute quote?
      '~orig-nym
      ~access))
-  ([stid, nym,
+  (;; "seven-parameter overload"
+   [stid, nym,
     empty-symref,
     modnym, scope-nyms, orig-nym,
     access]

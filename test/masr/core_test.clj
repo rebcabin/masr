@@ -1108,7 +1108,7 @@
                  {::asr/symbol-head   ::asr/ExternalSymbol
                   ::asr/symtab-id     5
                   ::asr/nym           '_lpython_main_program
-                  ::asr/extern-symref (symbol-ref '_lpython_main_program 7)
+                  ::asr/extern-symref [(symbol-ref '_lpython_main_program 7)]
                   ::asr/modulenym     '_global_symbols
                   ::asr/scope-nyms    [],
                   ::asr/orig-nym      '_lpython_main_program
