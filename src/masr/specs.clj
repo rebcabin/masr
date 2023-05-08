@@ -1,8 +1,27 @@
 ;; # PROLOGUE
 ;;
 ;;
-;; This file is semi-literate programming. Synchronize
-;; the code from this Markdown file via the following
+;; This file is semi-literate programming. Write
+;; code in this file according to the pattern you
+;; will see below. Write Markdown in Clojure
+;; comments. Precede Clojure code with #+begin_src
+;; clojure in a Clojure commend that begins in
+;; column 1, then add a blank line. Follow Clojure
+;; code with #+end_src in a clojure comment. You'll
+;; see how it works.
+;;
+;;
+;; Normally, we extract the Markdown file from the
+;; code via the following:
+;;
+;;
+;; ```bash
+;; awk -f md4code.awk < ./src/masr/specs.clj > specs.md
+;; ```
+;;
+;;
+;; Don't do this very often, but you can synchronize
+;; code from this Markdown file via the following
 ;; shell command:
 ;;
 ;;
@@ -11,31 +30,26 @@
 ;; ```
 ;;
 ;;
-;; Synchronize the Markdown file from the code via the
-;; following:
+;; Visual Studio Code maintains Table of Contents
+;; and section numbers through an extension called
+;; MarkdownForAll. Install it. To rebuild the Table
+;; of Contents and section numbers in the Markdown
+;; file:
 ;;
+;; 1. Run md4code as above.
 ;;
-;; ```bash
-;; awk -f md4code.awk < ./src/masr/specs.clj > specs.md
-;; ```
+;; 2. Open the Markdown file in Visual Studio
+;;    Code.
 ;;
+;; 3. Cmd-Shift-P, Add or Update Section Numbers.
 ;;
-;; Visual Studio Code maintains the Table of
-;; Contents and section numbers through an extension
-;; called MarkdownForAll. To rebuild the Table of
-;; Contents
+;; 4. Position the cursor at the top of the Markdown
+;;    file, then Cmd-Shift-P, Create Table of
+;;    Contents.
 ;;
-;; 1. run md4code as above
+;; 5. Save the Markdown file in Visual Studio Code.
 ;;
-;; 2. open the Markdown file in Visual Studio
-;;    Code
-;;
-;; 3. Cmd-Shift-P, Update Table of Contents
-;;
-;; 4. Cmd-Shift-P, Add or Update Section Numbers
-;;
-;; 5. Manually paste the Table of Contents back into
-;;    this source file, `specs.clj`
+;; 6. Commit the Markdown file and check it in.
 ;;
 ;;
 ;; "Semi-literate" means that blocks of code in the
