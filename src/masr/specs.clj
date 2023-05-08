@@ -92,12 +92,12 @@
 ;;     - [30.3.4. Legacy Sugar](#3034-legacy-sugar)
 ;;   - [30.4. LOGICAL BINOP](#304-logical-binop)
 ;;     - [30.4.1. Original ASDL](#3041-original-asdl)
-;;     - [30.4.2. EXAMPLE](#3042-example)
+;;     - [30.4.2. Example](#3042-example)
 ;;     - [30.4.3. Prerequisite Type Aliases](#3043-prerequisite-type-aliases)
 ;;     - [30.4.4. Heavy Sugar](#3044-heavy-sugar)
 ;;   - [30.5. LOGICAL COMPARE](#305-logical-compare)
 ;;     - [30.5.1. Original ASDL](#3051-original-asdl)
-;;     - [30.5.2. EXAMPLE](#3052-example)
+;;     - [30.5.2. Example](#3052-example)
 ;;     - [30.5.3. Heavy Sugar](#3053-heavy-sugar)
 ;; - [31. STMT](#31-stmt)
 ;;   - [31.1. Pluralities](#311-pluralities)
@@ -108,7 +108,7 @@
 ;;     - [31.2.4. Heavy Sugar](#3124-heavy-sugar)
 ;;   - [31.3. SUBROUTINE CALL](#313-subroutine-call)
 ;;     - [31.3.1. Original ASDL](#3131-original-asdl)
-;;     - [31.3.2. EXAMPLE](#3132-example)
+;;     - [31.3.2. Example](#3132-example)
 ;;     - [31.3.3. Prerequisite Types and Aliases](#3133-prerequisite-types-and-aliases)
 ;;     - [31.3.4. Pluralities](#3134-pluralities)
 ;;     - [31.3.5. Heavy Sugar](#3135-heavy-sugar)
@@ -116,25 +116,30 @@
 ;; - [32. SYMBOL](#32-symbol)
 ;;   - [32.1. EXTERNAL SYMBOL](#321-external-symbol)
 ;;     - [32.1.1. Original ASDL](#3211-original-asdl)
-;;     - [32.1.2. EXAMPLE](#3212-example)
-;;     - [32.1.3. Prerequisite Type Aliases](#3213-prerequisite-type-aliases)
-;;     - [32.1.4. Light Sugar](#3214-light-sugar)
-;;     - [32.1.5. Heavy Sugar](#3215-heavy-sugar)
-;;     - [32.1.6. Legacy Sugar](#3216-legacy-sugar)
-;;   - [32.2. MODULE](#322-module)
+;;     - [32.1.2. Example](#3212-example)
+;;     - [32.1.3. Prerequisite Types and Aliases](#3213-prerequisite-types-and-aliases)
+;;     - [32.1.4. Legacy Sugar](#3214-legacy-sugar)
+;;   - [32.2. VARIABLE](#322-variable)
 ;;     - [32.2.1. Original ASDL](#3221-original-asdl)
-;;     - [32.2.2. Prerequisite Type Aliases](#3222-prerequisite-type-aliases)
-;;     - [32.2.3. Heavy Sugar](#3223-heavy-sugar)
-;;   - [32.3. FUNCTION](#323-function)
+;;     - [32.2.2. Example](#3222-example)
+;;     - [32.2.3. Prerequisite Type Aliases](#3223-prerequisite-type-aliases)
+;;     - [32.2.4. Light Sugar](#3224-light-sugar)
+;;     - [32.2.5. Heavy Sugar](#3225-heavy-sugar)
+;;     - [32.2.6. Legacy Sugar](#3226-legacy-sugar)
+;;   - [32.3. MODULE](#323-module)
 ;;     - [32.3.1. Original ASDL](#3231-original-asdl)
 ;;     - [32.3.2. Prerequisite Type Aliases](#3232-prerequisite-type-aliases)
 ;;     - [32.3.3. Heavy Sugar](#3233-heavy-sugar)
-;;     - [32.3.4. Legacy Sugar](#3234-legacy-sugar)
-;;   - [32.4. PROGRAM](#324-program)
+;;   - [32.4. FUNCTION](#324-function)
 ;;     - [32.4.1. Original ASDL](#3241-original-asdl)
-;;     - [32.4.2. Prerequisite Type Alias](#3242-prerequisite-type-alias)
+;;     - [32.4.2. Prerequisite Type Aliases](#3242-prerequisite-type-aliases)
 ;;     - [32.4.3. Heavy Sugar](#3243-heavy-sugar)
 ;;     - [32.4.4. Legacy Sugar](#3244-legacy-sugar)
+;;   - [32.5. PROGRAM](#325-program)
+;;     - [32.5.1. Original ASDL](#3251-original-asdl)
+;;     - [32.5.2. Prerequisite Type Alias](#3252-prerequisite-type-alias)
+;;     - [32.5.3. Heavy Sugar](#3253-heavy-sugar)
+;;     - [32.5.4. Legacy Sugar](#3254-legacy-sugar)
 ;; - [33. UNIT](#33-unit)
 ;;   - [33.1. Prerequisite Type Aliases](#331-prerequisite-type-aliases)
 ;;   - [33.2. Pluralities](#332-pluralities)
@@ -1149,9 +1154,9 @@
 (defmasrtype
   ExternalSymbol symbol
   ;; types:
-  (symtab-id      nymref        dependencies
-   members        abi           access
-   extsym-enum    ttype         symbol-ref?))
+  (symtab-id      nym           extern-symref
+   modulenym      scope-nyms    orig-nym
+   access))
 
 (defmasrtype
  Variable symbol
@@ -2399,7 +2404,7 @@
 ;; ```
 ;;
 ;;
-;; ### EXAMPLE
+;; ### Example
 ;;
 ;;
 ;; #+begin_src clojure
@@ -2469,7 +2474,7 @@
 ;; ```
 ;;
 ;;
-;; ### EXAMPLE
+;; ### Example
 ;;
 ;;
 ;; #+begin_src clojure
@@ -2612,22 +2617,23 @@
 ;; ```c
 ;; | SubroutineCall(symbol     name,          ~~~> nymref
 ;;                  symbol   ? original_name, ~~~> orig-nymref
-;;                  call_arg * args,
+;;                  call_arg * args,          ~~~> call_args
 ;;                  expr     ? dt)
 ;; ```
+
 ;;
 ;;
-;; ### EXAMPLE
+;; ### Example
 ;;
 ;;
 ;; #+begin_src clojure
 
 #_(SubroutineCall
- 7 test_fn1
- ()
- []
- ()
- )
+   7 test_fn1
+   ()
+   []
+   ()
+   )
 ;; #+end_src
 
 ;;
@@ -2648,7 +2654,7 @@
 
 (defn symbol-ref [ident, stid]
   {::identifier ident,
-   ::symbtab-id stid})
+   ::symtab-id stid})
 ;; #+end_src
 
 ;;
@@ -2736,15 +2742,117 @@
 ;;
 ;;
 ;; ```c
-;; | ExternalSymbol(symbol_table parent_symtab,
-;;                  identifier   name,
-;;                  symbol       external,
-;;                  identifier   module_name,
-;;                  identifier*  scope_names,
-;;                  identifier   original_name,
-;;                  access       access)
+;; | ExternalSymbol(symbol_table parent_symtab, ~~~> symtab-id
+;;                  identifier   name,          ~~~> nym
+;;                  symbol       external,      ~~~> extern-symref
+;;                  identifier   module_name,   ~~~> module-nym
+;;                  identifier*  scope_names,   ~~~> scope-nyms
+;;                  identifier   original_name, ~~~> orig-nym
+;;                  access       access)        ~~~> access
+;; ```
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(ExternalSymbol
+ 5
+ _lpython_main_program
+ 7 _lpython_main_program   ;; either () or a naked pair
+ _global_symbols
+ []
+ _lpython_main_program
+ Public
+ )
+;; #+end_src
 
 
+;;
+;;
+;; ### Prerequisite Types and Aliases
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::nym           ::identifier)
+(s/def ::extern-symref ::symbol-ref)
+;; modulenym defined under Module
+(s/def ::scope-nyms    ::identifier-set)
+(s/def ::orig-nym      ::identifier)
+
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn ExternalSymbol--
+  [stid,    nym-,        extern-symref-
+   modnym-, scope-nyms-, orig-nym-,
+   access- ]
+  (let [cnf (s/conform
+             ::ExternalSymbol
+             {::term           ::symbol,
+              ::asr-symbol-head
+              {::symbol-head   ::ExternalSymbol,
+
+               ::symtab-id     stid
+               ::nym           nym-
+               ::extern-symref (if (empty? extern-symref-)
+                                 extern-symref-
+                                 (apply symbol-ref extern-symref-)),
+
+               ::modulenym     modnym-
+               ::scope-nyms    scope-nyms-,
+               ::orig-nym      orig-nym-,
+
+               ::access        access-}
+              })]
+    (if (s/invalid? cnf)
+      :invalid-external-symbol
+      cnf)))
+;; #+end_src
+
+
+;;
+;;
+;; ### Legacy Sugar
+;;
+;;
+
+;; First multiary (multiadic) macro
+;;
+;; #+begin_src clojure
+
+(defmacro ExternalSymbol
+  ([stid, nym,
+    orig-symref-stid, orig-symref-ident,
+    modnym, scope-nyms, orig-nym,
+    access]
+   `(ExternalSymbol--
+     ~stid, '~nym,
+     ['~orig-symref-ident, ~orig-symref-stid],
+     '~modnym,
+     ~scope-nyms, ;; TODO: distribute quote?
+     '~orig-nym
+     ~access))
+  ([stid, nym,
+    empty-symref,
+    modnym, scope-nyms, orig-nym,
+    access]
+   `(ExternalSymbol--
+     ~stid, '~nym,
+     ~empty-symref,
+     '~modnym,
+     ~scope-nyms, ;; TODO: distribute quote?
+     '~orig-nym
+     ~access)))
+;; #+end_src
 
 
 
@@ -2772,7 +2880,7 @@
 ;; ```
 ;;
 ;;
-;; ### EXAMPLE
+;; ### Example
 ;;
 ;;
 ;; #+begin_src clojure

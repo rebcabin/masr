@@ -1093,6 +1093,57 @@
   )
 
 
+;;  ___     _                     _ ___            _         _
+;; | __|_ _| |_ ___ _ _ _ _  __ _| / __|_  _ _ __ | |__  ___| |
+;; | _|\ \ /  _/ -_) '_| ' \/ _` | \__ \ || | '  \| '_ \/ _ \ |
+;; |___/_\_\\__\___|_| |_||_\__,_|_|___/\_, |_|_|_|_.__/\___/_|
+;;                                      |__/
+
+
+(deftest ExternalSymbol-test
+
+  (is (s/valid? ::asr/ExternalSymbol
+                {::asr/term       ::asr/symbol,
+                 ::asr/asr-symbol-head
+                 {::asr/symbol-head   ::asr/ExternalSymbol
+                  ::asr/symtab-id     5
+                  ::asr/nym           '_lpython_main_program
+                  ::asr/extern-symref (symbol-ref '_lpython_main_program 7)
+                  ::asr/modulenym     '_global_symbols
+                  ::asr/scope-nyms    [],
+                  ::asr/orig-nym      '_lpython_main_program
+                  ::asr/access        Public}}))
+
+  (is (s/valid? ::asr/ExternalSymbol
+                (ExternalSymbol--
+                 5 '_lpython_main_program
+                 ['_lpython_main_program 7]
+                 '_global_symbols
+                 []
+                 '_lpython_main_program
+                 Public
+                 )))
+
+  (is (s/valid? ::asr/ExternalSymbol
+                (ExternalSymbol
+                 5, _lpython_main_program
+                 7, _lpython_main_program,
+                 _global_symbols
+                 []
+                 _lpython_main_program
+                 Public)))
+
+  (is (s/valid? ::asr/ExternalSymbol
+                (ExternalSymbol
+                 5, _lpython_main_program
+                 ()
+                 _global_symbols
+                 []
+                 _lpython_main_program
+                 Public)))
+  )
+
+
 ;; __   __        _      _    _
 ;; \ \ / /_ _ _ _(_)__ _| |__| |___
 ;;  \ V / _` | '_| / _` | '_ \ / -_)
