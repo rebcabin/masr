@@ -17,15 +17,11 @@ Radiation. Yes, it's a physics pun. We like physics puns.
 
 `specs.md`
 
-You can regenerate `specs.md` from `specs.clj` by following
-the instructions near the top of `specs.clj`.
-
 # Modify
 
 - Write Clojure code and Markdown in `specs.clj` and `core_tests.clj`.
 
-Extract the Markdown file from the
-code via the following:
+- Extract the Markdown file from the code via the following:
 
 ```bash
 awk -f md4code.awk < ./src/masr/specs.clj > specs.md
