@@ -2,18 +2,20 @@
   - [1.1. Namespace Declaration](#11-namespace-declaration)
   - [1.2. Lightweight, Load-Time Testing:](#12-lightweight-load-time-testing)
   - [1.3. Unmap External Names](#13-unmap-external-names)
-- [2. OVERVIEW \& BACKGROUND](#2-overview--background)
+- [2. MASR OVERVIEW \& BACKGROUND](#2-masr-overview--background)
   - [2.1. MASR IS A TYPE SYSTEM](#21-masr-is-a-type-system)
     - [2.1.1. Terms (Nodes) in the ASDL Grammar](#211-terms-nodes-in-the-asdl-grammar)
-    - [2.1.2. Terms not Specified in ASDL](#212-terms-not-specified-in-asdl)
+    - [2.1.2. Terms Used but not Defined in ASDL](#212-terms-used-but-not-defined-in-asdl)
     - [2.1.3. Term-Like Things](#213-term-like-things)
     - [2.1.4. Mappings from ASDL to MASR](#214-mappings-from-asdl-to-masr)
 - [3. WHAT IS A _SPECIFICATION_?](#3-what-is-a-specification)
-- [4. FULL-FORM](#4-full-form)
+  - [3.1. CHECKING INSTANCES](#31-checking-instances)
+- [4. FULL-FORM ENTITY HASH-MAPS](#4-full-form-entity-hash-maps)
 - [5. SUGAR](#5-sugar)
   - [5.1. SUGAR NAMING CONVENTION](#51-sugar-naming-convention)
-    - [5.1.1. Heavy Sugar](#511-heavy-sugar)
-    - [5.1.2. Legacy Sugar](#512-legacy-sugar)
+    - [5.1.1. Light Sugar](#511-light-sugar)
+    - [5.1.2. Heavy Sugar](#512-heavy-sugar)
+    - [5.1.3. Legacy Sugar](#513-legacy-sugar)
 - [6. WHAT ARE TERMS?](#6-what-are-terms)
 - [7. QUALIFIED KEYWORDS AND `::TERM`](#7-qualified-keywords-and-term)
 - [8. POLYMORPHIC SPECS FOR TERMS](#8-polymorphic-specs-for-terms)
@@ -85,7 +87,6 @@
   - [30.2. LOGICAL CONSTANT](#302-logical-constant)
     - [30.2.1. Original ASDL](#3021-original-asdl)
     - [30.2.2. Example](#3022-example)
-    - [30.2.3. Heavy Sugar](#3023-heavy-sugar)
   - [30.3. INTEGER CONSTANT](#303-integer-constant)
     - [30.3.1. Original ASDL](#3031-original-asdl)
     - [30.3.2. Example](#3032-example)
@@ -154,18 +155,42 @@
 # 1. PROLOGUE
 
 
-This file is semi-literate programming. Write
-code in this file according to the pattern you
-will see below. Write Markdown in Clojure
-comments. Precede Clojure code with #+begin_src
-clojure in a Clojure commend that begins in
-column 1, then add a blank line. Follow Clojure
-code with #+end_src in a clojure comment. You'll
-see how it works.
+This file is semi-literate programming.
+"Semi-literate" means that blocks of code in the
+Markdown file, `specs.md`, are extracted from the
+live source code in `specs.clj`, but without
+reordering. In fully literate programming, we
+present blocks of code in _narrative order_,
+where we talk about things before they're fully
+defined for the compiler Fully literate
+programming requires tools we don't have for
+Clojure, specifically "tangle-up," which builds
+source from Markdown.
 
 
-Normally, we extract the Markdown file from the
-code via the following:
+When reading this Markdown file, `specs.md`
+you'll just have to backtrack to definitions when
+you encounter code that needs them. If you read a
+lot of code, you will be accustomed to that
+nuisance.
+
+
+Write code in `specs.clj`. Format comments in
+Markdown. End a block of comments with a comment
+line that says #+begin_src by itself, beginning
+in column 1, then add a blank line. Follow code
+with #+end_src in a Clojure comment beginning in
+column 1. You'll see many examples below.
+
+
+When the narrative really MUST talk about code
+that isn't defined yet, comment out your code or
+precede s-expressions with `#_`. Clojure will
+parse but ignore such escaped s-expressions.
+
+
+Just before checking in, extract `specs.md` from
+`specs.clj` via the following shell command:
 
 
 ```bash
@@ -173,48 +198,36 @@ awk -f md4code.awk < ./src/masr/specs.clj > specs.md
 ```
 
 
-Don't do this very often, but you can synchronize
-code from this Markdown file via the following
-shell command:
+Visual Studio Code can maintain Table of Contents
+and section numbers through an extension called
+MarkdownForAll. Install it. To rebuild the Table
+of Contents and section numbers in `specs.md`:
+
+1. Run `md4code.awk` as shown above.
+
+2. Open `specs.md` in Visual Studio Code.
+
+3. Cmd-Shift-P, "Add or Update Section Numbers."
+
+4. Position the cursor at the top of `specs.md`,
+   then Cmd-Shift-P, "Create Table of Contents."
+
+5. Save `specs.md` from Visual Studio Code.
+
+6. git commit `specs.mf` and git push it.
+
+
+In case of emergency, you might need to
+synchronize `specs.clj` from `specs.md`:
 
 
 ```bash
 awk -f code4md.awk < specs.md > ./src/masr/specs.clj
 ```
 
-
-Visual Studio Code maintains Table of Contents
-and section numbers through an extension called
-MarkdownForAll. Install it. To rebuild the Table
-of Contents and section numbers in the Markdown
-file:
-
-1. Run md4code as above.
-
-2. Open the Markdown file in Visual Studio
-   Code.
-
-3. Cmd-Shift-P, Add or Update Section Numbers.
-
-4. Position the cursor at the top of the Markdown
-   file, then Cmd-Shift-P, Create Table of
-   Contents.
-
-5. Save the Markdown file in Visual Studio Code.
-
-6. Commit the Markdown file and check it in.
+That's not normal workflow, however.
 
 
-"Semi-literate" means that blocks of code in the
-Markdown file are live, but they may not refer to
-things that aren't defined yet. That's not the
-optimal order for narrative, and not the way of full
-literate programming, but we'll live with it.
-
-
-Blocks that contain not-yet-defined code may contain
-comments or `#_` escapes that cause Clojure to parse
-but ignore the escaped expressions.
 
 
 ## 1.1. Namespace Declaration
@@ -275,7 +288,7 @@ original `deftype` as `clojure.core/deftype`.
 ```
 
 
-# 2. OVERVIEW & BACKGROUND
+# 2. MASR OVERVIEW & BACKGROUND
 
 
 ## 2.1. MASR IS A TYPE SYSTEM
@@ -284,13 +297,13 @@ original `deftype` as `clojure.core/deftype`.
 MASR is "Meta Abstract Semantics Representation,"
 and also a physics pun, "Microwave Amplification
 by Stimulated emission of Radiation." It is a
-work-in-progress, intended to replace the
-specification of ASR in ASDL by a more precise and
-discriminating type system written in Clojure.
+work-in-progress, intended to replace the ASDL
+with by a more precise and discriminating type
+system written.
 
 
-We begin the mapping with a precis of the full ASDL
-specification, or at least, a snapshot of it:
+We begin with a summary of the full ASDL
+specification, or, at least, a snapshot of it:
 `ASR_2023_APR_06_snapshot`.asdl
 https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
 
@@ -335,7 +348,7 @@ i.e., things to the left of equals signs:
 ```
 
 
-### 2.1.2. Terms not Specified in ASDL
+### 2.1.2. Terms Used but not Defined in ASDL
 
 
 ```c
@@ -373,7 +386,7 @@ permit. That means ASR in MASR
 * is more explicit than ASDL
 
 * has fewer overloaded specs, e.g. `symbol` and
-  `symbol_table`
+  `symbol_table`, `symbol-ref`
 
 * exposes secret semantics lifted from the current
   C++ implementation into the specification level
@@ -384,28 +397,55 @@ permit. That means ASR in MASR
 
 _Spec_ is short for _specification_. The_ noun
 "specification" derives from the verb "to specify."
-"Specify" means "to describe specifically, to state
-clearly, precisely, unambiguously. To distinguish a
-class of objects from others that might seem similar
-at first glance, say ships from boats"
+"To specify" means "to describe specifically:
+clearly, explicitly, precisely, unambiguously."
+Also, "to specify" means "to distinguish a class
+of objects from others that might seem similar at
+first glance, say to distinguish ships from
+boats."
 
 
-A major use-case for specification is checking
-instances against specs: "does this instance
-hash-map meet the general specification of hash-maps
-of this type?" For example, "does `(Integer 4 [])`
-meet the specification of an ASR `ttype`, which
-describes an infinite class of instances?"
+A major use-case for specifications is for
+checking instances against specs: "does this
+instance hash-map meet the general specification
+of hash-maps of this type?" For
+example, "does `(Integer 4 [])`, syntax sugar for
+an hash-map instance, meet the general
+specification of an ASR `ttype`, which describes
+an infinite class of instances?"
 
 
-Another use-case is for checking specs for sub-set
-relationships. For example, one may check whether
-every `::ttype` is also an `::asr-term`.
+In MASR, specs describe sets, and MASR type
+checking is often just finding out whether an
+instance inhabits a certain specified set.
 
 
-Clojure specs are arbitrary predicate functions.
-They suffice for advanced types like dependency
-types and concurrency types.
+A type system like like MASR's can act like a
+_set theory_ with respect to instances. See this
+Stack-Exchange question for the fine points of
+set theory versus type theory:
+
+
+https://math.stackexchange.com/questions/489369
+
+
+The important point is that a type theory is a
+self-contained logic. Clojure specs are arbitrary
+predicate functions. Because we may build any
+type system that predicate logic can support,
+Clojure specs suffice for advanced types like
+dependency types and concurrency types.
+
+
+## 3.1. CHECKING INSTANCES
+
+
+An instance hash-map may inhabit multiple sets.
+For example, any `LogicalConstant` is an `expr`,
+and any `expr` is an `asr-term`. These sets stand
+in _subset_ relations. We can also check that
+`LogicalConstant` is _not_ a `ttype`. All these
+tests are in `core_test.clj`.
 
 
 MASR types are recursive. Bigger types are defined
@@ -415,7 +455,7 @@ checked against specs, all the way down to the
 atoms.
 
 
-# 4. FULL-FORM
+# 4. FULL-FORM ENTITY HASH-MAPS
 
 
 Every MASR `asr-term` has a full-form. A full-form
@@ -437,12 +477,24 @@ are called _entities_. For example,
 
 
 is an entity checked against specs for `::term`,
-`::intent`, and `::intent-enum`. In MASR, all keys
-in all hash-maps are namespace-qualified keywords
-with double-colon prefixes. Such keys may have specs
+`::intent`, and `::intent-enum`.
+
+
+In MASR, all keys in all hash-maps are
+namespace-qualified keywords. Namespace-qualified
+keywords have double colons in this file,
+`specs.clj`, which defines the namespace
+`masr.specs`. In other files, namespace-qualified
+keywords in the namespace `masr.specs` must be
+written with an explicit prefix as in
+`:masr.specs/intent`, or with a namespace alias
+as in `::asr/intent`.
+
+
+Namespace-qualified keywords may have specs
 registered for them, or not. When a spec is
-registered for a key, automatic recursive
-type-checking is invoked.
+registered for a namespace-qualified keywords,
+Clojure automatically checks types recursively.
 
 
 # 5. SUGAR
@@ -480,6 +532,9 @@ legacy.
 ## 5.1. SUGAR NAMING CONVENTION
 
 
+### 5.1.1. Light Sugar
+
+
 The names of light-sugar functions, like `Integer-`,
 have a single trailing hyphen. The keyword arguments
 of light-sugar functions are partitioned into
@@ -493,6 +548,9 @@ conform to `::asr-term` and to `::ttype`:
 #_(Integer- {:dimensions [], :kind 4})
 #_(Integer- {:kind 4, :dimensions []})
 ```
+
+
+### 5.1.2. Heavy Sugar
 
 
 The names of heavy-sugar functions, like
@@ -511,9 +569,6 @@ For example, The following is heavy sugar for a
 desired form:
 
 
-### 5.1.1. Heavy Sugar
-
-
 ```clojure
 #_(Variable-- 2 'x (Integer 4)
             nil [] Local
@@ -521,30 +576,6 @@ desired form:
             Source Public Required
             false)
 ```
-
-
-Here is a legacy version of the same instance:
-
-
-### 5.1.2. Legacy Sugar
-
-```clojure
-#_(Variable 2 x []
-          Local () ()
-          Default (Integer 4 []) Source
-          Public Required false)
-```
-
-
-Notice NO QUOTE MARK on the name of the variable.
-That's the way `--show-asr` prints it. That's the
-only difference between heavy sugar and legacy
-sugar for _Variable_.
-
-
-For specs where MASR heavy sugar and ASDL legacy
-are identical, like `Integer`, there is only one
-function with no trailing hyphens in its name.
 
 
 Heavy-sugar functions employ positional arguments
@@ -560,6 +591,40 @@ conform to both `::asr-term` and to `::ttype`:
 #_(Integer 8 [[6 60] [1 42]])
 ```
 
+
+### 5.1.3. Legacy Sugar
+
+
+The purpose of legacy sugar is to auto-quote
+symbols and to correct certain defects in the
+original design of ASR in ASDL, such as a
+symbol-ref's sometimes being a list and sometimes
+being a naked par.
+
+
+Here is a legacy version of the entity above:
+
+
+```clojure
+#_(Variable 2 x []
+          Local () ()
+          Default (Integer 4 []) Source
+          Public Required false)
+```
+
+
+Notice NO QUOTE MARK on the name of the variable.
+That's the way `--show-asr` prints it. That's the
+only difference between heavy sugar and legacy
+sugar for `Variable`.
+
+
+For specs where MASR heavy sugar and ASDL legacy
+are identical, like `Integer`, there is no
+function with two trailing hyphens in its name.
+
+
+
 # 6. WHAT ARE TERMS?
 
 
@@ -573,12 +638,14 @@ EXAMPLE -- all these full-forms mean the same:
 
 * always acceptable, if verbose:
 
+
 ```clojure
 {:masr.specs/term        :masr.specs/intent,
  :masr.specs/intent-enum 'Unspecified}
 ```
 
 * shorter form, always acceptable:
+
 
 ```clojure
 #:masr.specs{:term        :intent,
@@ -588,13 +655,15 @@ EXAMPLE -- all these full-forms mean the same:
 * when in this file or in namespace masr.specs, via
   the line (in-ns 'masr.specs):
 
+
 ```clojure
 {::term        ::intent,
  ::intent-enum 'Unspecified}
 ```
 
 * if `masr.specs` is aliased to `asr`, as in `(:use
-  [masr.specs :as asr])` in `core_tests.clj`
+  [masr.specs :as asr])` in `core_test.clj`:
+
 
 ```clojure
 ;; {::asr/term        ::asr/intent,
@@ -616,11 +685,13 @@ As a qualified keyword, `::term` can name a Clojure
 spec. The following spec will check
 whether `::intent` is a `::term`:
 
+
 ```clojure
 (s/def ::term qualified-keyword?)
 ```
 
 EXAMPLE: "intent" is a valid "term"
+
 
 ```clojure
 (s/valid? ::term ::intent)
@@ -646,6 +717,7 @@ all implementations -- it just accepts a term. The
 implementations differ from one to the other. That's
 the meaning of "polymorphism" -- one interface, many
 implementations.
+
 
 ```clojure
 (defmulti term ::term)
@@ -690,6 +762,7 @@ techniques shown below.
 All multi-spec names in MASR, nested or not, begin
 with `::asr-...`, as in `::asr-term` (not nested)
 and `::asr-ttype-head` (nested in ttypes).
+
 
 ```clojure
 (s/def ::asr-term
@@ -737,6 +810,7 @@ recursively checks specs when entity keys like
 recursive conformance means that `::symbol` fields
 in other entities are checked by `::symbol` specs.
 
+
 ```clojure
 (defn term-selector-spec
   "Name a spec that checks that an asr-term entity
@@ -781,6 +855,7 @@ predictable. Implicit namespacing is a good
 design, overall, but we must be aware of it and
 step around it when necessary. We step around it
 via the built-in "name" function.
+
 
 ```clojure
 (defmacro defmasrnested
@@ -851,6 +926,7 @@ Uses of the `defmasrnested` macro:
 We need specs for each nested multi-spec
 like `::Variable` and `::FunctionType`.
 
+
 ```clojure
 (defmacro def-term-head--entity-key
   "Define an entity key like ::Variable, which is an
@@ -918,6 +994,7 @@ multi-specs.
 
 
 # 17. EXTRACTING ASDL FROM MASR
+
 
 ```clojure
 (def asdl-types
@@ -1033,6 +1110,7 @@ multimethods dispatch on the "head" keys of each
 term-with-nested-multi-spec, terms like
 `::symbol-head` and `::expr-head`.
 
+
 ```clojure
 (defmulti  ->asdl-type ::term)
 (defmacro term->asdl-type
@@ -1098,6 +1176,7 @@ via `s/def`.
 
 ## 20.1. UNIT
 
+
 ```clojure
 (defmulti  unit->asdl-type ::unit-head)
 (term->asdl-type unit)
@@ -1109,6 +1188,7 @@ via `s/def`.
 ```
 
 ## 20.2. SYMBOL
+
 
 ```clojure
 (defmulti  symbol->asdl-type ::symbol-head)
@@ -1156,6 +1236,7 @@ via `s/def`.
 
 ## 20.3. STMT
 
+
 ```clojure
 (defmulti  stmt->asdl-type ::stmt-head)
 (term->asdl-type stmt)   ;; CIDER macro-expand removes namespace.
@@ -1172,6 +1253,7 @@ via `s/def`.
 ```
 
 ## 20.4. EXPR
+
 
 ```clojure
 (defmulti  expr->asdl-type ::expr-head)
@@ -1206,6 +1288,7 @@ via `s/def`.
 ```
 
 ## 20.5. TTYPE
+
 
 ```clojure
 (defmulti  ttype->asdl-type ::ttype-head)
@@ -1259,7 +1342,6 @@ TODO: We might rework heavy sugar through the whole
 code-base because we must apply `legacy` anyway. For
 now, user-level code must call `legacy` when
 appropriate.
-
 
 
 ```clojure
@@ -1320,6 +1402,7 @@ makes exposes this secret explicitly.
 Case with 1 index is disallowed.
 https://github.com/rebcabin/masr/issues/5
 
+
 ```clojure
 (def MIN-DIMENSION-COUNT 0)
 (def MAX-DIMENSION-COUNT 2)
@@ -1352,6 +1435,7 @@ The next spec says that a `dimension` in full-form
 is an entity hash-map with keys `::term` and
 `::dimension-content`.
 
+
 ```clojure
 (defmethod term ::dimension [_]
   (s/keys :req [::term
@@ -1361,11 +1445,13 @@ is an entity hash-map with keys `::term` and
 As usual, we need a term-entity key, `::dimension`,
 for recursive type-checking.
 
+
 ```clojure
     (def-term-entity-key dimension)
 ```
 
 This spec can generate samples.
+
 
 ```clojure
 #_
@@ -1414,6 +1500,7 @@ example of a repeating pattern (TODO: macro?)
 
 TODO Consider a regex-spec.
 
+
 ```clojure
 (s/def ::dimensions
   (s/coll-of (term-selector-spec ::dimension)
@@ -1424,6 +1511,7 @@ TODO Consider a regex-spec.
 
 Generation of test cases does not currently work
 TODO https://github.com/rebcabin/masr/issues/14
+
 
 ```clojure
 #_(gen/sample (s/gen ::dimensions) 3)
@@ -1462,7 +1550,6 @@ better. MASR `->asdl-type` projects both of these
 types, `SymbolTable` and `symtab-id`, back into ASDL
 `symbol_table`, with its secret proviso. MASR
 exposes the secret. ASDL embraces the secret.
-
 
 
 ```clojure
@@ -1708,6 +1795,7 @@ etc., have additional structure we automate here.
 
 TODO: Consider a regex-spec.
 
+
 ```clojure
 (s/def ::ttypes
   (s/coll-of ::ttype
@@ -1716,6 +1804,7 @@ TODO: Consider a regex-spec.
 ```
 
 TODO: Consider a regex-spec.
+
 
 ```clojure
 (s/def ::ttype?
@@ -2012,6 +2101,7 @@ This is a rich `ttype` that we spell out by hand.
 * `ABI` is already good enough.
 * `deftype` is found above
 
+
 ```clojure
 (s/def ::bindc-name      (s/nilable string?))
 (s/def ::elemental       ::bool)
@@ -2044,6 +2134,7 @@ below.
 ```
 
 TODO: Consider a regex-spec.
+
 
 ```clojure
 (s/def ::symbols
@@ -2131,6 +2222,7 @@ TODO: Consider a regex-spec.
 
 ### 29.2.1. Sugar
 
+
 ```clojure
 (def value identity)
 ```
@@ -2149,6 +2241,7 @@ TODO: Consider a regex-spec.
 
 TODO: Consider a regex-spec.
 
+
 ```clojure
 (s/def ::exprs
   (s/coll-of ::expr
@@ -2157,6 +2250,7 @@ TODO: Consider a regex-spec.
 ```
 
 TODO: Consider a regex-spec.
+
 
 ```clojure
 (s/def ::expr?
@@ -2180,13 +2274,11 @@ TODO: Consider a regex-spec.
 ### 30.2.2. Example
 
 
-```clojure
-#_
-(LogicalConstant true (Logical 4 []))
+#+begin_src clojurer
 ```
 
 
-### 30.2.3. Heavy Sugar
+### Heavy Sugar
 
 
 ```clojure
@@ -2430,6 +2522,7 @@ TODO: check that the types of the exprs are `::Logical`!
 
 TODO: Consider a regex-spec.
 
+
 ```clojure
 (s/def ::stmts
   (s/coll-of ::stmt
@@ -2439,6 +2532,7 @@ TODO: Consider a regex-spec.
 
 
 TODO: Consider a regex-spec.
+
 
 ```clojure
 (s/def ::stmt?
@@ -2692,6 +2786,7 @@ abuses the word `symbol` to mean a `symbol-ref
 
 
 First multiary (multiadic) macro
+
 
 ```clojure
 (defmacro ExternalSymbol

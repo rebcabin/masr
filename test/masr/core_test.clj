@@ -872,33 +872,34 @@
 
 (deftest LogicalConstant-test
   (testing "valid"
-   (let [alv {::asr/term ::asr/expr,
-              ::asr/asr-expr-head
-              {::asr/expr-head ::asr/LogicalConstant
-               ::asr/bool      true
-               ::asr/Logical   (Logical)}}]
-     ;; telescoping specs
-     (is (= (s/valid? ::asr/asr-term        alv) true))
-     (is (= (s/valid? ::asr/expr            alv) true))
-     (is (= (s/valid? ::asr/LogicalConstant alv) true))
+    (let [alv {::asr/term ::asr/expr,
+               ::asr/asr-expr-head
+               {::asr/expr-head ::asr/LogicalConstant
+                ::asr/bool      true
+                ::asr/Logical   (Logical)}}]
+      ;; telescoping specs
+      (is (= (s/valid? ::asr/asr-term        alv) true))
+      (is (= (s/valid? ::asr/expr            alv) true))
+      (is (= (s/valid? ::asr/LogicalConstant alv) true))
 
-     (is (= alv (LogicalConstant true)))
-     (is (= alv (LogicalConstant true (Logical 4 []))))
-     (is (= alv (LogicalConstant true (Logical 4))))
-     (is (= alv (LogicalConstant true (Logical))))
-     ))
+      (is (= alv (LogicalConstant true)))
+      (is (= alv (LogicalConstant true (Logical 4 []))))
+      (is (= alv (LogicalConstant true (Logical 4))))
+      (is (= alv (LogicalConstant true (Logical))))
+      ))
 
   ;; invalid
   (testing "invalid"
-   (let [alv {::asr/term ::asr/expr,
-              ::asr/asr-expr-head
-              {::asr/expr-head ::asr/LogicalConstant
-               ::asr/bool      true
-               ::asr/Logical   (Integer)}}]
-     (is (= (s/valid? ::asr/expr            alv) false))
-     (is (= (s/valid? ::asr/LogicalConstant alv) false))
-     (is (= (s/valid? ::asr/asr-term        alv) false))))
-  )
+    (let [alv {::asr/term ::asr/expr,
+               ::asr/asr-expr-head
+               {::asr/expr-head ::asr/LogicalConstant
+                ::asr/bool      true
+                ::asr/Logical   (Integer)}}]
+      (is (= (s/valid? ::asr/asr-term        alv) false))
+      (is (= (s/valid? ::asr/expr            alv) false))
+      (is (= (s/valid? ::asr/ttype           alv) false))
+      (is (= (s/valid? ::asr/LogicalConstant alv) false))
+      )))
 
 
 ;;  ___     _                     ___             _            _
@@ -910,33 +911,34 @@
 
 (deftest IntegerConstant-test
   (testing "valid"
-   (let [aiv {::asr/term ::asr/expr,
-              ::asr/asr-expr-head
-              {::asr/expr-head ::asr/IntegerConstant
-               ::asr/int       42
-               ::asr/Integer   (Integer)}}]
-     ;; telescoping specs
-     (is (= (s/valid? ::asr/asr-term        aiv) true))
-     (is (= (s/valid? ::asr/expr            aiv) true))
-     (is (= (s/valid? ::asr/IntegerConstant aiv) true))
+    (let [aiv {::asr/term ::asr/expr,
+               ::asr/asr-expr-head
+               {::asr/expr-head ::asr/IntegerConstant
+                ::asr/int       42
+                ::asr/Integer   (Integer)}}]
+      ;; telescoping specs
+      (is (= (s/valid? ::asr/asr-term        aiv) true))
+      (is (= (s/valid? ::asr/expr            aiv) true))
+      (is (= (s/valid? ::asr/IntegerConstant aiv) true))
 
-     (is (= aiv (IntegerConstant 42)))
-     (is (= aiv (IntegerConstant 42 (Integer 4 []))))
-     (is (= aiv (IntegerConstant 42 (Integer 4))))
-     (is (= aiv (IntegerConstant 42 (Integer))))
-     ))
+      (is (= aiv (IntegerConstant 42)))
+      (is (= aiv (IntegerConstant 42 (Integer 4 []))))
+      (is (= aiv (IntegerConstant 42 (Integer 4))))
+      (is (= aiv (IntegerConstant 42 (Integer))))
+      ))
 
   ;; invalid
   (testing "invalid"
-   (let [aiv {::asr/term ::asr/expr,
-              ::asr/asr-expr-head
-              {::asr/expr-head ::asr/IntegerConstant
-               ::asr/int       42
-               ::asr/Integer   (Logical)}}]
-     (is (= (s/valid? ::asr/expr            aiv) false))
-     (is (= (s/valid? ::asr/IntegerConstant aiv) false))
-     (is (= (s/valid? ::asr/asr-term        aiv) false))))
-  )
+    (let [aiv {::asr/term ::asr/expr,
+               ::asr/asr-expr-head
+               {::asr/expr-head ::asr/IntegerConstant
+                ::asr/int       42
+                ::asr/Integer   (Logical)}}]
+      (is (= (s/valid? ::asr/asr-term        aiv) false))
+      (is (= (s/valid? ::asr/expr            aiv) false))
+      (is (= (s/valid? ::asr/ttype           aiv) false))
+      (is (= (s/valid? ::asr/IntegerConstant aiv) false))
+      )))
 
 
 ;; __   __
