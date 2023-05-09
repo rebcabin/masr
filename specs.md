@@ -84,21 +84,26 @@
   - [30.1. Pluralities](#301-pluralities)
   - [30.2. LOGICAL CONSTANT](#302-logical-constant)
     - [30.2.1. Original ASDL](#3021-original-asdl)
-    - [30.2.2. Heavy Sugar](#3022-heavy-sugar)
-  - [30.3. VAR](#303-var)
-    - [30.3.1. Issue #23](#3031-issue-23)
-    - [30.3.2. Prerequisite Type Alias](#3032-prerequisite-type-alias)
+    - [30.2.2. Example](#3022-example)
+    - [30.2.3. Heavy Sugar](#3023-heavy-sugar)
+  - [30.3. INTEGER CONSTANT](#303-integer-constant)
+    - [30.3.1. Original ASDL](#3031-original-asdl)
+    - [30.3.2. Example](#3032-example)
     - [30.3.3. Heavy Sugar](#3033-heavy-sugar)
-    - [30.3.4. Legacy Sugar](#3034-legacy-sugar)
-  - [30.4. LOGICAL BINOP](#304-logical-binop)
-    - [30.4.1. Original ASDL](#3041-original-asdl)
-    - [30.4.2. Example](#3042-example)
-    - [30.4.3. Prerequisite Type Aliases](#3043-prerequisite-type-aliases)
-    - [30.4.4. Heavy Sugar](#3044-heavy-sugar)
-  - [30.5. LOGICAL COMPARE](#305-logical-compare)
+  - [30.4. VAR](#304-var)
+    - [30.4.1. Issue #23](#3041-issue-23)
+    - [30.4.2. Prerequisite Type Alias](#3042-prerequisite-type-alias)
+    - [30.4.3. Heavy Sugar](#3043-heavy-sugar)
+    - [30.4.4. Legacy Sugar](#3044-legacy-sugar)
+  - [30.5. LOGICAL BINOP](#305-logical-binop)
     - [30.5.1. Original ASDL](#3051-original-asdl)
     - [30.5.2. Example](#3052-example)
-    - [30.5.3. Heavy Sugar](#3053-heavy-sugar)
+    - [30.5.3. Prerequisite Type Aliases](#3053-prerequisite-type-aliases)
+    - [30.5.4. Heavy Sugar](#3054-heavy-sugar)
+  - [30.6. LOGICAL COMPARE](#306-logical-compare)
+    - [30.6.1. Original ASDL](#3061-original-asdl)
+    - [30.6.2. Example](#3062-example)
+    - [30.6.3. Heavy Sugar](#3063-heavy-sugar)
 - [31. STMT](#31-stmt)
   - [31.1. Pluralities](#311-pluralities)
   - [31.2. ASSIGNMENT](#312-assignment)
@@ -1098,9 +1103,9 @@ via `s/def`.
 (term->asdl-type unit)
 
 (defmasrtype
- TranslationUnit unit
- (SymbolTable
-  nodes))
+  TranslationUnit unit
+  (SymbolTable
+   nodes))
 ```
 
 ## 20.2. SYMBOL
@@ -1110,16 +1115,17 @@ via `s/def`.
 (term->asdl-type symbol) ;; Don't expand in CIDER! console only.
 
 (defmasrtype
- Program symbol
- ;; types:
- (SymbolTable
-  prognym    dependencies    body))
+  Program symbol
+  ;; types:
+  (SymbolTable
+   prognym    dependencies    body))
 
 (defmasrtype
   ExternalSymbol symbol
   ;; types:
-  (symtab-id      nym           extern-symref
-   modulenym      scope-nyms    orig-nym
+  (symtab-id
+   nym          extern-symref
+   modulenym    scope-nyms       orig-nym
    access))
 
 (defmasrtype
@@ -1172,26 +1178,31 @@ via `s/def`.
 (term->asdl-type expr)   ;;
 
 (defmasrtype
- LogicalBinOp expr
- ;; types
- (logical-left    logicalbinop    logical-right
-  Logical         value))
+  LogicalBinOp expr
+  ;; types
+  (logical-left    logicalbinop    logical-right
+                   Logical         value))
 
 (defmasrtype
- LogicalCompare expr
- ;; types
- (logical-left    logicalcmpop    logical-right
-  Logical         value))
+  LogicalCompare expr
+  ;; types
+  (logical-left    logicalcmpop    logical-right
+                   Logical         value))
 
 (defmasrtype
- LogicalConstant expr
- ;; types
- (bool    Logical))
+  LogicalConstant expr
+  ;; types
+  (bool    Logical))
 
 (defmasrtype
- Var expr
- ;; types
- (symtab-id    varnym))
+  IntegerConstant expr
+  ;; types
+  (int    Integer))
+
+(defmasrtype
+  Var expr
+  ;; types
+  (symtab-id    varnym))
 ```
 
 ## 20.5. TTYPE
@@ -1201,19 +1212,19 @@ via `s/def`.
 (term->asdl-type ttype)
 
 (defmasrtype
- Logical ttype
- ;; types
- (logical-kind
-  dimensions))
+  Logical ttype
+  ;; types
+  (logical-kind
+   dimensions))
 
 (defmasrtype
   FunctionType ttype
   ;; types
-  (param-types     return-var-type  abi
-   deftype         bindc-name       elemental
-   pure            module           inline
-   static          type-params      restrictions
-   is-restriction))
+  (param-types    return-var-type    abi
+                  deftype            bindc-name     elemental
+                  pure               module         inline
+                  static             type-params    restrictions
+                  is-restriction))
 ```
 
 
@@ -2162,11 +2173,20 @@ TODO: Consider a regex-spec.
 
 
 ```c
+| LogicalConstant(bool value, ttype type)
+```
+
+
+### 30.2.2. Example
+
+
+```clojure
+#_
 (LogicalConstant true (Logical 4 []))
 ```
 
 
-### 30.2.2. Heavy Sugar
+### 30.2.3. Heavy Sugar
 
 
 ```clojure
@@ -2187,10 +2207,51 @@ TODO: Consider a regex-spec.
 ```
 
 
-## 30.3. VAR
+## 30.3. INTEGER CONSTANT
 
 
-### 30.3.1. Issue #23
+### 30.3.1. Original ASDL
+
+
+```c
+IntegerConstant(int n, ttype type)
+```
+
+
+### 30.3.2. Example
+
+
+```clojure
+#_
+(IntegerConstant 5 (Integer 4 []))
+```
+
+
+### 30.3.3. Heavy Sugar
+
+
+```clojure
+(defn IntegerConstant
+  ;; arity-2
+  ([an-int, a-ttype]
+   (let [cnf {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ::IntegerConstant
+               ::int       an-int
+               ::Integer   a-ttype}}]
+     (if (s/invalid? cnf)
+       :invalid-integer-constant
+       cnf)))
+  ;; arity-1
+  ([an-int]
+   (IntegerConstant an-int (Integer))))
+```
+
+
+## 30.4. VAR
+
+
+### 30.4.1. Issue #23
 
 
 Is the parameter `symbol` for `Var` really a `symbol`?
@@ -2210,7 +2271,7 @@ Var(symtab_id stid, identifier it)
 ```
 
 
-### 30.3.2. Prerequisite Type Alias
+### 30.4.2. Prerequisite Type Alias
 
 
 ```clojure
@@ -2218,7 +2279,7 @@ Var(symtab_id stid, identifier it)
 ```
 
 
-### 30.3.3. Heavy Sugar
+### 30.4.3. Heavy Sugar
 
 
 ```clojure
@@ -2235,7 +2296,7 @@ Var(symtab_id stid, identifier it)
 ```
 
 
-### 30.3.4. Legacy Sugar
+### 30.4.4. Legacy Sugar
 
 
 ```clojure
@@ -2247,10 +2308,10 @@ TODO: make it look up a value in the
 symbol-table! That's part of abstract execution.
 
 
-## 30.4. LOGICAL BINOP
+## 30.5. LOGICAL BINOP
 
 
-### 30.4.1. Original ASDL
+### 30.5.1. Original ASDL
 
 
 ```c
@@ -2259,7 +2320,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 30.4.2. Example
+### 30.5.2. Example
 
 
 ```clojure
@@ -2276,7 +2337,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 30.4.3. Prerequisite Type Aliases
+### 30.5.3. Prerequisite Type Aliases
 
 
 TODO: check that the types of the exprs are `::Logical`!
@@ -2288,7 +2349,7 @@ TODO: check that the types of the exprs are `::Logical`!
 ```
 
 
-### 30.4.4. Heavy Sugar
+### 30.5.4. Heavy Sugar
 
 
 ```clojure
@@ -2308,10 +2369,10 @@ TODO: check that the types of the exprs are `::Logical`!
 ```
 
 
-## 30.5. LOGICAL COMPARE
+## 30.6. LOGICAL COMPARE
 
 
-### 30.5.1. Original ASDL
+### 30.6.1. Original ASDL
 
 
 ```c
@@ -2323,7 +2384,7 @@ TODO: check that the types of the exprs are `::Logical`!
 ```
 
 
-### 30.5.2. Example
+### 30.6.2. Example
 
 
 ```clojure
@@ -2336,7 +2397,7 @@ TODO: check that the types of the exprs are `::Logical`!
 ```
 
 
-### 30.5.3. Heavy Sugar
+### 30.6.3. Heavy Sugar
 
 
 ```clojure
@@ -2845,7 +2906,8 @@ TODO: there is ambiguity regarding identifier-sets and lists:
 (defmacro Variable
   "Honor legacy parameter order of
   lpython/src/libasr/ASR.asdl as of 25 April 2023.
-  Quote the varnym and pass along all other params."
+  Quote the varnym and dependencies; pass along
+  all other params."
   [symtab-id-,     varnym-,          dependencies-,
    intent-,        symbolic-value-,  value-,
    storage-type-,  ttype-,           abi-,
@@ -2855,7 +2917,7 @@ TODO: there is ambiguity regarding identifier-sets and lists:
     '~varnym-  ;; notice the tick mark
     ~ttype-    ;; moved up from between storage type and abi
     nil ;; legacy doesn't have type-declaration
-    ~dependencies-
+    (for [d# '~dependencies-] d#)
     ~intent-
     ~symbolic-value-
     ~value-
@@ -2900,7 +2962,7 @@ TODO: there is ambiguity regarding identifier-sets and lists:
              {::symbol-head     ::Module
               ::SymbolTable     symtab
               ::modulenym       modnym
-              ::dependencies    deps
+              ::dependencies    deps    ;; TODO quote it
               ::loaded-from-mod loaded
               ::intrinsic       intrinsic-}}]
     (if (s/invalid? cnf)
@@ -2996,13 +3058,13 @@ TODO: there is ambiguity regarding identifier-sets and lists:
 
 ```clojure
 (defmacro Function
-  "Quote the fnnym."
+  "Quote the fnnym and the deps."
   [symtab,
    fnnym,   fnsig,  deps,
    params-, body-,  retvar,
    access-, determ, sefree]
   `(Function-- ~symtab,
-               '~fnnym,  ~fnsig,  ~deps,
+               '~fnnym,  ~fnsig,  (for [d# '~deps] d#),
                ~params-, ~body-,  ~retvar,
                ~access-, ~determ, ~sefree))
 ```
@@ -3054,9 +3116,13 @@ TODO: there is ambiguity regarding identifier-sets and lists:
 
 ```clojure
 (defmacro Program
-  "Quote the nym."
+  "Quote the nym and the dependencies."
   [stab, nym, deps, body-]
-  `(Program-- ~stab, '~nym, ~deps, ~body-))
+  `(Program--
+    ~stab,
+    '~nym,
+    (for [e# '~deps] e#),
+    ~body-))
 ```
 
 # 33. UNIT

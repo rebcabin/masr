@@ -999,9 +999,9 @@
 (term->asdl-type unit)
 
 (defmasrtype
- TranslationUnit unit
- (SymbolTable
-  nodes))
+  TranslationUnit unit
+  (SymbolTable
+   nodes))
 ;; #+end_src
 
 ;;
@@ -1013,16 +1013,17 @@
 (term->asdl-type symbol) ;; Don't expand in CIDER! console only.
 
 (defmasrtype
- Program symbol
- ;; types:
- (SymbolTable
-  prognym    dependencies    body))
+  Program symbol
+  ;; types:
+  (SymbolTable
+   prognym    dependencies    body))
 
 (defmasrtype
   ExternalSymbol symbol
   ;; types:
-  (symtab-id      nym           extern-symref
-   modulenym      scope-nyms    orig-nym
+  (symtab-id
+   nym          extern-symref
+   modulenym    scope-nyms       orig-nym
    access))
 
 (defmasrtype
@@ -1079,26 +1080,31 @@
 (term->asdl-type expr)   ;;
 
 (defmasrtype
- LogicalBinOp expr
- ;; types
- (logical-left    logicalbinop    logical-right
-  Logical         value))
+  LogicalBinOp expr
+  ;; types
+  (logical-left    logicalbinop    logical-right
+                   Logical         value))
 
 (defmasrtype
- LogicalCompare expr
- ;; types
- (logical-left    logicalcmpop    logical-right
-  Logical         value))
+  LogicalCompare expr
+  ;; types
+  (logical-left    logicalcmpop    logical-right
+                   Logical         value))
 
 (defmasrtype
- LogicalConstant expr
- ;; types
- (bool    Logical))
+  LogicalConstant expr
+  ;; types
+  (bool    Logical))
 
 (defmasrtype
- Var expr
- ;; types
- (symtab-id    varnym))
+  IntegerConstant expr
+  ;; types
+  (int    Integer))
+
+(defmasrtype
+  Var expr
+  ;; types
+  (symtab-id    varnym))
 ;; #+end_src
 
 ;;
@@ -1110,19 +1116,19 @@
 (term->asdl-type ttype)
 
 (defmasrtype
- Logical ttype
- ;; types
- (logical-kind
-  dimensions))
+  Logical ttype
+  ;; types
+  (logical-kind
+   dimensions))
 
 (defmasrtype
   FunctionType ttype
   ;; types
-  (param-types     return-var-type  abi
-   deftype         bindc-name       elemental
-   pure            module           inline
-   static          type-params      restrictions
-   is-restriction))
+  (param-types    return-var-type    abi
+                  deftype            bindc-name     elemental
+                  pure               module         inline
+                  static             type-params    restrictions
+                  is-restriction))
 ;; #+end_src
 
 ;;
@@ -2166,8 +2172,19 @@
 ;;
 ;;
 ;; ```c
-;; (LogicalConstant true (Logical 4 []))
+;; | LogicalConstant(bool value, ttype type)
 ;; ```
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(LogicalConstant true (Logical 4 []))
+;; #+end_src
+
 ;;
 ;;
 ;; ### Heavy Sugar
@@ -2189,6 +2206,51 @@
   ;; arity-1
   ([a-bool]
    (LogicalConstant a-bool (Logical))))
+;; #+end_src
+
+;;
+;;
+;; ## INTEGER CONSTANT
+;;
+;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; IntegerConstant(int n, ttype type)
+;; ```
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(IntegerConstant 5 (Integer 4 []))
+;; #+end_src
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn IntegerConstant
+  ;; arity-2
+  ([an-int, a-ttype]
+   (let [cnf {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ::IntegerConstant
+               ::int       an-int
+               ::Integer   a-ttype}}]
+     (if (s/invalid? cnf)
+       :invalid-integer-constant
+       cnf)))
+  ;; arity-1
+  ([an-int]
+   (IntegerConstant an-int (Integer))))
 ;; #+end_src
 
 ;;
@@ -2925,7 +2987,8 @@
 (defmacro Variable
   "Honor legacy parameter order of
   lpython/src/libasr/ASR.asdl as of 25 April 2023.
-  Quote the varnym and pass along all other params."
+  Quote the varnym and dependencies; pass along
+  all other params."
   [symtab-id-,     varnym-,          dependencies-,
    intent-,        symbolic-value-,  value-,
    storage-type-,  ttype-,           abi-,
@@ -2935,7 +2998,7 @@
     '~varnym-  ;; notice the tick mark
     ~ttype-    ;; moved up from between storage type and abi
     nil ;; legacy doesn't have type-declaration
-    ~dependencies-
+    (for [d# '~dependencies-] d#)
     ~intent-
     ~symbolic-value-
     ~value-
@@ -2984,7 +3047,7 @@
              {::symbol-head     ::Module
               ::SymbolTable     symtab
               ::modulenym       modnym
-              ::dependencies    deps
+              ::dependencies    deps    ;; TODO quote it
               ::loaded-from-mod loaded
               ::intrinsic       intrinsic-}}]
     (if (s/invalid? cnf)
@@ -3090,13 +3153,13 @@
 ;; #+begin_src clojure
 
 (defmacro Function
-  "Quote the fnnym."
+  "Quote the fnnym and the deps."
   [symtab,
    fnnym,   fnsig,  deps,
    params-, body-,  retvar,
    access-, determ, sefree]
   `(Function-- ~symtab,
-               '~fnnym,  ~fnsig,  ~deps,
+               '~fnnym,  ~fnsig,  (for [d# '~deps] d#),
                ~params-, ~body-,  ~retvar,
                ~access-, ~determ, ~sefree))
 ;; #+end_src
@@ -3154,9 +3217,13 @@
 ;; #+begin_src clojure
 
 (defmacro Program
-  "Quote the nym."
+  "Quote the nym and the dependencies."
   [stab, nym, deps, body-]
-  `(Program-- ~stab, '~nym, ~deps, ~body-))
+  `(Program--
+    ~stab,
+    '~nym,
+    (for [e# '~deps] e#),
+    ~body-))
 ;; #+end_src
 
 ;;
