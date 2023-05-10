@@ -3404,7 +3404,11 @@
             ),
 
           long-form-legacy-e2e0267
-          (legacy
+          (do (in-ns 'masr.specs)
+              (eval (rewrite-for-legacy
+                     hand-written-quoted-e2e0267)))
+          ;; same as ...
+          #_(legacy
            (TranslationUnit
             (SymbolTable
              1
