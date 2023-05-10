@@ -22,7 +22,7 @@
 ;; Write code in the source files, mostly in
 ;; `specs.clj`. Format code comments in Markdown.
 ;; End a block of comments with a comment line that
-; says `#+begin_src` by itself, beginning in column
+;; says `#+begin_src` by itself, beginning in column
 ;; 1, then add a blank line. Terminate src blocks
 ;; with `#+end_src` in a Clojure comment beginning
 ;; in column 1. You'll see many examples below.
@@ -451,7 +451,7 @@
 ;; two trailing hyphens. The difference concerns
 ;; legacy. If a legacy sugar is needed for a term,
 ;; the legacy sugar has the name with no hyphens,
-;; like `Variable` and the heavy sugar has the name
+;; like `Variable`, and the heavy sugar has the name
 ;; with two hyphens, like `Variable--`. Both legacy
 ;; sugar and heavy sugar produce identical
 ;; full-forms.
@@ -486,7 +486,6 @@
 #_(Integer 2 [])
 #_(Integer 8 [[6 60] [1 42]])
 ;; #+end_src
-
 
 ;;
 ;;
@@ -991,6 +990,7 @@
 ;; #+end_src
 
 ;;
+;;
 ;; #+begin_src clojure
 
 (defmacro defmasrtype
@@ -1150,6 +1150,7 @@
 
 (defmasrtype
   TranslationUnit unit
+  ;; types of the attributes:
   (SymbolTable
    nodes))
 ;; #+end_src
@@ -1165,42 +1166,38 @@
 
 (defmasrtype
   Program symbol
-  ;; types:
+  ;; types of the attributes:
   (SymbolTable
    prognym    dependencies    body))
 
 (defmasrtype
   ExternalSymbol symbol
-  ;; types:
   (symtab-id
    nym          extern-symref
    modulenym    scope-nyms       orig-nym
    access))
 
 (defmasrtype
- Variable symbol
-  ;; types:
- (symtab-id        varnym            dependencies
-  intent           symbolic-value    value
-  storage-type     ttype             abi
-  access           presence          value-attr
-  type-declaration))
+  Variable symbol
+  (symtab-id        varnym           dependencies
+                    intent           symbolic-value    value
+                    storage-type     ttype             abi
+                    access           presence          value-attr
+                    type-declaration))
 
 (defmasrtype
- Module symbol
-  ;; types:
+  Module symbol
   (SymbolTable
    modulenym       dependencies    loaded-from-mod
    intrinsic))
 
 (defmasrtype
- Function symbol
-  ;; types:
- (SymbolTable ;; not a symtab-id!
-  function-name    function-signature    dependencies
-  params           body                  return-var?
-  access           deterministic         side-effect-free
-  ))
+  Function symbol
+  (SymbolTable ;; not a symtab-id!
+   function-name    function-signature    dependencies
+   params           body                  return-var?
+   access           deterministic         side-effect-free
+   ))
 ;; #+end_src
 
 ;;
@@ -1213,9 +1210,9 @@
 (term->asdl-type stmt)   ;; CIDER macro-expand removes namespace.
 
 (defmasrtype
- Assignment stmt
- ;; types
- (lvalue    rvalue    overloaded))
+  Assignment stmt
+  ;; types of the attributes:
+  (lvalue    rvalue    overloaded))
 
 (defmasrtype
   Print stmt
@@ -1227,7 +1224,6 @@
 
 (defmasrtype
   SubroutineCall stmt
-  ;; types
   (nymref    orig-nymref    call-args    dt?))
 ;; #+end_src
 
@@ -1238,38 +1234,38 @@
 ;; #+begin_src clojure
 
 (defmulti  expr->asdl-type ::expr-head)
-(term->asdl-type expr)   ;;
+(term->asdl-type expr)
+
+(defmasrtype
+  NamedExpr expr
+  ;; types of the attributes:
+  (target value ttype))
 
 (defmasrtype
   FunctionCall expr
   (nymref    orig-nymref    call-args
-             return-type    value?    dt?))
+             return-type    value?       dt?))
 
 (defmasrtype
   LogicalBinOp expr
-  ;; types
   (logical-left    logicalbinop    logical-right
                    Logical         value))
 
 (defmasrtype
   LogicalCompare expr
-  ;; types
   (logical-left    logicalcmpop    logical-right
                    Logical         value))
 
 (defmasrtype
   LogicalConstant expr
-  ;; types
   (bool    Logical))
 
 (defmasrtype
   IntegerConstant expr
-  ;; types
   (int    Integer))
 
 (defmasrtype
   Var expr
-  ;; types
   (symtab-id    varnym))
 ;; #+end_src
 
@@ -1284,13 +1280,12 @@
 
 (defmasrtype
   Logical ttype
-  ;; types
+  ;; types of the attributes:
   (logical-kind
    dimensions))
 
 (defmasrtype
   FunctionType ttype
-  ;; types
   (param-types    return-var-type    abi
                   deftype            bindc-name     elemental
                   pure               module         inline
@@ -2356,27 +2351,6 @@
 
 ;;
 ;;
-;; ## VALUE
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::value empty?)
-;; #+end_src
-
-;;
-;;
-;; ### Sugar
-;;
-;;
-;; #+begin_src clojure
-
-(def value identity)
-;; #+end_src
-
-
-;;
-;;
 ;; # EXPR
 ;;
 ;;
@@ -2411,6 +2385,44 @@
   (s/coll-of ::expr
              :min-count 0
              :max-count 1))
+;; #+end_src
+
+
+;;
+;;
+;; ## NAMED EXPR
+;;
+;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | NamedExpr(expr target, expr value, ttype type)
+;; ```
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(NamedExpr
+ (Var 2 y)
+ (IntegerConstant 0 (Integer 4 []))
+ (Integer 4 [])
+ )
+;; #+end_src
+
+;;
+;;
+;; ### Prerequisite Type Aliases
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::target ::expr)
+(s/def ::value  ::expr?)
 ;; #+end_src
 
 
