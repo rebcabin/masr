@@ -3403,7 +3403,7 @@
             []
             ),
 
-          legacy-long-form-e2e0267
+          long-form-legacy-e2e0267
           (legacy
            (TranslationUnit
             (SymbolTable
@@ -3709,15 +3709,23 @@
           slurped-e2e0267
           (read-string
            (slurp
-            "resources/reference/asr_expr_10_e2e0267.stdout.clj"))]
+            "resources/reference/asr_expr_10_e2e0267.stdout.clj")),
+
+          long-form-slurped-e2e0267
+          (do (in-ns 'masr.specs)
+              (eval (rewrite-for-legacy
+                     slurped-e2e0267)))
+          ]
+
       (testing "whole translation unit"
-        (is (s/valid? ::asr/unit legacy-long-form-e2e0267)))
-      (is (= hand-written-quoted-e2e0267 slurped-e2e0267))
-      (is (s/valid? ::asr/asr-term legacy-long-form-e2e0267))
-      (is (s/valid? ::asr/asr-term
-                    (do (in-ns 'masr.specs)
-                        (eval (rewrite-for-legacy
-                               slurped-e2e0267)))))
+        (is (s/valid? ::asr/unit     long-form-legacy-e2e0267))
+        (is (s/valid? ::asr/asr-term long-form-legacy-e2e0267))
+        (is (s/valid? ::asr/unit     long-form-slurped-e2e0267))
+        (is (s/valid? ::asr/asr-term long-form-slurped-e2e0267)))
+
+      (testing "textual identity of slurped exampl"
+        (is (= hand-written-quoted-e2e0267 slurped-e2e0267)))
+
       )))
 
 
