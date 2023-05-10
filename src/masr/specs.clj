@@ -1179,7 +1179,7 @@
 
 (defmasrtype
   Variable symbol
-  (symtab-id        varnym           dependencies
+  (symtab-id        varnym            dependencies
                     intent           symbolic-value    value
                     storage-type     ttype             abi
                     access           presence          value-attr
@@ -1244,7 +1244,7 @@
 (defmasrtype
   FunctionCall expr
   (nymref    orig-nymref    call-args
-             return-type    value?       dt?))
+             return-type    value?    dt?))
 
 (defmasrtype
   LogicalBinOp expr
@@ -2421,8 +2421,9 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::target ::expr)
 (s/def ::value  ::expr?)
+(s/def ::value? ::expr?)
+(s/def ::target ::expr)
 ;; #+end_src
 
 
@@ -2493,7 +2494,7 @@
 ;; #+begin_src clojure
 
 (defn FunctionCall-- [fn-nymref orig-nymref call-args
-                      return-type value? dt?]
+                    return-type value? dt?]
   (let [cnf (s/conform
              ::FunctionCall
              {::term ::expr,
