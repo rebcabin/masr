@@ -2426,6 +2426,28 @@
 (s/def ::target ::expr)
 ;; #+end_src
 
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+
+(defn NamedExpr [target value ttype]
+  (let [cnf (s/conform
+             ::NamedExpr
+             {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ::NamedExpr
+               ::target target
+               ::value  value
+               ::ttype  ttype}})]
+    (if (s/invalid? cnf)
+      :invalid-named-expr
+      cnf)))
+;; #+end_src
+
 
 ;;
 ;;
@@ -2494,7 +2516,7 @@
 ;; #+begin_src clojure
 
 (defn FunctionCall-- [fn-nymref orig-nymref call-args
-                    return-type value? dt?]
+                      return-type value? dt?]
   (let [cnf (s/conform
              ::FunctionCall
              {::term ::expr,
