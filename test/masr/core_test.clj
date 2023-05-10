@@ -1003,14 +1003,17 @@
 ;; |_\___\__, \__,_\__|\_, |
 ;;       |___/         |__/
 
-;; TODO
 
-#_
 (deftest legacy-test
-  (testing "switching of namespaces"
-    (is (= (with-out-str (print *ns*))
-           "#namespace[masr.specs]"))
-    ))
+  (is (= '[(Var 42 x)]
+         (rewrite-for-legacy
+          '((Var 42 x)))))
+  (is (= '[(Var 42 x)]
+         (rewrite-for-legacy
+          '[(Var 42 x)])))
+  (is (s/valid? ::asr/expr?
+                (legacy ((Var 42 x)))))
+  )
 
 
 ;;    _          _                         _
@@ -1077,6 +1080,43 @@
                        (Logical 4 []) ()) ()))))    ))
 
 
+;;          _ _
+;;  __ __ _| | |        __ _ _ _ __ _
+;; / _/ _` | | |       / _` | '_/ _` |
+;; \__\__,_|_|_|  ___  \__,_|_| \__, |
+;;               |___|          |___/
+
+
+(deftest call-arg-test
+  (is (s/valid? ::asr/expr?     ()))
+  (is (s/valid? ::asr/Var       (legacy (Var 42 x))))
+
+  (is (s/valid? ::asr/expr?     (legacy ())))
+  (is (s/valid? ::asr/expr?     (legacy [(Var 42 x)])))
+  (is (s/valid? ::asr/expr?     (legacy ((Var 42 x)))))
+  ;; not allowed
+  (is (not (s/valid? ::asr/call-arg  (legacy []))))
+  ;; an empty ::asr/expr?
+  (is (s/valid? ::asr/call-arg  (legacy [()])))
+  ;; various ways of ::asr/expr? with one ::asr/expr,
+  ;; a natural expression of ::asr/expr? without
+  ;; s/or and its complications, and our
+  ;; normal way of expressing ? pluralities,
+  ;; via one extra level of nesting.
+  (is (s/valid? ::asr/call-arg  (legacy (((Var 42 x))))))
+  (is (s/valid? ::asr/call-arg  (legacy [((Var 42 x))])))
+  (is (s/valid? ::asr/call-arg  (legacy [[(Var 42 x)]])))
+  ;;                                 call-args with two call-arg instances
+  ;;                                        call-arg       call-arg
+  ;;                                     .-----^------. .-----^------.
+  (is (s/valid? ::asr/call-args (legacy [[((Var 42 x))] [((Var 43 j))] ])))
+  ;; Bracket styles don't matter under `legacy`:
+  (is (s/valid? ::asr/call-args (legacy [(((Var 42 x))) (((Var 43 j))) ])))
+  (is (s/valid? ::asr/call-args (legacy ((((Var 42 x))) (((Var 43 j)))) )))
+  (is (s/valid? ::asr/call-args (legacy []))) ;; empty call args
+  (is (s/valid? ::asr/call-args (legacy [(())]))))
+
+
 ;;  ___      _                 _   _           ___      _ _
 ;; / __|_  _| |__ _ _ ___ _  _| |_(_)_ _  ___ / __|__ _| | |
 ;; \__ \ || | '_ \ '_/ _ \ || |  _| | ' \/ -_) (__/ _` | | |
@@ -1087,20 +1127,54 @@
 
   (testing "heavy sugar"
     (is (s/valid? ::asr/SubroutineCall
-                 (SubroutineCall--
-                  ['test_fn1 7]
-                  ()
-                  []
-                  ()
-                  ))))
+                  (SubroutineCall--
+                   ['test_fn1 7]
+                   ()    []    ()
+                   ))))
   (testing "legacy sugar"
-    (is (s/valid? ::asr/SubroutineCall ;; le
-                 (SubroutineCall
-                  7
-                  test_fn1
-                  ()
-                  []
-                  ())))))
+    (is (s/valid? ::asr/SubroutineCall
+                  (SubroutineCall
+                   7 test_fn1
+                   ()    []    ())))
+    (is (s/valid? ::asr/SubroutineCall
+                  (legacy
+                   (SubroutineCall
+                    7 test_fn1
+                   ()    []    ()))))
+    (is (s/valid? ::asr/SubroutineCall
+                  (legacy
+                   (SubroutineCall
+                    7 test_fn1
+                    ()
+                    [((Var 42 i))]
+                    ()))))
+    (is (s/valid? ::asr/SubroutineCall
+                  (legacy
+                   (SubroutineCall
+                    7 test_fn1
+                    ()
+                    [((Var 42 i)) ((Var 43 j))]
+                    ()))))
+    (is (s/valid? ::asr/SubroutineCall
+                  (SubroutineCall--
+                   ['test_fn1 7]
+                   ()
+                   [[[(Var 42 i)]]]
+                   ())))
+    (is (s/valid? ::asr/SubroutineCall
+                  (legacy ;; replace call brackets with vector
+                   (SubroutineCall--
+                    ['test_fn1 7]
+                    ()
+                    [(((Var 42 i))) (((Var 43 j)))] ;; call brackets
+                    ()))))
+    (is (s/valid? ::asr/SubroutineCall
+                  (legacy ;; replace call brackets with vector
+                   (SubroutineCall--
+                    ['test_fn1 7]
+                    ()
+                    [(((Var 42 i)))] ;; call brackets
+                    ()))))))
 
 
 ;;                   __        __            ___
@@ -1694,7 +1768,7 @@
           (TranslationUnit
            (SymbolTable
             1 {:_global_symbols
-               (Module
+               (Module--
                 (SymbolTable
                  4 {:test_boolOp
                     (Function
@@ -1801,600 +1875,1489 @@
                      )]
                    )))
 
-    #_(is (s/valid? ::asr/SymbolTable
-                    (legacy
-                     (SymbolTable
-                      1
-                      {
-                       :_global_symbols
-                       (Module
-                        (SymbolTable
-                         7
-                         {
-                          :_lpython_main_program
-                          (Function
-                           (SymbolTable
-                            6
-                            {
+    (is (s/valid? ::asr/SubroutineCall
+                  (legacy
+                   (SubroutineCall
+                    5 _lpython_main_program
+                    ()
+                    []
+                    ()
+                    ))))
 
-                             })
-                           _lpython_main_program
-                           (FunctionType
-                            []
-                            ()
-                            Source
-                            Implementation
-                            ()
-                            false
-                            false
-                            false
-                            false
-                            false
-                            []
-                            []
-                            false
-                            )
-                           [test_fn1]
-                           []
-                           [(SubroutineCall
-                             7 test_fn1
-                             ()
-                             []
-                             ()
-                             )]
-                           ()
-                           Public
-                           false
-                           false
-                           ),
-                          :g
-                          (Function
-                           (SymbolTable
-                            2
-                            {
-                             :_lpython_return_variable
-                             (Variable
-                              2
-                              _lpython_return_variable
-                              []
-                              ReturnVar
-                              ()
-                              ()
-                              Default
-                              (Integer 4 [])
-                              Source
-                              Public
-                              Required
-                              false
-                              )
-                             })
-                           g
-                           (FunctionType
-                            []
-                            (Integer 4 [])
-                            Source
-                            Implementation
-                            ()
-                            false
-                            false
-                            false
-                            false
-                            false
-                            []
-                            []
-                            false
-                            )
-                           []
-                           []
-                           [(=
-                             (Var 2 _lpython_return_variable)
-                             (IntegerConstant 5 (Integer 4 []))
-                             ()
-                             )
-                            (Return)]
-                           (Var 2 _lpython_return_variable)
-                           Public
-                           false
-                           false
-                           ),
-                          :gsubrout
-                          (Function
-                           (SymbolTable
-                            3
-                            {
-                             :x
-                             (Variable
-                              3
-                              x
-                              []
-                              In
-                              ()
-                              ()
-                              Default
-                              (Integer 4 [])
-                              Source
-                              Public
-                              Required
-                              false
-                              )
-                             })
-                           gsubrout
-                           (FunctionType
-                            [(Integer 4 [])]
-                            ()
-                            Source
-                            Implementation
-                            ()
-                            false
-                            false
-                            false
-                            false
-                            false
-                            []
-                            []
-                            false
-                            )
-                           []
-                           [(Var 3 x)]
-                           [(Print
-                             ()
-                             [(Var 3 x)]
-                             ()
-                             ()
-                             )]
-                           ()
-                           Public
-                           false
-                           false
-                           ),
-                          :test_fn1
-                          (Function
-                           (SymbolTable
-                            4
-                            {
-                             :__lcompilers_dummy
-                             (Variable
-                              4
-                              __lcompilers_dummy
-                              []
-                              Local
-                              ()
-                              ()
-                              Default
-                              (Integer 4 [])
-                              Source
-                              Public
-                              Required
-                              false
-                              ),
-                             :i
-                             (Variable
-                              4
-                              i
-                              []
-                              Local
-                              ()
-                              ()
-                              Default
-                              (Integer 4 [])
-                              Source
-                              Public
-                              Required
-                              false
-                              ),
-                             :j
-                             (Variable
-                              4
-                              j
-                              []
-                              Local
-                              ()
-                              ()
-                              Default
-                              (Integer 4 [])
-                              Source
-                              Public
-                              Required
-                              false
-                              )
-                             })
-                           test_fn1
-                           (FunctionType
-                            []
-                            ()
-                            Source
-                            Implementation
-                            ()
-                            false
-                            false
-                            false
-                            false
-                            false
-                            []
-                            []
-                            false
-                            )
-                           [g
-                            gsubrout]
-                           []
-                           [(=
-                             (Var 4 i)
-                             (FunctionCall
-                              7 g
-                              ()
-                              []
-                              (Integer 4 [])
-                              ()
-                              ()
-                              )
-                             ()
-                             )
-                            (=
-                             (Var 4 j)
-                             (FunctionCall
-                              7 g
-                              ()
-                              []
-                              (Integer 4 [])
-                              ()
-                              ()
-                              )
-                             ()
-                             )
-                            (=
-                             (Var 4 __lcompilers_dummy)
-                             (FunctionCall
-                              7 g
-                              ()
-                              []
-                              (Integer 4 [])
-                              ()
-                              ()
-                              )
-                             ()
-                             )
-                            (SubroutineCall
-                             7 gsubrout
-                             ()
-                             [((Var 4 i))]
-                             ()
-                             )]
-                           ()
-                           Public
-                           false
-                           false
-                           )
-                          })
-                        _global_symbols
-                        []
-                        false
-                        false
-                        ),
-                       :main_program
-                       (Program
-                        (SymbolTable
-                         5
-                         {
-                          :_lpython_main_program
-                          (ExternalSymbol
-                           5
-                           _lpython_main_program
-                           7 _lpython_main_program
-                           _global_symbols
-                           []
-                           _lpython_main_program
-                           Public
-                           )
-                          })
-                        main_program
-                        [_global_symbols]
-                        [(SubroutineCall
-                          5 _lpython_main_program
-                          ()
-                          []
-                          ()
-                          )]
-                        )
-                       }))))
+    (is (s/valid? ::asr/Function
+                  (legacy
+                   (Function
+                    (SymbolTable
+                     6
+                     {
 
-    #_(is (s/valid? ::asr/unit
-                    '(TranslationUnit
+                      })
+                    _lpython_main_program
+                    (FunctionType
+                     []
+                     ()
+                     Source
+                     Implementation
+                     ()
+                     false
+                     false
+                     false
+                     false
+                     false
+                     []
+                     []
+                     false
+                     )
+                    [test_fn1]
+                    []
+                    [(SubroutineCall
+                      7 test_fn1
+                      ()
+                      []
+                      ()
+                      )]
+                    ()
+                    Public
+                    false
+                    false
+                    ))))
+
+    (is (s/valid? ::asr/SymbolTable
+                  (legacy
+                   (SymbolTable
+                    2
+                    {
+                     :_lpython_return_variable
+                     (Variable
+                      2
+                      _lpython_return_variable
+                      []
+                      ReturnVar
+                      ()
+                      ()
+                      Default
+                      (Integer 4 [])
+                      Source
+                      Public
+                      Required
+                      false
+                      )
+                     }))))
+
+    (is (s/valid? ::asr/FunctionType
+                  (legacy
+                   (FunctionType
+                    []
+                    (Integer 4 [])
+                    Source
+                    Implementation
+                    ()
+                    false
+                    false
+                    false
+                    false
+                    false
+                    []
+                    []
+                    false
+                    ))))
+
+    (is (s/valid? ::asr/Assignment
+                  (legacy
+                   (=
+                    (Var 2 _lpython_return_variable)
+                    (IntegerConstant 5 (Integer 4 []))
+                    ()
+                    ))))
+
+    (is (s/valid? ::asr/Return
+                  (legacy
+                   (Return))))
+
+    (is (s/valid? ::asr/Function
+                  (legacy
+                   (Function
+                    (SymbolTable
+                     2
+                     {
+                      :_lpython_return_variable
+                      (Variable
+                       2
+                       _lpython_return_variable
+                       []
+                       ReturnVar
+                       ()
+                       ()
+                       Default
+                       (Integer 4 [])
+                       Source
+                       Public
+                       Required
+                       false
+                       )
+                      })
+                    g
+                    (FunctionType
+                     []
+                     (Integer 4 [])
+                     Source
+                     Implementation
+                     ()
+                     false
+                     false
+                     false
+                     false
+                     false
+                     []
+                     []
+                     false
+                     )
+                    []
+                    []
+                    [(=
+                      (Var 2 _lpython_return_variable)
+                      (IntegerConstant 5 (Integer 4 []))
+                      ()
+                      )
+                     (Return)]
+                    (Var 2 _lpython_return_variable)
+                    Public
+                    false
+                    false
+                    ))))
+
+    (is (s/valid? ::asr/Function
+                  (legacy
+                   (Function
+                    (SymbolTable
+                     6
+                     {
+
+                      })
+                    _lpython_main_program
+                    (FunctionType
+                     []
+                     ()
+                     Source
+                     Implementation
+                     ()
+                     false
+                     false
+                     false
+                     false
+                     false
+                     []
+                     []
+                     false
+                     )
+                    [test_fn1]
+                    []
+                    [(SubroutineCall
+                      7 test_fn1
+                      ()
+                      []
+                      ()
+                      )]
+                    ()
+                    Public
+                    false
+                    false
+                    )
+                   )))
+
+    (is (s/valid? ::asr/Function
+                  (legacy
+                   (Function
+                    (SymbolTable
+                     3
+                     {
+                      :x
+                      (Variable
+                       3
+                       x
+                       []
+                       In
+                       ()
+                       ()
+                       Default
+                       (Integer 4 [])
+                       Source
+                       Public
+                       Required
+                       false
+                       )
+                      })
+                    gsubrout
+                    (FunctionType
+                     [(Integer 4 [])]
+                     ()
+                     Source
+                     Implementation
+                     ()
+                     false
+                     false
+                     false
+                     false
+                     false
+                     []
+                     []
+                     false
+                     )
+                    []
+                    [(Var 3 x)]
+                    [(Print
+                      ()
+                      [(Var 3 x)]
+                      ()
+                      ()
+                      )]
+                    ()
+                    Public
+                    false
+                    false
+                    ))))
+
+    (is (s/valid? ::asr/Function
+                  (legacy
+                   (Function
+                    (SymbolTable
+                     4
+                     {
+                      :__lcompilers_dummy
+                      (Variable
+                       4
+                       __lcompilers_dummy
+                       []
+                       Local
+                       ()
+                       ()
+                       Default
+                       (Integer 4 [])
+                       Source
+                       Public
+                       Required
+                       false
+                       ),
+                      :i
+                      (Variable
+                       4
+                       i
+                       []
+                       Local
+                       ()
+                       ()
+                       Default
+                       (Integer 4 [])
+                       Source
+                       Public
+                       Required
+                       false
+                       ),
+                      :j
+                      (Variable
+                       4
+                       j
+                       []
+                       Local
+                       ()
+                       ()
+                       Default
+                       (Integer 4 [])
+                       Source
+                       Public
+                       Required
+                       false
+                       )
+                      })
+                    test_fn1
+                    (FunctionType
+                     []
+                     ()
+                     Source
+                     Implementation
+                     ()
+                     false
+                     false
+                     false
+                     false
+                     false
+                     []
+                     []
+                     false
+                     )
+                    [g
+                     gsubrout]
+                    []
+                    [(=
+                      (Var 4 i)
+                      (FunctionCall
+                       7 g
+                       ()
+                       []
+                       (Integer 4 [])
+                       ()
+                       ()
+                       )
+                      ()
+                      )
+                     (=
+                      (Var 4 j)
+                      (FunctionCall
+                       7 g
+                       ()
+                       []
+                       (Integer 4 [])
+                       ()
+                       ()
+                       )
+                      ()
+                      )
+                     (=
+                      (Var 4 __lcompilers_dummy)
+                      (FunctionCall
+                       7 g
+                       ()
+                       []
+                       (Integer 4 [])
+                       ()
+                       ()
+                       )
+                      ()
+                      )
+                     (SubroutineCall
+                      7 gsubrout
+                      ()
+                      [((Var 4 i))]
+                      ()
+                      )]
+                    ()
+                    Public
+                    false
+                    false
+                    ))))
+
+    (is (s/valid? ::asr/SymbolTable
+                  (legacy
+                   (SymbolTable
+                    7
+                    {
+                     :_lpython_main_program
+                     (Function
                       (SymbolTable
-                       1
+                       6
                        {
-                        :_global_symbols
-                        (Module
-                         (SymbolTable
-                          7
-                          {
-                           :_lpython_main_program
-                           (Function
-                            (SymbolTable
-                             6
-                             {
 
-                              })
-                            _lpython_main_program
-                            (FunctionType
-                             []
-                             ()
-                             Source
-                             Implementation
-                             ()
-                             false
-                             false
-                             false
-                             false
-                             false
-                             []
-                             []
-                             false
-                             )
-                            [test_fn1]
-                            []
-                            [(SubroutineCall
-                              7 test_fn1
-                              ()
-                              []
-                              ()
-                              )]
-                            ()
-                            Public
-                            false
-                            false
-                            ),
-                           :g
-                           (Function
-                            (SymbolTable
-                             2
-                             {
-                              :_lpython_return_variable
-                              (Variable
-                               2
-                               _lpython_return_variable
-                               []
-                               ReturnVar
-                               ()
-                               ()
-                               Default
-                               (Integer 4 [])
-                               Source
-                               Public
-                               Required
-                               false
-                               )
-                              })
-                            g
-                            (FunctionType
-                             []
-                             (Integer 4 [])
-                             Source
-                             Implementation
-                             ()
-                             false
-                             false
-                             false
-                             false
-                             false
-                             []
-                             []
-                             false
-                             )
-                            []
-                            []
-                            [(=
-                              (Var 2 _lpython_return_variable)
-                              (IntegerConstant 5 (Integer 4 []))
-                              ()
-                              )
-                             (Return)]
-                            (Var 2 _lpython_return_variable)
-                            Public
-                            false
-                            false
-                            ),
-                           :gsubrout
-                           (Function
-                            (SymbolTable
-                             3
-                             {
-                              :x
-                              (Variable
-                               3
-                               x
-                               []
-                               In
-                               ()
-                               ()
-                               Default
-                               (Integer 4 [])
-                               Source
-                               Public
-                               Required
-                               false
-                               )
-                              })
-                            gsubrout
-                            (FunctionType
-                             [(Integer 4 [])]
-                             ()
-                             Source
-                             Implementation
-                             ()
-                             false
-                             false
-                             false
-                             false
-                             false
-                             []
-                             []
-                             false
-                             )
-                            []
-                            [(Var 3 x)]
-                            [(Print
-                              ()
-                              [(Var 3 x)]
-                              ()
-                              ()
-                              )]
-                            ()
-                            Public
-                            false
-                            false
-                            ),
-                           :test_fn1
-                           (Function
-                            (SymbolTable
-                             4
-                             {
-                              :__lcompilers_dummy
-                              (Variable
-                               4
-                               __lcompilers_dummy
-                               []
-                               Local
-                               ()
-                               ()
-                               Default
-                               (Integer 4 [])
-                               Source
-                               Public
-                               Required
-                               false
-                               ),
-                              :i
-                              (Variable
-                               4
-                               i
-                               []
-                               Local
-                               ()
-                               ()
-                               Default
-                               (Integer 4 [])
-                               Source
-                               Public
-                               Required
-                               false
-                               ),
-                              :j
-                              (Variable
-                               4
-                               j
-                               []
-                               Local
-                               ()
-                               ()
-                               Default
-                               (Integer 4 [])
-                               Source
-                               Public
-                               Required
-                               false
-                               )
-                              })
-                            test_fn1
-                            (FunctionType
-                             []
-                             ()
-                             Source
-                             Implementation
-                             ()
-                             false
-                             false
-                             false
-                             false
-                             false
-                             []
-                             []
-                             false
-                             )
-                            [g
-                             gsubrout]
-                            []
-                            [(=
-                              (Var 4 i)
-                              (FunctionCall
-                               7 g
-                               ()
-                               []
-                               (Integer 4 [])
-                               ()
-                               ()
-                               )
-                              ()
-                              )
-                             (=
-                              (Var 4 j)
-                              (FunctionCall
-                               7 g
-                               ()
-                               []
-                               (Integer 4 [])
-                               ()
-                               ()
-                               )
-                              ()
-                              )
-                             (=
-                              (Var 4 __lcompilers_dummy)
-                              (FunctionCall
-                               7 g
-                               ()
-                               []
-                               (Integer 4 [])
-                               ()
-                               ()
-                               )
-                              ()
-                              )
-                             (SubroutineCall
-                              7 gsubrout
-                              ()
-                              [((Var 4 i))]
-                              ()
-                              )]
-                            ()
-                            Public
-                            false
-                            false
-                            )
-                           })
-                         _global_symbols
+                        })
+                      _lpython_main_program
+                      (FunctionType
+                       []
+                       ()
+                       Source
+                       Implementation
+                       ()
+                       false
+                       false
+                       false
+                       false
+                       false
+                       []
+                       []
+                       false
+                       )
+                      [test_fn1]
+                      []
+                      [(SubroutineCall
+                        7 test_fn1
+                        ()
+                        []
+                        ()
+                        )]
+                      ()
+                      Public
+                      false
+                      false
+                      ),
+                     :g
+                     (Function
+                      (SymbolTable
+                       2
+                       {
+                        :_lpython_return_variable
+                        (Variable
+                         2
+                         _lpython_return_variable
                          []
+                         ReturnVar
+                         ()
+                         ()
+                         Default
+                         (Integer 4 [])
+                         Source
+                         Public
+                         Required
                          false
+                         )
+                        })
+                      g
+                      (FunctionType
+                       []
+                       (Integer 4 [])
+                       Source
+                       Implementation
+                       ()
+                       false
+                       false
+                       false
+                       false
+                       false
+                       []
+                       []
+                       false
+                       )
+                      []
+                      []
+                      [(=
+                        (Var 2 _lpython_return_variable)
+                        (IntegerConstant 5 (Integer 4 []))
+                        ()
+                        )
+                       (Return)]
+                      (Var 2 _lpython_return_variable)
+                      Public
+                      false
+                      false
+                      ),
+                     :gsubrout
+                     (Function
+                      (SymbolTable
+                       3
+                       {
+                        :x
+                        (Variable
+                         3
+                         x
+                         []
+                         In
+                         ()
+                         ()
+                         Default
+                         (Integer 4 [])
+                         Source
+                         Public
+                         Required
+                         false
+                         )
+                        })
+                      gsubrout
+                      (FunctionType
+                       [(Integer 4 [])]
+                       ()
+                       Source
+                       Implementation
+                       ()
+                       false
+                       false
+                       false
+                       false
+                       false
+                       []
+                       []
+                       false
+                       )
+                      []
+                      [(Var 3 x)]
+                      [(Print
+                        ()
+                        [(Var 3 x)]
+                        ()
+                        ()
+                        )]
+                      ()
+                      Public
+                      false
+                      false
+                      ),
+                     :test_fn1
+                     (Function
+                      (SymbolTable
+                       4
+                       {
+                        :__lcompilers_dummy
+                        (Variable
+                         4
+                         __lcompilers_dummy
+                         []
+                         Local
+                         ()
+                         ()
+                         Default
+                         (Integer 4 [])
+                         Source
+                         Public
+                         Required
                          false
                          ),
-                        :main_program
-                        (Program
+                        :i
+                        (Variable
+                         4
+                         i
+                         []
+                         Local
+                         ()
+                         ()
+                         Default
+                         (Integer 4 [])
+                         Source
+                         Public
+                         Required
+                         false
+                         ),
+                        :j
+                        (Variable
+                         4
+                         j
+                         []
+                         Local
+                         ()
+                         ()
+                         Default
+                         (Integer 4 [])
+                         Source
+                         Public
+                         Required
+                         false
+                         )
+                        })
+                      test_fn1
+                      (FunctionType
+                       []
+                       ()
+                       Source
+                       Implementation
+                       ()
+                       false
+                       false
+                       false
+                       false
+                       false
+                       []
+                       []
+                       false
+                       )
+                      [g
+                       gsubrout]
+                      []
+                      [(=
+                        (Var 4 i)
+                        (FunctionCall
+                         7 g
+                         ()
+                         []
+                         (Integer 4 [])
+                         ()
+                         ()
+                         )
+                        ()
+                        )
+                       (=
+                        (Var 4 j)
+                        (FunctionCall
+                         7 g
+                         ()
+                         []
+                         (Integer 4 [])
+                         ()
+                         ()
+                         )
+                        ()
+                        )
+                       (=
+                        (Var 4 __lcompilers_dummy)
+                        (FunctionCall
+                         7 g
+                         ()
+                         []
+                         (Integer 4 [])
+                         ()
+                         ()
+                         )
+                        ()
+                        )
+                       (SubroutineCall
+                        7 gsubrout
+                        ()
+                        [((Var 4 i))]
+                        ()
+                        )]
+                      ()
+                      Public
+                      false
+                      false
+                      )
+                     }))))
+
+    (is (s/valid? ::asr/Module
+                  (legacy
+                   (Module
+                    (SymbolTable
+                     7
+                     {
+                      :_lpython_main_program
+                      (Function
+                       (SymbolTable
+                        6
+                        {
+
+                         })
+                       _lpython_main_program
+                       (FunctionType
+                        []
+                        ()
+                        Source
+                        Implementation
+                        ()
+                        false
+                        false
+                        false
+                        false
+                        false
+                        []
+                        []
+                        false
+                        )
+                       [test_fn1]
+                       []
+                       [(SubroutineCall
+                         7 test_fn1
+                         ()
+                         []
+                         ()
+                         )]
+                       ()
+                       Public
+                       false
+                       false
+                       ),
+                      :g
+                      (Function
+                       (SymbolTable
+                        2
+                        {
+                         :_lpython_return_variable
+                         (Variable
+                          2
+                          _lpython_return_variable
+                          []
+                          ReturnVar
+                          ()
+                          ()
+                          Default
+                          (Integer 4 [])
+                          Source
+                          Public
+                          Required
+                          false
+                          )
+                         })
+                       g
+                       (FunctionType
+                        []
+                        (Integer 4 [])
+                        Source
+                        Implementation
+                        ()
+                        false
+                        false
+                        false
+                        false
+                        false
+                        []
+                        []
+                        false
+                        )
+                       []
+                       []
+                       [(=
+                         (Var 2 _lpython_return_variable)
+                         (IntegerConstant 5 (Integer 4 []))
+                         ()
+                         )
+                        (Return)]
+                       (Var 2 _lpython_return_variable)
+                       Public
+                       false
+                       false
+                       ),
+                      :gsubrout
+                      (Function
+                       (SymbolTable
+                        3
+                        {
+                         :x
+                         (Variable
+                          3
+                          x
+                          []
+                          In
+                          ()
+                          ()
+                          Default
+                          (Integer 4 [])
+                          Source
+                          Public
+                          Required
+                          false
+                          )
+                         })
+                       gsubrout
+                       (FunctionType
+                        [(Integer 4 [])]
+                        ()
+                        Source
+                        Implementation
+                        ()
+                        false
+                        false
+                        false
+                        false
+                        false
+                        []
+                        []
+                        false
+                        )
+                       []
+                       [(Var 3 x)]
+                       [(Print
+                         ()
+                         [(Var 3 x)]
+                         ()
+                         ()
+                         )]
+                       ()
+                       Public
+                       false
+                       false
+                       ),
+                      :test_fn1
+                      (Function
+                       (SymbolTable
+                        4
+                        {
+                         :__lcompilers_dummy
+                         (Variable
+                          4
+                          __lcompilers_dummy
+                          []
+                          Local
+                          ()
+                          ()
+                          Default
+                          (Integer 4 [])
+                          Source
+                          Public
+                          Required
+                          false
+                          ),
+                         :i
+                         (Variable
+                          4
+                          i
+                          []
+                          Local
+                          ()
+                          ()
+                          Default
+                          (Integer 4 [])
+                          Source
+                          Public
+                          Required
+                          false
+                          ),
+                         :j
+                         (Variable
+                          4
+                          j
+                          []
+                          Local
+                          ()
+                          ()
+                          Default
+                          (Integer 4 [])
+                          Source
+                          Public
+                          Required
+                          false
+                          )
+                         })
+                       test_fn1
+                       (FunctionType
+                        []
+                        ()
+                        Source
+                        Implementation
+                        ()
+                        false
+                        false
+                        false
+                        false
+                        false
+                        []
+                        []
+                        false
+                        )
+                       [g
+                        gsubrout]
+                       []
+                       [(=
+                         (Var 4 i)
+                         (FunctionCall
+                          7 g
+                          ()
+                          []
+                          (Integer 4 [])
+                          ()
+                          ()
+                          )
+                         ()
+                         )
+                        (=
+                         (Var 4 j)
+                         (FunctionCall
+                          7 g
+                          ()
+                          []
+                          (Integer 4 [])
+                          ()
+                          ()
+                          )
+                         ()
+                         )
+                        (=
+                         (Var 4 __lcompilers_dummy)
+                         (FunctionCall
+                          7 g
+                          ()
+                          []
+                          (Integer 4 [])
+                          ()
+                          ()
+                          )
+                         ()
+                         )
+                        (SubroutineCall
+                         7 gsubrout
+                         ()
+                         [((Var 4 i))]
+                         ()
+                         )]
+                       ()
+                       Public
+                       false
+                       false
+                       )
+                      })
+                    _global_symbols
+                    []
+                    false
+                    false
+                    ))))
+
+    (is (s/valid? ::asr/SymbolTable
+                  (legacy
+                   (SymbolTable
+                    1
+                    {
+                     :_global_symbols
+                     (Module
+                      (SymbolTable
+                       7
+                       {
+                        :_lpython_main_program
+                        (Function
                          (SymbolTable
-                          5
+                          6
                           {
-                           :_lpython_main_program
-                           (ExternalSymbol
-                            5
-                            _lpython_main_program
-                            7 _lpython_main_program
-                            _global_symbols
-                            []
-                            _lpython_main_program
-                            Public
-                            )
+
                            })
-                         main_program
-                         [_global_symbols]
+                         _lpython_main_program
+                         (FunctionType
+                          []
+                          ()
+                          Source
+                          Implementation
+                          ()
+                          false
+                          false
+                          false
+                          false
+                          false
+                          []
+                          []
+                          false
+                          )
+                         [test_fn1]
+                         []
                          [(SubroutineCall
-                           5 _lpython_main_program
+                           7 test_fn1
                            ()
                            []
                            ()
                            )]
+                         ()
+                         Public
+                         false
+                         false
+                         ),
+                        :g
+                        (Function
+                         (SymbolTable
+                          2
+                          {
+                           :_lpython_return_variable
+                           (Variable
+                            2
+                            _lpython_return_variable
+                            []
+                            ReturnVar
+                            ()
+                            ()
+                            Default
+                            (Integer 4 [])
+                            Source
+                            Public
+                            Required
+                            false
+                            )
+                           })
+                         g
+                         (FunctionType
+                          []
+                          (Integer 4 [])
+                          Source
+                          Implementation
+                          ()
+                          false
+                          false
+                          false
+                          false
+                          false
+                          []
+                          []
+                          false
+                          )
+                         []
+                         []
+                         [(=
+                           (Var 2 _lpython_return_variable)
+                           (IntegerConstant 5 (Integer 4 []))
+                           ()
+                           )
+                          (Return)]
+                         (Var 2 _lpython_return_variable)
+                         Public
+                         false
+                         false
+                         ),
+                        :gsubrout
+                        (Function
+                         (SymbolTable
+                          3
+                          {
+                           :x
+                           (Variable
+                            3
+                            x
+                            []
+                            In
+                            ()
+                            ()
+                            Default
+                            (Integer 4 [])
+                            Source
+                            Public
+                            Required
+                            false
+                            )
+                           })
+                         gsubrout
+                         (FunctionType
+                          [(Integer 4 [])]
+                          ()
+                          Source
+                          Implementation
+                          ()
+                          false
+                          false
+                          false
+                          false
+                          false
+                          []
+                          []
+                          false
+                          )
+                         []
+                         [(Var 3 x)]
+                         [(Print
+                           ()
+                           [(Var 3 x)]
+                           ()
+                           ()
+                           )]
+                         ()
+                         Public
+                         false
+                         false
+                         ),
+                        :test_fn1
+                        (Function
+                         (SymbolTable
+                          4
+                          {
+                           :__lcompilers_dummy
+                           (Variable
+                            4
+                            __lcompilers_dummy
+                            []
+                            Local
+                            ()
+                            ()
+                            Default
+                            (Integer 4 [])
+                            Source
+                            Public
+                            Required
+                            false
+                            ),
+                           :i
+                           (Variable
+                            4
+                            i
+                            []
+                            Local
+                            ()
+                            ()
+                            Default
+                            (Integer 4 [])
+                            Source
+                            Public
+                            Required
+                            false
+                            ),
+                           :j
+                           (Variable
+                            4
+                            j
+                            []
+                            Local
+                            ()
+                            ()
+                            Default
+                            (Integer 4 [])
+                            Source
+                            Public
+                            Required
+                            false
+                            )
+                           })
+                         test_fn1
+                         (FunctionType
+                          []
+                          ()
+                          Source
+                          Implementation
+                          ()
+                          false
+                          false
+                          false
+                          false
+                          false
+                          []
+                          []
+                          false
+                          )
+                         [g
+                          gsubrout]
+                         []
+                         [(=
+                           (Var 4 i)
+                           (FunctionCall
+                            7 g
+                            ()
+                            []
+                            (Integer 4 [])
+                            ()
+                            ()
+                            )
+                           ()
+                           )
+                          (=
+                           (Var 4 j)
+                           (FunctionCall
+                            7 g
+                            ()
+                            []
+                            (Integer 4 [])
+                            ()
+                            ()
+                            )
+                           ()
+                           )
+                          (=
+                           (Var 4 __lcompilers_dummy)
+                           (FunctionCall
+                            7 g
+                            ()
+                            []
+                            (Integer 4 [])
+                            ()
+                            ()
+                            )
+                           ()
+                           )
+                          (SubroutineCall
+                           7 gsubrout
+                           ()
+                           [((Var 4 i))]
+                           ()
+                           )]
+                         ()
+                         Public
+                         false
+                         false
                          )
                         })
+                      _global_symbols
                       []
-                      )))
+                      false
+                      false
+                      ),
+                     :main_program
+                     (Program
+                      (SymbolTable
+                       5
+                       {
+                        :_lpython_main_program
+                        (ExternalSymbol
+                         5
+                         _lpython_main_program
+                         7 _lpython_main_program
+                         _global_symbols
+                         []
+                         _lpython_main_program
+                         Public
+                         )
+                        })
+                      main_program
+                      [_global_symbols]
+                      [(SubroutineCall
+                        5 _lpython_main_program
+                        ()
+                        []
+                        ()
+                        )]
+                      )
+                     }))))
+
+    (is (s/valid? ::asr/unit
+                  (legacy
+                   (TranslationUnit
+                    (SymbolTable
+                     1
+                     {
+                      :_global_symbols
+                      (Module
+                       (SymbolTable
+                        7
+                        {
+                         :_lpython_main_program
+                         (Function
+                          (SymbolTable
+                           6
+                           {
+
+                            })
+                          _lpython_main_program
+                          (FunctionType
+                           []
+                           ()
+                           Source
+                           Implementation
+                           ()
+                           false
+                           false
+                           false
+                           false
+                           false
+                           []
+                           []
+                           false
+                           )
+                          [test_fn1]
+                          []
+                          [(SubroutineCall
+                            7 test_fn1
+                            ()
+                            []
+                            ()
+                            )]
+                          ()
+                          Public
+                          false
+                          false
+                          ),
+                         :g
+                         (Function
+                          (SymbolTable
+                           2
+                           {
+                            :_lpython_return_variable
+                            (Variable
+                             2
+                             _lpython_return_variable
+                             []
+                             ReturnVar
+                             ()
+                             ()
+                             Default
+                             (Integer 4 [])
+                             Source
+                             Public
+                             Required
+                             false
+                             )
+                            })
+                          g
+                          (FunctionType
+                           []
+                           (Integer 4 [])
+                           Source
+                           Implementation
+                           ()
+                           false
+                           false
+                           false
+                           false
+                           false
+                           []
+                           []
+                           false
+                           )
+                          []
+                          []
+                          [(=
+                            (Var 2 _lpython_return_variable)
+                            (IntegerConstant 5 (Integer 4 []))
+                            ()
+                            )
+                           (Return)]
+                          (Var 2 _lpython_return_variable)
+                          Public
+                          false
+                          false
+                          ),
+                         :gsubrout
+                         (Function
+                          (SymbolTable
+                           3
+                           {
+                            :x
+                            (Variable
+                             3
+                             x
+                             []
+                             In
+                             ()
+                             ()
+                             Default
+                             (Integer 4 [])
+                             Source
+                             Public
+                             Required
+                             false
+                             )
+                            })
+                          gsubrout
+                          (FunctionType
+                           [(Integer 4 [])]
+                           ()
+                           Source
+                           Implementation
+                           ()
+                           false
+                           false
+                           false
+                           false
+                           false
+                           []
+                           []
+                           false
+                           )
+                          []
+                          [(Var 3 x)]
+                          [(Print
+                            ()
+                            [(Var 3 x)]
+                            ()
+                            ()
+                            )]
+                          ()
+                          Public
+                          false
+                          false
+                          ),
+                         :test_fn1
+                         (Function
+                          (SymbolTable
+                           4
+                           {
+                            :__lcompilers_dummy
+                            (Variable
+                             4
+                             __lcompilers_dummy
+                             []
+                             Local
+                             ()
+                             ()
+                             Default
+                             (Integer 4 [])
+                             Source
+                             Public
+                             Required
+                             false
+                             ),
+                            :i
+                            (Variable
+                             4
+                             i
+                             []
+                             Local
+                             ()
+                             ()
+                             Default
+                             (Integer 4 [])
+                             Source
+                             Public
+                             Required
+                             false
+                             ),
+                            :j
+                            (Variable
+                             4
+                             j
+                             []
+                             Local
+                             ()
+                             ()
+                             Default
+                             (Integer 4 [])
+                             Source
+                             Public
+                             Required
+                             false
+                             )
+                            })
+                          test_fn1
+                          (FunctionType
+                           []
+                           ()
+                           Source
+                           Implementation
+                           ()
+                           false
+                           false
+                           false
+                           false
+                           false
+                           []
+                           []
+                           false
+                           )
+                          [g
+                           gsubrout]
+                          []
+                          [(=
+                            (Var 4 i)
+                            (FunctionCall
+                             7 g
+                             ()
+                             []
+                             (Integer 4 [])
+                             ()
+                             ()
+                             )
+                            ()
+                            )
+                           (=
+                            (Var 4 j)
+                            (FunctionCall
+                             7 g
+                             ()
+                             []
+                             (Integer 4 [])
+                             ()
+                             ()
+                             )
+                            ()
+                            )
+                           (=
+                            (Var 4 __lcompilers_dummy)
+                            (FunctionCall
+                             7 g
+                             ()
+                             []
+                             (Integer 4 [])
+                             ()
+                             ()
+                             )
+                            ()
+                            )
+                           (SubroutineCall
+                            7 gsubrout
+                            ()
+                            [((Var 4 i))]
+                            ()
+                            )]
+                          ()
+                          Public
+                          false
+                          false
+                          )
+                         })
+                       _global_symbols
+                       []
+                       false
+                       false
+                       ),
+                      :main_program
+                      (Program
+                       (SymbolTable
+                        5
+                        {
+                         :_lpython_main_program
+                         (ExternalSymbol
+                          5
+                          _lpython_main_program
+                          7 _lpython_main_program
+                          _global_symbols
+                          []
+                          _lpython_main_program
+                          Public
+                          )
+                         })
+                       main_program
+                       [_global_symbols]
+                       [(SubroutineCall
+                         5 _lpython_main_program
+                         ()
+                         []
+                         ()
+                         )]
+                       )
+                      })
+                    []
+                    ))))
     ))
+
 
 ;;(slurp "/Users/brian/tmp/lpython/tests/reference/asr-expr2-5311701.stdout")
 
