@@ -1249,12 +1249,12 @@
 (defmasrtype
   LogicalBinOp expr
   (logical-left    logicalbinop    logical-right
-                   Logical         value))
+                   Logical         value?))
 
 (defmasrtype
   LogicalCompare expr
   (logical-left    logicalcmpop    logical-right
-                   Logical         value))
+                   Logical         value?))
 
 (defmasrtype
   LogicalConstant expr
@@ -2421,7 +2421,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::value  ::expr?)
+(s/def ::value  ::expr)
 (s/def ::value? ::expr?)
 (s/def ::target ::expr)
 ;; #+end_src
@@ -2742,7 +2742,7 @@
 ;;
 ;; #+begin_src clojure
 
-(defn LogicalBinOp [left- lbo- right- tt- val-]
+(defn LogicalBinOp [left- lbo- right- tt- val?-]
   (let [cnf {::term ::expr,
              ::asr-expr-head
              {::expr-head     ::LogicalBinOp
@@ -2750,7 +2750,7 @@
               ::logicalbinop  lbo-
               ::logical-right right-
               ::Logical       tt-
-              ::value         val-
+              ::value?        val?-
               }}]
     (if (s/invalid? cnf)
       :invalid-logical-bin-op
@@ -2795,7 +2795,7 @@
 ;;
 ;; #+begin_src clojure
 
-(defn LogicalCompare [l- cmp- r- tt- val-]
+(defn LogicalCompare [l- cmp- r- tt- val?-]
   (let [cnf {::term ::expr,
              ::asr-expr-head
              {::expr-head     ::LogicalCompare
@@ -2803,7 +2803,7 @@
               ::logicalcmpop  cmp-
               ::logical-right r-
               ::Logical       tt-
-              ::value         val-}}]
+              ::value?        val?-}}]
     (if (s/invalid? cnf)
       :invalid-logical-compare
       cnf)))
