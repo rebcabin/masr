@@ -1278,7 +1278,7 @@
            ::asr/intent           Local
 
            ::asr/symbolic-value   () ;; TODO sugar
-           ::asr/value            () ;; TODO sugar
+           ::asr/value?           ()
            ::asr/storage-type     Default
 
            ::asr/abi              Source
@@ -1328,7 +1328,7 @@
                      :value-attr       false
 
                      :symbolic-value   []
-                     :value            []
+                     :value?           []
                      :storage-type     Default
 
                      :dependencies     ['y 'z]

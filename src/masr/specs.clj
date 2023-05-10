@@ -1179,10 +1179,10 @@
 
 (defmasrtype
   Variable symbol
-  (symtab-id        varnym            dependencies
-                    intent           symbolic-value    value
-                    storage-type     ttype             abi
-                    access           presence          value-attr
+  (symtab-id        varnym              dependencies
+                    intent              symbolic-value    value?
+                    storage-type        ttype             abi
+                    access              presence          value-attr
                     type-declaration))
 
 (defmasrtype
@@ -3283,7 +3283,7 @@
 ;;            identifier   * dependencies,    ;; vector of dependency
 ;;            intent         intent,
 ;;            expr         ? symbolic_value,  ;; lack specified by nil
-;;            expr         ? value,
+;;            expr         ? value,           ;; replace with value?
 ;;            storage_type   storage,
 ;;            ttype          type,
 ;;            abi            abi,
@@ -3358,7 +3358,7 @@
              symtab-id,          varnym,         ttype,
              ;; defaulted
              type-declaration,   dependencies,   intent,
-             symbolic-value,     value,          storage-type,
+             symbolic-value,     value?,         storage-type,
              abi,                access,         presence,
              value-attr
              ]
@@ -3367,7 +3367,7 @@
            intent           (intent 'Local)
 
            symbolic-value   ()
-           value            ()
+           value?           ()
            storage-type     (storage-type 'Default)
 
            abi              Source
@@ -3389,7 +3389,7 @@
                ::intent           intent,
 
                ::symbolic-value   symbolic-value,
-               ::value            value,
+               ::value?           value?,
                ::storage-type     storage-type,
 
                ::abi              abi,
@@ -3415,7 +3415,7 @@
   have trailing hyphens."
   [symtab-id-,         varnym-,        ttype-,
    typedecl-,          dependencies-,  intent-,
-   symbolic-value-,    value-,         storage-type-,
+   symbolic-value-,    value?-,        storage-type-,
    abi-,               access-,        presence-,
    value-attr-]
   (let [cnf (s/conform
@@ -3436,7 +3436,7 @@
                                     intent-),
 
                ::symbolic-value   symbolic-value-,
-               ::value            value-,
+               ::value?           value?-,
                ::storage-type     (if (symbol? storage-type-)
                                     (storage-type storage-type-)
                                     storage-type-),
@@ -3471,7 +3471,7 @@
   Quote the varnym and dependencies; pass along
   all other params."
   [symtab-id-,     varnym-,          dependencies-,
-   intent-,        symbolic-value-,  value-,
+   intent-,        symbolic-value-,  value?-,
    storage-type-,  ttype-,           abi-,
    access-,        presence-,        value-attr-]
   `(Variable-- ;; heavy sugar
@@ -3482,7 +3482,7 @@
     (for [d# '~dependencies-] d#)
     ~intent-
     ~symbolic-value-
-    ~value-
+    ~value?-
     ~storage-type-
     ;; ttype goes here in legacy
     ~abi-
