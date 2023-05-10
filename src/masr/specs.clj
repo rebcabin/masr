@@ -9,26 +9,30 @@
 ;; live source code in `specs.clj`, but without
 ;; reordering. In fully literate programming, we
 ;; present blocks of code in _narrative order_,
-;; where we talk about things before they're fully
-;; defined for the compiler Fully literate
-;; programming requires tools we don't have for
-;; Clojure, specifically "tangle-up," which builds
-;; source from Markdown.
+;; where we talk about and write code with things
+;; before they're fully defined. Fully literate
+;; programming requires tools for reassembling
+;; blocks of code from _define-first_ order in
+;; source files into narrative order in Markdown. We
+;; don't have such tools for Clojure. Instead, we
+;; suffice ourselves to go the other way and simply
+;; reformat source files into Markdown files.
 ;;
 ;;
-;; When reading this Markdown file, `specs.md`
+;; Write code in the source files, mostly in
+;; `specs.clj`. Format code comments in Markdown.
+;; End a block of comments with a comment line that
+; says `#+begin_src` by itself, beginning in column
+;; 1, then add a blank line. Terminate src blocks
+;; with `#+end_src` in a Clojure comment beginning
+;; in column 1. You'll see many examples below.
+;;
+;;
+;; When reading this Markdown file, `specs.md`,
 ;; you'll just have to backtrack to definitions when
 ;; you encounter code that needs them. If you read a
 ;; lot of code, you will be accustomed to that
 ;; nuisance.
-;;
-;;
-;; Write code in `specs.clj`. Format comments in
-;; Markdown. End a block of comments with a comment
-;; line that says #+begin_src by itself, beginning
-;; in column 1, then add a blank line. Follow code
-;; with #+end_src in a Clojure comment beginning in
-;; column 1. You'll see many examples below.
 ;;
 ;;
 ;; When the narrative really MUST talk about code
@@ -47,13 +51,14 @@
 ;;
 ;;
 ;; Visual Studio Code can maintain Table of Contents
-;; and section numbers through an extension called
+;; and section numbers via an extension called
 ;; MarkdownForAll. Install it. To rebuild the Table
 ;; of Contents and section numbers in `specs.md`:
 ;;
 ;; 1. Run `md4code.awk` as shown above.
 ;;
-;; 2. Open `specs.md` in Visual Studio Code.
+;; 2. Open or revert `specs.md` in Visual Studio
+;;    Code.
 ;;
 ;; 3. Cmd-Shift-P, "Add or Update Section Numbers."
 ;;
@@ -65,15 +70,15 @@
 ;; 6. git commit `specs.mf` and git push it.
 ;;
 ;;
-;; In case of emergency, you might need to
-;; synchronize `specs.clj` from `specs.md`:
+;; In case of emergency, you might synchronize
+;; `specs.clj` from `specs.md`:
 ;;
 ;;
 ;; ```bash
 ;; awk -f code4md.awk < specs.md > ./src/masr/specs.clj
 ;; ```
 ;;
-;; That's not normal workflow, however.
+;; However, that's not normal workflow.
 ;;
 ;;
 
@@ -83,9 +88,9 @@
 ;; ## Namespace Declaration
 ;;
 ;;
-;; Since we must define things before using them, we
-;; must first declare Clojure dependencies for the rest
-;; of the code in this file.
+;; Because we must define things before using them,
+;; we must first declare Clojure dependencies for
+;; the rest of the code in this file.
 ;;
 ;;
 ;; #+begin_src clojure
@@ -131,10 +136,11 @@
 ;; ## Unmap External Names
 ;;
 ;;
-;; Unmap `Integer` and `Character` so we can have those
-;; symbols in `ttypes`. Access the originals via
-;; `java.lang.Integer` `java.lang.Character`. Access
-;; original `deftype` as `clojure.core/deftype`.
+;; Unmap `Integer` and `Character` so we can have
+;; those symbols in `ttypes`. Access the originals
+;; via `java.lang.Integer` `java.lang.Character`. We
+;; also want `deftype`. Access original `deftype` as
+;; `clojure.core/deftype`.
 ;;
 ;;
 ;; #+begin_src clojure
@@ -156,14 +162,40 @@
 ;; MASR is "Meta Abstract Semantics Representation,"
 ;; and also a physics pun, "Microwave Amplification
 ;; by Stimulated emission of Radiation." It is a
-;; work-in-progress, intended to replace the ASDL
-;; with by a more precise and discriminating type
-;; system written.
+;; work-in-progress, intended eventually to replace
+;; the ASDL with by a more precise and
+;; discriminating type system.
+;;
+;;
+;; In general, MASR specs are more discriminating,
+;; precise, and detailed than ASDL could ever
+;; permit. That means ASR in MASR
+;;
+;; * is less ambiguous than ASDL; For example, we
+;;   distinguish names of programs from names of
+;;   functions. In ASDL, they're both just
+;;   `identifier`.
+;;
+;; * is more explicit than ASDL. For example, in MASR,
+;;   we can say that an argument list may have no more
+;;   than a certain `MAX-NUMBER-OF-CALL-ARGS`.
+;;
+;; * has fewer overloaded specs, e.g. `symbol` are
+;;   separate from `symbol_table`, `symbol-ref`
+;;
+;; * exposes secret semantics lifted from the current
+;;   C++ implementation into the specification level
+;;
+;;
+;; Until MASR is integrated, it will have a legacy
+;; back channel. The legacy back channel writes out
+;; types in ASDL format given MASR instances. Such
+;; will help us debug MASR and ensure it fulfills
+;; existing contracts.
 ;;
 ;;
 ;; We begin with a summary of the full ASDL
 ;; specification, or, at least, a snapshot of it:
-;; `ASR_2023_APR_06_snapshot`.asdl
 ;; https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
 ;;
 ;;
@@ -227,28 +259,14 @@
 ;; ### Mappings from ASDL to MASR
 ;;
 ;;
-;; * ASDL tuples like `(1 2)` are Clojure lists.
+;; * ASDL tuples like `(1 2)` are Clojure lists or
+;;   vectors.
 ;;
-;; * ASDL lists are ASDL tuples.
+;; * ASDL lists are Clojure lists.
 ;;
 ;; * ASDL vectors like `[expr? stmt*]` are Clojure vectors.
 ;;
 ;; * ASDL symbol_tables are Clojure maps.
-;;
-;;
-;; In general, MASR specs are more discriminating,
-;; precise, and detailed than ASDL could ever
-;; permit. That means ASR in MASR
-;;
-;; * is less ambiguous than ASDL
-;;
-;; * is more explicit than ASDL
-;;
-;; * has fewer overloaded specs, e.g. `symbol` and
-;;   `symbol_table`, `symbol-ref`
-;;
-;; * exposes secret semantics lifted from the current
-;;   C++ implementation into the specification level
 ;;
 ;;
 ;; # WHAT IS A _SPECIFICATION_?

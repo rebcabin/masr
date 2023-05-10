@@ -1,0 +1,114 @@
+(TranslationUnit
+    (SymbolTable
+        1
+        {
+            :_global_symbols
+                (Module
+                    (SymbolTable
+                        3
+                        {
+                            :f
+                                (Variable
+                                    3
+                                    f
+                                    []
+                                    Local
+                                    (Cast
+                                        (RealConstant
+                                            1.234568
+                                            (Real 8 [])
+                                        )
+                                        RealToReal
+                                        (Real 4 [])
+                                        (RealConstant
+                                            1.234568
+                                            (Real 4 [])
+                                        )
+                                    )
+                                    (RealConstant
+                                        1.234568
+                                        (Real 4 [])
+                                    )
+                                    Default
+                                    (Real 4 [])
+                                    Source
+                                    Public
+                                    Required
+                                    false
+                                ),
+                            :f2
+                                (Variable
+                                    3
+                                    f2
+                                    []
+                                    Local
+                                    (RealConstant
+                                        1.234568
+                                        (Real 8 [])
+                                    )
+                                    (RealConstant
+                                        1.234568
+                                        (Real 8 [])
+                                    )
+                                    Default
+                                    (Real 8 [])
+                                    Source
+                                    Public
+                                    Required
+                                    false
+                                ),
+                            :i
+                                (Variable
+                                    3
+                                    i
+                                    []
+                                    Local
+                                    (IntegerConstant 5 (Integer 4 []))
+                                    (IntegerConstant 5 (Integer 4 []))
+                                    Default
+                                    (Integer 4 [])
+                                    Source
+                                    Public
+                                    Required
+                                    false
+                                ),
+                            :i2
+                                (Variable
+                                    3
+                                    i2
+                                    []
+                                    Local
+                                    (Cast
+                                        (IntegerConstant 53430903434 (Integer 4 []))
+                                        IntegerToInteger
+                                        (Integer 8 [])
+                                        (IntegerConstant 53430903434 (Integer 8 []))
+                                    )
+                                    (IntegerConstant 53430903434 (Integer 8 []))
+                                    Default
+                                    (Integer 8 [])
+                                    Source
+                                    Public
+                                    Required
+                                    false
+                                )
+                        })
+                    _global_symbols
+                    []
+                    false
+                    false
+                ),
+            :main_program
+                (Program
+                    (SymbolTable
+                        2
+                        {
+                            
+                        })
+                    main_program
+                    []
+                    []
+                )
+        })
+    []
+)
