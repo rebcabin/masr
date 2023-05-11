@@ -993,8 +993,7 @@
   (is (s/valid? ::asr/expr           (StringConstant "boofar")))
   (is (s/valid? ::asr/asr-term       (StringConstant "boofar")))
 
-  (is (not (s/valid? ::asr/StringConstant (StringConstant 42))))
-  )
+  (is (not (s/valid? ::asr/StringConstant (StringConstant 42)))))
 
 
 ;; __   __
@@ -1067,8 +1066,9 @@
   (is (= '[(Var 42 x)]
          (rewrite-for-legacy
           '[(Var 42 x)])))
-  (is (s/valid? ::asr/expr?
-                (legacy ((Var 42 x)))))
+  (is (s/valid? ::asr/expr? (legacy ((Var 42 x)))))
+  (is (s/valid? ::asr/expr  (legacy (Var 42 x))))
+  (is (s/valid? ::asr/Var   (legacy (Var 42 x))))
   )
 
 

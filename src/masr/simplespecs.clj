@@ -30,9 +30,10 @@
 ;; Write specs into the masr.specs namespace.
 
 
-(s/def :masr.specs/int   int?)     ;; java.lang.Long
-(s/def :masr.specs/float float?)
-(s/def :masr.specs/bool  boolean?)
+(s/def :masr.specs/int    int?)     ;; java.lang.Long
+(s/def :masr.specs/float  float?)
+(s/def :masr.specs/bool   boolean?)
+(s/def :masr.specs/string string?)
 
 
 ;;  _    _      _     _  ___
