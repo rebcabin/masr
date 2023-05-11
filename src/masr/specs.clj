@@ -156,6 +156,8 @@
 ;; # MASR OVERVIEW & BACKGROUND
 ;;
 ;;
+
+
 ;; ## MASR IS A TYPE SYSTEM
 ;;
 ;;
@@ -267,11 +269,15 @@
 ;; * ASDL vectors like `[expr? stmt*]` are Clojure vectors.
 ;;
 ;; * ASDL symbol_tables are Clojure maps.
+
+
 ;;
 ;;
 ;; # WHAT IS A _SPECIFICATION_?
 ;;
 ;;
+
+
 ;; _Spec_ is short for _specification_. The_ noun
 ;; "specification" derives from the verb "to specify."
 ;; "To specify" means "to describe specifically:
@@ -312,15 +318,13 @@
 ;; type system that predicate logic can support,
 ;; Clojure specs suffice for advanced types like
 ;; dependency types and concurrency types.
-;;
-;;
-
 
 ;;
 ;;
 ;; ## CHECKING INSTANCES
 ;;
 ;;
+
 ;; An instance hash-map may inhabit multiple sets.
 ;; For example, any `LogicalConstant` is an `expr`,
 ;; and any `expr` is an `asr-term`. These sets stand
@@ -343,6 +347,8 @@
 ;; # FULL-FORM ENTITY HASH-MAPS
 ;;
 ;;
+
+
 ;; Every MASR `asr-term` has a full-form. A full-form
 ;; is a Clojure _hash-map_ that contains the key
 ;; `::term`. Clojure hash-maps are collections of
@@ -382,8 +388,6 @@
 ;; registered for them, or not. When a spec is
 ;; registered for a namespace-qualified keywords,
 ;; Clojure automatically checks types recursively.
-;;
-;;
 
 
 ;;
@@ -391,6 +395,8 @@
 ;; # SUGAR
 ;;
 ;;
+
+
 ;; Most entities have sugared forms that are
 ;;
 ;; 1. easier for humans to read and write
@@ -530,6 +536,8 @@
 ;; # WHAT ARE TERMS?
 ;;
 ;;
+
+
 ;; MASR _terms_ are models of terms or productions in
 ;; the ASDL grammar, items to the left of equals signs
 ;; like symbol or stmt in the list above and in the
@@ -585,6 +593,8 @@
 ;; # QUALIFIED KEYWORDS AND `::TERM`
 ;;
 ;;
+
+
 ;; `::term` is both a qualified keyword _and_ a
 ;; tag-fetching function, which picks the value of
 ;; the key :`:term` from any hash-map. For example,
@@ -618,6 +628,8 @@
 ;; # POLYMORPHIC SPECS FOR TERMS
 ;;
 ;;
+
+
 ;; `defmulti` defines a name, say `term` (no colons),
 ;; for a collection of `defmethods` with the same name.
 ;; The `defmulti` links the defmulti-defmethod name
@@ -652,8 +664,6 @@
 ;; is `::asr-term`, a qualified keyword, as must be
 ;; the names of all Clojure specs. Multi-specs act
 ;; like tagged unions in C -- polymorphic structs.
-;;
-;;
 
 
 ;;
@@ -661,6 +671,8 @@
 ;; # NESTED MULTI-SPECS
 ;;
 ;;
+
+
 ;; At the top level, term multi-specs dispatch on
 ;; values of the `::term` key, values like `::intent`,
 ;; `::symbol`, `::unit`, etc. Defmethods for those
@@ -676,8 +688,6 @@
 ;; that dispatch on _heads_, like `Variable` or
 ;; `Program`. MASR handles nested multi-specs via some
 ;; techniques shown below.
-;;
-;;
 
 
 ;;
@@ -685,6 +695,8 @@
 ;; # NAMING CONVENTION FOR MULTI-SPECS
 ;;
 ;;
+
+
 ;; All multi-spec names in MASR, nested or not, begin
 ;; with `::asr-...`, as in `::asr-term` (not nested)
 ;; and `::asr-ttype-head` (nested in ttypes).
@@ -702,6 +714,8 @@
 ;; # TELESCOPING SPECS
 ;;
 ;;
+
+
 ;; A given entity (instance hash-map) may be
 ;;
 ;; * an `::asr-term` -- any one of the terms
@@ -731,8 +745,6 @@
 ;; `::LogicalBinOp` is an `::expr`. Horizontally, both
 ;; `::LogicalBinOp` and `::LogicalCompare` are
 ;; `::expr`, and both are `::asr-term`.
-;;
-;;
 
 
 ;;
@@ -740,6 +752,8 @@
 ;; # TERM ENTITY KEY
 ;;
 ;;
+
+
 ;; Each term, like symbol, needs its own spec, named by
 ;; a qualified keyword like `::symbol`. MASR
 ;; recursively checks specs when entity keys like
@@ -776,13 +790,15 @@
 ;; # DEFMASRNESTED
 ;;
 ;;
+
+
 ;; Automate construction of nested multi-specs,
 ;; removing all duplicated wordage. The docstring of
 ;; defmasrnested shows an example with all the
 ;; duplicated verbiage that the macro eliminates.
 ;;
 ;;
-;; READ ALL DOCSTRINGS.
+;; **READ ALL DOCSTRINGS**
 ;;
 ;;
 ;; It is not necessary to understand the
@@ -868,6 +884,8 @@
 ;; # TERM-HEAD ENTITY KEY
 ;;
 ;;
+
+
 ;; We need specs for each nested multi-spec
 ;; like `::Variable` and `::FunctionType`.
 ;;
@@ -917,28 +935,34 @@
 ;; # DEFMASRTYPE
 ;;
 ;;
-;; `defmasrtype` is the primary way to add new specs
-;; to MASR, that is, for incremental, test-driven
-;; development of MASR. Use `defmasrtype` to define
-;; new specs for terms with nested multi-specs.
-;; Terms without nested multi-specs are few. They
-;; are special cases with hand-written specs.
+
+
+;; `defmasrtype` is the easiest way to add new specs
+;; that have nested multi-specs to MASR. Terms
+;; without nested multi-specs are few. They are
+;; special cases with hand-written specs.
 ;;
 ;;
 ;; `defmasrtype` creates both (1) the specs for
 ;; particular heads like `Variable` and `Assignment`,
 ;; and (2) a function, `->asdl-type`, that extracts
 ;; the ASDL type from any instance hash-map.
+
+
 ;;
 ;;
 ;; # RECURSIVE TYPE CHECKING, AGAIN
 ;;
 ;;
+
+
 ;; MASR automatically type-checks entities before
 ;; projecting them back to the less discriminating
 ;; and unchecked ASDL types. Recursive type-checking
 ;; pertains to terms with and without nested
 ;; multi-specs.
+
+
 ;;
 ;;
 ;; # EXTRACTING ASDL FROM MASR
@@ -967,7 +991,6 @@
    })
 ;; #+end_src
 
-;;
 ;; #+begin_src clojure
 
 (defmacro asdl-type-string
@@ -989,8 +1012,6 @@
        (str head# "(" params# ")"))))
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (defmacro defmasrtype
@@ -1060,6 +1081,8 @@
 ;; # TO ASDL-TYPE
 ;;
 ;;
+
+
 ;; The function `->asdl-type` relies on multimethods
 ;; for terms that have a nested multi-spec. The
 ;; multimethods dispatch on the "head" keys of each
@@ -1109,6 +1132,8 @@
 ;; # TERMS WITH NESTED MULTI-SPECS
 ;;
 ;;
+
+
 ;; The following blocks of code are as close to the
 ;; ASDL specs as we care to get in MASR. MASR is
 ;; more discriminating than ASDL. For example, the
@@ -1128,8 +1153,6 @@
 ;; discriminating types, like `prognym` and
 ;; `left-logical`, before they're defined as specs
 ;; via `s/def`.
-;;
-;;
 
 
 ;;
@@ -1137,7 +1160,6 @@
 ;; # ADD NEW DEFINITIONS HERE
 ;;
 ;;
-
 
 ;;
 ;; ## UNIT
@@ -1383,11 +1405,14 @@
                   is-restriction))
 ;; #+end_src
 
+
 ;;
 ;;
 ;; # LEGACY MACRO
 ;;
 ;;
+
+
 ;; The `legacy` macro currently just converts `=`
 ;; into `Assignment` in a whole tree. Apply "legacy"
 ;; to a whole expression.
@@ -1437,8 +1462,6 @@
    it))
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (defmacro legacy
@@ -1454,10 +1477,10 @@
 ;; # IMPLEMENTATIONS
 ;;
 ;;
+
+
 ;; The remaining sections of this document describe
-;; detailed implementations for every term in MASR.
-;;
-;;
+;; detailed implementations.
 
 
 ;;
@@ -1465,6 +1488,8 @@
 ;; # CALL-ARG
 ;;
 ;;
+
+
 ;; ## Issues
 ;;
 ;;
@@ -1496,8 +1521,6 @@
 ;;
 ;; Examples can't be executed until `expr?` is
 ;; defined. See discussion in `SubroutineCall.`
-;;
-;;
 
 
 ;;
@@ -1505,6 +1528,8 @@
 ;; # DIMENSION
 ;;
 ;;
+
+
 ;; `Dimension` is a term without nested multi-specs.
 ;; It is a handwritten special case, not defined via
 ;; `defmasrtype`.
@@ -1542,6 +1567,7 @@
 ;; ## Dimension-Content
 ;;
 ;;
+
 ;; The next spec says that a `::dimension-content` is
 ;; a collection of `::nat` with either two or zero
 ;; elements. TODO Consider a regex-spec.
@@ -1563,6 +1589,7 @@
 ;; ## Full-Form
 ;;
 ;;
+
 ;; The next spec says that a `dimension` in full-form
 ;; is an entity hash-map with keys `::term` and
 ;; `::dimension-content`.
@@ -1625,10 +1652,10 @@
 ;; # DIMENSIONS
 ;;
 ;;
+
+
 ;; `Dimensions` [sic] is not a term. Dimensions stands
-;; for `dimension*`, a plurality of dimension. We do a
-;; lot more pluralities later. This is just the first
-;; example of a repeating pattern (TODO: macro?)
+;; for `dimension*`, a plurality of dimension.
 ;;
 ;;
 ;; ## Pluralities
@@ -1693,6 +1720,8 @@
 ;; # SYMTAB-ID
 ;;
 ;;
+
+
 ;; In ASDL, `symbol_table` sometimes means a
 ;; `SymbolTable` and sometimes means an integer id of a
 ;; `SymbolTable` that is specified elsewhere. MASR does
@@ -1727,6 +1756,8 @@
 ;; # SYMBOL-TABLE
 ;;
 ;;
+
+
 ;; `SymbolTable` is an unwritten term. It doesn't have
 ;; nested multi-specs. Write it out fully by hand.
 ;;
@@ -1766,6 +1797,8 @@
 ;; # ENUM-LIKE
 ;;
 ;;
+
+
 ;; Many ASDL types are like enums: they are just a
 ;; set of alternative symbols, without parentheses
 ;; and without parameters _qua_ arguments. Example:
@@ -1788,8 +1821,6 @@
     `(list ~@cmds)))
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (defmacro legacicate
@@ -1809,6 +1840,7 @@
 ;; ## Enum-Like, Proper
 ;;
 ;;
+
 ;; #+begin_src clojure
 
 (defmacro enum-like
@@ -1848,6 +1880,7 @@
 ;; ## Most Enum-Likes
 ;;
 ;;
+
 ;; #+begin_src clojure
 
 (enum-like logicalbinop #{'And  'Or  'Xor  'NEqv  'Eqv})
@@ -1860,12 +1893,12 @@
 (enum-like deftype      #{'Implementation, 'Interface})
 ;; #+end_src
 
-
 ;;
 ;;
 ;; ## Abi
 ;;
 ;;
+
 ;; `Abi` is a special case of enum-like with rich logic.
 ;;
 ;; #+begin_src clojure
@@ -1958,14 +1991,14 @@
 ;; # TTYPE
 ;;
 ;;
+
+
 ;; `Ttype` is a term with nested multi-specs.
-;;
-;;
 
 
 ;;
 ;;
-;; ## PREREQUISITE TYPES AND ALIASES
+;; ## Prerequisite Types and Aliases
 ;;
 ;;
 ;; #+begin_src clojure
@@ -1998,16 +2031,12 @@
              :max-count 1))
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::param-types     ::ttypes)
 (s/def ::return-var-type ::ttype?)
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::bindc-name      (s/nilable string?))
@@ -2019,8 +2048,6 @@
 (s/def ::type-params     ::ttypes)
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (def MIN-NUMBER-OF-SYMBOLS   0)
@@ -2053,8 +2080,6 @@
 (s/def ::is-restriction  ::bool)
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (def MIN-NUMBER-OF-EXPRS    0)
@@ -2085,20 +2110,18 @@
              :max-count 1))
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::len       ::nat)
 (s/def ::len-expr? ::expr?)
 ;; #+end_src
 
-
 ;;
 ;;
 ;; ## Kind
 ;;
 ;;
+
 ;; The `kind` member selects the kind of a given `ttype`.
 ;; MASR currently supports the following:
 ;;
@@ -2121,6 +2144,7 @@
 ;;    default integer"; we currently use `kind=4` as
 ;;    default for Integer, so we also use `kind=4` as
 ;;    default for Logical.
+
 ;;
 ;;
 ;; ## Support Specs For Kinds
@@ -2250,24 +2274,12 @@
 ;;
 ;; See also `defmasrtypes` at top of the file.
 
-;;
-;;
 ;; #+begin_src clojure
 
 (def-ttype-and-head Integer)
 (def-ttype-and-head Real)
 (def-ttype-and-head Complex)
 (def-ttype-and-head Logical)
-;; #+end_src
-
-;;
-;;
-;; #+begin_src clojure
-
-(def-term-head--entity-key ttype Integer)
-(def-term-head--entity-key ttype Real)
-(def-term-head--entity-key ttype Complex)
-(def-term-head--entity-key ttype Logical)
 ;; #+end_src
 
 
@@ -2308,6 +2320,7 @@
 
 (defn Character
   ([kind, len, len-expr?, dims]
+   ;; 4-ary
    (let [cnf (s/conform
               ::Character
               {::term ::ttype
@@ -2322,10 +2335,16 @@
        :invalid-character
        cnf)))
   ([kind, len, dims]
+   ;; trinary
    (Character kind len () dims))
   ([kind, len]
+   ;; binary
    (Character kind len () []))
+  ([len]
+   ;; unary
+   (Character 1 len ( [])))
   ([]
+   ;; nullary
    (Character 1 1 () [])))
 ;; #+end_src
 
@@ -2335,6 +2354,8 @@
 ;; ## FUNCTION-TYPE
 ;;
 ;;
+
+
 ;; This is a rich `ttype` that we spell out by hand.
 ;;
 ;;
@@ -2378,12 +2399,12 @@
 
                ::param-types      param-types-
                ::return-var-type  (if (empty? return-var-type-)
-                                    ()
-                                    [return-var-type-])
+                                    (), [return-var-type-])
                ::abi              abi-
 
                ::deftype          deftype-
-               ::bindc-name       (if (empty? bindc-name-) nil bindc-name-)
+               ::bindc-name       (if (empty? bindc-name-)
+                                    nil, bindc-name-)
                ::elemental        elemental-
 
                ::pure             pure-
@@ -2438,6 +2459,8 @@
 ;;
 
 
+;; things we haven't fully defined yet
+
 ;;
 ;;
 ;; ## SYMBOLIC VALUE
@@ -2464,12 +2487,10 @@
 ;; # EXPR
 ;;
 ;;
-;; ## PREREQUISITE TYPES AND ALIASES
-;;
-;;
 
-;;
-;;
+
+;; ## Prerequisite Types and Aliases
+
 ;; #+begin_src clojure
 
 (s/def ::arg ::expr)
@@ -2482,8 +2503,6 @@
 (s/def ::target ::expr)
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::symbol-ref
@@ -2491,8 +2510,6 @@
                 ::symtab-id]))
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (defn symbol-ref [ident, stid]
@@ -2500,16 +2517,12 @@
    ::symtab-id  stid})
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::return-type   ::ttype)
 (s/def ::value?        ::expr?)
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::varnym        ::identifier)
@@ -2532,12 +2545,15 @@
 ;; ## NAMED EXPR
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
 ;; ```c
 ;; | NamedExpr(expr target, expr value, ttype type)
 ;; ```
+
 ;;
 ;;
 ;; ### Example
@@ -2560,7 +2576,6 @@
 ;;
 ;; #+begin_src clojure
 
-
 (defn NamedExpr [target value ttype]
   (let [cnf (s/conform
              ::NamedExpr
@@ -2581,6 +2596,8 @@
 ;; ## FUNCTION CALL
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -2632,7 +2649,6 @@
       cnf)))
 ;; #+end_src
 
-
 ;;
 ;;
 ;; ### Legacy Sugar
@@ -2650,11 +2666,14 @@
                    ~dt?))
 ;; #+end_src
 
+
 ;;
 ;;
 ;; ## LOGICAL CONSTANT
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -2703,6 +2722,8 @@
 ;; ## INTEGER CONSTANT
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -2751,6 +2772,8 @@
 ;; ## VAR
 ;;
 ;;
+
+
 ;; ### Issue #23
 ;;
 ;;
@@ -2814,6 +2837,8 @@
 ;; ## STRING CONSTANT
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -2822,20 +2847,17 @@
 ;; ```
 ;;
 ;;
-;; ## Example
+;; ### Example
 ;;
 ;;
 ;; #+begin_src clojure
 
 #_
-(StringOrd
- (StringConstant
-  "3"
-  (Character 1 1 () [])
-  )
- (Integer 4 [])
- (IntegerConstant 51 (Integer 4 []))
+(StringConstant
+ "3"
+ (Character 1 1 () [])
  )
+
 ;; #+end_src
 
 
@@ -2844,6 +2866,8 @@
 ;; ## STRING ORD
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -2852,7 +2876,7 @@
 ;; ```
 ;;
 ;;
-;; ## Example
+;; ### Example
 ;;
 ;;
 ;; #+begin_src clojure
@@ -2868,11 +2892,14 @@
  )
 ;; #+end_src
 
+
 ;;
 ;;
 ;; ## LOGICAL BINOP
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -2929,6 +2956,8 @@
 ;; ## LOGICAL COMPARE
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -2983,7 +3012,9 @@
 ;; # STMT
 ;;
 ;;
-;; ## PREREQUISITE TYPES AND ALIASES
+
+
+;; ## Prerequisite Types and Aliases
 ;;
 ;;
 ;; #+begin_src clojure
@@ -3031,8 +3062,6 @@
 (s/def ::overloaded ::stmt?)
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::symbol-ref?
@@ -3041,8 +3070,6 @@
              :max-count 1))
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::format?    ::expr?)
@@ -3051,30 +3078,19 @@
 (s/def ::end?       ::expr?)
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::nym                ::identifier)
 (s/def ::extern-symref      ::symbol-ref?)
-;; modulenym defined under Module
 (s/def ::scope-nyms         ::identifier-set)
 (s/def ::orig-nym           ::identifier)
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::value-attr         ::bool)
 ;; #+end_src
 
-;;
-;;
-;; `varnym` already defined for Var.
-;; https://github.com/rebcabin/masr/issues/28
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::type-declaration (s/nilable ::symtab-id))
@@ -3090,8 +3106,6 @@
 (s/def ::dependencies       ::identifier-set)
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::modulenym          ::identifier)
@@ -3099,18 +3113,12 @@
 (s/def ::intrinsic          ::bool)
 ;; #+end_src
 
-;;
-;; * `SymbolTable` is already defined
-;;
 ;; #+begin_src clojure
 
 (s/def ::function-name      ::identifier)
 (s/def ::function-signature ::FunctionType)
 ;; #+end_src
 
-;;
-;; * `dependencies` is already defined
-;;
 ;; #+begin_src clojure
 
 (s/def ::params             ::exprs) ;; renamed from args
@@ -3118,16 +3126,11 @@
 (s/def ::return-var?        ::expr?)
 ;; #+end_src
 
-;;
-;; * `access` is already defined
-;;
 ;; #+begin_src clojure
 
 (s/def ::deterministic      ::bool)
 (s/def ::side-effect-free   ::bool)
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::prognym            ::identifier)
@@ -3141,6 +3144,8 @@
 ;; ## IF
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -3150,7 +3155,7 @@
 
 ;;
 ;;
-;; ## Example
+;; ### Example
 ;;
 ;;
 ;; #+begin_src clojure
@@ -3177,7 +3182,6 @@
  []
  )
 ;; #+end_src
-
 
 ;;
 ;;
@@ -3206,6 +3210,8 @@
 ;; ## ASSIGNMENT
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -3251,6 +3257,8 @@
 ;; ## PRINT
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;; ```c
@@ -3287,6 +3295,8 @@
 ;; ## RETURN
 ;;
 ;;
+
+
 ;; #+begin_src clojure
 
 (defn Return []
@@ -3306,6 +3316,8 @@
 ;; ## SUBROUTINE CALL
 ;;
 ;;
+
+
 ;; `SubroutineCall` is a special case because it
 ;; abuses the word `symbol` to mean a `symbol-ref`.
 ;;
@@ -3337,8 +3349,6 @@
              :max-count MAX-NUMBER-OF-CALL-ARGS))
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::dt? ::expr?)
@@ -3349,6 +3359,7 @@
 ;; ### Examples
 ;;
 ;;
+
 ;; We're in a position, here, to run some examples
 ;; of `::call-arg` and `::call-args`, because
 ;; `::expr?` is defined. Fitting `::call-arg` to
@@ -3387,8 +3398,6 @@
 #_(s/valid? ::call-args (legacy [(())]))
 ;; #+end_src
 
-;;
-;;
 ;; #+begin_src clojure
 
 #_(SubroutineCall
@@ -3464,6 +3473,7 @@
 ;; ## EXTERNAL SYMBOL
 ;;
 ;;
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -3494,7 +3504,6 @@
  Public
  )
 ;; #+end_src
-
 
 ;;
 ;;
@@ -3530,25 +3539,20 @@
       cnf)))
 ;; #+end_src
 
-
 ;;
 ;;
 ;; ### Legacy Sugar
 ;;
 ;;
 
-;; First multiary (multiadic) macro
-;;
-;;
 ;; #+begin_src clojure
 
 (defmacro ExternalSymbol
-  (;; "eight-parameter overload"
-    [stid, nym,
+  ([stid, nym,
     orig-symref-stid, orig-symref-ident,
     modnym, scope-nyms, orig-nym,
     access]
-
+   "eight-parameter overload"
    `(ExternalSymbol--
      ~stid, '~nym,
      ['~orig-symref-ident, ~orig-symref-stid],
@@ -3556,11 +3560,11 @@
      ~scope-nyms, ;; TODO: distribute quote?
      '~orig-nym
      ~access))
-  (;; "seven-parameter overload"
-   [stid, nym,
+  ([stid, nym,
     empty-symref,
     modnym, scope-nyms, orig-nym,
     access]
+   "seven-parameter overload"
    `(ExternalSymbol--
      ~stid, '~nym,
      ~empty-symref,
@@ -3576,6 +3580,8 @@
 ;; ## VARIABLE
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -3769,6 +3775,8 @@
 ;; ## MODULE
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -3776,7 +3784,6 @@
 ;; | Module(symbol_table symtab, identifier name, identifier* dependencies,
 ;;                       bool loaded_from_mod, bool intrinsic)
 ;; ```
-
 
 ;;
 ;;
@@ -3820,6 +3827,8 @@
 ;; ## FUNCTION
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -3837,12 +3846,6 @@
 ;;            bool         deterministic,
 ;;            bool         side_effect_free)
 ;; ```
-
-;;
-;;
-;; #+begin_src clojure
-(def-term-head--entity-key symbol Function)
-;; #+end_src
 
 ;;
 ;;
@@ -3906,6 +3909,8 @@
 ;; ## PROGRAM
 ;;
 ;;
+
+
 ;; ### Original ASDL
 ;;
 ;;
@@ -3957,9 +3962,12 @@
 
 
 ;;
+;;
 ;; # UNIT
 ;;
 ;;
+
+
 ;; ## Prerequisite Type Aliases
 ;;
 ;;
@@ -4006,6 +4014,7 @@
 ;; ## TRANSLATION UNIT
 ;;
 ;;
+
 ;; ### Heavy Sugar
 ;;
 ;;
