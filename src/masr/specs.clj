@@ -2179,6 +2179,18 @@
 
 ;;
 ;;
+;; ## PREREQUISITE TYPES AND ALIASES
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::param-types     ::ttypes)
+(s/def ::return-var-type ::ttype?)
+;; #+end_src
+
+
+;;
+;;
 ;; ## FUNCTION-TYPE
 ;;
 ;;
@@ -2203,16 +2215,7 @@
 ;;                symbol* restrictions,
 ;;                bool    is_restriction)
 ;; ```
-;;
-;;
-;; ### Prerequisite Type Aliases
-;;
-;;
-;; #+begin_src clojure
 
-(s/def ::param-types     ::ttypes)
-(s/def ::return-var-type ::ttype?)
-;; #+end_src
 
 ;;
 ;; * `ABI` is already good enough.
@@ -2354,7 +2357,7 @@
 ;; # EXPR
 ;;
 ;;
-;; ## Pluralities
+;; ## PREREQUISITE TYPES AND ALIASES
 ;;
 ;;
 ;; #+begin_src clojure
@@ -2387,6 +2390,57 @@
              :max-count 1))
 ;; #+end_src
 
+;; #+begin_src clojure
+
+(s/def ::value  ::expr)
+(s/def ::value? ::expr?)
+(s/def ::target ::expr)
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::symbol-ref
+  (s/keys :req [::identifier
+                ::symtab-id]))
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(defn symbol-ref [ident, stid]
+  {::identifier ident,
+   ::symtab-id stid})
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::return-type ::ttype)
+(s/def ::value?      ::expr?)
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::varnym           ::identifier)
+;; #+end_src
+
+;;
+;;
+;; TODO: check that the types of the exprs are `::Logical`!
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::logical-left  ::expr)
+(s/def ::logical-right ::expr)
+;; #+end_src
+
 
 ;;
 ;;
@@ -2412,18 +2466,6 @@
  (IntegerConstant 0 (Integer 4 []))
  (Integer 4 [])
  )
-;; #+end_src
-
-;;
-;;
-;; ### Prerequisite Type Aliases
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::value  ::expr)
-(s/def ::value? ::expr?)
-(s/def ::target ::expr)
 ;; #+end_src
 
 ;;
@@ -2477,35 +2519,6 @@
  ()
  ()
  )
-;; #+end_src
-
-;;
-;;
-;; ### Prerequisite Types and Aliases
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::symbol-ref
-  (s/keys :req [::identifier
-                ::symtab-id]))
-;; #+end_src
-
-;;
-;;
-;; #+begin_src clojure
-
-(defn symbol-ref [ident, stid]
-  {::identifier ident,
-   ::symtab-id stid})
-;; #+end_src
-
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::return-type ::ttype)
-(s/def ::value?      ::expr?)
 ;; #+end_src
 
 ;;
@@ -2669,13 +2682,6 @@
 ;; ```
 ;;
 ;;
-;; ### Prerequisite Type Alias
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::varnym           ::identifier)
-;; #+end_src
 
 ;;
 ;;
@@ -2741,20 +2747,6 @@
   (Var 2 b)
   (Logical 4 []) ())
  (Logical 4 []) ())
-;; #+end_src
-
-;;
-;;
-;; ### Prerequisite Type Aliases
-;;
-;;
-;; TODO: check that the types of the exprs are `::Logical`!
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::logical-left  ::expr)
-(s/def ::logical-right ::expr)
 ;; #+end_src
 
 ;;
@@ -2837,7 +2829,7 @@
 ;; # STMT
 ;;
 ;;
-;; ## Pluralities
+;; ## PREREQUISITE TYPES AND ALIASES
 ;;
 ;;
 ;; #+begin_src clojure
@@ -2872,6 +2864,121 @@
              :max-count 1))
 ;; #+end_src
 
+;;
+;;
+;; TODO: more cases for `lvalue`, and an `s/or`
+;; with `second` hack
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::lvalue     ::Var)
+(s/def ::rvalue     ::expr)
+(s/def ::overloaded ::stmt?)
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::symbol-ref?
+  (s/coll-of ::symbol-ref
+             :min-count 0
+             :max-count 1))
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::format?    ::expr?)
+(s/def ::values     ::exprs)
+(s/def ::separator? ::expr?)
+(s/def ::end?       ::expr?)
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::nym                ::identifier)
+(s/def ::extern-symref      ::symbol-ref?)
+;; modulenym defined under Module
+(s/def ::scope-nyms         ::identifier-set)
+(s/def ::orig-nym           ::identifier)
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::value-attr         ::bool)
+;; #+end_src
+
+;;
+;;
+;; `varnym` already defined for Var.
+;; https://github.com/rebcabin/masr/issues/28
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::type-declaration (s/nilable ::symtab-id))
+;; #+end_src
+
+;;
+;;
+;; TODO: there is ambiguity regarding identifier-sets and lists:
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::dependencies       ::identifier-set)
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::modulenym          ::identifier)
+(s/def ::loaded-from-mod    ::bool)
+(s/def ::intrinsic          ::bool)
+;; #+end_src
+
+;;
+;; * `SymbolTable` is already defined
+;;
+;; #+begin_src clojure
+
+(s/def ::function-name      ::identifier)
+(s/def ::function-signature ::FunctionType)
+;; #+end_src
+
+;;
+;; * `dependencies` is already defined
+;;
+;; #+begin_src clojure
+
+(s/def ::params             ::exprs) ;; renamed from args
+(s/def ::body               ::stmts)
+(s/def ::return-var?        ::expr?)
+;; #+end_src
+
+;;
+;; * `access` is already defined
+;;
+;; #+begin_src clojure
+
+(s/def ::deterministic      ::bool)
+(s/def ::side-effect-free   ::bool)
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::prognym            ::identifier)
+;; #+end_src
+
 
 ;;
 ;;
@@ -2895,19 +3002,6 @@
 ;; https://github.com/rebcabin/masr/issues/26
 ;;
 ;;
-;; ### Prerequisite Type Aliases:
-;;
-;;
-;; TODO: more cases for `lvalue`, and an `s/or`
-;; with `second` hack
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::lvalue     ::Var)
-(s/def ::rvalue     ::expr)
-(s/def ::overloaded ::stmt?)
-;; #+end_src
 
 ;;
 ;;
@@ -2940,16 +3034,6 @@
 ;; | Print(expr? fmt, expr* values, expr? separator, expr? end)
 ;; ```
 ;;
-;; ### Prerequisite Type Aliases:
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::format?    ::expr?)
-(s/def ::values     ::exprs)
-(s/def ::separator? ::expr?)
-(s/def ::end?       ::expr?)
-;; #+end_src
 
 ;;
 ;;
@@ -3012,19 +3096,6 @@
 ;;                  call_arg * args,          ~~~> call_args
 ;;                  expr     ? dt)
 ;; ```
-
-;;
-;;
-;; ### Prerequisite Types and Aliases
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::symbol-ref?
-  (s/coll-of ::symbol-ref
-             :min-count 0
-             :max-count 1))
-;; #+end_src
 
 ;;
 ;;
@@ -3203,21 +3274,6 @@
 
 ;;
 ;;
-;; ### Prerequisite Types and Aliases
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::nym           ::identifier)
-(s/def ::extern-symref ::symbol-ref?)
-;; modulenym defined under Module
-(s/def ::scope-nyms    ::identifier-set)
-(s/def ::orig-nym      ::identifier)
-;; #+end_src
-
-
-;;
-;;
 ;; ### Heavy Sugar
 ;;
 ;;
@@ -3337,36 +3393,6 @@
  .false.)                ;   bool            value-attr
 ;; #+end_src
 
-;;
-;;
-;; ### Prerequisite Type Aliases
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::value-attr       ::bool)
-;; #+end_src
-
-;;
-;;
-;; `varnym` already defined for Var.
-;; https://github.com/rebcabin/masr/issues/28
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::type-declaration (s/nilable ::symtab-id))
-;; #+end_src
-
-;;
-;;
-;; TODO: there is ambiguity regarding identifier-sets and lists:
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::dependencies    ::identifier-set)
-;; #+end_src
 
 ;;
 ;;
@@ -3526,17 +3552,7 @@
 ;; | Module(symbol_table symtab, identifier name, identifier* dependencies,
 ;;                       bool loaded_from_mod, bool intrinsic)
 ;; ```
-;;
-;;
-;; ### Prerequisite Type Aliases
-;;
-;;
-;; #+begin_src clojure
 
-(s/def ::modulenym       ::identifier)
-(s/def ::loaded-from-mod ::bool)
-(s/def ::intrinsic       ::bool)
-;; #+end_src
 
 ;;
 ;;
@@ -3595,37 +3611,10 @@
 ;;            bool         deterministic,
 ;;            bool         side_effect_free)
 ;; ```
+
 ;;
-;;
-;; ### Prerequisite Type Aliases
-;;
-;;
-;; * `SymbolTable` is already defined
 ;;
 ;; #+begin_src clojure
-
-(s/def ::function-name      ::identifier)
-(s/def ::function-signature ::FunctionType)
-;; #+end_src
-
-;;
-;; * `dependencies` is already defined
-;;
-;; #+begin_src clojure
-
-(s/def ::params             ::exprs) ;; renamed from args
-(s/def ::body               ::stmts)
-(s/def ::return-var?        ::expr?)
-;; #+end_src
-
-;;
-;; * `access` is already defined
-;;
-;; #+begin_src clojure
-
-(s/def ::deterministic      ::bool)
-(s/def ::side-effect-free   ::bool)
-
 (def-term-head--entity-key symbol Function)
 ;; #+end_src
 
@@ -3698,15 +3687,6 @@
 ;;           identifier*  dependencies,
 ;;           stmt*        body)
 ;; ```
-;;
-;;
-;; ### Prerequisite Type Alias
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::prognym ::identifier)
-;; #+end_src
 
 ;;
 ;;
