@@ -2955,7 +2955,14 @@ TODO: there is ambiguity regarding identifier-sets and lists:
 
 ```clojure
 (s/def ::prognym            ::identifier)
-(s/def ::test-expr          ::expr)
+(s/def ::logical-expr
+  (s/or :logical-constant   ::LogicalConstant
+        :logical-compare    ::LogicalCompare
+        :logical-binop      ::LogicalBinOp
+        :named-expr         ::NamedExpr ;; TODO check return type!
+        ;; TODO: integer-compare, etc.
+        ))
+(s/def ::test-expr          ::logical-expr)
 (s/def ::orelse             ::stmts)
 ```
 
@@ -3014,7 +3021,12 @@ TODO: there is ambiguity regarding identifier-sets and lists:
                ::orelse    orelse}})]
     (if (s/invalid? cnf)
       :invalid-if
-      cnf)))
+      (assoc-in cnf
+                [::asr-stmt-head ::test-expr]
+                (second (-> cnf
+                            ::asr-stmt-head
+                            ::test-expr
+                            ))))))
 ```
 
 

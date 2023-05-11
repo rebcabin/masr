@@ -3217,7 +3217,14 @@
 ;; #+begin_src clojure
 
 (s/def ::prognym            ::identifier)
-(s/def ::test-expr          ::expr)
+(s/def ::logical-expr
+  (s/or :logical-constant   ::LogicalConstant
+        :logical-compare    ::LogicalCompare
+        :logical-binop      ::LogicalBinOp
+        :named-expr         ::NamedExpr ;; TODO check return type!
+        ;; TODO: integer-compare, etc.
+        ))
+(s/def ::test-expr          ::logical-expr)
 (s/def ::orelse             ::stmts)
 ;; #+end_src
 
@@ -3284,7 +3291,12 @@
                ::orelse    orelse}})]
     (if (s/invalid? cnf)
       :invalid-if
-      cnf)))
+      (assoc-in cnf
+                [::asr-stmt-head ::test-expr]
+                (second (-> cnf
+                            ::asr-stmt-head
+                            ::test-expr
+                            ))))))
 ;; #+end_src
 
 

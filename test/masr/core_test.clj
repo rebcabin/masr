@@ -1128,6 +1128,32 @@
 ;; |___|_|
 
 
+(deftest if-test
+  (is (s/valid?
+       ::asr/If
+       (legacy
+        (If
+         (NamedExpr
+          (Var 2 a)
+          (StringOrd
+           (StringConstant
+            "3"
+            (Character 1 1 () [])
+            )
+           (Integer 4 [])
+           (IntegerConstant 51 (Integer 4 []))
+           )
+          (Integer 4 [])
+          )
+         [(=
+           (Var 2 x)
+           (IntegerConstant 1 (Integer 4 []))
+           ()
+           )]
+         []
+         )))))
+
+
 ;;    _          _                         _
 ;;   /_\   _____(_)__ _ _ _  _ __  ___ _ _| |_
 ;;  / _ \ (_-<_-< / _` | ' \| '  \/ -_) ' \  _|
