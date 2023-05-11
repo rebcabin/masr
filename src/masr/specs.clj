@@ -1368,6 +1368,13 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  Character ttype
+  (character-kind len len-expr? dimensions))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   FunctionType ttype
   (param-types    return-var-type    abi
                   deftype            bindc-name     elemental
@@ -1920,10 +1927,11 @@
    (cond
      (not (= ext-kw :external)) ::invalid-abi
      :else
-     (let [cnf (s/conform ::abi
-                          {::term         ::abi,
-                           ::abi-enum     the-enum,
-                           ::abi-external the-bool})]
+     (let [cnf (s/conform
+                ::abi
+                {::term         ::abi,
+                 ::abi-enum     the-enum,
+                 ::abi-external the-bool})]
        (if (s/invalid? cnf)
          ::invalid-abi
          cnf)))))
@@ -1950,13 +1958,14 @@
 ;; # TTYPE
 ;;
 ;;
-;; `Ttype` is a term with nested multi-specs, so it
-;; fits in the macro scheme written at the top of this
-;; file. Its subtypes, `Integer`, `Real`, `Logical`,
-;; etc., have additional structure we automate here.
+;; `Ttype` is a term with nested multi-specs.
 ;;
 ;;
-;; ## Pluralities
+
+
+;;
+;;
+;; ## PREREQUISITE TYPES AND ALIASES
 ;;
 ;;
 ;; #+begin_src clojure
@@ -1987,6 +1996,101 @@
   (s/coll-of ::ttype
              :min-count 0
              :max-count 1))
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::param-types     ::ttypes)
+(s/def ::return-var-type ::ttype?)
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::bindc-name      (s/nilable string?))
+(s/def ::elemental       ::bool)
+(s/def ::pure            ::bool)
+(s/def ::module          ::bool)
+(s/def ::inline          ::bool)
+(s/def ::static          ::bool)
+(s/def ::type-params     ::ttypes)
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(def MIN-NUMBER-OF-SYMBOLS   0)
+(def MAX-NUMBER-OF-SYMBOLS 128)
+;; #+end_src
+
+;;
+;; TODO: Consider a regex-spec.
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::symbols
+  (s/coll-of ::symbol
+             :min-count MIN-NUMBER-OF-SYMBOLS
+             :max-count MAX-NUMBER-OF-SYMBOLS))
+;; #+end_src
+
+;;
+;; TODO: Consider a regex-spec.
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::symbol?
+  (s/coll-of ::symbol
+             :min-count 0,
+             :max-count 1))
+(s/def ::restrictions    ::symbols)
+(s/def ::is-restriction  ::bool)
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(def MIN-NUMBER-OF-EXPRS    0)
+(def MAX-NUMBER-OF-EXPRS 1024)
+;; #+end_src
+
+;;
+;; TODO: Consider a regex-spec.
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::exprs
+  (s/coll-of ::expr
+             :min-count MIN-NUMBER-OF-EXPRS
+             :max-count MAX-NUMBER-OF-EXPRS))
+;; #+end_src
+
+;;
+;; TODO: Consider a regex-spec.
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::expr?
+  (s/coll-of ::expr
+             :min-count 0
+             :max-count 1))
+;; #+end_src
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::len       ::nat)
+(s/def ::len-expr? ::expr?)
 ;; #+end_src
 
 
@@ -2033,30 +2137,6 @@
 
 ;;
 ;;
-;; ## INTEGER, REAL, COMPLEX, LOGICAL
-;;
-;;
-;; Defined via `defmasrtype` at top.
-
-
-;;
-;;
-;; ## CHARACTER
-;;
-;;
-;; TODO: `Character` is more rich
-;; `(def-ttype-head Character)`
-;;
-;;
-;; ### Original ASDL
-;;
-;;
-;; ```c
-;; | Character(int kind, int len, expr? len_expr, dimension* dims)
-;; ```
-
-;;
-;;
 ;; ## Heavy Sugar for `ttype`
 ;;
 ;;
@@ -2078,9 +2158,10 @@
         ::integer-kind 4,
         ::dimensions   []}}"
   [it]
-  (let [cnf (s/conform ::ttype
-                       {::term ::ttype,
-                        ::asr-ttype-head it})]
+  (let [cnf (s/conform
+             ::ttype
+             {::term ::ttype,
+              ::asr-ttype-head it})]
     (if (s/invalid? cnf)
       ::invalid-ttype
       cnf)))
@@ -2161,6 +2242,14 @@
        )))
 ;; #+end_src
 
+
+;;
+;;
+;; ## INTEGER, REAL, COMPLEX, LOGICAL
+;;
+;;
+;; See also `defmasrtypes` at top of the file.
+
 ;;
 ;;
 ;; #+begin_src clojure
@@ -2180,6 +2269,136 @@
 (def-term-head--entity-key ttype Complex)
 (def-term-head--entity-key ttype Logical)
 ;; #+end_src
+
+
+;;
+;;
+;; ## CHARACTER
+;;
+;;
+
+
+;;
+;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | Character(int kind, int len, expr? len_expr, dimension* dims)
+;; ```
+
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(Character 1 1 () [])
+;; #+end_src
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+
+(defn Character
+  ([kind, len, len-expr?, dims]
+   (let [cnf (s/conform
+              ::Character
+              {::term ::ttype
+               ::asr-ttype-head
+               {::ttype-head ::Character
+                ::character-kind kind
+                ::len            len
+                ::len-expr?      len-expr?
+                ::dimensions     dims
+                }})]
+     (if (s/invalid? cnf)
+       :invalid-character
+       cnf)))
+  ([kind, len]
+   (Character kind len () []))
+  ([kind, len, dims]
+   (Character kind len () dims))
+  ([]
+   (Character 1 1 () [])))
+;; #+end_src
+
+;;
+;;
+;; ## FUNCTION-TYPE
+;;
+;;
+;; This is a rich `ttype` that we spell out by hand.
+;;
+;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | FunctionType(ttype*  arg_types,       ;; rename param-types
+;;                ttype?  return_var_type,
+;;                abi     abi,
+;;                deftype deftype,
+;;                string? bindc_name,
+;;                bool    elemental,
+;;                bool    pure,
+;;                bool    module,
+;;                bool    inline,
+;;                bool    static,
+;;                ttype*  type_params,
+;;                symbol* restrictions,
+;;                bool    is_restriction)
+;; ```
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn FunctionType
+  [param-types-     return-var-type-  abi-
+   deftype-         bindc-name-       elemental-
+   pure-            module-           inline-
+   static-          type-params-      restrictions-
+   is-restriction-  ]
+  (let [cnf (s/conform
+             ::FunctionType
+             {::term ::ttype
+              ::asr-ttype-head
+              {::ttype-head       ::FunctionType
+
+               ::param-types      param-types-
+               ::return-var-type  (if (empty? return-var-type-)
+                                    ()
+                                    [return-var-type-])
+               ::abi              abi-
+
+               ::deftype          deftype-
+               ::bindc-name       (if (empty? bindc-name-) nil bindc-name-)
+               ::elemental        elemental-
+
+               ::pure             pure-
+               ::module           module-
+               ::inline           inline-
+
+               ::static           static-
+               ::type-params      type-params-
+               ::restrictions     restrictions-
+
+               ::is-restriction   is-restriction-}})]
+    (if (s/invalid? cnf)
+      :invalid-function-type
+      cnf)))
+;; #+end_src
+
 
 ;;
 ;;
@@ -2209,153 +2428,6 @@
 ;; ```
 ;;
 ;;
-
-
-;;
-;;
-;; ## PREREQUISITE TYPES AND ALIASES
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::param-types     ::ttypes)
-(s/def ::return-var-type ::ttype?)
-;; #+end_src
-
-
-;;
-;;
-;; ## FUNCTION-TYPE
-;;
-;;
-;; This is a rich `ttype` that we spell out by hand.
-;;
-;;
-;; ### Original ASDL
-;;
-;;
-;; ```c
-;; | FunctionType(ttype*  arg_types,       ;; rename param-types
-;;                ttype?  return_var_type,
-;;                abi     abi,
-;;                deftype deftype,
-;;                string? bindc_name,
-;;                bool    elemental,
-;;                bool    pure,
-;;                bool    module,
-;;                bool    inline,
-;;                bool    static,
-;;                ttype*  type_params,
-;;                symbol* restrictions,
-;;                bool    is_restriction)
-;; ```
-
-
-;;
-;; * `ABI` is already good enough.
-;; * `deftype` is found above
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::bindc-name      (s/nilable string?))
-(s/def ::elemental       ::bool)
-(s/def ::pure            ::bool)
-(s/def ::module          ::bool)
-(s/def ::inline          ::bool)
-(s/def ::static          ::bool)
-(s/def ::type-params     ::ttypes)
-;; #+end_src
-
-;;
-;;
-;; ### Pluralities
-;;
-;;
-;; `symbol*` is written `symbols`, and `restrictions`
-;; is a type alias for `symbols`.
-;;
-;;
-;; ### Forward Reference
-;;
-;;
-;; Can only test empty `symbol*`
-;; restrictions until `symbol` is properly defined
-;; below.
-;;
-;;
-;; #+begin_src clojure
-
-(def MIN-NUMBER-OF-SYMBOLS   0)
-(def MAX-NUMBER-OF-SYMBOLS 128)
-;; #+end_src
-
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::symbols
-  (s/coll-of ::symbol
-             :min-count MIN-NUMBER-OF-SYMBOLS
-             :max-count MAX-NUMBER-OF-SYMBOLS))
-;; #+end_src
-
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::symbol?
-  (s/coll-of ::symbol
-             :min-count 0,
-             :max-count 1))
-(s/def ::restrictions    ::symbols)
-(s/def ::is-restriction  ::bool)
-;; #+end_src
-
-;;
-;;
-;; ### Heavy Sugar
-;;
-;;
-;; #+begin_src clojure
-
-(defn FunctionType
-  [param-types-     return-var-type-  abi-
-   deftype-         bindc-name-       elemental-
-   pure-            module-           inline-
-   static-          type-params-      restrictions-
-   is-restriction-  ]
-  (let [cnf {::term ::ttype
-             ::asr-ttype-head
-             {::ttype-head       ::FunctionType
-
-              ::param-types      param-types-
-              ::return-var-type  (if (empty? return-var-type-)
-                                   ()
-                                   [return-var-type-])
-              ::abi              abi-
-
-              ::deftype          deftype-
-              ::bindc-name       (if (empty? bindc-name-) nil bindc-name-)
-              ::elemental        elemental-
-
-              ::pure             pure-
-              ::module           module-
-              ::inline           inline-
-
-              ::static           static-
-              ::type-params      type-params-
-              ::restrictions     restrictions-
-
-              ::is-restriction   is-restriction-}}]
-    (if (s/invalid? cnf)
-      :invalid-function-type
-      cnf)))
-;; #+end_src
 
 
 ;;
@@ -2400,38 +2472,6 @@
 ;; #+begin_src clojure
 
 (s/def ::arg ::expr)
-;; #+end_src
-
-;;
-;;
-;; #+begin_src clojure
-
-(def MIN-NUMBER-OF-EXPRS    0)
-(def MAX-NUMBER-OF-EXPRS 1024)
-;; #+end_src
-
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::exprs
-  (s/coll-of ::expr
-             :min-count MIN-NUMBER-OF-EXPRS
-             :max-count MAX-NUMBER-OF-EXPRS))
-;; #+end_src
-
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::expr?
-  (s/coll-of ::expr
-             :min-count 0
-             :max-count 1))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2641,11 +2681,13 @@
 (defn LogicalConstant
   ;; arity-2
   ([a-bool, a-ttype]
-   (let [cnf {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::LogicalConstant
-               ::bool      a-bool
-               ::Logical   a-ttype}}]
+   (let [cnf (s/conform
+              ::LogicalConstant
+              {::term ::expr,
+               ::asr-expr-head
+               {::expr-head ::LogicalConstant
+                ::bool      a-bool
+                ::Logical   a-ttype}})]
      (if (s/invalid? cnf)
        :invalid-logical-constant
        cnf)))
@@ -2687,11 +2729,13 @@
 (defn IntegerConstant
   ;; arity-2
   ([an-int, a-ttype]
-   (let [cnf {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::IntegerConstant
-               ::int       an-int
-               ::Integer   a-ttype}}]
+   (let [cnf (s/conform
+              ::IntegerConstant
+              {::term ::expr,
+               ::asr-expr-head
+               {::expr-head ::IntegerConstant
+                ::int       an-int
+                ::Integer   a-ttype}})]
      (if (s/invalid? cnf)
        :invalid-integer-constant
        cnf)))
@@ -2735,12 +2779,14 @@
 ;; #+begin_src clojure
 
 (defn Var-- [stid, ident]
-  (let [cnf {::term ::expr,
-             ::asr-expr-head
-             {::expr-head  ::Var
-              ::symtab-id  stid
-              ::varnym     ident
-              }}]
+  (let [cnf (s/conform
+             ::Var
+             {::term ::expr,
+              ::asr-expr-head
+              {::expr-head  ::Var
+               ::symtab-id  stid
+               ::varnym     ident
+               }})]
     (if (s/invalid? cnf)
       :invalid-var
       cnf)))
@@ -2860,15 +2906,17 @@
 ;; #+begin_src clojure
 
 (defn LogicalBinOp [left- lbo- right- tt- val?-]
-  (let [cnf {::term ::expr,
-             ::asr-expr-head
-             {::expr-head     ::LogicalBinOp
-              ::logical-left  left-
-              ::logicalbinop  lbo-
-              ::logical-right right-
-              ::Logical       tt-
-              ::value?        val?-
-              }}]
+  (let [cnf (s/conform
+             ::LogicalBinOp
+             {::term ::expr,
+              ::asr-expr-head
+              {::expr-head     ::LogicalBinOp
+               ::logical-left  left-
+               ::logicalbinop  lbo-
+               ::logical-right right-
+               ::Logical       tt-
+               ::value?        val?-
+               }})]
     (if (s/invalid? cnf)
       :invalid-logical-bin-op
       cnf)))
@@ -2913,14 +2961,16 @@
 ;; #+begin_src clojure
 
 (defn LogicalCompare [l- cmp- r- tt- val?-]
-  (let [cnf {::term ::expr,
-             ::asr-expr-head
-             {::expr-head     ::LogicalCompare
-              ::logical-left  l-
-              ::logicalcmpop  cmp-
-              ::logical-right r-
-              ::Logical       tt-
-              ::value?        val?-}}]
+  (let [cnf (s/conform
+             ::LogicalCompare
+             {::term ::expr,
+              ::asr-expr-head
+              {::expr-head     ::LogicalCompare
+               ::logical-left  l-
+               ::logicalcmpop  cmp-
+               ::logical-right r-
+               ::Logical       tt-
+               ::value?        val?-}})]
     (if (s/invalid? cnf)
       :invalid-logical-compare
       cnf)))
@@ -3130,18 +3180,20 @@
 
 ;;
 ;;
-;; ### Heavy Sugra
+;; ### Heavy Sugar
 ;;
 ;;
 ;; #+begin_src clojure
 
 (defn If [test-expr body orelse]
-  (let [cnf {::term ::stmt
-             ::asr-stmt-head
-             {::stmt-head ::If
-              ::test-expr test-expr
-              ::body      body
-              ::orelse    orelse}}]
+  (let [cnf (s/conform
+             ::If
+             {::term ::stmt
+              ::asr-stmt-head
+              {::stmt-head ::If
+               ::test-expr test-expr
+               ::body      body
+               ::orelse    orelse}})]
     (if (s/invalid? cnf)
       :invalid-if
       cnf)))
@@ -3179,12 +3231,14 @@
 ;; #+begin_src clojure
 
 (defn Assignment-- [lhs, rhs, unk]
-  (let [cnf {::term ::stmt,
-             ::asr-stmt-head
-             {::stmt-head   ::Assignment
-              ::lvalue      lhs
-              ::rvalue      rhs
-              ::overloaded  unk}}]
+  (let [cnf (s/conform
+             ::Assignment
+             {::term ::stmt,
+              ::asr-stmt-head
+              {::stmt-head   ::Assignment
+               ::lvalue      lhs
+               ::rvalue      rhs
+               ::overloaded  unk}})]
     (if (s/invalid? cnf)
       :invalid-assignment
       cnf)))
@@ -3358,15 +3412,16 @@
 
 (defn SubroutineCall--
   [subr-symref, orig-symref, args, dt?]
-  (let [cnf (s/conform ::SubroutineCall
-                       {::term ::stmt,
-                        ::asr-stmt-head
-                        {::stmt-head    ::SubroutineCall
-                         ::nymref       (apply symbol-ref subr-symref)
-                         ::orig-nymref  orig-symref ;; TODO
-                         ::call-args    args
-                         ::dt?          dt?
-                         }})]
+  (let [cnf (s/conform
+             ::SubroutineCall
+             {::term ::stmt,
+              ::asr-stmt-head
+              {::stmt-head    ::SubroutineCall
+               ::nymref       (apply symbol-ref subr-symref)
+               ::orig-nymref  orig-symref ;; TODO
+               ::call-args    args
+               ::dt?          dt?
+               }})]
     (if (s/invalid? cnf)
       :invalid-subroutine-call
       cnf)))
@@ -3730,14 +3785,16 @@
 ;; #+begin_src clojure
 
 (defn Module-- [symtab, modnym, deps, loaded, intrinsic-]
-  (let [cnf {::term ::symbol
-             ::asr-symbol-head
-             {::symbol-head     ::Module
-              ::SymbolTable     symtab
-              ::modulenym       modnym
-              ::dependencies    deps    ;; TODO quote it
-              ::loaded-from-mod loaded
-              ::intrinsic       intrinsic-}}]
+  (let [cnf (s/conform
+             ::Module
+             {::term ::symbol
+              ::asr-symbol-head
+              {::symbol-head     ::Module
+               ::SymbolTable     symtab
+               ::modulenym       modnym
+               ::dependencies    deps ;; TODO quote it
+               ::loaded-from-mod loaded
+               ::intrinsic       intrinsic-}})]
     (if (s/invalid? cnf)
       :invalid-module
       cnf)))
@@ -3797,25 +3854,27 @@
                   fnnym,   fnsig,  deps,
                   params-, body-,  retvar,
                   access-, determ, sefree]
-  (let [cnf {::term ::symbol
-             ::asr-symbol-head
-             {::symbol-head         ::Function
+  (let [cnf (s/conform
+             ::Function
+             {::term ::symbol
+              ::asr-symbol-head
+              {::symbol-head         ::Function
 
-              ::SymbolTable         symtab
+               ::SymbolTable         symtab
 
-              ::function-name       fnnym
-              ::function-signature  fnsig
-              ::dependencies        deps
+               ::function-name       fnnym
+               ::function-signature  fnsig
+               ::dependencies        deps
 
-              ::params              params-
-              ::body                body-
-              ::return-var?         (if (empty? retvar)
-                                      () [retvar])
+               ::params              params-
+               ::body                body-
+               ::return-var?         (if (empty? retvar)
+                                       () [retvar])
 
-              ::access              access-
-              ::deterministic       determ
-              ::side-effect-free    sefree
-              }}]
+               ::access              access-
+               ::deterministic       determ
+               ::side-effect-free    sefree
+               }})]
     (if (s/invalid? cnf)
       :invalid-function
       cnf)))
@@ -3864,14 +3923,15 @@
 ;; #+begin_src clojure
 
 (defn Program-- [stab, nym, deps, body-]
-  (let [cnf (s/conform ::Program
-                       {::term ::symbol,
-                        ::asr-symbol-head
-                        {::symbol-head  ::Program
-                         ::SymbolTable  stab
-                         ::prognym      nym
-                         ::dependencies deps
-                         ::body         body-}})]
+  (let [cnf (s/conform
+             ::Program
+             {::term ::symbol,
+              ::asr-symbol-head
+              {::symbol-head  ::Program
+               ::SymbolTable  stab
+               ::prognym      nym
+               ::dependencies deps
+               ::body         body-}})]
     (if (s/invalid? cnf)
       ::invalid-program
       cnf)))
@@ -3955,7 +4015,7 @@
         ;; the s/conform slips back in the tag keys from s/or
         cnf
         (s/conform
-         ::unit
+         ::TranslationUnit
          {::term          ::unit
           ::asr-unit-head
           {::unit-head    ::TranslationUnit

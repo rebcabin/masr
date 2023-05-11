@@ -703,10 +703,20 @@
 
 (deftest ttype-test
   (testing "top-level-types"
-    (is      (s/valid? ::asr/Logical (Logical)))
-    (is      (s/valid? ::asr/Integer (Integer)))
-    (is (not (s/valid? ::asr/Logical (Integer))))
-    (is (not (s/valid? ::asr/Integer (Logical)))))
+    (is (s/valid? ::asr/Logical   (Logical)))
+    (is (s/valid? ::asr/Integer   (Integer)))
+    (is (s/valid? ::asr/Character (Character 1 1 () [])))
+
+    (is (s/valid? ::asr/ttype     (Logical)))
+    (is (s/valid? ::asr/ttype     (Integer)))
+    (is (s/valid? ::asr/ttype     (Character 1 1 () [])))
+
+    (is (s/valid? ::asr/asr-term  (Logical)))
+    (is (s/valid? ::asr/asr-term  (Integer)))
+    (is (s/valid? ::asr/asr-term  (Character 1 1 () [])))
+
+    (is (not (s/valid? ::asr/Logical   (Integer))))
+    (is (not (s/valid? ::asr/Integer   (Logical)))))
   (testing "full-sugar and light-sugar)"
     (is (vt? ::asr/Integer (Integer)))
     (is (vt? ::asr/Integer (Integer 4)))
@@ -721,6 +731,11 @@
     (is (vt? ::asr/Logical (Logical 4)))
     (is (vt? ::asr/Logical (Logical 4 [])))
     (is (vt? ::asr/Logical (Logical 4 [[6 60] [1 42]])))
+
+    (is (vt? ::asr/Character (Character 1 1 () [])))
+    (is (vt? ::asr/Character (Character 1 1)))
+    (is (vt? ::asr/Character (Character 1 1 [6 60])))
+    (is (vt? ::asr/Character (Character)))
 
     (is (vt? ::asr/Integer (Integer- {:dimensions [], :kind 4})))
     (is (vt? ::asr/Integer (Integer- {:kind 4, :dimensions []})))
