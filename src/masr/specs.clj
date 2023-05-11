@@ -1269,6 +1269,14 @@
   (int    Integer))
 
 (defmasrtype
+  StringConstant expr
+  (string ttype))
+
+(defmasrtype
+  StringOrd expr
+  (arg ttype value?))
+
+(defmasrtype
   Var expr
   (symtab-id    varnym))
 ;; #+end_src
@@ -2027,6 +2035,15 @@
 ;; `(def-ttype-head Character)`
 ;;
 ;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | Character(int kind, int len, expr? len_expr, dimension* dims)
+;; ```
+
+;;
+;;
 ;; ## Heavy Sugar for `ttype`
 ;;
 ;;
@@ -2364,6 +2381,16 @@
 ;; ## PREREQUISITE TYPES AND ALIASES
 ;;
 ;;
+
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::arg ::expr)
+;; #+end_src
+
+;;
+;;
 ;; #+begin_src clojure
 
 (def MIN-NUMBER-OF-EXPRS    0)
@@ -2416,22 +2443,22 @@
 
 (defn symbol-ref [ident, stid]
   {::identifier ident,
-   ::symtab-id stid})
+   ::symtab-id  stid})
 ;; #+end_src
 
 ;;
 ;;
 ;; #+begin_src clojure
 
-(s/def ::return-type ::ttype)
-(s/def ::value?      ::expr?)
+(s/def ::return-type   ::ttype)
+(s/def ::value?        ::expr?)
 ;; #+end_src
 
 ;;
 ;;
 ;; #+begin_src clojure
 
-(s/def ::varnym           ::identifier)
+(s/def ::varnym        ::identifier)
 ;; #+end_src
 
 ;;
@@ -2721,6 +2748,65 @@
 ;; TODO: make Var look up a value in the
 ;; symbol-table! That's part of abstract execution.
 
+
+;;
+;;
+;; ## STRING CONSTANT
+;;
+;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | StringConstant(string s, ttype type)
+;; ```
+;;
+;;
+;; ## Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(StringOrd
+ (StringConstant
+  "3"
+  (Character 1 1 () [])
+  )
+ (Integer 4 [])
+ (IntegerConstant 51 (Integer 4 []))
+ )
+;; #+end_src
+
+
+;;
+;;
+;; ## STRING ORD
+;;
+;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | StringOrd(expr arg, ttype type, expr? value)
+;; ```
+;;
+;;
+;; ## Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(StringOrd
+ (StringConstant
+  "3"
+  (Character 1 1 () [])
+  )
+ (Integer 4 [])
+ (IntegerConstant 51 (Integer 4 []))
+ )
+;; #+end_src
 
 ;;
 ;;
