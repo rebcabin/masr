@@ -2316,18 +2316,19 @@
                 ::character-kind kind
                 ::len            len
                 ::len-expr?      len-expr?
-                ::dimensions     dims
+                ::dimensions     (dimensions dims)
                 }})]
      (if (s/invalid? cnf)
        :invalid-character
        cnf)))
-  ([kind, len]
-   (Character kind len () []))
   ([kind, len, dims]
    (Character kind len () dims))
+  ([kind, len]
+   (Character kind len () []))
   ([]
    (Character 1 1 () [])))
 ;; #+end_src
+
 
 ;;
 ;;

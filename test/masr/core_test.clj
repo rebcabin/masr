@@ -733,8 +733,9 @@
     (is (vt? ::asr/Logical (Logical 4 [[6 60] [1 42]])))
 
     (is (vt? ::asr/Character (Character 1 1 () [])))
+    (is (vt? ::asr/Character (Character 1 1 () [[6 60]])))
     (is (vt? ::asr/Character (Character 1 1)))
-    (is (vt? ::asr/Character (Character 1 1 [6 60])))
+    (is (vt? ::asr/Character (Character 1 1 [[6 60]])))
     (is (vt? ::asr/Character (Character)))
 
     (is (vt? ::asr/Integer (Integer- {:dimensions [], :kind 4})))
