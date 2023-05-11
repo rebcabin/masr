@@ -871,12 +871,14 @@
 
 
 (deftest named-expr-test
-  (is (s/valid? ::asr/NamedExpr
-                (NamedExpr
+  (let [example (NamedExpr
                  (Var 2 y)
                  (IntegerConstant 0 (Integer 4 []))
                  (Integer 4 [])
-                 ))))
+                 )]
+    (is (s/valid? ::asr/asr-term  example))
+    (is (s/valid? ::asr/expr      example))
+    (is (s/valid? ::asr/NamedExpr example))))
 
 
 ;;  _              _         _  ___             _            _
@@ -1030,6 +1032,12 @@
   (is (s/valid? ::asr/expr?
                 (legacy ((Var 42 x)))))
   )
+
+
+;;  ___  __
+;; |_ _|/ _|
+;;  | ||  _|
+;; |___|_|
 
 
 ;;    _          _                         _

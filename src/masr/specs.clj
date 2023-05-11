@@ -1215,6 +1215,10 @@
   (lvalue    rvalue    overloaded))
 
 (defmasrtype
+  If stmt
+  (test-expr body orelse))
+
+(defmasrtype
   Print stmt
   (format? values separator? end?))
 
@@ -2977,6 +2981,71 @@
 ;; #+begin_src clojure
 
 (s/def ::prognym            ::identifier)
+(s/def ::test-expr          ::expr)
+(s/def ::orelse             ::stmts)
+;; #+end_src
+
+
+;;
+;;
+;; ## IF
+;;
+;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | If(expr test, stmt* body, stmt* orelse)
+;; ```
+
+;;
+;;
+;; ## Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(If
+ (NamedExpr
+  (Var 2 a)
+  (StringOrd
+   (StringConstant
+    "3"
+    (Character 1 1 () [])
+    )
+   (Integer 4 [])
+   (IntegerConstant 51 (Integer 4 []))
+   )
+  (Integer 4 [])
+  )
+ [(=
+   (Var 2 x)
+   (IntegerConstant 1 (Integer 4 []))
+   ()
+   )]
+ []
+ )
+;; #+end_src
+
+
+;;
+;;
+;; ### Heavy Sugra
+;;
+;;
+;; #+begin_src clojure
+
+(defn If [test-expr body orelse]
+  (let [cnf {::term ::stmt
+             ::asr-stmt-head
+             {::stmt-head ::If
+              ::test-expr test-expr
+              ::body      body
+              ::orelse    orelse}}]
+    (if (s/invalid? cnf)
+      :invalid-if
+      cnf)))
 ;; #+end_src
 
 
