@@ -108,9 +108,12 @@
   - [31.7. STRING CONSTANT](#317-string-constant)
     - [31.7.1. Original ASDL](#3171-original-asdl)
     - [31.7.2. Example](#3172-example)
+    - [31.7.3. Heavy Sugar](#3173-heavy-sugar)
   - [31.8. STRING ORD](#318-string-ord)
     - [31.8.1. Original ASDL](#3181-original-asdl)
     - [31.8.2. Example](#3182-example)
+    - [31.8.3. Heavy Sugar](#3183-heavy-sugar)
+    - [31.8.4. Legacy Sugar](#3184-legacy-sugar)
   - [31.9. LOGICAL BINOP](#319-logical-binop)
     - [31.9.1. Original ASDL](#3191-original-asdl)
     - [31.9.2. Example](#3192-example)
@@ -410,7 +413,7 @@ i.e., things to the left of equals signs:
 
 
 ```c
- 0 atoms           = int, float, bool, nat, bignat
+ 0 atoms           = int, float, bool, string, nat, bignat
  0 identifier      = specified below
 ```
 
@@ -1350,12 +1353,12 @@ via `s/def`.
 ```clojure
 (defmasrtype
   StringConstant expr
-  (string ttype))
+  (string Character))
 ```
 ```clojure
 (defmasrtype
   StringOrd expr
-  (arg ttype value?))
+  (StringConstant Integer IntegerConstant?))
 ```
 ```clojure
 (defmasrtype
@@ -2350,6 +2353,12 @@ things we haven't fully defined yet
 (s/def ::target ::expr)
 ```
 ```clojure
+(s/def ::IntegerConstant?
+  (s/coll-of ::IntegerConstant
+             :min-count 0
+             :max-count 1))
+```
+```clojure
 (s/def ::symbol-ref
   (s/keys :req [::identifier
                 ::symtab-id]))
@@ -2512,8 +2521,8 @@ TODO: check that the types of the exprs are `::Logical`!
 
 ```clojure
 (defn LogicalConstant
-  ;; arity-2
   ([a-bool, a-ttype]
+   "binary"
    (let [cnf (s/conform
               ::LogicalConstant
               {::term ::expr,
@@ -2524,8 +2533,8 @@ TODO: check that the types of the exprs are `::Logical`!
      (if (s/invalid? cnf)
        :invalid-logical-constant
        cnf)))
-  ;; arity-1
   ([a-bool]
+   "unary"
    (LogicalConstant a-bool (Logical))))
 ```
 
@@ -2653,6 +2662,29 @@ symbol-table! That's part of abstract execution.
 ```
 
 
+### 31.7.3. Heavy Sugar
+
+
+```clojure
+(defn StringConstant
+  ([string, char-ttype]
+   "binary"
+   (let [cnf (s/conform
+              ::StringConstant
+              {::term ::expr,
+               ::asr-expr-head
+               {::expr-head ::StringConstant
+                ::string    string
+                ::Character char-ttype}})]
+     (if (s/invalid? cnf)
+       :invalid-string-constant
+       cnf)))
+  ([string]
+   "unary"
+   (StringConstant string (Character))))
+```
+
+
 ## 31.8. STRING ORD
 
 
@@ -2677,6 +2709,54 @@ symbol-table! That's part of abstract execution.
  (Integer 4 [])
  (IntegerConstant 51 (Integer 4 []))
  )
+```
+
+
+### 31.8.3. Heavy Sugar
+
+
+```clojure
+(defn StringOrd--
+  ([strconst, int-ttype, int-val?]
+   "trinary"
+   (let [cnf (s/conform
+              ::StringOrd
+              {::term ::expr,
+               ::asr-expr-head
+               {::expr-head ::StringOrd
+                ::StringConstant      strconst
+                ::Integer             int-ttype
+                ::IntegerConstant?    int-val?}})]
+     (if (s/invalid? cnf)
+       :invalid-string-ord
+       cnf)))
+  ([strconst, int-val?]
+   (StringOrd-- strconst, (Integer) int-val?)))
+```
+
+
+### 31.8.4. Legacy Sugar
+
+
+```clojure
+(defn StringOrd
+  ([strconst, int-ttype, int-val?]
+   "trinary"
+   (let [cnf (s/conform
+              ::StringOrd
+              {::term ::expr,
+               ::asr-expr-head
+               {::expr-head ::StringOrd
+                ::StringConstant      strconst
+                ::Integer             int-ttype
+                ::IntegerConstant?    (if (empty? int-val?)
+                                        int-val?
+                                        [int-val?])}})]
+     (if (s/invalid? cnf)
+       :invalid-string-ord
+       cnf)))
+  ([strconst, int-val?]
+   (StringOrd strconst, (Integer) int-val?)))
 ```
 
 

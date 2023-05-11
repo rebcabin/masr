@@ -996,6 +996,49 @@
   (is (not (s/valid? ::asr/StringConstant (StringConstant 42)))))
 
 
+;;  ___ _       _            ___         _
+;; / __| |_ _ _(_)_ _  __ _ / _ \ _ _ __| |
+;; \__ \  _| '_| | ' \/ _` | (_) | '_/ _` |
+;; |___/\__|_| |_|_||_\__, |\___/|_| \__,_|
+;;                    |___/
+
+
+(deftest StringOrd-test
+  (is (s/valid? ::asr/StringOrd
+                (StringOrd--
+                 (StringConstant "boofar"),
+                 (Integer),
+                 [(IntegerConstant 51 (Integer))])))
+  (is (s/valid? ::asr/StringOrd
+                (StringOrd--
+                 (StringConstant "boofar"),
+                 [(IntegerConstant 51 (Integer))])))
+  (is (s/valid? ::asr/StringOrd
+                (StringOrd
+                 (StringConstant "boofar"),
+                 (Integer),
+                 (IntegerConstant 51 (Integer)))))
+  (is (s/valid? ::asr/StringOrd
+                (StringOrd
+                 (StringConstant "boofar"),
+                 (IntegerConstant 51 (Integer)))))
+  (is (not (s/valid? ::asr/StringOrd
+                     (StringOrd
+                      (StringConstant 42),
+                      (Integer),
+                      (IntegerConstant 51 (Integer))))))
+  (is (not (s/valid? ::asr/StringOrd
+                     (StringOrd
+                      (StringConstant "boofar" 42),
+                      (Integer),
+                      (LogicalConstant true (Logical))))))
+  (is (not (s/valid? ::asr/StringOrd
+                     (StringOrd
+                      (StringConstant "boofar"),
+                      (Real),
+                      (IntegerConstant 51 (Integer))))))  )
+
+
 ;; __   __
 ;; \ \ / /_ _ _ _
 ;;  \ V / _` | '_|
@@ -1068,8 +1111,15 @@
           '[(Var 42 x)])))
   (is (s/valid? ::asr/expr? (legacy ((Var 42 x)))))
   (is (s/valid? ::asr/expr  (legacy (Var 42 x))))
-  (is (s/valid? ::asr/Var   (legacy (Var 42 x))))
-  )
+  (is (s/valid? ::asr/Var   (legacy (Var 42 x))))  )
+
+
+;; ================================================================
+;;  ____ _____ __  __ _____
+;; / ___|_   _|  \/  |_   _|
+;; \___ \ | | | |\/| | | |
+;;  ___) || | | |  | | | |
+;; |____/ |_| |_|  |_| |_|
 
 
 ;;  ___  __
@@ -1142,11 +1192,11 @@
                        (Logical 4 []) ()) ()))))    ))
 
 
-;;          _ _
-;;  __ __ _| | |        __ _ _ _ __ _
-;; / _/ _` | | |       / _` | '_/ _` |
-;; \__\__,_|_|_|  ___  \__,_|_| \__, |
-;;               |___|          |___/
+;;            ____
+;;  _______ _/ / / ___ ________ _
+;; / __/ _ `/ / / / _ `/ __/ _ `/
+;; \__/\_,_/_/_/__\_,_/_/  \_, /
+;;            /___/       /___/
 
 
 (deftest call-arg-test
@@ -1750,6 +1800,14 @@
     (is (s/valid? ::asr/asr-term p))
     (is (s/valid? ::asr/symbol   p))
     (is (s/valid? ::asr/Program  p))))
+
+
+;; ================================================================
+;;  _   _ _   _ ___ _____
+;; | | | | \ | |_ _|_   _|
+;; | | | |  \| || |  | |
+;; | |_| | |\  || |  | |
+;;  \___/|_| \_|___| |_|
 
 
 ;;  _____                 _      _   _         _   _      _ _
@@ -3171,11 +3229,12 @@
                      }))))))
 
 
-;;     _                       _
-;;  __| |_  _ _ _ _ __  ___ __| |
-;; (_-< | || | '_| '_ \/ -_) _` |
-;; /__/_|\_,_|_| | .__/\___\__,_|
-;;               |_|
+;; ================================================================
+;;  ____  _    _   _ ____  ____  _____ ____
+;; / ___|| |  | | | |  _ \|  _ \| ____|  _ \
+;; \___ \| |  | | | | |_) | |_) |  _| | | | |
+;;  ___) | |__| |_| |  _ <|  __/| |___| |_| |
+;; |____/|_____\___/|_| \_\_|   |_____|____/
 
 
 (defn slurp-asr
@@ -3538,7 +3597,7 @@
 ;; ================================================================
 ;;      __    _    ____  ____  _
 ;;  ____\ \  / \  / ___||  _ \| |
-;; |_____\ \/ _ \ \___ \| | | | |
+;; |     \ \/ _ \ \___ \| | | | |
 ;; |_____/ / ___ \ ___) | |_| | |___
 ;;      /_/_/   \_\____/|____/|_____|
 

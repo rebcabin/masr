@@ -254,7 +254,7 @@
 ;;
 ;;
 ;; ```c
-;;  0 atoms           = int, float, bool, nat, bignat
+;;  0 atoms           = int, float, bool, string, nat, bignat
 ;;  0 identifier      = specified below
 ;; ```
 ;;
@@ -1341,7 +1341,7 @@
 
 (defmasrtype
   StringOrd expr
-  (arg ttype value?))
+  (StringConstant Integer IntegerConstant?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2505,6 +2505,14 @@
 
 ;; #+begin_src clojure
 
+(s/def ::IntegerConstant?
+  (s/coll-of ::IntegerConstant
+             :min-count 0
+             :max-count 1))
+;; #+end_src
+
+;; #+begin_src clojure
+
 (s/def ::symbol-ref
   (s/keys :req [::identifier
                 ::symtab-id]))
@@ -2916,6 +2924,57 @@
  )
 ;; #+end_src
 
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn StringOrd--
+  ([strconst, int-ttype, int-val?]
+   "trinary"
+   (let [cnf (s/conform
+              ::StringOrd
+              {::term ::expr,
+               ::asr-expr-head
+               {::expr-head ::StringOrd
+                ::StringConstant      strconst
+                ::Integer             int-ttype
+                ::IntegerConstant?    int-val?}})]
+     (if (s/invalid? cnf)
+       :invalid-string-ord
+       cnf)))
+  ([strconst, int-val?]
+   (StringOrd-- strconst, (Integer) int-val?)))
+;; #+end_src
+
+;;
+;;
+;; ### Legacy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn StringOrd
+  ([strconst, int-ttype, int-val?]
+   "trinary"
+   (let [cnf (s/conform
+              ::StringOrd
+              {::term ::expr,
+               ::asr-expr-head
+               {::expr-head ::StringOrd
+                ::StringConstant      strconst
+                ::Integer             int-ttype
+                ::IntegerConstant?    (if (empty? int-val?)
+                                        int-val?
+                                        [int-val?])}})]
+     (if (s/invalid? cnf)
+       :invalid-string-ord
+       cnf)))
+  ([strconst, int-val?]
+   (StringOrd strconst, (Integer) int-val?)))
+;; #+end_src
 
 ;;
 ;;
