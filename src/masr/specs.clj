@@ -1291,10 +1291,21 @@
 (term->asdl-type ttype)
 
 (defmasrtype
-  Logical ttype
+  Complex ttype
   ;; types of the attributes:
-  (logical-kind
-   dimensions))
+  (complex-kind dimensions))
+
+(defmasrtype
+  Integer ttype
+  (integer-kind dimensions))
+
+(defmasrtype
+  Logical ttype
+  (logical-kind dimensions))
+
+(defmasrtype
+  Real ttype
+  (real-kind dimensions))
 
 (defmasrtype
   FunctionType ttype
@@ -1962,68 +1973,10 @@
 
 ;;
 ;;
-;; ## Original ASDL
-;;
-;;
-;; Here are the first four ttypes, which all follow
-;; a common pattern captured in macros. There are
-;; more ttypes later that don't follow that pattern.
-;;
-;;
-;; ```c
-;; ttype
-;;     = Integer(int kind, dimension* dims)
-;;     | Real(int kind, dimension* dims)
-;;     | Complex(int kind, dimension* dims)
-;;     | Logical(int kind, dimension* dims)
-;; ```
-;;
-;;
-;; ## Full-Form
-;;
-;;
-;; Because the full-forms for `Integer`, `Real`,
-;; `Complex`, and `Logical` are almost identical with
-;; one another, a Clojure macro is the appropriate
-;; implementation of these four `ttypes`.
-;;
-;;
-;; #+begin_src clojure
-
-(defmacro def-ttype-head
-  "Defmethods for defmulti ttype-head, requiring
-  entity keywords ::ttype-head and ::dimensions.
-  Automates expressions like
-
-      (defmethod ttype-head ::Integer [_]
-        (s/keys :req [::ttype-head
-                      ::integer-kind ;; see specs above
-                      ::dimensions]))"
-  [it]
-  (let [ns     "masr.specs"
-        ;; Like "integer"
-        strit  (str it)
-        ;; Like ::Integer
-        method (keyword ns (str/capitalize strit))
-        ;; Like ::integer-kind
-        kind   (keyword ns (str (str/lower-case strit) "-kind"))]
-    `(defmethod ttype-head ~method [_#]
-       (s/keys :req [::ttype-head ~kind ::dimensions]))))
-;; #+end_src
-
-
-;;
-;;
 ;; ## INTEGER, REAL, COMPLEX, LOGICAL
 ;;
 ;;
-;; #+begin_src clojure
-
-(def-ttype-head Integer)
-(def-ttype-head Real)
-(def-ttype-head Complex)
-(def-ttype-head Logical)
-;; #+end_src
+;; Defined via `defmasrtype` at top
 
 
 ;;
