@@ -1277,6 +1277,13 @@
   (nymref    orig-nymref    call-args    dt?))
 ;; #+end_src
 
+;; #+begin_src clojure
+
+(defmasrtype
+  WhileLoop stmt
+  (unknown-tuple    test-expr    body))
+;; #+end_src
+
 ;;
 ;; ## EXPR
 ;;
@@ -2463,6 +2470,16 @@
 
 ;;
 ;;
+;; ## UNKNOWN TUPLE
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::unknown-tuple      empty?)
+;; #+end_src
+
+;;
+;;
 ;; ## SYMBOLIC VALUE
 ;;
 ;;
@@ -3228,6 +3245,17 @@
 (s/def ::orelse             ::stmts)
 ;; #+end_src
 
+;; #+begin_src clojure
+
+(defn fix-test-expr
+  [cnf]
+  (assoc-in cnf
+            [::asr-stmt-head ::test-expr]
+            (second (-> cnf
+                        ::asr-stmt-head
+                        ::test-expr
+                        ))))
+;; #+end_src
 
 ;;
 ;;
@@ -3291,12 +3319,7 @@
                ::orelse    orelse}})]
     (if (s/invalid? cnf)
       :invalid-if
-      (assoc-in cnf
-                [::asr-stmt-head ::test-expr]
-                (second (-> cnf
-                            ::asr-stmt-head
-                            ::test-expr
-                            ))))))
+      (fix-test-expr cnf))))
 ;; #+end_src
 
 
@@ -3344,6 +3367,66 @@
     (if (s/invalid? cnf)
       :invalid-assignment
       cnf)))
+;; #+end_src
+
+
+;;
+;;
+;; ## WHILE LOOP
+;;
+;;
+
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | WhileLoop(expr test, stmt* body)
+;; ```
+
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(WhileLoop
+ ()
+ (NamedExpr
+  (Var 2 a)
+  (IntegerConstant 1 (Integer 4 []))
+  (Integer 4 [])
+  )
+ [(=
+   (Var 2 y)
+   (IntegerConstant 1 (Integer 4 []))
+   ()
+   )]
+ )
+;; #+end_src
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn WhileLoop
+  [unknown-tuple, test-expr, body]
+  (let [cnf (s/conform
+             ::WhileLoop
+             {::term ::stmt
+              ::asr-stmt-head
+              {::stmt-head ::WhileLoop
+               ::unknown-tuple unknown-tuple
+               ::test-expr     test-expr
+               ::body          body}})]
+    (if (s/invalid? cnf)
+      :invalid-while-loop
+      (fix-test-expr cnf))))
 ;; #+end_src
 
 

@@ -1154,6 +1154,32 @@
          )))))
 
 
+;; __      ___    _ _     _
+;; \ \    / / |_ (_) |___| |   ___  ___ _ __
+;;  \ \/\/ /| ' \| | / -_) |__/ _ \/ _ \ '_ \
+;;   \_/\_/ |_||_|_|_\___|____\___/\___/ .__/
+;;                                     |_|
+
+
+(deftest while-loop-test
+  (is (s/valid?
+       ::asr/WhileLoop
+       (legacy
+        (WhileLoop
+         ()
+         (NamedExpr
+          (Var 2 a)
+          (IntegerConstant 1 (Integer 4 []))
+          (Integer 4 [])
+          )
+         [(=
+           (Var 2 y)
+           (IntegerConstant 1 (Integer 4 []))
+           ()
+           )]
+         )))))
+
+
 ;;    _          _                         _
 ;;   /_\   _____(_)__ _ _ _  _ __  ___ _ _| |_
 ;;  / _ \ (_-<_-< / _` | ' \| '  \/ -_) ' \  _|
@@ -3613,7 +3639,6 @@
     (testing "whole translation unit for 5311701"
       (is (s/valid? ::asr/unit (long-form-asr "_expr2_5311701"))))
 
-    #_
     (testing "whole translation unit for dde511e"
       (is (s/valid? ::asr/unit (long-form-asr "-expr1-dde511e"))))
 
