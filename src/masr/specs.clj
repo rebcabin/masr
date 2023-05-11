@@ -1334,7 +1334,7 @@
 
 (defmasrtype
   StringConstant expr
-  (string ttype))
+  (string Character))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2699,8 +2699,8 @@
 ;; #+begin_src clojure
 
 (defn LogicalConstant
-  ;; arity-2
   ([a-bool, a-ttype]
+   "binary"
    (let [cnf (s/conform
               ::LogicalConstant
               {::term ::expr,
@@ -2711,8 +2711,8 @@
      (if (s/invalid? cnf)
        :invalid-logical-constant
        cnf)))
-  ;; arity-1
   ([a-bool]
+   "unary"
    (LogicalConstant a-bool (Logical))))
 ;; #+end_src
 
@@ -2860,6 +2860,30 @@
 
 ;; #+end_src
 
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn StringConstant
+  ([string, char-ttype]
+   "binary"
+   (let [cnf (s/conform
+              ::StringConstant
+              {::term ::expr,
+               ::asr-expr-head
+               {::expr-head ::StringConstant
+                ::string    string
+                ::Character char-ttype}})]
+     (if (s/invalid? cnf)
+       :invalid-string-constant
+       cnf)))
+  ([string]
+   "unary"
+   (StringConstant string (Character))))
+;; #+end_src
 
 ;;
 ;;

@@ -88,7 +88,7 @@
 (gen/sample (s/gen ::asr/nat) 15)
 ;; => (1 0 58 0 12
 ;;     0 3751 13 185743679156 4
-;;     9 758 2475515847708 30 474561204531338)
+;n;     9 758 2475515847708 30 474561204531338)
 
 
 ;;     _ _                   _
@@ -759,14 +759,12 @@
            ::asr/real-kind    4
            ::asr/dimensions   []}})))
   (testing "defaults"
-    (is (= (Integer)
-           (Integer 4 [])))
-    (is (= (Integer 4)
-           (Integer 4 []))))
+    (is (= (Integer)   (Integer 4 [])))
+    (is (= (Integer 4) (Integer 4 []))))
   (testing "order-independence of light sugar"
     (is (= (Integer- {:dimensions [], :kind 4})
            (Integer- {:kind 4, :dimensions []}))))
-  (testing "migrating from spec.clj"
+  (testing "migrating from specs.clj"
     (is (= (s/valid? ::asr/asr-ttype-head
                      {::asr/ttype-head ::asr/Integer
                       ::asr/integer-kind 42 ;; wrong kind
@@ -879,6 +877,14 @@
     (is (= (s/valid?  ::asr/FunctionType  ft)  true))))
 
 
+;; ================================================================
+;;  _______  ______  ____
+;; | ____\ \/ /  _ \|  _ \
+;; |  _|  \  /| |_) | |_) |
+;; | |___ /  \|  __/|  _ <
+;; |_____/_/\_\_|   |_| \_\
+
+
 ;;  _  _                   _ ___
 ;; | \| |__ _ _ __  ___ __| | __|_ ___ __ _ _
 ;; | .` / _` | '  \/ -_) _` | _|\ \ / '_ \ '_|
@@ -975,6 +981,22 @@
       )))
 
 
+;;  ___ _       _            ___             _            _
+;; / __| |_ _ _(_)_ _  __ _ / __|___ _ _  __| |_ __ _ _ _| |_
+;; \__ \  _| '_| | ' \/ _` | (__/ _ \ ' \(_-<  _/ _` | ' \  _|
+;; |___/\__|_| |_|_||_\__, |\___\___/_||_/__/\__\__,_|_||_\__|
+;;                    |___/
+
+
+(deftest StringConstant-test
+  (is (s/valid? ::asr/StringConstant (StringConstant "boofar")))
+  (is (s/valid? ::asr/expr           (StringConstant "boofar")))
+  (is (s/valid? ::asr/asr-term       (StringConstant "boofar")))
+
+  (is (not (s/valid? ::asr/StringConstant (StringConstant 42))))
+  )
+
+
 ;; __   __
 ;; \ \ / /_ _ _ _
 ;;  \ V / _` | '_|
@@ -982,20 +1004,20 @@
 
 
 (deftest Var-test
- (let [vlv {::asr/term ::asr/expr,
-            ::asr/asr-expr-head
-            {::asr/expr-head  ::asr/Var
-             ::asr/symtab-id  2
-             ::asr/varnym     'x
-             }}]
-   (is (= (Var-- 2 'x) vlv))
-   (is (= (Var   2  x) vlv))
-   (is (= (Var-- 2 'x) (s/conform ::asr/Var   vlv)))
-   (is (= (Var   2  x) (s/conform ::asr/Var   vlv)))
-   (is (= (s/conform ::asr/Var (Var-- 2 'x))  vlv))
-   (is (= (s/conform ::asr/Var (Var   2  x))  vlv))
-   (is (= (s/valid?  ::asr/asr-term vlv)      true))
-   (is (= (s/valid?  ::asr/Var      vlv)      true))))
+  (let [vlv {::asr/term ::asr/expr,
+             ::asr/asr-expr-head
+             {::asr/expr-head  ::asr/Var
+              ::asr/symtab-id  2
+              ::asr/varnym     'x
+              }}]
+    (is (= (Var-- 2 'x) vlv))
+    (is (= (Var   2  x) vlv))
+    (is (= (Var-- 2 'x) (s/conform ::asr/Var   vlv)))
+    (is (= (Var   2  x) (s/conform ::asr/Var   vlv)))
+    (is (= (s/conform ::asr/Var (Var-- 2 'x))  vlv))
+    (is (= (s/conform ::asr/Var (Var   2  x))  vlv))
+    (is (= (s/valid?  ::asr/asr-term vlv)      true))
+    (is (= (s/valid?  ::asr/Var      vlv)      true))))
 
 
 ;;  _              _         _ ___ _      ___
