@@ -1257,14 +1257,16 @@ via `s/def`.
   ;; types of the attributes:
   (SymbolTable
    prognym    dependencies    body))
-
+```
+```clojure
 (defmasrtype
   ExternalSymbol symbol
   (symtab-id
    nym          extern-symref
    modulenym    scope-nyms       orig-nym
    access))
-
+```
+```clojure
 (defmasrtype
   Variable symbol
   (symtab-id        varnym              dependencies
@@ -1272,13 +1274,15 @@ via `s/def`.
                     storage-type        ttype             abi
                     access              presence          value-attr
                     type-declaration))
-
+```
+```clojure
 (defmasrtype
   Module symbol
   (SymbolTable
    modulenym       dependencies    loaded-from-mod
    intrinsic))
-
+```
+```clojure
 (defmasrtype
   Function symbol
   (SymbolTable ;; not a symtab-id!
@@ -1299,19 +1303,23 @@ via `s/def`.
   Assignment stmt
   ;; types of the attributes:
   (lvalue    rvalue    overloaded))
-
+```
+```clojure
 (defmasrtype
   If stmt
   (test-expr body orelse))
-
+```
+```clojure
 (defmasrtype
   Print stmt
   (format? values separator? end?))
-
+```
+```clojure
 (defmasrtype
   Return stmt
   ())
-
+```
+```clojure
 (defmasrtype
   SubroutineCall stmt
   (nymref    orig-nymref    call-args    dt?))
@@ -1328,38 +1336,46 @@ via `s/def`.
   NamedExpr expr
   ;; types of the attributes:
   (target value ttype))
-
+```
+```clojure
 (defmasrtype
   FunctionCall expr
   (nymref    orig-nymref    call-args
              return-type    value?    dt?))
-
+```
+```clojure
 (defmasrtype
   LogicalBinOp expr
   (logical-left    logicalbinop    logical-right
                    Logical         value?))
-
+```
+```clojure
 (defmasrtype
   LogicalCompare expr
   (logical-left    logicalcmpop    logical-right
                    Logical         value?))
-
+```
+```clojure
 (defmasrtype
   LogicalConstant expr
   (bool    Logical))
-
+```
+```clojure
 (defmasrtype
   IntegerConstant expr
   (int    Integer))
-
+```
+```clojure
 (defmasrtype
   StringConstant expr
   (string ttype))
-
+```
+```clojure
 (defmasrtype
   StringOrd expr
   (arg ttype value?))
-
+```
+```clojure
 (defmasrtype
   Var expr
   (symtab-id    varnym))
@@ -1376,19 +1392,23 @@ via `s/def`.
   Complex ttype
   ;; types of the attributes:
   (complex-kind dimensions))
-
+```
+```clojure
 (defmasrtype
   Integer ttype
   (integer-kind dimensions))
-
+```
+```clojure
 (defmasrtype
   Logical ttype
   (logical-kind dimensions))
-
+```
+```clojure
 (defmasrtype
   Real ttype
   (real-kind dimensions))
-
+```
+```clojure
 (defmasrtype
   FunctionType ttype
   (param-types    return-var-type    abi
@@ -1988,7 +2008,7 @@ MASR currently supports the following:
 ## 29.4. INTEGER, REAL, COMPLEX, LOGICAL
 
 
-Defined via `defmasrtype` at top
+Defined via `defmasrtype` at top.
 
 
 ## 29.5. CHARACTER

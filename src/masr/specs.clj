@@ -1169,6 +1169,9 @@
   ;; types of the attributes:
   (SymbolTable
    prognym    dependencies    body))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   ExternalSymbol symbol
@@ -1176,6 +1179,9 @@
    nym          extern-symref
    modulenym    scope-nyms       orig-nym
    access))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Variable symbol
@@ -1184,12 +1190,18 @@
                     storage-type        ttype             abi
                     access              presence          value-attr
                     type-declaration))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Module symbol
   (SymbolTable
    modulenym       dependencies    loaded-from-mod
    intrinsic))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Function symbol
@@ -1213,18 +1225,30 @@
   Assignment stmt
   ;; types of the attributes:
   (lvalue    rvalue    overloaded))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   If stmt
   (test-expr body orelse))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Print stmt
   (format? values separator? end?))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Return stmt
   ())
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   SubroutineCall stmt
@@ -1244,37 +1268,61 @@
   NamedExpr expr
   ;; types of the attributes:
   (target value ttype))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   FunctionCall expr
   (nymref    orig-nymref    call-args
              return-type    value?    dt?))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   LogicalBinOp expr
   (logical-left    logicalbinop    logical-right
                    Logical         value?))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   LogicalCompare expr
   (logical-left    logicalcmpop    logical-right
                    Logical         value?))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   LogicalConstant expr
   (bool    Logical))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   IntegerConstant expr
   (int    Integer))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   StringConstant expr
   (string ttype))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   StringOrd expr
   (arg ttype value?))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Var expr
@@ -1294,18 +1342,30 @@
   Complex ttype
   ;; types of the attributes:
   (complex-kind dimensions))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Integer ttype
   (integer-kind dimensions))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Logical ttype
   (logical-kind dimensions))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Real ttype
   (real-kind dimensions))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   FunctionType ttype
@@ -1976,7 +2036,7 @@
 ;; ## INTEGER, REAL, COMPLEX, LOGICAL
 ;;
 ;;
-;; Defined via `defmasrtype` at top
+;; Defined via `defmasrtype` at top.
 
 
 ;;
