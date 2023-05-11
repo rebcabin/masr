@@ -80,8 +80,9 @@
   - [29.9. TODO The Rest of the `ttypes`](#299-todo-the-rest-of-the-ttypes)
     - [29.9.1. Original ASDL](#2991-original-asdl)
 - [30. PLACEHOLDERS](#30-placeholders)
-  - [30.1. SYMBOLIC VALUE](#301-symbolic-value)
-    - [30.1.1. Sugar](#3011-sugar)
+  - [30.1. UNKNOWN TUPLE](#301-unknown-tuple)
+  - [30.2. SYMBOLIC VALUE](#302-symbolic-value)
+    - [30.2.1. Sugar](#3021-sugar)
 - [31. EXPR](#31-expr)
   - [31.1. Prerequisite Types and Aliases](#311-prerequisite-types-and-aliases)
   - [31.2. NAMED EXPR](#312-named-expr)
@@ -132,15 +133,19 @@
     - [32.3.1. Original ASDL](#3231-original-asdl)
     - [32.3.2. Issues](#3232-issues)
     - [32.3.3. Heavy Sugar](#3233-heavy-sugar)
-  - [32.4. PRINT](#324-print)
+  - [32.4. WHILE LOOP](#324-while-loop)
     - [32.4.1. Original ASDL](#3241-original-asdl)
-    - [32.4.2. Heavy Sugar](#3242-heavy-sugar)
-  - [32.5. RETURN](#325-return)
-  - [32.6. SUBROUTINE CALL](#326-subroutine-call)
-    - [32.6.1. Original ASDL](#3261-original-asdl)
-    - [32.6.2. Examples](#3262-examples)
-    - [32.6.3. Heavy Sugar](#3263-heavy-sugar)
-    - [32.6.4. Legacy Sugar](#3264-legacy-sugar)
+    - [32.4.2. Example](#3242-example)
+    - [32.4.3. Heavy Sugar](#3243-heavy-sugar)
+  - [32.5. PRINT](#325-print)
+    - [32.5.1. Original ASDL](#3251-original-asdl)
+    - [32.5.2. Heavy Sugar](#3252-heavy-sugar)
+  - [32.6. RETURN](#326-return)
+  - [32.7. SUBROUTINE CALL](#327-subroutine-call)
+    - [32.7.1. Original ASDL](#3271-original-asdl)
+    - [32.7.2. Examples](#3272-examples)
+    - [32.7.3. Heavy Sugar](#3273-heavy-sugar)
+    - [32.7.4. Legacy Sugar](#3274-legacy-sugar)
 - [33. SYMBOL](#33-symbol)
   - [33.1. EXTERNAL SYMBOL](#331-external-symbol)
     - [33.1.1. Original ASDL](#3311-original-asdl)
@@ -1309,6 +1314,11 @@ via `s/def`.
   SubroutineCall stmt
   (nymref    orig-nymref    call-args    dt?))
 ```
+```clojure
+(defmasrtype
+  WhileLoop stmt
+  (unknown-tuple    test-expr    body))
+```
 
 ## 20.4. EXPR
 
@@ -2324,7 +2334,15 @@ This is a rich `ttype` that we spell out by hand.
 things we haven't fully defined yet
 
 
-## 30.1. SYMBOLIC VALUE
+## 30.1. UNKNOWN TUPLE
+
+
+```clojure
+(s/def ::unknown-tuple      empty?)
+```
+
+
+## 30.2. SYMBOLIC VALUE
 
 
 ```clojure
@@ -2332,7 +2350,7 @@ things we haven't fully defined yet
 ```
 
 
-### 30.1.1. Sugar
+### 30.2.1. Sugar
 
 
 ```clojure
@@ -2965,6 +2983,16 @@ TODO: there is ambiguity regarding identifier-sets and lists:
 (s/def ::test-expr          ::logical-expr)
 (s/def ::orelse             ::stmts)
 ```
+```clojure
+(defn fix-test-expr
+  [cnf]
+  (assoc-in cnf
+            [::asr-stmt-head ::test-expr]
+            (second (-> cnf
+                        ::asr-stmt-head
+                        ::test-expr
+                        ))))
+```
 
 
 ## 32.2. IF
@@ -3021,12 +3049,7 @@ TODO: there is ambiguity regarding identifier-sets and lists:
                ::orelse    orelse}})]
     (if (s/invalid? cnf)
       :invalid-if
-      (assoc-in cnf
-                [::asr-stmt-head ::test-expr]
-                (second (-> cnf
-                            ::asr-stmt-head
-                            ::test-expr
-                            ))))))
+      (fix-test-expr cnf))))
 ```
 
 
@@ -3071,10 +3094,62 @@ https://github.com/rebcabin/masr/issues/26
 ```
 
 
-## 32.4. PRINT
+## 32.4. WHILE LOOP
 
 
 ### 32.4.1. Original ASDL
+
+
+```c
+| WhileLoop(expr test, stmt* body)
+```
+
+
+### 32.4.2. Example
+
+
+```clojure
+#_
+(WhileLoop
+ ()
+ (NamedExpr
+  (Var 2 a)
+  (IntegerConstant 1 (Integer 4 []))
+  (Integer 4 [])
+  )
+ [(=
+   (Var 2 y)
+   (IntegerConstant 1 (Integer 4 []))
+   ()
+   )]
+ )
+```
+
+
+### 32.4.3. Heavy Sugar
+
+
+```clojure
+(defn WhileLoop
+  [unknown-tuple, test-expr, body]
+  (let [cnf (s/conform
+             ::WhileLoop
+             {::term ::stmt
+              ::asr-stmt-head
+              {::stmt-head ::WhileLoop
+               ::unknown-tuple unknown-tuple
+               ::test-expr     test-expr
+               ::body          body}})]
+    (if (s/invalid? cnf)
+      :invalid-while-loop
+      (fix-test-expr cnf))))
+```
+
+
+## 32.5. PRINT
+
+
+### 32.5.1. Original ASDL
 
 ```c
 | Print(expr? fmt, expr* values, expr? separator, expr? end)
@@ -3082,7 +3157,7 @@ https://github.com/rebcabin/masr/issues/26
 
 
 
-### 32.4.2. Heavy Sugar
+### 32.5.2. Heavy Sugar
 
 
 ```clojure
@@ -3103,7 +3178,7 @@ https://github.com/rebcabin/masr/issues/26
 ```
 
 
-## 32.5. RETURN
+## 32.6. RETURN
 
 
 ```clojure
@@ -3119,14 +3194,14 @@ https://github.com/rebcabin/masr/issues/26
 ```
 
 
-## 32.6. SUBROUTINE CALL
+## 32.7. SUBROUTINE CALL
 
 
 `SubroutineCall` is a special case because it
 abuses the word `symbol` to mean a `symbol-ref`.
 
 
-### 32.6.1. Original ASDL
+### 32.7.1. Original ASDL
 
 
 ```c
@@ -3155,7 +3230,7 @@ abuses the word `symbol` to mean a `symbol-ref`.
 ```
 
 
-### 32.6.2. Examples
+### 32.7.2. Examples
 
 
 We're in a position, here, to run some examples
@@ -3209,7 +3284,7 @@ These are all tested in `core_test.clj`:
 ```
 
 
-### 32.6.3. Heavy Sugar
+### 32.7.3. Heavy Sugar
 
 
 ```clojure
@@ -3231,7 +3306,7 @@ These are all tested in `core_test.clj`:
 ```
 
 
-### 32.6.4. Legacy Sugar
+### 32.7.4. Legacy Sugar
 
 
 ```clojure
