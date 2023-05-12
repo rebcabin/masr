@@ -2237,10 +2237,11 @@
        ;; (Integer- {:kind 4 :dimensions []}
        (defn ~lcp ;; like Integer-
          [{kind# :kind, dims# :dimensions}]
-         (let [cnd# {::ttype-head  ~tth,  ;; like ::Integer
-                     ~kdh          kind#, ;; like ::integer-kind
+         (let [cnd# {::ttype-head ~tth,  ;; like ::Integer
+                     ~kdh         kind#, ;; like ::integer-kind
                      ::dimensions (dimensions dims#)}]
-           (if (s/valid? cnd#) (ttype cnd#), ~ivh)))
+           (if (s/valid? ::asr-ttype-head cnd#)
+             (ttype cnd#), ~ivh)))
        ;; Define the HEAVY-SUGAR fns Integer, Real,
        ;; Complex Logical, Character that take
        ;; positional arguments, like
