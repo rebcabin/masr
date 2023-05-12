@@ -1870,7 +1870,7 @@
        (defn ~term [it#] ;; the sugar
          (let [cnd# {~trm ~tkw
                      ~tke it#}
-               result# (if (s/valid? art cnf#) cnd# ~tki)]
+               result# (if (s/valid? ~art cnd#) cnd#, ~tki)]
            result#))
        #_(symbolicate ~heads)
        (legacicate ~term ~heads)
@@ -1962,14 +1962,12 @@
    (cond
      (not (= ext-kw :external)) ::invalid-abi
      :else
-     (let [cnf (s/conform
-                ::abi
-                {::term         ::abi,
-                 ::abi-enum     the-enum,
-                 ::abi-external the-bool})]
-       (if (s/invalid? cnf)
-         ::invalid-abi
-         cnf)))))
+     (let [cnd {::term         ::abi,
+                ::abi-enum     the-enum,
+                ::abi-external the-bool}]
+       (if (s/valid? ::abi cnd)
+         cnd
+         ::invalid-abi)))))
 ;; #+end_src
 
 ;;
@@ -2184,13 +2182,11 @@
         ::integer-kind 4,
         ::dimensions   []}}"
   [it]
-  (let [cnf (s/conform
-             ::ttype
-             {::term ::ttype,
-              ::asr-ttype-head it})]
-    (if (s/invalid? cnf)
-      ::invalid-ttype
-      cnf)))
+  (let [cnd {::term ::ttype,
+             ::asr-ttype-head it}]
+    (if (s/valid? ::ttype cnd)
+      cnd
+      ::invalid-ttype)))
 ;; #+end_src
 
 ;;
