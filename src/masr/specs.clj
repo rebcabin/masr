@@ -1320,7 +1320,7 @@
 (defmasrtype
   LogicalBinOp expr
   (logical-left    logicalbinop    logical-right
-                   Logical         value?))
+                   Logical         logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1328,7 +1328,7 @@
 (defmasrtype
   LogicalCompare expr
   (logical-left    logicalcmpop    logical-right
-                   Logical         value?))
+                   Logical         logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2508,11 +2508,11 @@
 
 ;; #+begin_src clojure
 
-(s/def ::logical-expr? (.? ::logical-expr))
+(s/def ::logical-expr?  (.? ::logical-expr))
+(s/def ::logical-value?     ::logical-expr?)
 
-(s/def ::logical-value? ::logical-expr?)
-(s/def ::logical-left   ::logical-expr)
-(s/def ::logical-right  ::logical-expr)
+(s/def ::logical-left       ::logical-expr)
+(s/def ::logical-right      ::logical-expr)
 ;; #+end_src
 
 ;;
@@ -2993,12 +2993,12 @@
 (defn LogicalBinOp [left- lbo- right- tt- val?-]
   (let [cnd {::term ::expr,
              ::asr-expr-head
-             {::expr-head     ::LogicalBinOp
-              ::logical-left  left-
-              ::logicalbinop  lbo-
-              ::logical-right right-
-              ::Logical       tt-
-              ::value?        val?-
+             {::expr-head      ::LogicalBinOp
+              ::logical-left   left-
+              ::logicalbinop   lbo-
+              ::logical-right  right-
+              ::Logical        tt-
+              ::logical-value? val?-
               }}]
     (if (s/valid? ::LogicalBinOp cnd)
       cnd
@@ -3048,12 +3048,12 @@
 (defn LogicalCompare [l- cmp- r- tt- val?-]
   (let [cnd {::term ::expr,
              ::asr-expr-head
-             {::expr-head     ::LogicalCompare
-              ::logical-left  l-
-              ::logicalcmpop  cmp-
-              ::logical-right r-
-              ::Logical       tt-
-              ::value?        val?-}}]
+             {::expr-head      ::LogicalCompare
+              ::logical-left   l-
+              ::logicalcmpop   cmp-
+              ::logical-right  r-
+              ::Logical        tt-
+              ::logical-value? val?-}}]
     (if (s/valid? ::LogicalCompare cnd)
       cnd
       :invalid-logical-compare)))
