@@ -1868,10 +1868,9 @@
                 ;; like the predicate #(= ::intent (::term %))
                 (term-selector-spec ~tkw)))
        (defn ~term [it#] ;; the sugar
-         (let [cnf# (s/conform ~art
-                               {~trm ~tkw
-                                ~tke it#})
-               result# (if (s/invalid? cnf#) ~tki, cnf#)]
+         (let [cnd# {~trm ~tkw
+                     ~tke it#}
+               result# (if (s/valid? art cnf#) cnd# ~tki)]
            result#))
        #_(symbolicate ~heads)
        (legacicate ~term ~heads)
