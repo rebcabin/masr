@@ -246,7 +246,7 @@
 ;;
 ;; ```c
 ;; 31 symbol_table    = a clojure map
-;; 32 dimensions      = dimension*, see below
+;; 32 dimension*      = dimension*, see below
 ;; ```
 ;;
 ;;
@@ -443,8 +443,8 @@
 ;;
 ;; #+begin_src clojure
 
-#_(Integer- {:dimensions [], :kind 4})
-#_(Integer- {:kind 4, :dimensions []})
+#_(Integer- {:dimension* [], :kind 4})
+#_(Integer- {:kind 4, :dimension* []})
 ;; #+end_src
 
 ;;
@@ -976,7 +976,7 @@
    ::body         "stmt* body"
    ::call-args    "call_arg* args"
    ::dependencies "identifier* dependencies"
-   ::dimensions   "dimension* dims"
+   ::dimension*   "dimension* dims"
    ::dt?          "expr? dt"
    ::logical-kind "int kind"
    ::logicalbinop "logicalbinop"
@@ -1229,7 +1229,7 @@
   Function symbol
   (SymbolTable ;; not a symtab-id!
    function-name    function-signature    dependencies
-   params           body                  return-var?
+   param*           body                  return-var?
    access           deterministic         side-effect-free
    ))
 ;; #+end_src
@@ -1260,7 +1260,7 @@
 
 (defmasrtype
   Print stmt
-  (format? values separator? end?))
+  (format? value* separator? end?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1378,45 +1378,45 @@
 (defmasrtype
   Complex ttype
   ;; types of the attributes:
-  (complex-kind dimensions))
+  (complex-kind dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   Integer ttype
-  (integer-kind dimensions))
+  (integer-kind dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   Logical ttype
-  (logical-kind dimensions))
+  (logical-kind dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   Real ttype
-  (real-kind dimensions))
+  (real-kind dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   Character ttype
-  (character-kind len len-expr? dimensions))
+  (character-kind len len-expr? dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   FunctionType ttype
-  (param-types    return-var-type?    abi
+  (param-type*    return-var-type?    abi
                   deftype            bindc-name     elemental
                   pure               module         inline
-                  static             type-params    restrictions
+                  static             type-param*    restrictions
                   is-restriction))
 ;; #+end_src
 
@@ -1562,20 +1562,6 @@
 ;; in secret C++ code, is that we have either both
 ;; `start` and `length` or we just have nothing. MASR
 ;; makes exposes this secret explicitly.
-;;
-;;
-;; ## Pluralities
-;;
-;;
-;; Case with 1 index is disallowed.
-;; https://github.com/rebcabin/masr/issues/5
-;;
-;;
-;; #+begin_src clojure
-
-(def MIN-DIMENSION-COUNT 0)
-(def MAX-DIMENSION-COUNT 2)
-;; #+end_src
 
 ;;
 ;;
@@ -1589,6 +1575,9 @@
 ;;
 ;;
 ;; #+begin_src clojure
+
+(def MIN-DIMENSION-COUNT 0)
+(def MAX-DIMENSION-COUNT 2)
 
 (s/def ::dimension-content
   (s/and
@@ -1662,23 +1651,10 @@
 
 ;;
 ;;
-;; # DIMENSIONS
+;; # DIMENSION*
 ;;
 ;;
 
-
-;; `Dimensions` [sic] is not a term. Dimensions stands
-;; for `dimension*`, a plurality of dimension.
-;;
-;;
-;; ## Pluralities
-;;
-;;
-;; #+begin_src clojure
-
-(def MIN-NUMBER-OF-DIMENSIONS 0)
-(def MAX-NUMBER-OF-DIMENSIONS 9)
-;; #+end_src
 
 ;;
 ;; TODO Consider a regex-spec.
@@ -1686,10 +1662,8 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::dimensions
-  (s/coll-of (term-selector-spec ::dimension)
-             :min-count MIN-NUMBER-OF-DIMENSIONS,
-             :max-count MAX-NUMBER-OF-DIMENSIONS,
+(s/def ::dimension*
+  (s/coll-of (term-selector-spec ::dimension),
              :into []))
 ;; #+end_src
 
@@ -1700,7 +1674,7 @@
 ;;
 ;; #+begin_src clojure
 
-#_(gen/sample (s/gen ::dimensions) 3)
+#_(gen/sample (s/gen ::dimension*) 3)
 ;; #+end_src
 
 ;;
@@ -1710,20 +1684,20 @@
 ;;
 ;; #+begin_src clojure
 
-(defn dimensions
+(defn dimension*
   [candidate-contents]
   (if (or (not (coll? candidate-contents))
           (set? candidate-contents)
           (map? candidate-contents))
-    ::invalid-dimensions
+    ::invalid-dimension*
     ;; else
     (let [dims-coll (map dimension candidate-contents)]
-      (if (s/valid? ::dimensions dims-coll)
+      (if (s/valid? ::dimension* dims-coll)
         (let [dims-cont (map
                          ::dimension-content
                          dims-coll)]
           (map dimension dims-cont))
-        ::invalid-dimensions))))
+        ::invalid-dimension*))))
 ;; #+end_src
 
 
@@ -2009,11 +1983,6 @@
 ;; ## Prerequisite Types and Aliases
 ;;
 ;;
-;; #+begin_src clojure
-
-(def MIN-NUMBER-OF-TTYPES    0)
-(def MAX-NUMBER-OF-TTYPES 1024)
-;; #+end_src
 
 ;;
 ;; TODO: Consider a regex-spec.
@@ -2021,10 +1990,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::ttypes
-  (s/coll-of ::ttype
-             :min-count MIN-NUMBER-OF-TTYPES
-             :max-count MAX-NUMBER-OF-TTYPES))
+(s/def ::ttype* (s/coll-of ::ttype))
 ;; #+end_src
 
 ;;
@@ -2043,7 +2009,7 @@
 
 ;; #+begin_src clojure
 
-(s/def ::param-types      ::ttypes)
+(s/def ::param-type*      ::ttype*)
 (s/def ::return-var-type? ::ttype?)
 ;; #+end_src
 
@@ -2055,13 +2021,7 @@
 (s/def ::module           ::bool)
 (s/def ::inline           ::bool)
 (s/def ::static           ::bool)
-(s/def ::type-params      ::ttypes)
-;; #+end_src
-
-;; #+begin_src clojure
-
-(def MIN-NUMBER-OF-SYMBOLS   0)
-(def MAX-NUMBER-OF-SYMBOLS 128)
+(s/def ::type-param*      ::ttype*)
 ;; #+end_src
 
 ;;
@@ -2070,10 +2030,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::symbols
-  (s/coll-of ::symbol
-             :min-count MIN-NUMBER-OF-SYMBOLS
-             :max-count MAX-NUMBER-OF-SYMBOLS))
+(s/def ::symbols (s/coll-of ::symbol))
 ;; #+end_src
 
 ;;
@@ -2087,22 +2044,13 @@
 (s/def ::is-restriction  ::bool)
 ;; #+end_src
 
-;; #+begin_src clojure
-
-(def MIN-NUMBER-OF-EXPRS    0)
-(def MAX-NUMBER-OF-EXPRS 1024)
-;; #+end_src
-
 ;;
 ;; TODO: Consider a regex-spec.
 ;;
 ;;
 ;; #+begin_src clojure
 
-(s/def ::expr*
-  (s/coll-of ::expr
-             :min-count MIN-NUMBER-OF-EXPRS
-             :max-count MAX-NUMBER-OF-EXPRS))
+(s/def ::expr* (s/coll-of ::expr))
 ;; #+end_src
 
 ;;
@@ -2176,7 +2124,7 @@
 
       {::ttype-head   ::Integer,
        ::integer-kind 4,
-       ::dimensions   []}
+       ::dimension*   []}
 
   produce a conforming ttype like
 
@@ -2184,7 +2132,7 @@
        ::asr-ttype-head
        {::ttype-head   ::Integer,
         ::integer-kind 4,
-        ::dimensions   []}}"
+        ::dimension*   []}}"
   [it]
   (let [cnd {::term ::ttype,
              ::asr-ttype-head it}]
@@ -2205,7 +2153,7 @@
   etc., that take a full hash-map of arguments,
   e.g.,
 
-      (Integer- {:kind 4, :dimensions []})
+      (Integer- {:kind 4, :dimension* []})
 
   Define heavy-sugar functions like Integer, Real,
   etc., that take positional arguments, with defaults,
@@ -2226,7 +2174,7 @@
                          (str "invalid-" it "-ttype")))
         ;; ... like ::invalid-integer-ttype
         dfk 4  ;; default kind
-        dfd [] ;; default dimensions
+        dfd [] ;; default dimension*
         _   (case scp
               Integer true
               Real    true
@@ -2238,12 +2186,12 @@
        ;; Define the LIGHT-SUGAR fns Integer-,
        ;; Real-, Complex- Logical-, that require a
        ;; full map of arguments, like
-       ;; (Integer- {:kind 4 :dimensions []}
+       ;; (Integer- {:kind 4 :dimension* []}
        (defn ~lcp ;; like Integer-
-         [{kind# :kind, dims# :dimensions}]
+         [{kind# :kind, dims# :dimension*}]
          (let [cnd# {::ttype-head ~tth,  ;; like ::Integer
                      ~kdh         kind#, ;; like ::integer-kind
-                     ::dimensions (dimensions dims#)}]
+                     ::dimension* (dimension* dims#)}]
            (if (s/valid? ::asr-ttype-head cnd#)
              (ttype cnd#), ~ivh)))
        ;; Define the HEAVY-SUGAR fns Integer, Real,
@@ -2253,16 +2201,16 @@
        (defn ~scp ;; like Integer
          ;; arity-2
          ([kindx# dimsx#]
-          (~lcp {:kind kindx# :dimensions dimsx#}))
+          (~lcp {:kind kindx# :dimension* dimsx#}))
          ;; arity-1
          ([kindy#]
-          (~lcp {:kind kindy# :dimensions ~dfd}))
+          (~lcp {:kind kindy# :dimension* ~dfd}))
          ;; dfk = 4  is the default kinds for
          ;;          Integer, Real, Complex, Logical
-         ;; dfd = [] is the default dimensions
+         ;; dfd = [] is the default dimension*
          ;; arity-0
          ([]
-          (~lcp {:kind ~dfk   :dimensions ~dfd})))
+          (~lcp {:kind ~dfk   :dimension* ~dfd})))
        ;; TODO ? entity keywords for ::Integer, ::Real, etc.
        )))
 ;; #+end_src
@@ -2328,7 +2276,7 @@
                ::character-kind kind
                ::len            len
                ::len-expr?      len-expr?
-               ::dimensions     (dimensions dims)
+               ::dimension*     (dimension* dims)
                }}]
      (if (s/valid? ::Character cnd)
        cnd
@@ -2362,7 +2310,7 @@
 ;;
 ;;
 ;; ```c
-;; | FunctionType(ttype*  arg_types,       ;; rename param-types
+;; | FunctionType(ttype*  arg_types,       ;; rename param-type*
 ;;                ttype?  return_var_type,
 ;;                abi     abi,
 ;;                deftype deftype,
@@ -2372,7 +2320,7 @@
 ;;                bool    module,
 ;;                bool    inline,
 ;;                bool    static,
-;;                ttype*  type_params,
+;;                ttype*  type_param*,
 ;;                symbol* restrictions,
 ;;                bool    is_restriction)
 ;; ```
@@ -2385,16 +2333,16 @@
 ;; #+begin_src clojure
 
 (defn FunctionType
-  [param-types-     return-var-type?-  abi-
+  [param-type*-     return-var-type?-  abi-
    deftype-         bindc-name-        elemental-
    pure-            module-            inline-
-   static-          type-params-       restrictions-
+   static-          type-param*-       restrictions-
    is-restriction-  ]
   (let [cnd {::term ::ttype
              ::asr-ttype-head
              {::ttype-head        ::FunctionType
 
-              ::param-types       param-types-
+              ::param-type*       param-type*-
               ::return-var-type?  (if (empty? return-var-type?-)
                                    (), [return-var-type?-])
               ::abi               abi-
@@ -2409,7 +2357,7 @@
               ::inline            inline-
 
               ::static            static-
-              ::type-params       type-params-
+              ::type-param*       type-param*-
               ::restrictions      restrictions-
 
               ::is-restriction    is-restriction-}}]
@@ -2512,10 +2460,7 @@
 
 ;; #+begin_src clojure
 
-(s/def ::IntegerConstant?
-  (s/coll-of ::IntegerConstant
-             :min-count 0
-             :max-count 1))
+(s/def ::IntegerConstant? (.? ::IntegerConstant))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2563,9 +2508,7 @@
 
 ;; #+begin_src clojure
 
-(s/def ::logical-expr?  (s/coll-of ::logical-expr
-                                   :min-count 0
-                                   :max-count 1))
+(s/def ::logical-expr? (.? ::logical-expr))
 
 (s/def ::logical-value? ::logical-expr?)
 (s/def ::logical-left   ::logical-expr)
@@ -3124,13 +3067,17 @@
 ;;
 
 
+;;
+;;
 ;; ## Prerequisite Types and Aliases
 ;;
 ;;
+;; TODO: Consider a regex-spec.
+;;
+;;
 ;; #+begin_src clojure
 
-(def MIN-NUMBER-OF-STMTS    0)
-(def MAX-NUMBER-OF-STMTS 1024)
+(s/def ::stmts (s/coll-of ::stmt))
 ;; #+end_src
 
 ;;
@@ -3140,23 +3087,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::stmts
-  (s/coll-of ::stmt
-             :min-count MIN-NUMBER-OF-STMTS
-             :max-count MAX-NUMBER-OF-STMTS))
-;; #+end_src
-
-;;
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
-;; #+begin_src clojure
-
-(s/def ::stmt?
-  (s/coll-of ::stmt
-             :min-count 0
-             :max-count 1))
+(s/def ::stmt? (.? ::stmt))
 ;; #+end_src
 
 ;;
@@ -3174,16 +3105,13 @@
 
 ;; #+begin_src clojure
 
-(s/def ::symbol-ref?
-  (s/coll-of ::symbol-ref
-             :min-count 0
-             :max-count 1))
+(s/def ::symbol-ref? (.? ::symbol-ref))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (s/def ::format?    ::expr?)
-(s/def ::values     ::expr*)
+(s/def ::value*     ::expr*)
 (s/def ::separator? ::expr?)
 (s/def ::end?       ::expr?)
 ;; #+end_src
@@ -3231,7 +3159,7 @@
 
 ;; #+begin_src clojure
 
-(s/def ::params             ::expr*) ;; renamed from args
+(s/def ::param*             ::expr*) ;; renamed from args
 (s/def ::body               ::stmts)
 (s/def ::return-var?        ::expr?)
 ;; #+end_src
@@ -3436,12 +3364,12 @@
 ;;
 ;; #+begin_src clojure
 
-(defn Print [fmt, values, separator, end]
+(defn Print [fmt, value*, separator, end]
   (let [cnd {::term ::stmt,
              ::asr-stmt-head
              {::stmt-head ::Print
               ::format?    fmt
-              ::values     values
+              ::value*     value*
               ::separator? separator
               ::end?       end}
              }]
@@ -3495,17 +3423,7 @@
 ;;
 ;; #+begin_src clojure
 
-(def MIN-NUMBER-OF-CALL-ARGS   0)
-(def MAX-NUMBER-OF-CALL-ARGS 128)
-
-;; TODO: check that `call-args` with empty `expr`s
-;; in them only occur at the ends of argument lists,
-;; the only place where optional arguments obtain.
-
-(s/def ::call-args
-  (s/coll-of ::call-arg
-             :min-count MIN-NUMBER-OF-CALL-ARGS
-             :max-count MAX-NUMBER-OF-CALL-ARGS))
+(s/def ::call-args (s/coll-of ::call-arg))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -4002,7 +3920,7 @@
 
 (defn Function-- [symtab,
                   fnnym,   fnsig,  deps,
-                  params-, body-,  retvar,
+                  param*-, body-,  retvar,
                   access-, determ, sefree]
   (let [cnd {::term ::symbol
              ::asr-symbol-head
@@ -4014,7 +3932,7 @@
               ::function-signature  fnsig
               ::dependencies        deps
 
-              ::params              params-
+              ::param*              param*-
               ::body                body-
               ::return-var?         (if (empty? retvar)
                                       () [retvar])
@@ -4039,11 +3957,11 @@
   "Quote the fnnym and the deps."
   [symtab,
    fnnym,   fnsig,  deps,
-   params-, body-,  retvar,
+   param*-, body-,  retvar,
    access-, determ, sefree]
   `(Function-- ~symtab,
                '~fnnym,  ~fnsig,  (for [d# '~deps] d#),
-               ~params-, ~body-,  ~retvar,
+               ~param*-, ~body-,  ~retvar,
                ~access-, ~determ, ~sefree))
 ;; #+end_src
 
@@ -4130,21 +4048,13 @@
 ;; ## Pluralities
 ;;
 ;;
-;; #+begin_src clojure
-
-(def MIN-NODE-COUNT    0)
-(def MAX-NODE-COUNT 4096)
-;; #+end_src
 
 ;;
 ;; TODO: Consider a regex-spec.
 ;;
 ;; #+begin_src clojure
 
-(s/def ::nodes
-  (s/and (s/coll-of ::node
-                    :min-count MIN-NODE-COUNT,
-                    :max-count MAX-NODE-COUNT)))
+(s/def ::nodes (s/coll-of ::node))
 ;; #+end_src
 
 ;;

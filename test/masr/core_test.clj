@@ -217,43 +217,43 @@
 
 
 (defn vds? [term]
-  (s/valid? ::asr/dimensions term))
+  (s/valid? ::asr/dimension* term))
 
 
 (deftest dimensions-test
   (is (s/valid?
-       ::asr/dimensions
+       ::asr/dimension*
        [#:masr.specs{:term :masr.specs/dimension,
                      :dimension-content [1 60]}
         #:masr.specs{:term :masr.specs/dimension,
                      :dimension-content ()}]))
   (let [dims [(dimension [1 60]), (dimension [])]]
-    (is (s/valid? ::asr/dimensions dims))
-    (is (= dims (s/conform ::asr/dimensions dims)))
-    (is (= dims (dimensions [[1 60] []])))
-    (is (= dims (s/conform ::asr/dimensions
-                           (dimensions [[1 60] []])))))
-  (is (vds? (dimensions ['(1 60) '()])))
-  (is (vds? (dimensions ['(1 60)])))
-  (is (vds? (dimensions ['(1 60) []])))
-  (is (vds? (dimensions [])))
-  (is (vds? (dimensions '((1 60) ()))))
-  (is (vds? (dimensions '((1 60)))))
-  (is (vds? (dimensions '((1 60) []))))
-  (is (vds? (dimensions ())))
-  (is (vds? (dimensions [[1 60] []])))
-  (is (vds? (dimensions [[1 60]  [42 43]])))
-  (is (vds? (dimensions [[1 60] '(42 43)])))
-  (is (vds? (dimensions ())))
-  (is (not (vds? (dimensions #{'(1 60) []}))))
-  (is (not (vds? (dimensions #{}))))
-  (is (not (vds? (dimensions {}))))
-  (is (not (vds? (dimensions {2 3}))))
-  (is (not (vds? (dimensions '("f")))))
-  (is (not (vds? (dimensions '[("f")])))))
+    (is (s/valid? ::asr/dimension* dims))
+    (is (= dims (s/conform ::asr/dimension* dims)))
+    (is (= dims (dimension* [[1 60] []])))
+    (is (= dims (s/conform ::asr/dimension*
+                           (dimension* [[1 60] []])))))
+  (is (vds? (dimension* ['(1 60) '()])))
+  (is (vds? (dimension* ['(1 60)])))
+  (is (vds? (dimension* ['(1 60) []])))
+  (is (vds? (dimension* [])))
+  (is (vds? (dimension* '((1 60) ()))))
+  (is (vds? (dimension* '((1 60)))))
+  (is (vds? (dimension* '((1 60) []))))
+  (is (vds? (dimension* ())))
+  (is (vds? (dimension* [[1 60] []])))
+  (is (vds? (dimension* [[1 60]  [42 43]])))
+  (is (vds? (dimension* [[1 60] '(42 43)])))
+  (is (vds? (dimension* ())))
+  (is (not (vds? (dimension* #{'(1 60) []}))))
+  (is (not (vds? (dimension* #{}))))
+  (is (not (vds? (dimension* {}))))
+  (is (not (vds? (dimension* {2 3}))))
+  (is (not (vds? (dimension* '("f")))))
+  (is (not (vds? (dimension* '[("f")])))))
 
 #_
-(gen/sample (s/gen ::asr/dimensions) 5)
+(gen/sample (s/gen ::asr/dimension*) 5)
 ;; => ([#:masr.specs{:term :masr.specs/dimension, :dimension-content (3)}
 ;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (11 0)}
 ;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1 6674)}
@@ -740,8 +740,8 @@
     (is (vt? ::asr/Character (Character 1 1 [[6 60]])))
     (is (vt? ::asr/Character (Character)))
 
-    (is (vt? ::asr/Integer (Integer- {:dimensions [], :kind 4})))
-    (is (vt? ::asr/Integer (Integer- {:kind 4, :dimensions []})))
+    (is (vt? ::asr/Integer (Integer- {:dimension* [], :kind 4})))
+    (is (vt? ::asr/Integer (Integer- {:kind 4, :dimension* []})))
     (testing "non-conformance"
       (is (not (vt? ::asr/Logical (Logical 4 ['fubar]))))
       (is (not (vt? ::asr/Logical (Logical 8))))
@@ -753,48 +753,48 @@
           ::asr/asr-ttype-head
           {::asr/ttype-head   ::asr/Integer,
            ::asr/integer-kind 4
-           ::asr/dimensions   []}}))
+           ::asr/dimension*   []}}))
     (is (vt? ::asr/Real
          {::asr/term ::asr/ttype,
           ::asr/asr-ttype-head
           {::asr/ttype-head   ::asr/Real,
            ::asr/real-kind    4
-           ::asr/dimensions   []}})))
+           ::asr/dimension*   []}})))
   (testing "defaults"
     (is (= (Integer)   (Integer 4 [])))
     (is (= (Integer 4) (Integer 4 []))))
   (testing "order-independence of light sugar"
-    (is (= (Integer- {:dimensions [], :kind 4})
-           (Integer- {:kind 4, :dimensions []}))))
+    (is (= (Integer- {:dimension* [], :kind 4})
+           (Integer- {:kind 4, :dimension* []}))))
   (testing "migrating from specs.clj"
     (is (= (s/valid? ::asr/asr-ttype-head
                      {::asr/ttype-head ::asr/Integer
                       ::asr/integer-kind 42 ;; wrong kind
-                      ::asr/dimensions []})               false))
+                      ::asr/dimension* []})               false))
 
     (is (= (s/valid? ::asr/asr-ttype-head
                      {::asr/ttype-head ::asr/Integer
                       ::asr/integer-kind 4
-                      ::asr/dimensions []})               true))
+                      ::asr/dimension* []})               true))
 
     (is (= (s/valid? ::asr/asr-ttype-head
                      {::asr/ttype-head ::asr/Integer
                       ::asr/integer-kind 4
-                      ::asr/dimensions
-                      (dimensions [[6 60] [1 42]])})      true))
+                      ::asr/dimension*
+                      (dimension* [[6 60] [1 42]])})      true))
 
     ;; Check a conformed one.
     (let [a {::asr/ttype-head   ::asr/Integer
              ::asr/integer-kind 4
-             ::asr/dimensions
-             (dimensions [[6 60] [1 42]])}]
+             ::asr/dimension*
+             (dimension* [[6 60] [1 42]])}]
       (is (= (s/conform ::asr/asr-ttype-head a)           a)))
 
     ;; Check a Real instead of an Integer.
     (let [a {::asr/ttype-head   ::asr/Real
              ::asr/real-kind    8
-             ::asr/dimensions
-             (dimensions [[6 60] [1 42]])}]
+             ::asr/dimension*
+             (dimension* [[6 60] [1 42]])}]
       (is (= (s/conform ::asr/asr-ttype-head a)           a)))
 
     (is (= (s/valid? ::asr/asr-term
@@ -802,14 +802,14 @@
                       ::asr/asr-ttype-head
                       {::asr/ttype-head ::asr/Real,
                        ::asr/real-kind  4
-                       ::asr/dimensions []}})               true))
+                       ::asr/dimension* []}})               true))
 
     (is (= (s/valid? ::asr/asr-term
                      {::asr/term ::asr/ttype,
                       ::asr/asr-ttype-head
                       {::asr/ttype-head ::asr/Real,
                        ::asr/real-kind  2 ;; wrong kind
-                       ::asr/dimensions []}})               false)))
+                       ::asr/dimension* []}})               false)))
   (testing "sugar"
     (is (= (s/valid? ::asr/asr-ttype-head
                      (::asr/asr-ttype-head (Integer 4)))    true))
@@ -837,9 +837,9 @@
     (is (= (s/valid? ::asr/ttype    (Logical 8 []))               false))
 
     (is (= (s/valid? ::asr/ttype
-                     (Integer- {:dimensions [], :kind 4}))  true))
+                     (Integer- {:dimension* [], :kind 4}))  true))
     (is (= (s/valid? ::asr/ttype
-                     (Integer- {:kind 4, :dimensions []}))  true))
+                     (Integer- {:kind 4, :dimension* []}))  true))
     ))
 
 
