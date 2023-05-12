@@ -2099,7 +2099,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::exprs
+(s/def ::expr*
   (s/coll-of ::expr
              :min-count MIN-NUMBER-OF-EXPRS
              :max-count MAX-NUMBER-OF-EXPRS))
@@ -3183,7 +3183,7 @@
 ;; #+begin_src clojure
 
 (s/def ::format?    ::expr?)
-(s/def ::values     ::exprs)
+(s/def ::values     ::expr*)
 (s/def ::separator? ::expr?)
 (s/def ::end?       ::expr?)
 ;; #+end_src
@@ -3231,7 +3231,7 @@
 
 ;; #+begin_src clojure
 
-(s/def ::params             ::exprs) ;; renamed from args
+(s/def ::params             ::expr*) ;; renamed from args
 (s/def ::body               ::stmts)
 (s/def ::return-var?        ::expr?)
 ;; #+end_src
