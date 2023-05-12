@@ -2318,19 +2318,17 @@
 (defn Character
   ([kind, len, len-expr?, dims]
    ;; 4-ary
-   (let [cnf (s/conform
-              ::Character
-              {::term ::ttype
-               ::asr-ttype-head
-               {::ttype-head ::Character
-                ::character-kind kind
-                ::len            len
-                ::len-expr?      len-expr?
-                ::dimensions     (dimensions dims)
-                }})]
-     (if (s/invalid? cnf)
-       :invalid-character
-       cnf)))
+   (let [cnd {::term ::ttype
+              ::asr-ttype-head
+              {::ttype-head ::Character
+               ::character-kind kind
+               ::len            len
+               ::len-expr?      len-expr?
+               ::dimensions     (dimensions dims)
+               }}]
+     (if (s/valid? ::Character cnd)
+       cnd
+       :invalid-character)))
   ([kind, len, dims]
    ;; trinary
    (Character kind len () dims))
