@@ -1310,6 +1310,14 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  IntegerBinOp expr
+  (integer-left    integerbinop    integer-right
+                   Integer         value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   LogicalBinOp expr
   (logical-left    logicalbinop    logical-right
                    Logical         value?))
@@ -1405,7 +1413,7 @@
 
 (defmasrtype
   FunctionType ttype
-  (param-types    return-var-type    abi
+  (param-types    return-var-type?    abi
                   deftype            bindc-name     elemental
                   pure               module         inline
                   static             type-params    restrictions
@@ -2025,27 +2033,29 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::ttype?
-  (s/coll-of ::ttype
-             :min-count 0
-             :max-count 1))
+(defmacro .? [type]
+  `(s/coll-of ~type
+              :min-count 0
+              :max-count 1))
+
+(s/def ::ttype? (.? ::ttype))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::param-types     ::ttypes)
-(s/def ::return-var-type ::ttype?)
+(s/def ::param-types      ::ttypes)
+(s/def ::return-var-type? ::ttype?)
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::bindc-name      (s/nilable string?))
-(s/def ::elemental       ::bool)
-(s/def ::pure            ::bool)
-(s/def ::module          ::bool)
-(s/def ::inline          ::bool)
-(s/def ::static          ::bool)
-(s/def ::type-params     ::ttypes)
+(s/def ::bindc-name       (s/nilable string?))
+(s/def ::elemental        ::bool)
+(s/def ::pure             ::bool)
+(s/def ::module           ::bool)
+(s/def ::inline           ::bool)
+(s/def ::static           ::bool)
+(s/def ::type-params      ::ttypes)
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2072,10 +2082,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::symbol?
-  (s/coll-of ::symbol
-             :min-count 0,
-             :max-count 1))
+(s/def ::symbol?     (.? ::symbol))
 (s/def ::restrictions    ::symbols)
 (s/def ::is-restriction  ::bool)
 ;; #+end_src
@@ -2104,10 +2111,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::expr?
-  (s/coll-of ::expr
-             :min-count 0
-             :max-count 1))
+(s/def ::expr? (.? ::expr))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2381,35 +2385,35 @@
 ;; #+begin_src clojure
 
 (defn FunctionType
-  [param-types-     return-var-type-  abi-
-   deftype-         bindc-name-       elemental-
-   pure-            module-           inline-
-   static-          type-params-      restrictions-
+  [param-types-     return-var-type?-  abi-
+   deftype-         bindc-name-        elemental-
+   pure-            module-            inline-
+   static-          type-params-       restrictions-
    is-restriction-  ]
   (let [cnd {::term ::ttype
              ::asr-ttype-head
-             {::ttype-head       ::FunctionType
+             {::ttype-head        ::FunctionType
 
-              ::param-types      param-types-
-              ::return-var-type  (if (empty? return-var-type-)
-                                   (), [return-var-type-])
-              ::abi              abi-
+              ::param-types       param-types-
+              ::return-var-type?  (if (empty? return-var-type?-)
+                                   (), [return-var-type?-])
+              ::abi               abi-
 
-              ::deftype          deftype-
-              ::bindc-name       (if (empty? bindc-name-)
-                                   nil, bindc-name-)
-              ::elemental        elemental-
+              ::deftype           deftype-
+              ::bindc-name        (if (empty? bindc-name-)
+                                    nil, bindc-name-)
+              ::elemental         elemental-
 
-              ::pure             pure-
-              ::module           module-
-              ::inline           inline-
+              ::pure              pure-
+              ::module            module-
+              ::inline            inline-
 
-              ::static           static-
-              ::type-params      type-params-
-              ::restrictions     restrictions-
+              ::static            static-
+              ::type-params       type-params-
+              ::restrictions      restrictions-
 
-              ::is-restriction   is-restriction-}}]
-    (if (s/valid? ::FunctionType cnd)
+              ::is-restriction    is-restriction-}}]
+    (if (s/valid? ::FunctionType  cnd)
       cnd
       :invalid-function-type)))
 ;; #+end_src
@@ -2549,6 +2553,7 @@
 (s/def ::logical-expr
   (s/or :logical-constant   ::LogicalConstant
         :logical-compare    ::LogicalCompare
+        ;; :integer-compare    ::IntegerCompare
         :logical-binop      ::LogicalBinOp
         :named-expr         ::NamedExpr ;; TODO check return type!
         :var                ::Var       ;; TODO check return type!
@@ -2558,8 +2563,35 @@
 
 ;; #+begin_src clojure
 
-(s/def ::logical-left  ::logical-expr)
-(s/def ::logical-right ::logical-expr)
+(s/def ::logical-expr?  (s/coll-of ::logical-expr
+                                   :min-count 0
+                                   :max-count 1))
+
+(s/def ::logical-value? ::logical-expr?)
+(s/def ::logical-left   ::logical-expr)
+(s/def ::logical-right  ::logical-expr)
+;; #+end_src
+
+;;
+;;
+;; TODO: check that the types of the exprs are `::Integer`!
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::integer-expr
+  (s/or :integer-constant   ::IntegerConstant
+        :integer-binop      ::IntegerBinOp
+        :named-expr         ::NamedExpr ;; TODO check return type!
+        :var                ::Var       ;; TODO check return type!
+        ;; TODO: integer-compare, etc.
+        ))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::integer-left  ::integer-expr)
+(s/def ::integer-right ::integer-expr)
 ;; #+end_src
 
 

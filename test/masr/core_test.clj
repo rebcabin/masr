@@ -3655,7 +3655,6 @@
 
     (testing "whole translation unit for dde511e"
       (is (s/valid? ::asr/unit (long-form-asr "-expr1-dde511e"))))
-
     #_
     (testing "whole translation unit for 03055c0"
       (is (s/valid? ::asr/unit (long-form-asr "-expr_01-03055c0"))))
