@@ -1070,6 +1070,18 @@
 
 
 (deftest LogicalBinOp-test
+
+  (is (s/valid? ::asr/LogicalBinOp
+                (LogicalBinOp
+                 (Var 2 a)
+                 And
+                 (LogicalCompare
+                  (Var 2 b)
+                  Eq
+                  (Var 2 b)
+                  (Logical 4 []) ())
+                 (Logical 4 []) ())))
+
   (is (s/valid? ::asr/LogicalBinOp
                 (LogicalBinOp
                  (Var 2 a)

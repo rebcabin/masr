@@ -1642,15 +1642,13 @@
   (if (or (not (coll? candidate-contents))
           (set? candidate-contents)
           (map? candidate-contents))
-    ::invalid-dimension  ;; return this,
+    ::invalid-dimension ;; return this,
     ;; else
-    (let [cnf (s/conform
-               ::dimension
-               {::term ::dimension,
-                ::dimension-content candidate-contents})]
-      (if (s/invalid? cnf)
-        ::invalid-dimension
-        cnf))))
+    (let [cnd {::term ::dimension,
+               ::dimension-content candidate-contents}]
+      (if (s/valid? dimension cnd)
+        cnd
+        ::invalid-dimension))))
 ;; #+end_src
 
 
@@ -1711,14 +1709,13 @@
           (map? candidate-contents))
     ::invalid-dimensions
     ;; else
-    (let [dims-coll (map dimension candidate-contents)
-          dims-conf (s/conform ::dimensions dims-coll)]
-      (if (s/invalid? dims-conf)
-        ::invalid-dimensions
+    (let [dims-coll (map dimension candidate-contents)]
+      (if (s/valid? ::dimensions dims-coll)
         (let [dims-cont (map
                          ::dimension-content
-                         dims-conf)]
-          (map dimension dims-cont))))))
+                         dims-coll)]
+          (map dimension dims-cont))
+        ::invalid-dimensions))))
 ;; #+end_src
 
 
@@ -1751,10 +1748,9 @@
 ;; #+begin_src clojure
 
 (defn symtab-id [it]
-  (let [cnf (s/conform ::symtab-id it)]
-    (if (s/invalid? cnf)
-      ::invalid-symtab-id
-      cnf)))
+  (if (s/valid? ::symtab-id it)
+    it
+    ::invalid-symtab-id))
 ;; #+end_src
 
 
@@ -2560,8 +2556,20 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::logical-left  ::expr)
-(s/def ::logical-right ::expr)
+(s/def ::logical-expr
+  (s/or :logical-constant   ::LogicalConstant
+        :logical-compare    ::LogicalCompare
+        :logical-binop      ::LogicalBinOp
+        :named-expr         ::NamedExpr ;; TODO check return type!
+        :var                ::Var       ;; TODO check return type!
+        ;; TODO: integer-compare, etc.
+        ))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::logical-left  ::logical-expr)
+(s/def ::logical-right ::logical-expr)
 ;; #+end_src
 
 
@@ -3034,20 +3042,18 @@
 ;; #+begin_src clojure
 
 (defn LogicalBinOp [left- lbo- right- tt- val?-]
-  (let [cnf (s/conform
-             ::LogicalBinOp
-             {::term ::expr,
-              ::asr-expr-head
-              {::expr-head     ::LogicalBinOp
-               ::logical-left  left-
-               ::logicalbinop  lbo-
-               ::logical-right right-
-               ::Logical       tt-
-               ::value?        val?-
-               }})]
-    (if (s/invalid? cnf)
-      :invalid-logical-bin-op
-      cnf)))
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head     ::LogicalBinOp
+              ::logical-left  left-
+              ::logicalbinop  lbo-
+              ::logical-right right-
+              ::Logical       tt-
+              ::value?        val?-
+              }}]
+    (if (s/valid? ::LogicalBinOp cnd)
+      cnd
+      :invalid-logical-bin-op)))
 ;; #+end_src
 
 
@@ -3091,19 +3097,17 @@
 ;; #+begin_src clojure
 
 (defn LogicalCompare [l- cmp- r- tt- val?-]
-  (let [cnf (s/conform
-             ::LogicalCompare
-             {::term ::expr,
-              ::asr-expr-head
-              {::expr-head     ::LogicalCompare
-               ::logical-left  l-
-               ::logicalcmpop  cmp-
-               ::logical-right r-
-               ::Logical       tt-
-               ::value?        val?-}})]
-    (if (s/invalid? cnf)
-      :invalid-logical-compare
-      cnf)))
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head     ::LogicalCompare
+              ::logical-left  l-
+              ::logicalcmpop  cmp-
+              ::logical-right r-
+              ::Logical       tt-
+              ::value?        val?-}}]
+    (if (s/valid? ::LogicalCompare cnd)
+      cnd
+      :invalid-logical-compare)))
 ;; #+end_src
 
 
@@ -3234,13 +3238,6 @@
 ;; #+begin_src clojure
 
 (s/def ::prognym            ::identifier)
-(s/def ::logical-expr
-  (s/or :logical-constant   ::LogicalConstant
-        :logical-compare    ::LogicalCompare
-        :logical-binop      ::LogicalBinOp
-        :named-expr         ::NamedExpr ;; TODO check return type!
-        ;; TODO: integer-compare, etc.
-        ))
 (s/def ::test-expr          ::logical-expr)
 (s/def ::orelse             ::stmts)
 ;; #+end_src
@@ -3356,17 +3353,15 @@
 ;; #+begin_src clojure
 
 (defn Assignment-- [lhs, rhs, unk]
-  (let [cnf (s/conform
-             ::Assignment
-             {::term ::stmt,
-              ::asr-stmt-head
-              {::stmt-head   ::Assignment
-               ::lvalue      lhs
-               ::rvalue      rhs
-               ::overloaded  unk}})]
-    (if (s/invalid? cnf)
-      :invalid-assignment
-      cnf)))
+  (let [cnd {::term ::stmt,
+             ::asr-stmt-head
+             {::stmt-head   ::Assignment
+              ::lvalue      lhs
+              ::rvalue      rhs
+              ::overloaded  unk}}]
+    (if (s/valid? ::Assignment cnd)
+      cnd
+      :invalid-assignment)))
 ;; #+end_src
 
 
@@ -3560,11 +3555,11 @@
 #_(not (s/valid? ::call-arg  (legacy [])))
   ;; an empty ::expr?
 #_(s/valid? ::call-arg  (legacy [()]))
-  ;; various ways of ::expr? with one ::expr,
-  ;; a natural expression of ::expr? without
-  ;; s/or and its complications, and our
-  ;; normal way of expressing ? pluralities,
-  ;; via one extra level of nesting.
+  ;; various ways of ::expr? with one ::expr, a
+  ;; natural expression of ::expr? without s/or and
+  ;; its complications with regard to s/conform, and
+  ;; our normal way of expressing ? pluralities, via
+  ;; one extra level of nesting
 #_(s/valid? ::call-arg  (legacy (((Var 42 x)))))
 #_(s/valid? ::call-arg  (legacy [((Var 42 x))]))
 #_(s/valid? ::call-arg  (legacy [[(Var 42 x)]]))
@@ -4036,30 +4031,28 @@
                   fnnym,   fnsig,  deps,
                   params-, body-,  retvar,
                   access-, determ, sefree]
-  (let [cnf (s/conform
-             ::Function
-             {::term ::symbol
-              ::asr-symbol-head
-              {::symbol-head         ::Function
+  (let [cnd {::term ::symbol
+             ::asr-symbol-head
+             {::symbol-head         ::Function
 
-               ::SymbolTable         symtab
+              ::SymbolTable         symtab
 
-               ::function-name       fnnym
-               ::function-signature  fnsig
-               ::dependencies        deps
+              ::function-name       fnnym
+              ::function-signature  fnsig
+              ::dependencies        deps
 
-               ::params              params-
-               ::body                body-
-               ::return-var?         (if (empty? retvar)
-                                       () [retvar])
+              ::params              params-
+              ::body                body-
+              ::return-var?         (if (empty? retvar)
+                                      () [retvar])
 
-               ::access              access-
-               ::deterministic       determ
-               ::side-effect-free    sefree
-               }})]
-    (if (s/invalid? cnf)
-      :invalid-function
-      cnf)))
+              ::access              access-
+              ::deterministic       determ
+              ::side-effect-free    sefree
+              }}]
+    (if (s/valid? ::Function cnd)
+      cnd
+      :invalid-function)))
 ;; #+end_src
 
 ;;
@@ -4150,7 +4143,10 @@
 ;;
 ;;
 ;; `s/conform` slips in the tag keys in from `s/or`,
-;; requiring a step in heavy sugar to remove them.
+;; requiring a step in heavy sugar for node to
+;; remove them.
+;;
+;; TODO: Won't work recursively!
 ;;
 ;; #+begin_src clojure
 
