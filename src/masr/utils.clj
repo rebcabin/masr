@@ -1,4 +1,6 @@
-(ns masr.utils)
+(ns masr.utils
+  (:require [clojure.pprint  :refer [pprint]]
+            [clojure.java.io :as     io]))
 
 
 (defn warnings-banner []
@@ -22,3 +24,9 @@
         (catch Exception e#
           (with-out-str
             (println (.getMessage e#))))))
+
+
+(defn pprint-file [filenamestr, obj]
+  (with-open [w (io/writer filenamestr)]
+    (binding [*out* w]
+      (pprint obj))))

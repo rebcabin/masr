@@ -11,7 +11,8 @@
 
   (:require [masr.utils             :refer [warnings-banner
                                             dosafely
-                                            plnecho]]
+                                            plnecho
+                                            pprint-file]]
             [masr.simplespecs       :refer [nat
                                             identifier
                                             identifier-set
@@ -698,7 +699,8 @@
 (defn vt? [intermediate ttype]
   (and (s/valid? ::asr/asr-term ttype)
        (s/valid? ::asr/ttype    ttype)
-       (s/valid? intermediate   ttype)))
+       (s/valid? intermediate   ttype)
+       (= ttype (s/conform intermediate ttype))))
 
 
 (deftest ttype-test
@@ -1450,7 +1452,7 @@
            ::asr/ttype            (Integer 4 [])
 
            ::asr/type-declaration nil
-           ::asr/dependencies     ()
+           ::asr/dependencies     #{}
            ::asr/intent           Local
 
            ::asr/symbolic-value   () ;; TODO sugar
@@ -1460,8 +1462,7 @@
            ::asr/abi              Source
            ::asr/access           Public
            ::asr/presence         Required
-           ::asr/value-attr       false
-           }
+           ::asr/value-attr       false}
           ;; nested
           a-var {::asr/term ::asr/symbol
                  ::asr/asr-symbol-head a-var-head}
@@ -1471,6 +1472,7 @@
           avl-2  (Variable- :varnym     'x
                             :symtab-id  2
                             :ttype      (Integer 42))]
+      (is (= a-var       (s/conform ::asr/asr-term a-var)))
       (is (= a-var-light (s/conform ::asr/asr-term a-var)))
       (is (= a-var-light (s/conform ::asr/Variable a-var)))
 
