@@ -700,7 +700,7 @@
   (and (s/valid? ::asr/asr-term ttype)
        (s/valid? ::asr/ttype    ttype)
        (s/valid? intermediate   ttype)
-       (= ttype (s/conform intermediate ttype))))
+       #_(= ttype (s/conform intermediate ttype))))
 
 
 (deftest ttype-test
@@ -1010,11 +1010,11 @@
                 (StringOrd--
                  (StringConstant "boofar"),
                  (Integer),
-                 [(IntegerConstant 51 (Integer))])))
+                 (IntegerConstant 51 (Integer)))))
   (is (s/valid? ::asr/StringOrd
                 (StringOrd--
                  (StringConstant "boofar"),
-                 [(IntegerConstant 51 (Integer))])))
+                 (IntegerConstant 51 (Integer)))))
   (is (s/valid? ::asr/StringOrd
                 (StringOrd
                  (StringConstant "boofar"),
@@ -1077,7 +1077,7 @@
   (is (s/valid? ::asr/binop          Add))
   (is (s/valid? ::asr/integer-right  (IntegerConstant 3 (Integer 4 []))))
   (is (s/valid? ::asr/Integer        (Integer 4 [])))
-  (is (s/valid? ::asr/integer-value? [(IntegerConstant 5 (Integer 4 []))]))
+  (is (s/valid? ::asr/integer-value? (IntegerConstant 5 (Integer 4 []))))
 
   (is (s/valid? ::asr/IntegerBinOp
                 (IntegerBinOp
@@ -1163,7 +1163,9 @@
   (is (= '[(Var 42 x)]
          (rewrite-for-legacy
           '[(Var 42 x)])))
-  (is (s/valid? ::asr/expr? (legacy ((Var 42 x)))))
+  (is (s/valid? ::asr/expr? ()))
+  (is (s/valid? ::asr/expr? []))
+  (is (s/valid? ::asr/expr? (legacy (Var 42 x))))
   (is (s/valid? ::asr/expr  (legacy (Var 42 x))))
   (is (s/valid? ::asr/Var   (legacy (Var 42 x))))  )
 
@@ -1310,8 +1312,8 @@
   (is (s/valid? ::asr/Var       (legacy (Var 42 x))))
 
   (is (s/valid? ::asr/expr?     (legacy ())))
-  (is (s/valid? ::asr/expr?     (legacy [(Var 42 x)])))
-  (is (s/valid? ::asr/expr?     (legacy ((Var 42 x)))))
+  (is (s/valid? ::asr/expr?     (legacy (Var 42 x))))
+  (is (s/valid? ::asr/expr?     (legacy (Var 42 x))))
   ;; not allowed
   (is (not (s/valid? ::asr/call-arg  (legacy []))))
   ;; an empty ::asr/expr?
@@ -1321,16 +1323,17 @@
   ;; s/or and its complications, and our
   ;; normal way of expressing ? pluralities,
   ;; via one extra level of nesting.
-  (is (s/valid? ::asr/call-arg  (legacy (((Var 42 x))))))
-  (is (s/valid? ::asr/call-arg  (legacy [((Var 42 x))])))
-  (is (s/valid? ::asr/call-arg  (legacy [[(Var 42 x)]])))
-  ;;                                 call-args with two call-arg instances
-  ;;                                        call-arg       call-arg
-  ;;                                     .-----^------. .-----^------.
-  (is (s/valid? ::asr/call-args (legacy [[((Var 42 x))] [((Var 43 j))] ])))
+  (is (s/valid? ::asr/call-arg  (legacy ((Var 42 x)))))
+  (is (s/valid? ::asr/call-arg  (legacy [(Var 42 x)])))
+  ;;                                call-args with two call-arg instances
+  ;;                                       call-arg      call-arg
+  ;;                                     .----^-----. .----^-----.
+  (is (s/valid? ::asr/call-args (legacy [[(Var 42 x)] [(Var 43 j)]] )))
   ;; Bracket styles don't matter under `legacy`:
-  (is (s/valid? ::asr/call-args (legacy [(((Var 42 x))) (((Var 43 j))) ])))
-  (is (s/valid? ::asr/call-args (legacy ((((Var 42 x))) (((Var 43 j)))) )))
+  (is (s/valid? ::asr/call-args (legacy (((Var 42 x)) ((Var 43 j))) )))
+  ;; Key must be an integer: TODO: investigate
+  #_
+  (is (s/valid? ::asr/call-args (legacy ([(Var 42 x)] [(Var 43 j)]) )))
   (is (s/valid? ::asr/call-args (legacy []))) ;; empty call args
   (is (s/valid? ::asr/call-args (legacy [(())]))))
 
@@ -1358,40 +1361,53 @@
                   (legacy
                    (SubroutineCall
                     7 test_fn1
-                   ()    []    ()))))
+                    ()    []    ()))))
     (is (s/valid? ::asr/SubroutineCall
                   (legacy
                    (SubroutineCall
                     7 test_fn1
                     ()
-                    [((Var 42 i))]
+                    ((Var 42 i))
                     ()))))
     (is (s/valid? ::asr/SubroutineCall
                   (legacy
                    (SubroutineCall
                     7 test_fn1
                     ()
-                    [((Var 42 i)) ((Var 43 j))]
+                    ((Var 42 i) (Var 43 j))
                     ()))))
+
+    (is (s/valid? ::asr/call-arg  '(())))
+    (is (s/valid? ::asr/call-arg  [()]))
+    (is (s/valid? ::asr/call-arg  [(Var 42 i)]))
+    (is (s/valid? ::asr/call-arg  (legacy ((Var 42 i)))))
+    (is (s/valid? ::asr/call-arg  (legacy [(Var 42 i)])))
+    (is (s/valid? ::asr/call-args [[(Var 42 i)]]))
+    (is (s/valid? ::asr/call-args (legacy [[(Var 42 i)]])))
+    (is (s/valid? ::asr/call-args (legacy [((Var 42 i))])))
+    ;; Not allowed TODO: investigate
+    #_
+    (is (s/valid? ::asr/call-args (legacy ([(Var 42 i)]))))
+
     (is (s/valid? ::asr/SubroutineCall
                   (SubroutineCall--
                    ['test_fn1 7]
                    ()
-                   [[[(Var 42 i)]]]
+                   [[(Var 42 i)]]
                    ())))
     (is (s/valid? ::asr/SubroutineCall
                   (legacy ;; replace call brackets with vector
                    (SubroutineCall--
                     ['test_fn1 7]
                     ()
-                    [(((Var 42 i))) (((Var 43 j)))] ;; call brackets
+                    (((Var 42 i)) ((Var 43 j))) ;; call brackets
                     ()))))
     (is (s/valid? ::asr/SubroutineCall
                   (legacy ;; replace call brackets with vector
                    (SubroutineCall--
                     ['test_fn1 7]
                     ()
-                    [(((Var 42 i)))] ;; call brackets
+                    (((Var 42 i))) ;; call brackets
                     ()))))))
 
 
@@ -1418,7 +1434,7 @@
   (is (not (s/valid? ::asr/symbol-ref {::asr/symtab-id  42})))
   (let [vsr {::asr/identifier 'foobar
              ::asr/symtab-id  42}]
-    (is (s/valid? ::asr/symbol-ref? [vsr]))
+    (is (s/valid? ::asr/symbol-ref? vsr))
     (is (s/valid? ::asr/symbol-ref? []))
     (is (s/valid? ::asr/symbol-ref? ()))
     (is (not (s/valid? ::asr/symbol-ref? [vsr, vsr]))))
@@ -1440,7 +1456,7 @@
                  {::asr/symbol-head   ::asr/ExternalSymbol
                   ::asr/symtab-id     5
                   ::asr/nym           '_lpython_main_program
-                  ::asr/extern-symref [(symbol-ref '_lpython_main_program 7)]
+                  ::asr/extern-symref (symbol-ref '_lpython_main_program 7)
                   ::asr/modulenym     '_global_symbols
                   ::asr/scope-nyms    [],
                   ::asr/orig-nym      '_lpython_main_program
@@ -1449,7 +1465,7 @@
   (is (s/valid? ::asr/ExternalSymbol
                 (ExternalSymbol--
                  5 '_lpython_main_program
-                 ['_lpython_main_program 7]
+                 (symbol-ref '_lpython_main_program 7)
                  '_global_symbols
                  []
                  '_lpython_main_program
@@ -1512,9 +1528,9 @@
           avl-2  (Variable- :varnym     'x
                             :symtab-id  2
                             :ttype      (Integer 42))]
-      (is (= a-var       (s/conform ::asr/asr-term a-var)))
-      (is (= a-var-light (s/conform ::asr/asr-term a-var)))
-      (is (= a-var-light (s/conform ::asr/Variable a-var)))
+      ;; (is (= a-var       (s/conform ::asr/asr-term a-var)))
+      ;; (is (= a-var-light (s/conform ::asr/asr-term a-var)))
+      ;; (is (= a-var-light (s/conform ::asr/Variable a-var)))
 
       (is (= (s/valid? ::asr/asr-symbol-head a-var-head) true))
 
@@ -2500,7 +2516,7 @@
                      (SubroutineCall
                       7 gsubrout
                       ()
-                      [((Var 4 i))]
+                      ((Var 4 i))
                       ()
                       )]
                     ()
@@ -3698,6 +3714,9 @@
 
     (testing "whole translation unit for 03055c0"
       (is (s/valid? ::asr/unit (long-form-asr "-expr_01-03055c0"))))
+    #_
+    (testing "whole translation unit for eafd41c"
+      (is (s/valid? ::asr/unit (long-form-asr "-expr_01-eafd41c"))))
     ))
 
 

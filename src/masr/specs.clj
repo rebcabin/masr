@@ -1252,6 +1252,13 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  Assert stmt
+  (test-expr message?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   If stmt
   (test-expr body orelse))
 ;; #+end_src
@@ -1509,9 +1516,9 @@
 ;;
 ;;
 ;; https://github.com/rebcabin/masr/issues/32
-;; `call-arg` introduces a level of nesting to a
-;; list of actual arguments to a function call or
-;; subroutine call.
+;; `call-arg` intentionally introduces a level of
+;; nesting to a list of actual arguments to a
+;; function call or subroutine call.
 ;;
 ;;
 ;; ## Original ASDL
@@ -2003,10 +2010,9 @@
 ;;
 ;; #+begin_src clojure
 
-(defmacro .? [type]
-  `(s/coll-of ~type
-              :min-count 0
-              :max-count 1))
+(defmacro .? [ttype]
+  `(s/or :type ~ttype
+         :empty empty?))
 
 (s/def ::ttype? (.? ::ttype))
 ;; #+end_src
@@ -2347,8 +2353,7 @@
              {::ttype-head        ::FunctionType
 
               ::param-type*       param-type*-
-              ::return-var-type?  (if (empty? return-var-type?-)
-                                   (), [return-var-type?-])
+              ::return-var-type?  return-var-type?-
               ::abi               abi-
 
               ::deftype           deftype-
@@ -2531,7 +2536,6 @@
         :integer-binop      ::IntegerBinOp
         :named-expr         ::NamedExpr ;; TODO check return type!
         :var                ::Var       ;; TODO check return type!
-        ;; TODO: integer-compare, etc.
         ))
 ;; #+end_src
 
@@ -2605,8 +2609,12 @@
 ;;
 ;;
 ;; ```c
-;; | FunctionCall(symbol name, symbol? original_name, call_arg* args,
-;;                       ttype type, expr? value, expr? dt)
+;; | FunctionCall(symbol     name,
+;;                symbol?    original_name,
+;;                call_arg * args,
+;;                ttype      type,
+;;                expr     ? value,
+;;                expr     ? dt)
 ;; ```
 ;;
 ;;
@@ -2947,9 +2955,7 @@
               {::expr-head ::StringOrd
                ::StringConstant      strconst
                ::Integer             int-ttype
-               ::IntegerConstant?    (if (empty? int-val?)
-                                       int-val?
-                                       [int-val?])}}]
+               ::IntegerConstant?    int-val?}}]
      (if (s/valid? ::StringOrd cnd)
        cnd
        :invalid-string-ord)))
@@ -3004,9 +3010,7 @@
               ::logicalbinop   lbo-
               ::logical-right  right-
               ::Logical        tt-
-              ::logical-value? (if (empty? val?-)
-                                   val?-
-                                   [val?-])
+              ::logical-value? val?-
               }}]
     (if (s/valid? ::LogicalBinOp cnd)
       cnd
@@ -3067,9 +3071,7 @@
               ::binop          bo-
               ::integer-right  right-
               ::Integer        itt-
-              ::integer-value? (if (empty? ival?-)
-                                   ival?-
-                                   [ival?-])
+              ::integer-value? ival?-
               }}]
     (if (s/valid? ::IntegerBinOp cnd)
       cnd
@@ -3147,7 +3149,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::stmts (s/coll-of ::stmt))
+(s/def ::stmt* (s/coll-of ::stmt))
 ;; #+end_src
 
 ;;
@@ -3230,7 +3232,7 @@
 ;; #+begin_src clojure
 
 (s/def ::param*             ::expr*) ;; renamed from args
-(s/def ::body               ::stmts)
+(s/def ::body               ::stmt*)
 (s/def ::return-var?        ::expr?)
 ;; #+end_src
 
@@ -3243,15 +3245,53 @@
 
 (s/def ::prognym            ::identifier)
 (s/def ::test-expr          ::logical-expr)
-(s/def ::orelse             ::stmts)
+(s/def ::orelse             ::stmt*)
 ;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::message?     (s/or :str string?
+                            :nil empty?))
+;; #+end_src
+
+
+;;
+;;
+;; # ASSERT
+;;
+;;
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | Assert(expr test, expr? msg)
+;; ```
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn Assert [test-expr message?]
+  (let [cnd {::term ::stmt
+             ::asr-stmt-head
+             {::stmt-head ::Assert
+              ::test-expr test-expr
+              ::message?  message?}}]
+    (if (s/valid? ::Assert cnd)
+      cnd
+      :invalid-if)))
+;; #+end_src
+
 
 ;;
 ;;
 ;; ## IF
 ;;
 ;;
-
 
 ;; ### Original ASDL
 ;;
@@ -3506,42 +3546,6 @@
 ;; ### Examples
 ;;
 ;;
-
-;; We're in a position, here, to run some examples
-;; of `::call-arg` and `::call-args`, because
-;; `::expr?` is defined. Fitting `::call-arg` to
-;; `legacy` is tricky because of the multiple levels
-;; of nesting.
-;;
-;;
-;; These are all tested in `core_test.clj`:
-;;
-;;
-;; #+begin_src clojure
-
-#_(s/valid? ::expr?     ())
-#_(s/valid? ::Var       (legacy (Var 42 x)))
-
-#_(s/valid? ::expr?     (legacy ()))
-#_(s/valid? ::expr?     (legacy [(Var 42 x)]))
-#_(s/valid? ::expr?     (legacy ((Var 42 x))))
-  ;; not allowed
-#_(not (s/valid? ::call-arg  (legacy [])))
-  ;; an empty ::expr?
-#_(s/valid? ::call-arg  (legacy [()]))
-  ;; normal way of expressing ? pluralities, via
-  ;; one extra level of nesting
-#_(s/valid? ::call-arg  (legacy (((Var 42 x)))))
-#_(s/valid? ::call-arg  (legacy [((Var 42 x))]))
-#_(s/valid? ::call-arg  (legacy [[(Var 42 x)]]))
-  ;;                        call-args with two call-arg instances
-  ;;                                call-arg       call-arg
-  ;;                             .-----^------. .-----^------.
-#_(s/valid? ::call-args (legacy [[((Var 42 x))] [((Var 43 j))] ]))
-#_(s/valid? ::call-args (legacy [])) ;; empty call args
-#_(s/valid? ::call-args (legacy [(())]))
-;; #+end_src
-
 ;; #+begin_src clojure
 
 #_(SubroutineCall
@@ -3553,7 +3557,7 @@
 #_(SubroutineCall
    7 test_fn1
    ()
-   [((Var 42 i))]
+   ((Var 42 i))
    ())
 ;; #+end_src
 
@@ -3664,9 +3668,7 @@
 
               ::symtab-id     stid
               ::nym           nym-
-              ::extern-symref (if (empty? extern-symref-)
-                                extern-symref-
-                                [(apply symbol-ref extern-symref-)]),
+              ::extern-symref extern-symref-
 
               ::modulenym     modnym-
               ::scope-nyms    scope-nyms-,
@@ -3695,7 +3697,7 @@
    "eight-parameter overload"
    `(ExternalSymbol--
      ~stid, '~nym,
-     ['~orig-symref-ident, ~orig-symref-stid],
+     (symbol-ref '~orig-symref-ident, ~orig-symref-stid),
      '~modnym,
      ~scope-nyms, ;; TODO: distribute quote?
      '~orig-nym
@@ -4004,8 +4006,7 @@
 
               ::param*              param*-
               ::body                body-
-              ::return-var?         (if (empty? retvar)
-                                      () [retvar])
+              ::return-var?         retvar
 
               ::access              access-
               ::deterministic       determ
