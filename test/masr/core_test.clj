@@ -1064,6 +1064,46 @@
     (is (= (s/valid?  ::asr/Var      vlv)      true))))
 
 
+;;  ___     _                    ___ _      ___
+;; |_ _|_ _| |_ ___ __ _ ___ _ _| _ |_)_ _ / _ \ _ __
+;;  | || ' \  _/ -_) _` / -_) '_| _ \ | ' \ (_) | '_ \
+;; |___|_||_\__\___\__, \___|_| |___/_|_||_\___/| .__/
+;;                 |___/                        |_|
+
+
+(deftest IntegerBinOp-test
+
+  (is (s/valid? ::asr/integer-left   (IntegerConstant 2 (Integer 4 []))))
+  (is (s/valid? ::asr/binop          Add))
+  (is (s/valid? ::asr/integer-right  (IntegerConstant 3 (Integer 4 []))))
+  (is (s/valid? ::asr/Integer        (Integer 4 [])))
+  (is (s/valid? ::asr/integer-value? [(IntegerConstant 5 (Integer 4 []))]))
+
+  (is (s/valid? ::asr/IntegerBinOp
+                (IntegerBinOp
+                 (IntegerConstant 2 (Integer 4 []))
+                 Add
+                 (IntegerConstant 3 (Integer 4 []))
+                 (Integer 4 [])
+                 (IntegerConstant 5 (Integer 4 []))
+                 )))
+
+  (is (s/valid? ::asr/IntegerBinOp
+                (IntegerBinOp
+                 (IntegerBinOp
+                  (IntegerConstant 2 (Integer 4 []))
+                  Add
+                  (IntegerConstant 3 (Integer 4 []))
+                  (Integer 4 [])
+                  (IntegerConstant 5 (Integer 4 []))
+                  )
+                 Mul
+                 (IntegerConstant 5 (Integer 4 []))
+                 (Integer 4 [])
+                 (IntegerConstant 25 (Integer 4 []))
+                 ))))
+
+
 ;;  _              _         _ ___ _      ___
 ;; | |   ___  __ _(_)__ __ _| | _ |_)_ _ / _ \ _ __
 ;; | |__/ _ \/ _` | / _/ _` | | _ \ | ' \ (_) | '_ \
@@ -3655,7 +3695,7 @@
 
     (testing "whole translation unit for dde511e"
       (is (s/valid? ::asr/unit (long-form-asr "-expr1-dde511e"))))
-    #_
+
     (testing "whole translation unit for 03055c0"
       (is (s/valid? ::asr/unit (long-form-asr "-expr_01-03055c0"))))
     ))

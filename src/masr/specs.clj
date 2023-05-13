@@ -1311,8 +1311,8 @@
 
 (defmasrtype
   IntegerBinOp expr
-  (integer-left    integerbinop    integer-right
-                   Integer         value?))
+  (integer-left    binop           integer-right
+                   Integer         integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1868,8 +1868,12 @@
 ;; #+begin_src clojure
 
 (enum-like logicalbinop #{'And  'Or  'Xor  'NEqv  'Eqv})
+(enum-like binop        #{'Add 'Sub 'Mul 'Div 'Pow
+                          'BitAnd 'BitOr 'BitXor
+                          'BitLShift 'BitRShift})
 (enum-like cmpop        #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
-(enum-like intent       #{'Local 'In 'Out 'InOut 'ReturnVar 'Unspecified})
+(enum-like intent       #{'Local 'In 'Out 'InOut 'ReturnVar
+                          'Unspecified})
 (enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
 (enum-like logicalcmpop #{'Eq 'NotEq})
 (enum-like access       #{'Public 'Private})
@@ -2533,6 +2537,9 @@
 
 ;; #+begin_src clojure
 
+(s/def ::integer-expr?  (.? ::integer-expr))
+(s/def ::integer-value?     ::integer-expr?)
+
 (s/def ::integer-left  ::integer-expr)
 (s/def ::integer-right ::integer-expr)
 ;; #+end_src
@@ -2956,7 +2963,6 @@
 ;;
 ;;
 
-
 ;; ### Original ASDL
 ;;
 ;;
@@ -2998,7 +3004,9 @@
               ::logicalbinop   lbo-
               ::logical-right  right-
               ::Logical        tt-
-              ::logical-value? val?-
+              ::logical-value? (if (empty? val?-)
+                                   val?-
+                                   [val?-])
               }}]
     (if (s/valid? ::LogicalBinOp cnd)
       cnd
@@ -3008,10 +3016,72 @@
 
 ;;
 ;;
-;; ## LOGICAL COMPARE
+;; ## INTEGER BINOP
 ;;
 ;;
 
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | IntegerBinOp(expr  left,
+;;                binop op,
+;;                expr  right,
+;;                ttype type,
+;;                expr? value)
+;; ```
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(IntegerBinOp
+ (IntegerBinOp
+  (IntegerConstant 2 (Integer 4 []))
+  Add
+  (IntegerConstant 3 (Integer 4 []))
+  (Integer 4 [])
+  (IntegerConstant 5 (Integer 4 []))
+  )
+ Mul
+ (IntegerConstant 5 (Integer 4 []))
+ (Integer 4 [])
+ (IntegerConstant 25 (Integer 4 [])))
+;; #+end_src
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn IntegerBinOp [left- bo- right- itt- ival?-]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::IntegerBinOp
+              ::integer-left   left-
+              ::binop          bo-
+              ::integer-right  right-
+              ::Integer        itt-
+              ::integer-value? (if (empty? ival?-)
+                                   ival?-
+                                   [ival?-])
+              }}]
+    (if (s/valid? ::IntegerBinOp cnd)
+      cnd
+      :invalid-integer-bin-op)))
+;; #+end_src
+
+
+;;
+;;
+;; ## LOGICAL COMPARE
+;;
+;;
 
 ;; ### Original ASDL
 ;;
