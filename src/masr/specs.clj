@@ -1345,8 +1345,16 @@
 
 (defmasrtype
   IntegerBinOp expr
-  (integer-left    binop           integer-right
+  (integer-left    integer-binop   integer-right
                    Integer         integer-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  RealBinOp expr
+  (real-left       real-binop      real-right
+                   Real            real-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1916,28 +1924,33 @@
 
 ;; #+begin_src clojure
 
-(enum-like logicalbinop #{'And  'Or  'Xor  'NEqv  'Eqv})
-(enum-like binop        #{'Add 'Sub 'Mul 'Div 'Pow
-                          'BitAnd 'BitOr 'BitXor
-                          'BitLShift 'BitRShift})
-(enum-like cmpop        #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
-(enum-like intent       #{'Local 'In 'Out 'InOut 'ReturnVar
-                          'Unspecified})
-(enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
-(enum-like logicalcmpop #{'Eq 'NotEq})
-(enum-like access       #{'Public 'Private})
-(enum-like presence     #{'Required 'Optional})
-(enum-like deftype      #{'Implementation, 'Interface})
-(enum-like cast-kind    #{'RealToInteger       'IntegerToReal
-                          'LogicalToReal       'RealToReal
-                          'IntegerToInteger    'RealToComplex
-                          'IntegerToComplex    'IntegerToLogical
-                          'RealToLogical       'CharacterToLogical
-                          'CharacterToInteger  'CharacterToList
-                          'ComplexToLogical    'ComplexToComplex
-                          'ComplexToReal       'ComplexToInteger
-                          'LogicalToInteger    'RealToCharacter
-                          'IntegerToCharacter  'LogicalToCharacter})
+(enum-like logicalbinop  #{'And  'Or  'Xor  'NEqv  'Eqv})
+;; Collisions of names are NOT ALLOWED
+;; See Legacy Sugar for RealBinOp.
+(enum-like real-binop    #{'RAdd 'RSub 'RMul 'RDiv 'RPow})
+(enum-like integer-binop #{'Add 'Sub 'Mul 'Div 'Pow
+                           'BitAnd 'BitOr 'BitXor
+                           'BitLShift 'BitRShift})
+(enum-like cmpop         #{'Eq 'NotEq  'Lt  'LtE  'Gt  'GtE })
+;; Collisions of names are NOT ALLOWED!
+;; See Legacy Sugar for LogicalCompare.
+(enum-like logicalcmpop  #{'LEq 'LNotEq})
+(enum-like intent        #{'Local 'In 'Out 'InOut 'ReturnVar
+                           'Unspecified})
+(enum-like storage-type  #{'Default, 'Save, 'Parameter, 'Allocatable})
+(enum-like access        #{'Public 'Private})
+(enum-like presence      #{'Required 'Optional})
+(enum-like deftype       #{'Implementation, 'Interface})
+(enum-like cast-kind     #{'RealToInteger       'IntegerToReal
+                           'LogicalToReal       'RealToReal
+                           'IntegerToInteger    'RealToComplex
+                           'IntegerToComplex    'IntegerToLogical
+                           'RealToLogical       'CharacterToLogical
+                           'CharacterToInteger  'CharacterToList
+                           'ComplexToLogical    'ComplexToComplex
+                           'ComplexToReal       'ComplexToInteger
+                           'LogicalToInteger    'RealToCharacter
+                           'IntegerToCharacter  'LogicalToCharacter})
 ;; #+end_src
 
 ;;
@@ -2551,9 +2564,10 @@
 
 ;;
 ;;
-;; TODO: check that the types of the exprs are `::Logical`!
+;; ### Logical Types
 ;;
 ;;
+
 ;; #+begin_src clojure
 
 (s/def ::logical-expr
@@ -2580,9 +2594,10 @@
 
 ;;
 ;;
-;; TODO: check that the types of the exprs are `::Integer`!
+;; ### Integer Types
 ;;
 ;;
+
 ;; #+begin_src clojure
 
 (s/def ::integer-expr
@@ -2602,6 +2617,33 @@
 
 (s/def ::integer-left  ::integer-expr)
 (s/def ::integer-right ::integer-expr)
+;; #+end_src
+
+;;
+;;
+;; ### Real Types
+;;
+;;
+
+;; #+begin_src clojure
+
+(s/def ::real-expr
+  (s/or :real-constant   ::RealConstant
+        :real-binop      ::RealBinOp
+        :cast            ::Cast      ;; TODO check return type!
+        :if-expr         ::IfExp     ;; TODO check return type!
+        :named-expr      ::NamedExpr ;; TODO check return type!
+        :var             ::Var       ;; TODO check return type!
+        ))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::real-expr?  (.? ::real-expr))
+(s/def ::real-value?     ::real-expr?)
+
+(s/def ::real-left  ::real-expr)
+(s/def ::real-right ::real-expr)
 ;; #+end_src
 
 
@@ -3248,7 +3290,7 @@
               ::logicalbinop   lbo-
               ::logical-right  right-
               ::Logical        tt-
-              ::logical-value? val?-
+              ::logical-value? val?-  ;; TODO: Check arithmetic!
               }}]
     (if (s/valid? ::LogicalBinOp cnd)
       cnd
@@ -3306,16 +3348,89 @@
              ::asr-expr-head
              {::expr-head      ::IntegerBinOp
               ::integer-left   left-
-              ::binop          bo-
+              ::integer-binop  bo-
               ::integer-right  right-
               ::Integer        itt-
-              ::integer-value? ival?-
+              ::integer-value? ival?-  ;; TODO: Check arithmetic!
               }}]
     (if (s/valid? ::IntegerBinOp cnd)
       cnd
       :invalid-integer-bin-op)))
 ;; #+end_src
 
+
+;;
+;;
+;; ## REAL BINOP
+;;
+;;
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | RealBinOp(expr  left,
+;;                binop op,
+;;                expr  right,
+;;                ttype type,
+;;                expr? value)
+;; ```
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(RealBinOp
+ (RealBinOp
+  (RealConstant 2 (Real 4 []))
+  Add
+  (RealConstant 3 (Real 4 []))
+  (Real 4 [])
+  (RealConstant 5 (Real 4 []))
+  )
+ Mul
+ (RealConstant 5 (Real 4 []))
+ (Real 4 [])
+ (RealConstant 25 (Real 4 [])))
+;; #+end_src
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn RealBinOp-- [left- bo- right- rtt- rval?-]
+  "Must use RAdd, RMul, etc."
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head   ::RealBinOp
+              ::real-left   left-
+              ::real-binop  bo-
+              ::real-right  right-
+              ::Real        rtt-
+              ::real-value? rval?- ;; TODO: Check arithmetic!
+              }}]
+    (if (s/valid? ::RealBinOp cnd)
+      cnd
+      :invalid-real-bin-op)))
+;; #+end_src
+
+;;
+;;
+;; ### Legacy Sugar
+;;
+;;
+
+(defmacro RealBinOp
+  "Must use Add, Mul, etc."
+  [left- bo- right- rtt- rval?-]
+  (let [rop (symbol (str "R" bo-))]
+    `(RealBinOp-- ~left- ~rop ~right- ~rtt- ~rval?-)))
 
 ;;
 ;;
@@ -3409,7 +3524,7 @@
 ;;
 ;; #+begin_src clojure
 
-(defn LogicalCompare [l- cmp- r- tt- val?-]
+(defn LogicalCompare-- [l- cmp- r- tt- val?-]
   (let [cnd {::term ::expr,
              ::asr-expr-head
              {::expr-head      ::LogicalCompare
@@ -3422,6 +3537,16 @@
       cnd
       :invalid-logical-compare)))
 ;; #+end_src
+
+;;
+;;
+;; ### Legacy Sugar
+;;
+;;
+
+(defmacro LogicalCompare [l- cmp- r- tt- val?-]
+  (let [lop (symbol (str "L" cmp-))]
+    `(LogicalCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 
 
 ;;

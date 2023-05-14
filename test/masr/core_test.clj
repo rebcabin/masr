@@ -1109,11 +1109,15 @@
 
 (deftest IntegerBinOp-test
 
-  (is (s/valid? ::asr/integer-left   (IntegerConstant 2 (Integer 4 []))))
-  (is (s/valid? ::asr/binop          Add))
-  (is (s/valid? ::asr/integer-right  (IntegerConstant 3 (Integer 4 []))))
-  (is (s/valid? ::asr/Integer        (Integer 4 [])))
-  (is (s/valid? ::asr/integer-value? (IntegerConstant 5 (Integer 4 []))))
+  (is (s/valid? ::asr/integer-left
+                (IntegerConstant 2 (Integer 4 []))))
+  (is (s/valid? ::asr/integer-binop  Add))
+  (is (s/valid? ::asr/integer-right
+                (IntegerConstant 3 (Integer 4 []))))
+  (is (s/valid? ::asr/Integer
+                (Integer 4 [])))
+  (is (s/valid? ::asr/integer-value?
+                (IntegerConstant 5 (Integer 4 []))))
 
   (is (s/valid? ::asr/IntegerBinOp
                 (IntegerBinOp
@@ -1121,8 +1125,7 @@
                  Add
                  (IntegerConstant 3 (Integer 4 []))
                  (Integer 4 [])
-                 (IntegerConstant 5 (Integer 4 []))
-                 )))
+                 (IntegerConstant 5 (Integer 4 [])))))
 
   (is (s/valid? ::asr/IntegerBinOp
                 (IntegerBinOp
@@ -1131,13 +1134,55 @@
                   Add
                   (IntegerConstant 3 (Integer 4 []))
                   (Integer 4 [])
-                  (IntegerConstant 5 (Integer 4 []))
-                  )
+                  (IntegerConstant 5 (Integer 4 [])))
                  Mul
                  (IntegerConstant 5 (Integer 4 []))
                  (Integer 4 [])
-                 (IntegerConstant 25 (Integer 4 []))
-                 ))))
+                 (IntegerConstant 25 (Integer 4 [])))))
+  )
+
+
+;;  ___          _ ___ _      ___
+;; | _ \___ __ _| | _ |_)_ _ / _ \ _ __
+;; |   / -_) _` | | _ \ | ' \ (_) | '_ \
+;; |_|_\___\__,_|_|___/_|_||_\___/| .__/
+;;                                |_|
+
+
+(deftest RealBinOp-test
+
+  (is (s/valid? ::asr/real-left
+                (RealConstant 2.0 (Real 4 []))))
+  (is (s/valid? ::asr/real-binop   RAdd))
+  (is (s/valid? ::asr/real-right
+                (RealConstant 3.0 (Real 4 []))))
+  (is (s/valid? ::asr/Real
+                (Real 4 [])))
+  (is (s/valid? ::asr/real-value?
+                (RealConstant 5.0 (Real 4 []))))
+
+  (is (s/valid? ::asr/RealBinOp
+                (RealBinOp
+                 (RealConstant 2.0 (Real 4 []))
+                 Add ;; legacy sugar
+                 (RealConstant 3.0 (Real 4 []))
+                 (Real 4 [])
+                 (RealConstant 5.0 (Real 4 []))
+                 )))
+
+  (is (s/valid? ::asr/RealBinOp
+                (RealBinOp
+                 (RealBinOp
+                  (RealConstant 2.0 (Real 4 []))
+                  Add ;; legacy sugar
+                  (RealConstant 3.0 (Real 4 []))
+                  (Real 4 [])
+                  (RealConstant 5.0 (Real 4 [])))
+                 Mul ;; legacy sugar
+                 (RealConstant 5.0 (Real 4 []))
+                 (Real 4 [])
+                 (RealConstant 25.0 (Real 4 [])))))
+  )
 
 
 ;;  _              _         _ ___ _      ___
@@ -4528,6 +4573,9 @@
 
     (testing "whole translation unit for -expr7-2ef3822"
       (is (s/valid? ::asr/unit (long-form-asr "-expr7-2ef3822"))))
+    #_
+    (testing "whole translation unit for -expr8-2a4630a"
+      (is (s/valid? ::asr/unit (long-form-asr "-expr8-2a4630a"))))
 
     ))
 
