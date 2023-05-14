@@ -3525,6 +3525,7 @@
 ;; #+begin_src clojure
 
 (defn LogicalCompare-- [l- cmp- r- tt- val?-]
+  "Must use LEq, LNotEq."
   (let [cnd {::term ::expr,
              ::asr-expr-head
              {::expr-head      ::LogicalCompare
@@ -3544,7 +3545,9 @@
 ;;
 ;;
 
-(defmacro LogicalCompare [l- cmp- r- tt- val?-]
+(defmacro LogicalCompare
+  "Must use Eq, NotEq."
+  [l- cmp- r- tt- val?-]
   (let [lop (symbol (str "L" cmp-))]
     `(LogicalCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 
