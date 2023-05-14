@@ -83,6 +83,9 @@
     - [30.2.1. Sugar](#3021-sugar)
 - [31. EXPR](#31-expr)
   - [31.1. Prerequisite Types and Aliases](#311-prerequisite-types-and-aliases)
+    - [31.1.1. Logical Types](#3111-logical-types)
+    - [31.1.2. Integer Types](#3112-integer-types)
+    - [31.1.3. Real Types](#3113-real-types)
   - [31.2. CAST](#312-cast)
     - [31.2.1. Original ASDL](#3121-original-asdl)
     - [31.2.2. Example](#3122-example)
@@ -132,14 +135,20 @@
     - [31.13.1. Original ASDL](#31131-original-asdl)
     - [31.13.2. Example](#31132-example)
     - [31.13.3. Heavy Sugar](#31133-heavy-sugar)
-  - [31.14. INTEGER COMPARE](#3114-integer-compare)
+  - [31.14. REAL BINOP](#3114-real-binop)
     - [31.14.1. Original ASDL](#31141-original-asdl)
     - [31.14.2. Example](#31142-example)
     - [31.14.3. Heavy Sugar](#31143-heavy-sugar)
-  - [31.15. LOGICAL COMPARE](#3115-logical-compare)
+    - [31.14.4. Legacy Sugar](#31144-legacy-sugar)
+  - [31.15. INTEGER COMPARE](#3115-integer-compare)
     - [31.15.1. Original ASDL](#31151-original-asdl)
     - [31.15.2. Example](#31152-example)
     - [31.15.3. Heavy Sugar](#31153-heavy-sugar)
+  - [31.16. LOGICAL COMPARE](#3116-logical-compare)
+    - [31.16.1. Original ASDL](#31161-original-asdl)
+    - [31.16.2. Example](#31162-example)
+    - [31.16.3. Heavy Sugar](#31163-heavy-sugar)
+    - [31.16.4. Legacy Sugar](#31164-legacy-sugar)
 - [32. STMT](#32-stmt)
   - [32.1. Prerequisite Types and Aliases](#321-prerequisite-types-and-aliases)
 - [33. EXPLICIT DEALLOCATE](#33-explicit-deallocate)
@@ -1391,8 +1400,14 @@ via `s/def`.
 ```clojure
 (defmasrtype
   IntegerBinOp expr
-  (integer-left    binop           integer-right
+  (integer-left    integer-binop   integer-right
                    Integer         integer-value?))
+```
+```clojure
+(defmasrtype
+  RealBinOp expr
+  (real-left       real-binop      real-right
+                   Real            real-value?))
 ```
 ```clojure
 (defmasrtype
@@ -1864,28 +1879,33 @@ via one macro, `enum-like`.
 
 
 ```clojure
-(enum-like logicalbinop #{'And  'Or  'Xor  'NEqv  'Eqv})
-(enum-like binop        #{'Add 'Sub 'Mul 'Div 'Pow
-                          'BitAnd 'BitOr 'BitXor
-                          'BitLShift 'BitRShift})
-(enum-like cmpop        #{'Eq  'NotEq  'Lt  'LtE  'Gt  'GtE })
-(enum-like intent       #{'Local 'In 'Out 'InOut 'ReturnVar
-                          'Unspecified})
-(enum-like storage-type #{'Default, 'Save, 'Parameter, 'Allocatable})
-(enum-like logicalcmpop #{'Eq 'NotEq})
-(enum-like access       #{'Public 'Private})
-(enum-like presence     #{'Required 'Optional})
-(enum-like deftype      #{'Implementation, 'Interface})
-(enum-like cast-kind    #{'RealToInteger       'IntegerToReal
-                          'LogicalToReal       'RealToReal
-                          'IntegerToInteger    'RealToComplex
-                          'IntegerToComplex    'IntegerToLogical
-                          'RealToLogical       'CharacterToLogical
-                          'CharacterToInteger  'CharacterToList
-                          'ComplexToLogical    'ComplexToComplex
-                          'ComplexToReal       'ComplexToInteger
-                          'LogicalToInteger    'RealToCharacter
-                          'IntegerToCharacter  'LogicalToCharacter})
+(enum-like logicalbinop  #{'And  'Or  'Xor  'NEqv  'Eqv})
+;; Collisions of names are NOT ALLOWED
+;; See Legacy Sugar for RealBinOp.
+(enum-like real-binop    #{'RAdd 'RSub 'RMul 'RDiv 'RPow})
+(enum-like integer-binop #{'Add 'Sub 'Mul 'Div 'Pow
+                           'BitAnd 'BitOr 'BitXor
+                           'BitLShift 'BitRShift})
+(enum-like cmpop         #{'Eq 'NotEq  'Lt  'LtE  'Gt  'GtE })
+;; Collisions of names are NOT ALLOWED!
+;; See Legacy Sugar for LogicalCompare.
+(enum-like logicalcmpop  #{'LEq 'LNotEq})
+(enum-like intent        #{'Local 'In 'Out 'InOut 'ReturnVar
+                           'Unspecified})
+(enum-like storage-type  #{'Default, 'Save, 'Parameter, 'Allocatable})
+(enum-like access        #{'Public 'Private})
+(enum-like presence      #{'Required 'Optional})
+(enum-like deftype       #{'Implementation, 'Interface})
+(enum-like cast-kind     #{'RealToInteger       'IntegerToReal
+                           'LogicalToReal       'RealToReal
+                           'IntegerToInteger    'RealToComplex
+                           'IntegerToComplex    'IntegerToLogical
+                           'RealToLogical       'CharacterToLogical
+                           'CharacterToInteger  'CharacterToList
+                           'ComplexToLogical    'ComplexToComplex
+                           'ComplexToReal       'ComplexToInteger
+                           'LogicalToInteger    'RealToCharacter
+                           'IntegerToCharacter  'LogicalToCharacter})
 ```
 
 
@@ -2409,7 +2429,7 @@ things we haven't fully defined yet
 ```
 
 
-TODO: check that the types of the exprs are `::Logical`!
+### 31.1.1. Logical Types
 
 
 ```clojure
@@ -2434,7 +2454,7 @@ TODO: check that the types of the exprs are `::Logical`!
 ```
 
 
-TODO: check that the types of the exprs are `::Integer`!
+### 31.1.2. Integer Types
 
 
 ```clojure
@@ -2453,6 +2473,28 @@ TODO: check that the types of the exprs are `::Integer`!
 
 (s/def ::integer-left  ::integer-expr)
 (s/def ::integer-right ::integer-expr)
+```
+
+
+### 31.1.3. Real Types
+
+
+```clojure
+(s/def ::real-expr
+  (s/or :real-constant   ::RealConstant
+        :real-binop      ::RealBinOp
+        :cast            ::Cast      ;; TODO check return type!
+        :if-expr         ::IfExp     ;; TODO check return type!
+        :named-expr      ::NamedExpr ;; TODO check return type!
+        :var             ::Var       ;; TODO check return type!
+        ))
+```
+```clojure
+(s/def ::real-expr?  (.? ::real-expr))
+(s/def ::real-value?     ::real-expr?)
+
+(s/def ::real-left  ::real-expr)
+(s/def ::real-right ::real-expr)
 ```
 
 
@@ -3016,7 +3058,7 @@ symbol-table! That's part of abstract execution.
               ::logicalbinop   lbo-
               ::logical-right  right-
               ::Logical        tt-
-              ::logical-value? val?-
+              ::logical-value? val?-  ;; TODO: Check arithmetic!
               }}]
     (if (s/valid? ::LogicalBinOp cnd)
       cnd
@@ -3068,10 +3110,10 @@ symbol-table! That's part of abstract execution.
              ::asr-expr-head
              {::expr-head      ::IntegerBinOp
               ::integer-left   left-
-              ::binop          bo-
+              ::integer-binop  bo-
               ::integer-right  right-
               ::Integer        itt-
-              ::integer-value? ival?-
+              ::integer-value? ival?-  ;; TODO: Check arithmetic!
               }}]
     (if (s/valid? ::IntegerBinOp cnd)
       cnd
@@ -3079,10 +3121,71 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.14. INTEGER COMPARE
+## 31.14. REAL BINOP
 
 
 ### 31.14.1. Original ASDL
+
+
+```c
+| RealBinOp(expr  left,
+               binop op,
+               expr  right,
+               ttype type,
+               expr? value)
+```
+
+
+### 31.14.2. Example
+
+
+```clojure
+#_
+(RealBinOp
+ (RealBinOp
+  (RealConstant 2 (Real 4 []))
+  Add
+  (RealConstant 3 (Real 4 []))
+  (Real 4 [])
+  (RealConstant 5 (Real 4 []))
+  )
+ Mul
+ (RealConstant 5 (Real 4 []))
+ (Real 4 [])
+ (RealConstant 25 (Real 4 [])))
+```
+
+
+### 31.14.3. Heavy Sugar
+
+
+```clojure
+(defn RealBinOp-- [left- bo- right- rtt- rval?-]
+  "Must use RAdd, RMul, etc."
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head   ::RealBinOp
+              ::real-left   left-
+              ::real-binop  bo-
+              ::real-right  right-
+              ::Real        rtt-
+              ::real-value? rval?- ;; TODO: Check arithmetic!
+              }}]
+    (if (s/valid? ::RealBinOp cnd)
+      cnd
+      :invalid-real-bin-op)))
+```
+
+
+### 31.14.4. Legacy Sugar
+
+
+
+
+## 31.15. INTEGER COMPARE
+
+
+### 31.15.1. Original ASDL
 
 
 ```c
@@ -3094,7 +3197,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.14.2. Example
+### 31.15.2. Example
 
 
 ```clojure
@@ -3108,7 +3211,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.14.3. Heavy Sugar
+### 31.15.3. Heavy Sugar
 
 
 ```clojure
@@ -3127,10 +3230,10 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.15. LOGICAL COMPARE
+## 31.16. LOGICAL COMPARE
 
 
-### 31.15.1. Original ASDL
+### 31.16.1. Original ASDL
 
 
 ```c
@@ -3142,7 +3245,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.15.2. Example
+### 31.16.2. Example
 
 
 ```clojure
@@ -3155,11 +3258,12 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.15.3. Heavy Sugar
+### 31.16.3. Heavy Sugar
 
 
 ```clojure
-(defn LogicalCompare [l- cmp- r- tt- val?-]
+(defn LogicalCompare-- [l- cmp- r- tt- val?-]
+  "Must use LEq, LNotEq."
   (let [cnd {::term ::expr,
              ::asr-expr-head
              {::expr-head      ::LogicalCompare
@@ -3172,6 +3276,11 @@ symbol-table! That's part of abstract execution.
       cnd
       :invalid-logical-compare)))
 ```
+
+
+### 31.16.4. Legacy Sugar
+
+
 
 
 # 32. STMT

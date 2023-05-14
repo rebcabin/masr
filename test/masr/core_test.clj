@@ -4573,7 +4573,7 @@
 
     (testing "whole translation unit for -expr7-2ef3822"
       (is (s/valid? ::asr/unit (long-form-asr "-expr7-2ef3822"))))
-    #_
+
     (testing "whole translation unit for -expr8-2a4630a"
       (is (s/valid? ::asr/unit (long-form-asr "-expr8-2a4630a"))))
 
