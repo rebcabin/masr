@@ -1309,8 +1309,14 @@
 
 (defmasrtype
   NamedExpr expr
-  ;; types of the attributes:
   (target value ttype))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  IfExp expr
+  (test-expr body orelse ttype value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2524,6 +2530,7 @@
         :logical-compare    ::LogicalCompare
         :integer-compare    ::IntegerCompare
         :logical-binop      ::LogicalBinOp
+        :if-else            ::IfExp
         :named-expr         ::NamedExpr ;; TODO check return type!
         :var                ::Var       ;; TODO check return type!
         ;; TODO: integer-compare, etc.
@@ -2549,6 +2556,7 @@
 (s/def ::integer-expr
   (s/or :integer-constant   ::IntegerConstant
         :integer-binop      ::IntegerBinOp
+        :if-else            ::IfExp
         :named-expr         ::NamedExpr ;; TODO check return type!
         :var                ::Var       ;; TODO check return type!
         ))
@@ -2561,6 +2569,71 @@
 
 (s/def ::integer-left  ::integer-expr)
 (s/def ::integer-right ::integer-expr)
+;; #+end_src
+
+
+;;
+;;
+;; ## IF EXP
+;;
+;;
+
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;;  IfExp(expr test,
+;;        expr body,
+;;        expr orelse,
+;;        ttype type,
+;;        expr? value)
+;; ```
+
+
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(IfExp
+ (IntegerCompare
+  (Var 2 b)
+  Gt
+  (IntegerConstant 5 (Integer 4 []))
+  (Logical 4 [])
+  ())
+ (LogicalConstant true (Logical 4 []))
+ (LogicalConstant false (Logical 4 []))
+ (Logical 4 []) () )
+(defmasrtype
+  IfExp expr
+  (test-expr body orelse ttype value?))
+
+;; #+end_src
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn IfExp [test-expr, body, orelse, ttype, value?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head ::IfExp
+              ::test-expr test-expr
+              ::body      body
+              ::orelse    orelse
+              ::ttype     ttype
+              ::value?    value?}}]
+    (if (s/valid? ::IfExp cnd)
+      cnd
+      :invalid-if-exp)))
 ;; #+end_src
 
 

@@ -83,52 +83,56 @@
     - [30.2.1. Sugar](#3021-sugar)
 - [31. EXPR](#31-expr)
   - [31.1. Prerequisite Types and Aliases](#311-prerequisite-types-and-aliases)
-  - [31.2. NAMED EXPR](#312-named-expr)
+  - [31.2. IF EXP](#312-if-exp)
     - [31.2.1. Original ASDL](#3121-original-asdl)
     - [31.2.2. Example](#3122-example)
     - [31.2.3. Heavy Sugar](#3123-heavy-sugar)
-  - [31.3. FUNCTION CALL](#313-function-call)
+  - [31.3. NAMED EXPR](#313-named-expr)
     - [31.3.1. Original ASDL](#3131-original-asdl)
     - [31.3.2. Example](#3132-example)
     - [31.3.3. Heavy Sugar](#3133-heavy-sugar)
-    - [31.3.4. Legacy Sugar](#3134-legacy-sugar)
-  - [31.4. LOGICAL CONSTANT](#314-logical-constant)
+  - [31.4. FUNCTION CALL](#314-function-call)
     - [31.4.1. Original ASDL](#3141-original-asdl)
     - [31.4.2. Example](#3142-example)
     - [31.4.3. Heavy Sugar](#3143-heavy-sugar)
-  - [31.5. INTEGER CONSTANT](#315-integer-constant)
+    - [31.4.4. Legacy Sugar](#3144-legacy-sugar)
+  - [31.5. LOGICAL CONSTANT](#315-logical-constant)
     - [31.5.1. Original ASDL](#3151-original-asdl)
     - [31.5.2. Example](#3152-example)
     - [31.5.3. Heavy Sugar](#3153-heavy-sugar)
-  - [31.6. VAR](#316-var)
-    - [31.6.1. Issue #23](#3161-issue-23)
-    - [31.6.2. Heavy Sugar](#3162-heavy-sugar)
-    - [31.6.3. Legacy Sugar](#3163-legacy-sugar)
-  - [31.7. STRING CONSTANT](#317-string-constant)
-    - [31.7.1. Original ASDL](#3171-original-asdl)
-    - [31.7.2. Example](#3172-example)
-    - [31.7.3. Heavy Sugar](#3173-heavy-sugar)
-  - [31.8. STRING ORD](#318-string-ord)
+  - [31.6. INTEGER CONSTANT](#316-integer-constant)
+    - [31.6.1. Original ASDL](#3161-original-asdl)
+    - [31.6.2. Example](#3162-example)
+    - [31.6.3. Heavy Sugar](#3163-heavy-sugar)
+  - [31.7. VAR](#317-var)
+    - [31.7.1. Issue #23](#3171-issue-23)
+    - [31.7.2. Heavy Sugar](#3172-heavy-sugar)
+    - [31.7.3. Legacy Sugar](#3173-legacy-sugar)
+  - [31.8. STRING CONSTANT](#318-string-constant)
     - [31.8.1. Original ASDL](#3181-original-asdl)
     - [31.8.2. Example](#3182-example)
     - [31.8.3. Heavy Sugar](#3183-heavy-sugar)
-    - [31.8.4. Legacy Sugar](#3184-legacy-sugar)
-  - [31.9. LOGICAL BINOP](#319-logical-binop)
+  - [31.9. STRING ORD](#319-string-ord)
     - [31.9.1. Original ASDL](#3191-original-asdl)
     - [31.9.2. Example](#3192-example)
     - [31.9.3. Heavy Sugar](#3193-heavy-sugar)
-  - [31.10. INTEGER BINOP](#3110-integer-binop)
+    - [31.9.4. Legacy Sugar](#3194-legacy-sugar)
+  - [31.10. LOGICAL BINOP](#3110-logical-binop)
     - [31.10.1. Original ASDL](#31101-original-asdl)
     - [31.10.2. Example](#31102-example)
     - [31.10.3. Heavy Sugar](#31103-heavy-sugar)
-  - [31.11. INTEGER COMPARE](#3111-integer-compare)
+  - [31.11. INTEGER BINOP](#3111-integer-binop)
     - [31.11.1. Original ASDL](#31111-original-asdl)
     - [31.11.2. Example](#31112-example)
     - [31.11.3. Heavy Sugar](#31113-heavy-sugar)
-  - [31.12. LOGICAL COMPARE](#3112-logical-compare)
+  - [31.12. INTEGER COMPARE](#3112-integer-compare)
     - [31.12.1. Original ASDL](#31121-original-asdl)
     - [31.12.2. Example](#31122-example)
     - [31.12.3. Heavy Sugar](#31123-heavy-sugar)
+  - [31.13. LOGICAL COMPARE](#3113-logical-compare)
+    - [31.13.1. Original ASDL](#31131-original-asdl)
+    - [31.13.2. Example](#31132-example)
+    - [31.13.3. Heavy Sugar](#31133-heavy-sugar)
 - [32. STMT](#32-stmt)
   - [32.1. Prerequisite Types and Aliases](#321-prerequisite-types-and-aliases)
 - [33. EXPLICIT DEALLOCATE](#33-explicit-deallocate)
@@ -1351,8 +1355,12 @@ via `s/def`.
 
 (defmasrtype
   NamedExpr expr
-  ;; types of the attributes:
   (target value ttype))
+```
+```clojure
+(defmasrtype
+  IfExp expr
+  (test-expr body orelse ttype value?))
 ```
 ```clojure
 (defmasrtype
@@ -2375,6 +2383,7 @@ TODO: check that the types of the exprs are `::Logical`!
         :logical-compare    ::LogicalCompare
         :integer-compare    ::IntegerCompare
         :logical-binop      ::LogicalBinOp
+        :if-else            ::IfExp
         :named-expr         ::NamedExpr ;; TODO check return type!
         :var                ::Var       ;; TODO check return type!
         ;; TODO: integer-compare, etc.
@@ -2396,6 +2405,7 @@ TODO: check that the types of the exprs are `::Integer`!
 (s/def ::integer-expr
   (s/or :integer-constant   ::IntegerConstant
         :integer-binop      ::IntegerBinOp
+        :if-else            ::IfExp
         :named-expr         ::NamedExpr ;; TODO check return type!
         :var                ::Var       ;; TODO check return type!
         ))
@@ -2409,10 +2419,66 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-## 31.2. NAMED EXPR
+## 31.2. IF EXP
 
 
 ### 31.2.1. Original ASDL
+
+
+```c
+ IfExp(expr test,
+       expr body,
+       expr orelse,
+       ttype type,
+       expr? value)
+```
+
+
+### 31.2.2. Example
+
+
+```clojure
+#_
+(IfExp
+ (IntegerCompare
+  (Var 2 b)
+  Gt
+  (IntegerConstant 5 (Integer 4 []))
+  (Logical 4 [])
+  ())
+ (LogicalConstant true (Logical 4 []))
+ (LogicalConstant false (Logical 4 []))
+ (Logical 4 []) () )
+(defmasrtype
+  IfExp expr
+  (test-expr body orelse ttype value?))
+
+```
+
+
+### 31.2.3. Heavy Sugar
+
+
+```clojure
+(defn IfExp [test-expr, body, orelse, ttype, value?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head ::IfExp
+              ::test-expr test-expr
+              ::body      body
+              ::orelse    orelse
+              ::ttype     ttype
+              ::value?    value?}}]
+    (if (s/valid? ::IfExp cnd)
+      cnd
+      :invalid-if-exp)))
+```
+
+
+## 31.3. NAMED EXPR
+
+
+### 31.3.1. Original ASDL
 
 
 ```c
@@ -2420,7 +2486,7 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-### 31.2.2. Example
+### 31.3.2. Example
 
 
 ```clojure
@@ -2433,7 +2499,7 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-### 31.2.3. Heavy Sugar
+### 31.3.3. Heavy Sugar
 
 
 ```clojure
@@ -2450,10 +2516,10 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-## 31.3. FUNCTION CALL
+## 31.4. FUNCTION CALL
 
 
-### 31.3.1. Original ASDL
+### 31.4.1. Original ASDL
 
 
 ```c
@@ -2466,7 +2532,7 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-### 31.3.2. Example
+### 31.4.2. Example
 
 
 ```clojure
@@ -2482,7 +2548,7 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-### 31.3.3. Heavy Sugar
+### 31.4.3. Heavy Sugar
 
 
 ```clojure
@@ -2504,7 +2570,7 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-### 31.3.4. Legacy Sugar
+### 31.4.4. Legacy Sugar
 
 
 ```clojure
@@ -2519,10 +2585,10 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-## 31.4. LOGICAL CONSTANT
+## 31.5. LOGICAL CONSTANT
 
 
-### 31.4.1. Original ASDL
+### 31.5.1. Original ASDL
 
 
 ```c
@@ -2530,7 +2596,7 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-### 31.4.2. Example
+### 31.5.2. Example
 
 
 ```clojure
@@ -2539,7 +2605,7 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-### 31.4.3. Heavy Sugar
+### 31.5.3. Heavy Sugar
 
 
 ```clojure
@@ -2560,10 +2626,10 @@ TODO: check that the types of the exprs are `::Integer`!
 ```
 
 
-## 31.5. INTEGER CONSTANT
+## 31.6. INTEGER CONSTANT
 
 
-### 31.5.1. Original ASDL
+### 31.6.1. Original ASDL
 
 
 ```c
@@ -2571,7 +2637,7 @@ IntegerConstant(int n, ttype type)
 ```
 
 
-### 31.5.2. Example
+### 31.6.2. Example
 
 
 ```clojure
@@ -2580,7 +2646,7 @@ IntegerConstant(int n, ttype type)
 ```
 
 
-### 31.5.3. Heavy Sugar
+### 31.6.3. Heavy Sugar
 
 
 ```clojure
@@ -2601,10 +2667,10 @@ IntegerConstant(int n, ttype type)
 ```
 
 
-## 31.6. VAR
+## 31.7. VAR
 
 
-### 31.6.1. Issue #23
+### 31.7.1. Issue #23
 
 
 Is the parameter `symbol` for `Var` really a `symbol`?
@@ -2626,7 +2692,7 @@ Var(symtab_id stid, identifier it)
 
 
 
-### 31.6.2. Heavy Sugar
+### 31.7.2. Heavy Sugar
 
 
 ```clojure
@@ -2643,7 +2709,7 @@ Var(symtab_id stid, identifier it)
 ```
 
 
-### 31.6.3. Legacy Sugar
+### 31.7.3. Legacy Sugar
 
 
 ```clojure
@@ -2655,10 +2721,10 @@ TODO: make Var look up a value in the
 symbol-table! That's part of abstract execution.
 
 
-## 31.7. STRING CONSTANT
+## 31.8. STRING CONSTANT
 
 
-### 31.7.1. Original ASDL
+### 31.8.1. Original ASDL
 
 
 ```c
@@ -2666,7 +2732,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.7.2. Example
+### 31.8.2. Example
 
 
 ```clojure
@@ -2679,7 +2745,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.7.3. Heavy Sugar
+### 31.8.3. Heavy Sugar
 
 
 ```clojure
@@ -2700,10 +2766,10 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.8. STRING ORD
+## 31.9. STRING ORD
 
 
-### 31.8.1. Original ASDL
+### 31.9.1. Original ASDL
 
 
 ```c
@@ -2711,7 +2777,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.8.2. Example
+### 31.9.2. Example
 
 
 ```clojure
@@ -2727,7 +2793,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.8.3. Heavy Sugar
+### 31.9.3. Heavy Sugar
 
 
 ```clojure
@@ -2748,7 +2814,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.8.4. Legacy Sugar
+### 31.9.4. Legacy Sugar
 
 
 ```clojure
@@ -2769,10 +2835,10 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.9. LOGICAL BINOP
+## 31.10. LOGICAL BINOP
 
 
-### 31.9.1. Original ASDL
+### 31.10.1. Original ASDL
 
 
 ```c
@@ -2781,7 +2847,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.9.2. Example
+### 31.10.2. Example
 
 
 ```clojure
@@ -2798,7 +2864,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.9.3. Heavy Sugar
+### 31.10.3. Heavy Sugar
 
 
 ```clojure
@@ -2818,10 +2884,10 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.10. INTEGER BINOP
+## 31.11. INTEGER BINOP
 
 
-### 31.10.1. Original ASDL
+### 31.11.1. Original ASDL
 
 
 ```c
@@ -2833,7 +2899,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.10.2. Example
+### 31.11.2. Example
 
 
 ```clojure
@@ -2853,7 +2919,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.10.3. Heavy Sugar
+### 31.11.3. Heavy Sugar
 
 
 ```clojure
@@ -2873,10 +2939,10 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.11. INTEGER COMPARE
+## 31.12. INTEGER COMPARE
 
 
-### 31.11.1. Original ASDL
+### 31.12.1. Original ASDL
 
 
 ```c
@@ -2888,7 +2954,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.11.2. Example
+### 31.12.2. Example
 
 
 ```clojure
@@ -2902,7 +2968,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.11.3. Heavy Sugar
+### 31.12.3. Heavy Sugar
 
 
 ```clojure
@@ -2921,10 +2987,10 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.12. LOGICAL COMPARE
+## 31.13. LOGICAL COMPARE
 
 
-### 31.12.1. Original ASDL
+### 31.13.1. Original ASDL
 
 
 ```c
@@ -2936,7 +3002,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.12.2. Example
+### 31.13.2. Example
 
 
 ```clojure
@@ -2949,7 +3015,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.12.3. Heavy Sugar
+### 31.13.3. Heavy Sugar
 
 
 ```clojure
