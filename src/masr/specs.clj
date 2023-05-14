@@ -1341,6 +1341,14 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  IntegerCompare expr
+  (integer-left    cmpop           integer-right
+                   Integer         integer-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   LogicalConstant expr
   (bool    Logical))
 ;; #+end_src
@@ -2507,7 +2515,7 @@
 (s/def ::logical-expr
   (s/or :logical-constant   ::LogicalConstant
         :logical-compare    ::LogicalCompare
-        ;; :integer-compare    ::IntegerCompare
+        :integer-compare    ::IntegerCompare
         :logical-binop      ::LogicalBinOp
         :named-expr         ::NamedExpr ;; TODO check return type!
         :var                ::Var       ;; TODO check return type!
@@ -3076,6 +3084,60 @@
     (if (s/valid? ::IntegerBinOp cnd)
       cnd
       :invalid-integer-bin-op)))
+;; #+end_src
+
+
+;;
+;;
+;; ## INTEGER COMPARE
+;;
+;;
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | IntegerCompare(expr  left,
+;;                  cmpop op,
+;;                  expr  right,
+;;                  ttype type,
+;;                  expr? value)
+;; ```
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(IntegerCompare
+ (Var 4 z)
+ Eq
+ (IntegerConstant 16 (Integer 4 []))
+ (Logical 4 [])
+ ())
+;; #+end_src
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn IntegerCompare [l- cmp- r- tt- val?-]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::IntegerCompare
+              ::integer-left   l-
+              ::cmpop          cmp-
+              ::integer-right  r-
+              ::Integer        tt-
+              ::integer-value? val?-}}]
+    (if (s/valid? ::IntegerCompare cnd)
+      cnd
+      :invalid-integer-compare)))
 ;; #+end_src
 
 
