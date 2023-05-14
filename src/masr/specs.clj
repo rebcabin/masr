@@ -1252,6 +1252,13 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  ExplicitDeallocate stmt
+  (vars))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   Assert stmt
   (test-expr message?))
 ;; #+end_src
@@ -3206,28 +3213,20 @@
 ;; ## Prerequisite Types and Aliases
 ;;
 ;;
-;; TODO: Consider a regex-spec.
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::stmt* (s/coll-of ::stmt))
 ;; #+end_src
 
-;;
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::stmt? (.? ::stmt))
+(s/def ::vars  (s/coll-of ::Var))
 ;; #+end_src
 
 ;;
 ;;
-;; TODO: more cases for `lvalue`, and an `s/or`
-;; with `second` hack
+;; TODO: more cases for `lvalue`
 ;;
 ;;
 ;; #+begin_src clojure
@@ -3314,6 +3313,37 @@
 
 (s/def ::message?     (s/or :str string?
                             :nil empty?))
+;; #+end_src
+
+
+;;
+;;
+;; # EXPLICIT DEALLOCATE
+;;
+;;
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;;     | ExplicitDeallocate(expr* vars)
+;; ```
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn ExplicitDeallocate [vars]
+  (let [cnd {::term ::stmt
+             ::asr-stmt-head
+             {::stmt-head ::ExplicitDeallocate
+              ::vars vars}}]
+    (if (s/valid? ::ExplicitDeallocate cnd)
+      cnd
+      :invalid-explicit-deallocate)))
 ;; #+end_src
 
 
