@@ -122,10 +122,10 @@
                                                     Required
                                                     false
                                                 ),
-                                            cos@:__lpython_overloaded_0__cos
+                                            :cos__AT____lpython_overloaded_0__cos
                                                 (ExternalSymbol
                                                     193
-                                                    cos@__lpython_overloaded_0__cos
+                                                    cos__AT____lpython_overloaded_0__cos
                                                     3 __lpython_overloaded_0__cos
                                                     numpy
                                                     []
@@ -179,7 +179,7 @@
                                         []
                                         false
                                     )
-                                    [cos@__lpython_overloaded_0__cos
+                                    [cos__AT____lpython_overloaded_0__cos
                                     verify2d]
                                     []
                                     [(DoLoop
@@ -239,7 +239,7 @@
                                         (Var 193 cos2d)
                                         (RealBinOp
                                             (FunctionCall
-                                                193 cos@__lpython_overloaded_0__cos
+                                                193 cos__AT____lpython_overloaded_0__cos
                                                 220 cos
                                                 [((Var 193 array2d))]
                                                 (Real 8 [((IntegerConstant 0 (Integer 4 []))
@@ -619,20 +619,20 @@
                                                     Required
                                                     false
                                                 ),
-                                            sin@:__lpython_overloaded_0__sin
+                                            :sin__AT____lpython_overloaded_0__sin
                                                 (ExternalSymbol
                                                     192
-                                                    sin@__lpython_overloaded_0__sin
+                                                    sin__AT____lpython_overloaded_0__sin
                                                     3 __lpython_overloaded_0__sin
                                                     numpy
                                                     []
                                                     __lpython_overloaded_0__sin
                                                     Public
                                                 ),
-                                            sin@:__lpython_overloaded_1__sin
+                                            :sin__AT____lpython_overloaded_1__sin
                                                 (ExternalSymbol
                                                     192
-                                                    sin@__lpython_overloaded_1__sin
+                                                    sin__AT____lpython_overloaded_1__sin
                                                     3 __lpython_overloaded_1__sin
                                                     numpy
                                                     []
@@ -676,9 +676,9 @@
                                         []
                                         false
                                     )
-                                    [sin@__lpython_overloaded_1__sin
+                                    [sin__AT____lpython_overloaded_1__sin
                                     verify1d
-                                    sin@__lpython_overloaded_0__sin
+                                    sin__AT____lpython_overloaded_0__sin
                                     verifynd]
                                     []
                                     [(DoLoop
@@ -715,10 +715,10 @@
                                     (=
                                         (Var 192 sin1d)
                                         (FunctionCall
-                                            192 sin@__lpython_overloaded_1__sin
+                                            192 sin__AT____lpython_overloaded_1__sin
                                             220 sin
                                             [((FunctionCall
-                                                192 sin@__lpython_overloaded_1__sin
+                                                192 sin__AT____lpython_overloaded_1__sin
                                                 220 sin
                                                 [((Var 192 array1d))]
                                                 (Real 4 [((IntegerConstant 0 (Integer 4 []))
@@ -820,7 +820,7 @@
                                         (Var 192 sinnd)
                                         (RealBinOp
                                             (FunctionCall
-                                                192 sin@__lpython_overloaded_0__sin
+                                                192 sin__AT____lpython_overloaded_0__sin
                                                 220 sin
                                                 [((Var 192 arraynd))]
                                                 (Real 8 [((IntegerConstant 0 (Integer 4 []))
@@ -1130,10 +1130,10 @@
                                                     Required
                                                     false
                                                 ),
-                                            cos@:__lpython_overloaded_1__cos
+                                            :cos__AT____lpython_overloaded_1__cos
                                                 (ExternalSymbol
                                                     194
-                                                    cos@__lpython_overloaded_1__cos
+                                                    cos__AT____lpython_overloaded_1__cos
                                                     3 __lpython_overloaded_1__cos
                                                     numpy
                                                     []
@@ -1269,10 +1269,10 @@
                                                     Required
                                                     false
                                                 ),
-                                            sin@:__lpython_overloaded_1__sin
+                                            :sin__AT____lpython_overloaded_1__sin
                                                 (ExternalSymbol
                                                     194
-                                                    sin@__lpython_overloaded_1__sin
+                                                    sin__AT____lpython_overloaded_1__sin
                                                     3 __lpython_overloaded_1__sin
                                                     numpy
                                                     []
@@ -1296,8 +1296,8 @@
                                         []
                                         false
                                     )
-                                    [sin@__lpython_overloaded_1__sin
-                                    cos@__lpython_overloaded_1__cos]
+                                    [sin__AT____lpython_overloaded_1__sin
+                                    cos__AT____lpython_overloaded_1__cos]
                                     []
                                     [(=
                                         (Var 194 eps)
@@ -1417,7 +1417,7 @@
                                         (RealBinOp
                                             (RealBinOp
                                                 (FunctionCall
-                                                    194 sin@__lpython_overloaded_1__sin
+                                                    194 sin__AT____lpython_overloaded_1__sin
                                                     220 sin
                                                     [((Var 194 arraynd))]
                                                     (Real 4 [((IntegerConstant 0 (Integer 4 []))
@@ -1454,7 +1454,7 @@
                                             Add
                                             (RealBinOp
                                                 (FunctionCall
-                                                    194 cos@__lpython_overloaded_1__cos
+                                                    194 cos__AT____lpython_overloaded_1__cos
                                                     220 cos
                                                     [((Var 194 arraynd))]
                                                     (Real 4 [((IntegerConstant 0 (Integer 4 []))
@@ -1619,10 +1619,10 @@
                                                     (SymbolTable
                                                         195
                                                         {
-                                                            sin@:__lpython_overloaded_1__sin
+                                                            :sin__AT____lpython_overloaded_1__sin
                                                                 (ExternalSymbol
                                                                     195
-                                                                    sin@__lpython_overloaded_1__sin
+                                                                    sin__AT____lpython_overloaded_1__sin
                                                                     3 __lpython_overloaded_1__sin
                                                                     numpy
                                                                     []
@@ -1637,10 +1637,10 @@
                                                                 Abs
                                                                 [(RealBinOp
                                                                     (FunctionCall
-                                                                        195 sin@__lpython_overloaded_1__sin
+                                                                        195 sin__AT____lpython_overloaded_1__sin
                                                                         220 sin
                                                                         [((FunctionCall
-                                                                            195 sin@__lpython_overloaded_1__sin
+                                                                            195 sin__AT____lpython_overloaded_1__sin
                                                                             220 sin
                                                                             [((ArrayItem
                                                                                 (Var 185 array)
@@ -1766,7 +1766,7 @@
                                         []
                                         false
                                     )
-                                    [sin@__lpython_overloaded_1__sin]
+                                    [sin__AT____lpython_overloaded_1__sin]
                                     [(Var 185 array)
                                     (Var 185 result)
                                     (Var 185 size)]
@@ -2303,10 +2303,10 @@
                                                                     (SymbolTable
                                                                         200
                                                                         {
-                                                                            cos@:__lpython_overloaded_0__cos
+                                                                            :cos__AT____lpython_overloaded_0__cos
                                                                                 (ExternalSymbol
                                                                                     200
-                                                                                    cos@__lpython_overloaded_0__cos
+                                                                                    cos__AT____lpython_overloaded_0__cos
                                                                                     3 __lpython_overloaded_0__cos
                                                                                     numpy
                                                                                     []
@@ -2322,7 +2322,7 @@
                                                                                 [(RealBinOp
                                                                                     (RealBinOp
                                                                                         (FunctionCall
-                                                                                            200 cos@__lpython_overloaded_0__cos
+                                                                                            200 cos__AT____lpython_overloaded_0__cos
                                                                                             220 cos
                                                                                             [((ArrayItem
                                                                                                 (Var 187 array)
@@ -2515,7 +2515,7 @@
                                         []
                                         false
                                     )
-                                    [cos@__lpython_overloaded_0__cos]
+                                    [cos__AT____lpython_overloaded_0__cos]
                                     [(Var 187 array)
                                     (Var 187 result)
                                     (Var 187 size1)
@@ -2590,10 +2590,10 @@
                                                                                     (SymbolTable
                                                                                         198
                                                                                         {
-                                                                                            sin@:__lpython_overloaded_0__sin
+                                                                                            :sin__AT____lpython_overloaded_0__sin
                                                                                                 (ExternalSymbol
                                                                                                     198
-                                                                                                    sin@__lpython_overloaded_0__sin
+                                                                                                    sin__AT____lpython_overloaded_0__sin
                                                                                                     3 __lpython_overloaded_0__sin
                                                                                                     numpy
                                                                                                     []
@@ -2609,7 +2609,7 @@
                                                                                                 [(RealBinOp
                                                                                                     (RealBinOp
                                                                                                         (FunctionCall
-                                                                                                            198 sin@__lpython_overloaded_0__sin
+                                                                                                            198 sin__AT____lpython_overloaded_0__sin
                                                                                                             220 sin
                                                                                                             [((ArrayItem
                                                                                                                 (Var 186 array)
@@ -2865,7 +2865,7 @@
                                         []
                                         false
                                     )
-                                    [sin@__lpython_overloaded_0__sin]
+                                    [sin__AT____lpython_overloaded_0__sin]
                                     [(Var 186 array)
                                     (Var 186 result)
                                     (Var 186 size1)
@@ -4233,10 +4233,10 @@
                                                     _mod
                                                     Private
                                                 ),
-                                            _mod@:__lpython_overloaded_4___mod
+                                            :_mod__AT____lpython_overloaded_4___mod
                                                 (ExternalSymbol
                                                     72
-                                                    _mod@__lpython_overloaded_4___mod
+                                                    _mod__AT____lpython_overloaded_4___mod
                                                     79 __lpython_overloaded_4___mod
                                                     lpython_builtin
                                                     []
@@ -4291,7 +4291,7 @@
                                         []
                                         false
                                     )
-                                    [_mod@__lpython_overloaded_4___mod]
+                                    [_mod__AT____lpython_overloaded_4___mod]
                                     [(Var 72 x1)
                                     (Var 72 x2)]
                                     [(If
@@ -4323,7 +4323,7 @@
                                     (=
                                         (Var 72 _lpython_return_variable)
                                         (FunctionCall
-                                            72 _mod@__lpython_overloaded_4___mod
+                                            72 _mod__AT____lpython_overloaded_4___mod
                                             72 _mod
                                             [((Var 72 x1))
                                             ((Var 72 x2))]
@@ -6096,10 +6096,10 @@
                                                     _mod
                                                     Private
                                                 ),
-                                            _mod@:__lpython_overloaded_2___mod
+                                            :_mod__AT____lpython_overloaded_2___mod
                                                 (ExternalSymbol
                                                     73
-                                                    _mod@__lpython_overloaded_2___mod
+                                                    _mod__AT____lpython_overloaded_2___mod
                                                     79 __lpython_overloaded_2___mod
                                                     lpython_builtin
                                                     []
@@ -6154,7 +6154,7 @@
                                         []
                                         false
                                     )
-                                    [_mod@__lpython_overloaded_2___mod]
+                                    [_mod__AT____lpython_overloaded_2___mod]
                                     [(Var 73 x1)
                                     (Var 73 x2)]
                                     [(If
@@ -6176,7 +6176,7 @@
                                     (=
                                         (Var 73 _lpython_return_variable)
                                         (FunctionCall
-                                            73 _mod@__lpython_overloaded_2___mod
+                                            73 _mod__AT____lpython_overloaded_2___mod
                                             73 _mod
                                             [((Var 73 x1))
                                             ((Var 73 x2))]

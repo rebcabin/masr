@@ -22,10 +22,10 @@
                                                     _lpython_floordiv
                                                     Private
                                                 ),
-                                            _lpython_floordiv@:__lpython_overloaded_6___lpython_floordiv
+                                            :_lpython_floordiv__AT____lpython_overloaded_6___lpython_floordiv
                                                 (ExternalSymbol
                                                     2
-                                                    _lpython_floordiv@__lpython_overloaded_6___lpython_floordiv
+                                                    _lpython_floordiv__AT____lpython_overloaded_6___lpython_floordiv
                                                     4 __lpython_overloaded_6___lpython_floordiv
                                                     lpython_builtin
                                                     []
@@ -109,7 +109,7 @@
                                         []
                                         false
                                     )
-                                    [_lpython_floordiv@__lpython_overloaded_6___lpython_floordiv]
+                                    [_lpython_floordiv__AT____lpython_overloaded_6___lpython_floordiv]
                                     []
                                     [(=
                                         (Var 2 x)
@@ -385,7 +385,7 @@
                                         (Var 2 x)
                                         (Cast
                                             (FunctionCall
-                                                2 _lpython_floordiv@__lpython_overloaded_6___lpython_floordiv
+                                                2 _lpython_floordiv__AT____lpython_overloaded_6___lpython_floordiv
                                                 2 _lpython_floordiv
                                                 [((Var 2 b1))
                                                 ((Var 2 b1))]

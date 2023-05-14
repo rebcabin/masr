@@ -160,20 +160,20 @@
                                                     max
                                                     Private
                                                 ),
-                                            max@:__lpython_overloaded_2__max
+                                            :max__AT____lpython_overloaded_2__max
                                                 (ExternalSymbol
                                                     3
-                                                    max@__lpython_overloaded_2__max
+                                                    max__AT____lpython_overloaded_2__max
                                                     8 __lpython_overloaded_2__max
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_2__max
                                                     Public
                                                 ),
-                                            max@:__lpython_overloaded_3__max
+                                            :max__AT____lpython_overloaded_3__max
                                                 (ExternalSymbol
                                                     3
-                                                    max@__lpython_overloaded_3__max
+                                                    max__AT____lpython_overloaded_3__max
                                                     8 __lpython_overloaded_3__max
                                                     lpython_builtin
                                                     []
@@ -197,8 +197,8 @@
                                         []
                                         false
                                     )
-                                    [max@__lpython_overloaded_2__max
-                                    max@__lpython_overloaded_3__max]
+                                    [max__AT____lpython_overloaded_2__max
+                                    max__AT____lpython_overloaded_3__max]
                                     []
                                     [(=
                                         (Var 3 d)
@@ -227,7 +227,7 @@
                                     (Assert
                                         (RealCompare
                                             (FunctionCall
-                                                3 max@__lpython_overloaded_2__max
+                                                3 max__AT____lpython_overloaded_2__max
                                                 3 max
                                                 [((Var 3 d))
                                                 ((Var 3 e))
@@ -246,7 +246,7 @@
                                     (Assert
                                         (RealCompare
                                             (FunctionCall
-                                                3 max@__lpython_overloaded_3__max
+                                                3 max__AT____lpython_overloaded_3__max
                                                 3 max
                                                 [((Var 3 e))
                                                 ((Var 3 f))]
@@ -326,20 +326,20 @@
                                                     max
                                                     Private
                                                 ),
-                                            max@:__lpython_overloaded_0__max
+                                            :max__AT____lpython_overloaded_0__max
                                                 (ExternalSymbol
                                                     2
-                                                    max@__lpython_overloaded_0__max
+                                                    max__AT____lpython_overloaded_0__max
                                                     8 __lpython_overloaded_0__max
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_0__max
                                                     Public
                                                 ),
-                                            max@:__lpython_overloaded_1__max
+                                            :max__AT____lpython_overloaded_1__max
                                                 (ExternalSymbol
                                                     2
-                                                    max@__lpython_overloaded_1__max
+                                                    max__AT____lpython_overloaded_1__max
                                                     8 __lpython_overloaded_1__max
                                                     lpython_builtin
                                                     []
@@ -363,8 +363,8 @@
                                         []
                                         false
                                     )
-                                    [max@__lpython_overloaded_0__max
-                                    max@__lpython_overloaded_1__max]
+                                    [max__AT____lpython_overloaded_0__max
+                                    max__AT____lpython_overloaded_1__max]
                                     []
                                     [(=
                                         (Var 2 a)
@@ -384,7 +384,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                2 max@__lpython_overloaded_0__max
+                                                2 max__AT____lpython_overloaded_0__max
                                                 2 max
                                                 [((Var 2 a))
                                                 ((Var 2 b))]
@@ -402,7 +402,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                2 max@__lpython_overloaded_1__max
+                                                2 max__AT____lpython_overloaded_1__max
                                                 2 max
                                                 [((Var 2 a))
                                                 ((Var 2 b))
@@ -421,7 +421,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                2 max@__lpython_overloaded_1__max
+                                                2 max__AT____lpython_overloaded_1__max
                                                 2 max
                                                 [((IntegerConstant 1 (Integer 4 [])))
                                                 ((IntegerConstant 2 (Integer 4 [])))
@@ -443,7 +443,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                2 max@__lpython_overloaded_0__max
+                                                2 max__AT____lpython_overloaded_0__max
                                                 2 max
                                                 [((IntegerConstant 1 (Integer 4 [])))
                                                 ((IntegerConstant 6 (Integer 4 [])))]
@@ -526,20 +526,20 @@
                                                     min
                                                     Private
                                                 ),
-                                            min@:__lpython_overloaded_2__min
+                                            :min__AT____lpython_overloaded_2__min
                                                 (ExternalSymbol
                                                     5
-                                                    min@__lpython_overloaded_2__min
+                                                    min__AT____lpython_overloaded_2__min
                                                     8 __lpython_overloaded_2__min
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_2__min
                                                     Public
                                                 ),
-                                            min@:__lpython_overloaded_3__min
+                                            :min__AT____lpython_overloaded_3__min
                                                 (ExternalSymbol
                                                     5
-                                                    min@__lpython_overloaded_3__min
+                                                    min__AT____lpython_overloaded_3__min
                                                     8 __lpython_overloaded_3__min
                                                     lpython_builtin
                                                     []
@@ -563,8 +563,8 @@
                                         []
                                         false
                                     )
-                                    [min@__lpython_overloaded_2__min
-                                    min@__lpython_overloaded_3__min]
+                                    [min__AT____lpython_overloaded_2__min
+                                    min__AT____lpython_overloaded_3__min]
                                     []
                                     [(=
                                         (Var 5 d)
@@ -593,7 +593,7 @@
                                     (Assert
                                         (RealCompare
                                             (FunctionCall
-                                                5 min@__lpython_overloaded_2__min
+                                                5 min__AT____lpython_overloaded_2__min
                                                 5 min
                                                 [((Var 5 d))
                                                 ((Var 5 e))
@@ -612,7 +612,7 @@
                                     (Assert
                                         (RealCompare
                                             (FunctionCall
-                                                5 min@__lpython_overloaded_3__min
+                                                5 min__AT____lpython_overloaded_3__min
                                                 5 min
                                                 [((Var 5 e))
                                                 ((Var 5 f))]
@@ -692,20 +692,20 @@
                                                     min
                                                     Private
                                                 ),
-                                            min@:__lpython_overloaded_0__min
+                                            :min__AT____lpython_overloaded_0__min
                                                 (ExternalSymbol
                                                     4
-                                                    min@__lpython_overloaded_0__min
+                                                    min__AT____lpython_overloaded_0__min
                                                     8 __lpython_overloaded_0__min
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_0__min
                                                     Public
                                                 ),
-                                            min@:__lpython_overloaded_1__min
+                                            :min__AT____lpython_overloaded_1__min
                                                 (ExternalSymbol
                                                     4
-                                                    min@__lpython_overloaded_1__min
+                                                    min__AT____lpython_overloaded_1__min
                                                     8 __lpython_overloaded_1__min
                                                     lpython_builtin
                                                     []
@@ -729,8 +729,8 @@
                                         []
                                         false
                                     )
-                                    [min@__lpython_overloaded_0__min
-                                    min@__lpython_overloaded_1__min]
+                                    [min__AT____lpython_overloaded_0__min
+                                    min__AT____lpython_overloaded_1__min]
                                     []
                                     [(=
                                         (Var 4 a)
@@ -750,7 +750,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                4 min@__lpython_overloaded_0__min
+                                                4 min__AT____lpython_overloaded_0__min
                                                 4 min
                                                 [((Var 4 a))
                                                 ((Var 4 b))]
@@ -768,7 +768,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                4 min@__lpython_overloaded_1__min
+                                                4 min__AT____lpython_overloaded_1__min
                                                 4 min
                                                 [((Var 4 a))
                                                 ((Var 4 b))
@@ -787,7 +787,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                4 min@__lpython_overloaded_1__min
+                                                4 min__AT____lpython_overloaded_1__min
                                                 4 min
                                                 [((IntegerConstant 1 (Integer 4 [])))
                                                 ((IntegerConstant 2 (Integer 4 [])))
@@ -809,7 +809,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                4 min@__lpython_overloaded_0__min
+                                                4 min__AT____lpython_overloaded_0__min
                                                 4 min
                                                 [((IntegerConstant 1 (Integer 4 [])))
                                                 ((IntegerConstant 6 (Integer 4 [])))]

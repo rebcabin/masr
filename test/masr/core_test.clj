@@ -254,31 +254,6 @@
 
 #_
 (gen/sample (s/gen ::asr/dimension*) 5)
-;; => ([#:masr.specs{:term :masr.specs/dimension, :dimension-content (3)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (11 0)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1 6674)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content ()}]
-;;     [#:masr.specs{:term :masr.specs/dimension, :dimension-content (13 2)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (17)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (0 7208)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (0 6578)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content ()}]
-;;     [#:masr.specs{:term :masr.specs/dimension, :dimension-content (1686186484)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (2 4)}]
-;;     [#:masr.specs{:term :masr.specs/dimension, :dimension-content ()}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1 11)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (1447797)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (31428)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (2551 2037)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content ()}]
-;;     [#:masr.specs{:term :masr.specs/dimension, :dimension-content (24 10722173)}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content ()}
-;;      #:masr.specs{:term :masr.specs/dimension, :dimension-content (12)}])
-
-
 
 
 ;;               _        _        _    _
@@ -290,8 +265,8 @@
 
 (deftest symtab-id-test
   (is (= (symtab-id  42)                            42))
-  (is (= (symtab-id -42)                            ::asr/invalid-symtab-id))
-  (is (= (symtab-id 'foo)                           ::asr/invalid-symtab-id))
+  (is (= (symtab-id -42)                       ::asr/invalid-symtab-id))
+  (is (= (symtab-id 'foo)                      ::asr/invalid-symtab-id))
   (is (= (s/conform ::asr/nat 42)                   42))
   (is (= (s/conform ::asr/nat (nat 42))             42))
   (is (= (s/conform ::asr/symtab-id 42)             42))
@@ -379,18 +354,23 @@
   (is      (s/valid? ::asr/identifier-set (identifier-set ['foo])))
   (is      (s/valid? ::asr/identifier-set (identifier-set '(foo))))
   (is      (s/valid? ::asr/identifier-set (identifier-set #{'foo})))
-  (is (not (s/valid? ::asr/identifier-set (identifier-set {'foo 'bar}))))
+  (is (not (s/valid? ::asr/identifier-set
+                     (identifier-set {'foo 'bar}))))
   (is      (s/valid? ::asr/identifier-set (identifier-set ['foo 'bar])))
   (is      (s/valid? ::asr/identifier-set (identifier-set '(foo bar))))
-  (is      (s/valid? ::asr/identifier-set (identifier-set #{'foo 'bar})))
-  (is      (s/valid? ::asr/identifier-set (identifier-set ['foo 'foo])))
+  (is      (s/valid? ::asr/identifier-set
+                     (identifier-set #{'foo 'bar})))
+  (is      (s/valid? ::asr/identifier-set
+                     (identifier-set ['foo 'foo])))
   ;; check set-ness
   (is (= 1 (count (identifier-set ['foo 'foo]))))
   (is      (s/valid? ::asr/identifier-set (identifier-set '(foo foo))))
   ;; #{'foo 'foo} won't compile!
   (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo 123]))))
-  (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo "foo"]))))
-  (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo :foo])))))
+  (is (not (s/valid? ::asr/identifier-set
+                     (identifier-set ['foo "foo"]))))
+  (is (not (s/valid? ::asr/identifier-set
+                     (identifier-set ['foo :foo])))))
 
 
 (deftest identifier-list-test
@@ -401,18 +381,27 @@
   (is      (s/valid? ::asr/identifier-list (identifier-list ['foo])))
   (is      (s/valid? ::asr/identifier-list (identifier-list '(foo))))
   (is      (s/valid? ::asr/identifier-list (identifier-list #{'foo})))
-  (is (not (s/valid? ::asr/identifier-list (identifier-list {'foo 'bar}))))
-  (is      (s/valid? ::asr/identifier-list (identifier-list ['foo 'bar])))
-  (is      (s/valid? ::asr/identifier-list (identifier-list '(foo bar))))
-  (is      (s/valid? ::asr/identifier-list (identifier-list #{'foo 'bar})))
-  (is      (s/valid? ::asr/identifier-list (identifier-list ['foo 'foo])))
+  (is (not (s/valid? ::asr/identifier-list
+                     (identifier-list {'foo 'bar}))))
+  (is      (s/valid? ::asr/identifier-list
+                     (identifier-list ['foo 'bar])))
+  (is      (s/valid? ::asr/identifier-list
+                     (identifier-list '(foo bar))))
+  (is      (s/valid? ::asr/identifier-list
+                     (identifier-list #{'foo 'bar})))
+  (is      (s/valid? ::asr/identifier-list
+                     (identifier-list ['foo 'foo])))
   ;; check that duplicates are allowed
   (is (= 2 (count (identifier-list ['foo 'foo]))))
-  (is      (s/valid? ::asr/identifier-list (identifier-list '(foo foo))))
+  (is      (s/valid? ::asr/identifier-list
+                     (identifier-list '(foo foo))))
   ;; #{'foo 'foo} won't compile!
-  (is (not (s/valid? ::asr/identifier-list (identifier-list ['foo 123]))))
-  (is (not (s/valid? ::asr/identifier-list (identifier-list ['foo "foo"]))))
-  (is (not (s/valid? ::asr/identifier-list (identifier-list ['foo :foo])))))
+  (is (not (s/valid? ::asr/identifier-list
+                     (identifier-list ['foo 123]))))
+  (is (not (s/valid? ::asr/identifier-list
+                     (identifier-list ['foo "foo"]))))
+  (is (not (s/valid? ::asr/identifier-list
+                     (identifier-list ['foo :foo])))))
 
 
 (deftest identifier-suit-test
@@ -423,16 +412,25 @@
   (is      (s/valid? ::asr/identifier-suit (identifier-suit ['foo])))
   (is      (s/valid? ::asr/identifier-suit (identifier-suit '(foo))))
   (is      (s/valid? ::asr/identifier-suit (identifier-suit #{'foo})))
-  (is (not (s/valid? ::asr/identifier-suit (identifier-suit {'foo 'bar}))))
-  (is      (s/valid? ::asr/identifier-suit (identifier-suit ['foo 'bar])))
-  (is      (s/valid? ::asr/identifier-suit (identifier-suit '(foo bar))))
-  (is      (s/valid? ::asr/identifier-suit (identifier-suit #{'foo 'bar})))
-  (is (not (s/valid? ::asr/identifier-suit (identifier-suit ['foo 'foo]))))
-  (is (not (s/valid? ::asr/identifier-suit (identifier-suit '(foo foo)))))
+  (is (not (s/valid? ::asr/identifier-suit
+                     (identifier-suit {'foo 'bar}))))
+  (is      (s/valid? ::asr/identifier-suit
+                     (identifier-suit ['foo 'bar])))
+  (is      (s/valid? ::asr/identifier-suit
+                     (identifier-suit '(foo bar))))
+  (is      (s/valid? ::asr/identifier-suit
+                     (identifier-suit #{'foo 'bar})))
+  (is (not (s/valid? ::asr/identifier-suit
+                     (identifier-suit ['foo 'foo]))))
+  (is (not (s/valid? ::asr/identifier-suit
+                     (identifier-suit '(foo foo)))))
   ;; #{'foo 'foo} won't compile!
-  (is (not (s/valid? ::asr/identifier-suit (identifier-suit ['foo 123]))))
-  (is (not (s/valid? ::asr/identifier-suit (identifier-suit ['foo "foo"]))))
-  (is (not (s/valid? ::asr/identifier-suit (identifier-suit ['foo :foo])))))
+  (is (not (s/valid? ::asr/identifier-suit
+                     (identifier-suit ['foo 123]))))
+  (is (not (s/valid? ::asr/identifier-suit
+                     (identifier-suit ['foo "foo"]))))
+  (is (not (s/valid? ::asr/identifier-suit
+                     (identifier-suit ['foo :foo])))))
 
 
 ;;  _     _           _
@@ -707,17 +705,25 @@
   (testing "top-level-types"
     (is (s/valid? ::asr/Logical   (Logical)))
     (is (s/valid? ::asr/Integer   (Integer)))
+    (is (s/valid? ::asr/Real      (Real)))
+    (is (s/valid? ::asr/Complex   (Complex)))
     (is (s/valid? ::asr/Character (Character 1 1 () [])))
 
     (is (s/valid? ::asr/ttype     (Logical)))
     (is (s/valid? ::asr/ttype     (Integer)))
+    (is (s/valid? ::asr/ttype     (Real)))
+    (is (s/valid? ::asr/ttype     (Complex)))
     (is (s/valid? ::asr/ttype     (Character 1 1 () [])))
 
     (is (s/valid? ::asr/asr-term  (Logical)))
     (is (s/valid? ::asr/asr-term  (Integer)))
+    (is (s/valid? ::asr/asr-term  (Real)))
+    (is (s/valid? ::asr/asr-term  (Complex)))
     (is (s/valid? ::asr/asr-term  (Character 1 1 () [])))
 
     (is (not (s/valid? ::asr/Logical   (Integer))))
+    (is (not (s/valid? ::asr/Real      (Integer))))
+    (is (not (s/valid? ::asr/Complex   (Integer))))
     (is (not (s/valid? ::asr/Integer   (Logical)))))
   (testing "full-sugar and light-sugar)"
     (is (vt? ::asr/Integer (Integer)))
@@ -728,6 +734,15 @@
     (is (vt? ::asr/Integer (Integer 8)))
     (is (vt? ::asr/Integer (Integer 8 [])))
     (is (vt? ::asr/Integer (Integer 8 [[6 60] [1 82]])))
+
+    (is (vt? ::asr/Real    (Real)))
+    (is (vt? ::asr/Real    (Real 4)))
+    (is (vt? ::asr/Real    (Real 4 [])))
+    (is (vt? ::asr/Real    (Real 4 [[6 60] [1 42]])))
+    (is (vt? ::asr/Real    (Real)))
+    (is (vt? ::asr/Real    (Real 8)))
+    (is (vt? ::asr/Real    (Real 8 [])))
+    (is (vt? ::asr/Real    (Real 8 [[6 60] [1 82]])))
 
     (is (vt? ::asr/Logical (Logical)))
     (is (vt? ::asr/Logical (Logical 4)))
@@ -885,6 +900,27 @@
 ;; |  _|  \  /| |_) | |_) |
 ;; | |___ /  \|  __/|  _ <
 ;; |_____/_/\_\_|   |_| \_\
+
+
+;;   ___         _
+;;  / __|__ _ __| |_
+;; | (__/ _` (_-<  _|
+;;  \___\__,_/__/\__|
+
+#_
+(deftest cast-test
+  (let [example (Cast
+                 (FunctionCall
+                  2 pow__AT____lpython_overloaded_0__pow
+                  2 pow
+                  [((IntegerConstant 2 (Integer 4 [])))
+                   ((IntegerConstant 2 (Integer 4 [])))]
+                  (Real 8 [])
+                  (RealConstant 4.000000 (Real 8 [])) ())
+                 RealToInteger
+                 (Integer 4 [])
+                 (IntegerConstant 4 (Integer 4 [])))]
+    (is (s/valid? ::Cast example))))
 
 
 ;;  _  _                   _ ___
@@ -1456,7 +1492,8 @@
                  {::asr/symbol-head   ::asr/ExternalSymbol
                   ::asr/symtab-id     5
                   ::asr/nym           '_lpython_main_program
-                  ::asr/extern-symref (symbol-ref '_lpython_main_program 7)
+                  ::asr/extern-symref
+                  (symbol-ref '_lpython_main_program 7)
                   ::asr/modulenym     '_global_symbols
                   ::asr/scope-nyms    [],
                   ::asr/orig-nym      '_lpython_main_program
@@ -1489,6 +1526,16 @@
                  []
                  _lpython_main_program
                  Public)))
+
+  (is (s/valid? ::asr/ExternalSymbol
+                (ExternalSymbol
+                 3 pow__AT____lpython_overloaded_0__pow
+                 6 __lpython_overloaded_0__pow
+                 lpython_builtin
+                 []
+                 __lpython_overloaded_0__pow
+                 Public
+                 )))
   )
 
 
@@ -1895,6 +1942,829 @@
     ))
 
 
+;;  __  __         _      _
+;; |  \/  |___  __| |_  _| |___
+;; | |\/| / _ \/ _` | || | / -_)
+;; |_|  |_\___/\__,_|\_,_|_\___|
+
+
+(deftest bisecting-Module-test
+  (let [example (legacy
+                 (Function
+                  (SymbolTable
+                   113
+                   {})
+                  _lpython_main_program
+                  (FunctionType
+                   []
+                   ()
+                   Source
+                   Implementation
+                   ()
+                   false
+                   false
+                   false
+                   false
+                   false
+                   []
+                   []
+                   false)
+                  [main0]
+                  []
+                  [(SubroutineCall
+                    114 main0
+                    ()
+                    []
+                    ()
+                    )]
+                  ()
+                  Public
+                  false
+                  false))]
+    (is (s/valid? ::asr/Function example)))
+
+  (let [example (legacy
+                 (Function
+                  (SymbolTable
+                   4
+                   {:c
+                    (Variable
+                     4
+                     c
+                     []
+                     Local
+                     ()
+                     ()
+                     Default
+                     (Integer 4 [])
+                     Source
+                     Public
+                     Required
+                     false
+                     )
+                    })
+                  main0
+                  (FunctionType
+                   []
+                   ()
+                   Source
+                   Implementation
+                   ()
+                   false
+                   false
+                   false
+                   false
+                   false
+                   []
+                   []
+                   false
+                   )
+                  [test_pow
+                   test_pow_1]
+                  []
+                  [(SubroutineCall
+                    114 test_pow
+                    ()
+                    []
+                    ()
+                    )
+                   (=
+                    (Var 4 c)
+                    (FunctionCall
+                     114 test_pow_1
+                     ()
+                     [((IntegerConstant 1 (Integer 4 [])))
+                      ((IntegerConstant 2 (Integer 4 [])))]
+                     (Integer 4 [])
+                     ()
+                     ()
+                     )
+                    ()
+                    )]
+                  ()
+                  Public
+                  false
+                  false
+                  ))]
+    (is (s/valid? ::asr/Function example)))
+
+  (let [example (legacy
+                 (ExternalSymbol
+                  2
+                  pow
+                  6 pow
+                  lpython_builtin
+                  []
+                  pow
+                  Private
+                  ))]
+    (is (s/valid? ::asr/ExternalSymbol example)))
+
+  (let [example (legacy
+                 (ExternalSymbol
+                  2
+                  pow__AT____lpython_overloaded_0__pow
+                  6 __lpython_overloaded_0__pow
+                  lpython_builtin
+                  []
+                  __lpython_overloaded_0__pow
+                  Public
+                  ))]
+    (is (s/valid? ::asr/ExternalSymbol example)))
+
+  (let [example (legacy
+                 (FunctionType
+                  []
+                  ()
+                  Source
+                  Implementation
+                  ()
+                  false
+                  false
+                  false
+                  false
+                  false
+                  []
+                  []
+                  false
+                  ))]
+    (is (s/valid? ::asr/FunctionType example)))
+
+  (let [example (legacy
+                 (Variable
+                  2 a []
+                  Local () ()
+                  Default
+                  (Integer 4 [])
+                  Source  Public  Required false))]
+    (is (s/valid? ::asr/Variable example)))
+
+  (let [example (legacy [((IntegerConstant 2 (Integer 4 [])))
+                         ((IntegerConstant 2 (Integer 4 [])))])]
+    (is (s/valid? ::asr/call-args example)))
+
+  (let [example (legacy
+                 (FunctionCall
+                  2 pow__AT____lpython_overloaded_0__pow
+                  2 pow
+                  [((IntegerConstant 2 (Integer 4 [])))
+                   ((IntegerConstant 2 (Integer 4 [])))]
+                  (Real 8 [])
+                  (RealConstant 4.000000 (Real 8 [])) ()))]
+    (is (s/valid? ::asr/FunctionCall example))
+    (is (s/valid? ::asr/expr         example))
+    (is (s/valid? ::asr/target       example)))
+
+  (is (s/valid? ::asr/value  (IntegerConstant 4 (Integer 4 []))))
+  (is (s/valid? ::asr/value? (IntegerConstant 4 (Integer 4 []))))
+  (is (s/valid? ::asr/cast-kind RealToInteger))
+  (is (s/valid? ::asr/ttype     (Integer 4 [])))
+
+  (let [example (legacy
+                 (Cast
+                  (FunctionCall
+                   2 pow__AT____lpython_overloaded_0__pow
+                   2 pow
+                   [((IntegerConstant 2 (Integer 4 [])))
+                    ((IntegerConstant 2 (Integer 4 [])))]
+                   (Real 8 [])
+                   (RealConstant 4.000000 (Real 8 [])) ())
+                  RealToInteger
+                  (Integer 4 [])
+                  (IntegerConstant 4 (Integer 4 []))
+                  ))]
+    (is       (s/valid?  ::asr/Cast example)))
+
+  (let [example (legacy
+                 [(=
+                   (Var 2 a)
+                   (Cast
+                    (FunctionCall
+                     2 pow__AT____lpython_overloaded_0__pow
+                     2 pow
+                     [((IntegerConstant 2 (Integer 4 [])))
+                      ((IntegerConstant 2 (Integer 4 [])))]
+                     (Real 8 [])
+                     (RealConstant
+                      4.000000
+                      (Real 8 [])
+                      )
+                     ()
+                     )
+                    RealToInteger
+                    (Integer 4 [])
+                    (IntegerConstant 4 (Integer 4 []))
+                    )
+                   ()
+                   )])]
+    (is (s/valid? ::asr/body example)))
+
+  (let [example (legacy
+                 (Function
+                  (SymbolTable 2 { })
+                  test_pow
+                  (FunctionType
+                   []
+                   ()
+                   Source
+                   Implementation
+                   ()
+                   false
+                   false
+                   false
+                   false
+                   false
+                   []
+                   []
+                   false
+                   )
+                  [pow__AT____lpython_overloaded_0__pow]
+                  []
+                  [(=
+                    (Var 2 a)
+                    (Cast
+                     (FunctionCall
+                      2 pow__AT____lpython_overloaded_0__pow
+                      2 pow
+                      [((IntegerConstant 2 (Integer 4 [])))
+                       ((IntegerConstant 2 (Integer 4 [])))]
+                      (Real 8 [])
+                      (RealConstant
+                       4.000000
+                       (Real 8 [])
+                       )
+                      ()
+                      )
+                     RealToInteger
+                     (Integer 4 [])
+                     (IntegerConstant 4 (Integer 4 []))
+                     )
+                    ()
+                    )]
+                  ()
+                  Public
+                  false
+                  false
+                  ))]
+    (is (s/valid? ::asr/Function example)))
+
+  (let [example (legacy
+                 (SymbolTable
+                  114
+                  {:test_pow
+                   (Function
+                    (SymbolTable
+                     2
+                     {
+                      :a
+                      (Variable
+                       2
+                       a
+                       []
+                       Local
+                       ()
+                       ()
+                       Default
+                       (Integer 4 [])
+                       Source
+                       Public
+                       Required
+                       false
+                       ),
+                      :pow
+                      (ExternalSymbol
+                       2
+                       pow
+                       6 pow
+                       lpython_builtin
+                       []
+                       pow
+                       Private
+                       ),
+                      :pow__AT____lpython_overloaded_0__pow
+                      (ExternalSymbol
+                       2
+                       pow__AT____lpython_overloaded_0__pow
+                       6 __lpython_overloaded_0__pow
+                       lpython_builtin
+                       []
+                       __lpython_overloaded_0__pow
+                       Public
+                       )
+                      })
+                    test_pow
+                    (FunctionType
+                     []
+                     ()
+                     Source
+                     Implementation
+                     ()
+                     false
+                     false
+                     false
+                     false
+                     false
+                     []
+                     []
+                     false
+                     )
+                    [pow__AT____lpython_overloaded_0__pow]
+                    []
+                    [(=
+                      (Var 2 a)
+                      (Cast
+                       (FunctionCall
+                        2 pow__AT____lpython_overloaded_0__pow
+                        2 pow
+                        [((IntegerConstant 2 (Integer 4 [])))
+                         ((IntegerConstant 2 (Integer 4 [])))]
+                        (Real 8 [])
+                        (RealConstant
+                         4.000000
+                         (Real 8 [])
+                         )
+                        ()
+                        )
+                       RealToInteger
+                       (Integer 4 [])
+                       (IntegerConstant 4 (Integer 4 []))
+                       )
+                      ()
+                      )]
+                    ()
+                    Public
+                    false
+                    false
+                    ),
+                   :test_pow_1
+                   (Function
+                    (SymbolTable
+                     3
+                     {
+                      :_lpython_return_variable
+                      (Variable
+                       3
+                       _lpython_return_variable
+                       []
+                       ReturnVar
+                       ()
+                       ()
+                       Default
+                       (Integer 4 [])
+                       Source
+                       Public
+                       Required
+                       false
+                       ),
+                      :a
+                      (Variable
+                       3
+                       a
+                       []
+                       In
+                       ()
+                       ()
+                       Default
+                       (Integer 4 [])
+                       Source
+                       Public
+                       Required
+                       false
+                       ),
+                      :b
+                      (Variable
+                       3
+                       b
+                       []
+                       In
+                       ()
+                       ()
+                       Default
+                       (Integer 4 [])
+                       Source
+                       Public
+                       Required
+                       false
+                       ),
+                      :pow
+                      (ExternalSymbol
+                       3
+                       pow
+                       6 pow
+                       lpython_builtin
+                       []
+                       pow
+                       Private
+                       ),
+                      :pow__AT____lpython_overloaded_0__pow
+                      (ExternalSymbol
+                       3
+                       pow__AT____lpython_overloaded_0__pow
+                       6 __lpython_overloaded_0__pow
+                       lpython_builtin
+                       []
+                       __lpython_overloaded_0__pow
+                       Public
+                       ),
+                      :res
+                      (Variable
+                       3
+                       res
+                       []
+                       Local
+                       ()
+                       ()
+                       Default
+                       (Integer 4 [])
+                       Source
+                       Public
+                       Required
+                       false
+                       )
+                      })
+                    test_pow_1
+                    (FunctionType
+                     [(Integer 4 [])
+                      (Integer 4 [])]
+                     (Integer 4 [])
+                     Source
+                     Implementation
+                     ()
+                     false
+                     false
+                     false
+                     false
+                     false
+                     []
+                     []
+                     false
+                     )
+                    [pow__AT____lpython_overloaded_0__pow]
+                    [(Var 3 a)
+                     (Var 3 b)]
+                    [(=
+                      (Var 3 res)
+                      (Cast
+                       (FunctionCall
+                        3 pow__AT____lpython_overloaded_0__pow
+                        3 pow
+                        [((Var 3 a))
+                         ((Var 3 b))]
+                        (Real 8 [])
+                        ()
+                        ()
+                        )
+                       RealToInteger
+                       (Integer 4 [])
+                       ()
+                       )
+                      ()
+                      )
+                     (=
+                      (Var 3 _lpython_return_variable)
+                      (Var 3 res)
+                      ()
+                      )
+                     (Return)]
+                    (Var 3 _lpython_return_variable)
+                    Public
+                    false
+                    false
+                    )
+                   })
+                 )]
+    (is (s/valid? ::asr/SymbolTable example))))
+
+
+(deftest Module-test
+  (let [example (legacy
+                 (Module
+                  (SymbolTable
+                   114
+                   {:_lpython_main_program
+                    (Function
+                     (SymbolTable
+                      113
+                      {})
+                     _lpython_main_program
+                     (FunctionType
+                      []
+                      ()
+                      Source
+                      Implementation
+                      ()
+                      false
+                      false
+                      false
+                      false
+                      false
+                      []
+                      []
+                      false)
+                     [main0]
+                     []
+                     [(SubroutineCall
+                       114 main0
+                       ()
+                       []
+                       ()
+                       )]
+                     ()
+                     Public
+                     false
+                     false),
+                    :main0
+                    (Function
+                     (SymbolTable
+                      4
+                      {:c
+                       (Variable
+                        4
+                        c
+                        []
+                        Local
+                        ()
+                        ()
+                        Default
+                        (Integer 4 [])
+                        Source
+                        Public
+                        Required
+                        false
+                        )
+                       })
+                     main0
+                     (FunctionType
+                      []
+                      ()
+                      Source
+                      Implementation
+                      ()
+                      false
+                      false
+                      false
+                      false
+                      false
+                      []
+                      []
+                      false
+                      )
+                     [test_pow
+                      test_pow_1]
+                     []
+                     [(SubroutineCall
+                       114 test_pow
+                       ()
+                       []
+                       ()
+                       )
+                      (=
+                       (Var 4 c)
+                       (FunctionCall
+                        114 test_pow_1
+                        ()
+                        [((IntegerConstant 1 (Integer 4 [])))
+                         ((IntegerConstant 2 (Integer 4 [])))]
+                        (Integer 4 [])
+                        ()
+                        ()
+                        )
+                       ()
+                       )]
+                     ()
+                     Public
+                     false
+                     false
+                     ),
+                    :test_pow
+                    (Function
+                     (SymbolTable
+                      2
+                      {
+                       :a
+                       (Variable
+                        2
+                        a
+                        []
+                        Local
+                        ()
+                        ()
+                        Default
+                        (Integer 4 [])
+                        Source
+                        Public
+                        Required
+                        false
+                        ),
+                       :pow
+                       (ExternalSymbol
+                        2
+                        pow
+                        6 pow
+                        lpython_builtin
+                        []
+                        pow
+                        Private
+                        ),
+                       :pow__AT____lpython_overloaded_0__pow
+                       (ExternalSymbol
+                        2
+                        pow__AT____lpython_overloaded_0__pow
+                        6 __lpython_overloaded_0__pow
+                        lpython_builtin
+                        []
+                        __lpython_overloaded_0__pow
+                        Public
+                        )
+                       })
+                     test_pow
+                     (FunctionType
+                      []
+                      ()
+                      Source
+                      Implementation
+                      ()
+                      false
+                      false
+                      false
+                      false
+                      false
+                      []
+                      []
+                      false
+                      )
+                     [pow__AT____lpython_overloaded_0__pow]
+                     []
+                     [(=
+                       (Var 2 a)
+                       (Cast
+                        (FunctionCall
+                         2 pow__AT____lpython_overloaded_0__pow
+                         2 pow
+                         [((IntegerConstant 2 (Integer 4 [])))
+                          ((IntegerConstant 2 (Integer 4 [])))]
+                         (Real 8 [])
+                         (RealConstant
+                          4.000000
+                          (Real 8 [])
+                          )
+                         ()
+                         )
+                        RealToInteger
+                        (Integer 4 [])
+                        (IntegerConstant 4 (Integer 4 []))
+                        )
+                       ()
+                       )]
+                     ()
+                     Public
+                     false
+                     false
+                     ),
+                    :test_pow_1
+                    (Function
+                     (SymbolTable
+                      3
+                      {
+                       :_lpython_return_variable
+                       (Variable
+                        3
+                        _lpython_return_variable
+                        []
+                        ReturnVar
+                        ()
+                        ()
+                        Default
+                        (Integer 4 [])
+                        Source
+                        Public
+                        Required
+                        false
+                        ),
+                       :a
+                       (Variable
+                        3
+                        a
+                        []
+                        In
+                        ()
+                        ()
+                        Default
+                        (Integer 4 [])
+                        Source
+                        Public
+                        Required
+                        false
+                        ),
+                       :b
+                       (Variable
+                        3
+                        b
+                        []
+                        In
+                        ()
+                        ()
+                        Default
+                        (Integer 4 [])
+                        Source
+                        Public
+                        Required
+                        false
+                        ),
+                       :pow
+                       (ExternalSymbol
+                        3
+                        pow
+                        6 pow
+                        lpython_builtin
+                        []
+                        pow
+                        Private
+                        ),
+                       :pow__AT____lpython_overloaded_0__pow
+                       (ExternalSymbol
+                        3
+                        pow__AT____lpython_overloaded_0__pow
+                        6 __lpython_overloaded_0__pow
+                        lpython_builtin
+                        []
+                        __lpython_overloaded_0__pow
+                        Public
+                        ),
+                       :res
+                       (Variable
+                        3
+                        res
+                        []
+                        Local
+                        ()
+                        ()
+                        Default
+                        (Integer 4 [])
+                        Source
+                        Public
+                        Required
+                        false
+                        )
+                       })
+                     test_pow_1
+                     (FunctionType
+                      [(Integer 4 [])
+                       (Integer 4 [])]
+                      (Integer 4 [])
+                      Source
+                      Implementation
+                      ()
+                      false
+                      false
+                      false
+                      false
+                      false
+                      []
+                      []
+                      false
+                      )
+                     [pow__AT____lpython_overloaded_0__pow]
+                     [(Var 3 a)
+                      (Var 3 b)]
+                     [(=
+                       (Var 3 res)
+                       (Cast
+                        (FunctionCall
+                         3 pow__AT____lpython_overloaded_0__pow
+                         3 pow
+                         [((Var 3 a))
+                          ((Var 3 b))]
+                         (Real 8 [])
+                         ()
+                         ()
+                         )
+                        RealToInteger
+                        (Integer 4 [])
+                        ()
+                        )
+                       ()
+                       )
+                      (=
+                       (Var 3 _lpython_return_variable)
+                       (Var 3 res)
+                       ()
+                       )
+                      (Return)]
+                     (Var 3 _lpython_return_variable)
+                     Public
+                     false
+                     false
+                     )
+                    })
+                  _global_symbols
+                  []#_[lpython_builtin]
+                  false
+                  false
+                  ))]
+    (is (s/valid? ::asr/Module example))))
+
+
 ;;  ___
 ;; | _ \_ _ ___  __ _ _ _ __ _ _ __
 ;; |  _/ '_/ _ \/ _` | '_/ _` | '  \
@@ -2122,7 +2992,7 @@
                       (= (Var 2 a) (LogicalBinOp (Var 2 b) Or (Var 2 b)
                                                  (Logical 4 []) ()) ())]
                      () Public false false)})
-                '_global_symbols ;; NOTE TICK MARK
+                _global_symbols
                 [] false false),
                :main_program
                (Program (SymbolTable 3 {}) main_program [] [])}) [])))))
@@ -2477,48 +3347,35 @@
                     [g
                      gsubrout]
                     []
-                    [(=
-                      (Var 4 i)
+                    [(= (Var 4 i)
                       (FunctionCall
                        7 g
                        ()
                        []
                        (Integer 4 [])
                        ()
-                       ()
-                       )
-                      ()
-                      )
-                     (=
-                      (Var 4 j)
+                       ()) ())
+                     (= (Var 4 j)
                       (FunctionCall
                        7 g
                        ()
                        []
                        (Integer 4 [])
                        ()
-                       ()
-                       )
-                      ()
-                      )
-                     (=
-                      (Var 4 __lcompilers_dummy)
+                       ()) ())
+                     (= (Var 4 __lcompilers_dummy)
                       (FunctionCall
                        7 g
                        ()
                        []
                        (Integer 4 [])
                        ()
-                       ()
-                       )
-                      ()
-                      )
+                       ()) ())
                      (SubroutineCall
                       7 gsubrout
                       ()
                       ((Var 4 i))
-                      ()
-                      )]
+                      ())]
                     ()
                     Public
                     false
@@ -2737,42 +3594,30 @@
                       [g
                        gsubrout]
                       []
-                      [(=
-                        (Var 4 i)
+                      [(= (Var 4 i)
                         (FunctionCall
                          7 g
                          ()
                          []
                          (Integer 4 [])
                          ()
-                         ()
-                         )
-                        ()
-                        )
-                       (=
-                        (Var 4 j)
+                         ()) ())
+                       (= (Var 4 j)
                         (FunctionCall
                          7 g
                          ()
                          []
                          (Integer 4 [])
                          ()
-                         ()
-                         )
-                        ()
-                        )
-                       (=
-                        (Var 4 __lcompilers_dummy)
+                         ()) ())
+                       (= (Var 4 __lcompilers_dummy)
                         (FunctionCall
                          7 g
                          ()
                          []
                          (Integer 4 [])
                          ()
-                         ()
-                         )
-                        ()
-                        )
+                         ()) ())
                        (SubroutineCall
                         7 gsubrout
                         ()
@@ -2999,42 +3844,30 @@
                        [g
                         gsubrout]
                        []
-                       [(=
-                         (Var 4 i)
+                       [(= (Var 4 i)
                          (FunctionCall
                           7 g
                           ()
                           []
                           (Integer 4 [])
                           ()
-                          ()
-                          )
-                         ()
-                         )
-                        (=
-                         (Var 4 j)
+                          ()) ())
+                        (= (Var 4 j)
                          (FunctionCall
                           7 g
                           ()
                           []
                           (Integer 4 [])
                           ()
-                          ()
-                          )
-                         ()
-                         )
-                        (=
-                         (Var 4 __lcompilers_dummy)
+                          ()) ())
+                        (= (Var 4 __lcompilers_dummy)
                          (FunctionCall
                           7 g
                           ()
                           []
                           (Integer 4 [])
                           ()
-                          ()
-                          )
-                         ()
-                         )
+                          ()) ())
                         (SubroutineCall
                          7 gsubrout
                          ()
@@ -3270,42 +4103,30 @@
                          [g
                           gsubrout]
                          []
-                         [(=
-                           (Var 4 i)
+                         [(= (Var 4 i)
                            (FunctionCall
                             7 g
                             ()
                             []
                             (Integer 4 [])
                             ()
-                            ()
-                            )
-                           ()
-                           )
-                          (=
-                           (Var 4 j)
+                            ()) ())
+                          (= (Var 4 j)
                            (FunctionCall
                             7 g
                             ()
                             []
                             (Integer 4 [])
                             ()
-                            ()
-                            )
-                           ()
-                           )
-                          (=
-                           (Var 4 __lcompilers_dummy)
+                            ()) ())
+                          (= (Var 4 __lcompilers_dummy)
                            (FunctionCall
                             7 g
                             ()
                             []
                             (Integer 4 [])
                             ()
-                            ()
-                            )
-                           ()
-                           )
+                            ()) ())
                           (SubroutineCall
                            7 gsubrout
                            ()
@@ -3523,14 +4344,12 @@
                 ()
                 Public
                 false
-                false
-                ),
+                false),
                :test_fn1
                (Function
                 (SymbolTable
                  4
-                 {
-                  :__lcompilers_dummy
+                 {:__lcompilers_dummy
                   (Variable
                    4
                    __lcompilers_dummy
@@ -3543,8 +4362,7 @@
                    Source
                    Public
                    Required
-                   false
-                   ),
+                   false),
                   :i
                   (Variable
                    4
@@ -3558,8 +4376,7 @@
                    Source
                    Public
                    Required
-                   false
-                   ),
+                   false),
                   :j
                   (Variable
                    4
@@ -3573,9 +4390,7 @@
                    Source
                    Public
                    Required
-                   false
-                   )
-                  })
+                   false)})
                 test_fn1
                 (FunctionType
                  []
@@ -3595,48 +4410,35 @@
                 [g
                  gsubrout]
                 []
-                [(=
-                  (Var 4 i)
+                [(= (Var 4 i)
                   (FunctionCall
                    7 g
                    ()
                    []
                    (Integer 4 [])
                    ()
-                   ()
-                   )
-                  ()
-                  )
-                 (=
-                  (Var 4 j)
+                   ()) ())
+                 (= (Var 4 j)
                   (FunctionCall
                    7 g
                    ()
                    []
                    (Integer 4 [])
                    ()
-                   ()
-                   )
-                  ()
-                  )
-                 (=
-                  (Var 4 __lcompilers_dummy)
+                   ()) ())
+                 (= (Var 4 __lcompilers_dummy)
                   (FunctionCall
                    7 g
                    ()
                    []
                    (Integer 4 [])
                    ()
-                   ()
-                   )
-                  ()
-                  )
+                   ()) ())
                  (SubroutineCall
                   7 gsubrout
                   ()
                   [((Var 4 i))]
-                  ()
-                  )]
+                  ())]
                 ()
                 Public
                 false
@@ -3723,7 +4525,353 @@
 
     (testing "whole translation unit for -expr6-bfb3384"
       (is (s/valid? ::asr/unit (long-form-asr "-expr6-bfb3384"))))
+
+    (testing "whole translation unit for -expr7-2ef3822"
+      (is (s/valid? ::asr/unit (long-form-asr "-expr7-2ef3822"))))
+
     ))
+
+
+(deftest bisecting-2ef3822-test
+  (let [example (legacy (TranslationUnit
+                         (SymbolTable
+                          1
+                          {
+                           :_global_symbols
+                           (Module
+                            (SymbolTable
+                             114
+                             {
+                              :_lpython_main_program
+                              (Function
+                               (SymbolTable
+                                113
+                                {
+
+                                 })
+                               _lpython_main_program
+                               (FunctionType
+                                []
+                                ()
+                                Source
+                                Implementation
+                                ()
+                                false
+                                false
+                                false
+                                false
+                                false
+                                []
+                                []
+                                false
+                                )
+                               [main0]
+                               []
+                               [(SubroutineCall
+                                 114 main0
+                                 ()
+                                 []
+                                 ()
+                                 )]
+                               ()
+                               Public
+                               false
+                               false
+                               ),
+                              :main0
+                              (Function
+                               (SymbolTable
+                                4
+                                {
+                                 :c
+                                 (Variable
+                                  4
+                                  c
+                                  []
+                                  Local
+                                  ()
+                                  ()
+                                  Default
+                                  (Integer 4 [])
+                                  Source
+                                  Public
+                                  Required
+                                  false
+                                  )
+                                 })
+                               main0
+                               (FunctionType
+                                []
+                                ()
+                                Source
+                                Implementation
+                                ()
+                                false
+                                false
+                                false
+                                false
+                                false
+                                []
+                                []
+                                false
+                                )
+                               [test_pow
+                                test_pow_1]
+                               []
+                               [(SubroutineCall
+                                 114 test_pow
+                                 ()
+                                 []
+                                 ()
+                                 )
+                                (=
+                                 (Var 4 c)
+                                 (FunctionCall
+                                  114 test_pow_1
+                                  ()
+                                  [((IntegerConstant 1 (Integer 4 [])))
+                                   ((IntegerConstant 2 (Integer 4 [])))]
+                                  (Integer 4 [])
+                                  ()
+                                  ()
+                                  )
+                                 ()
+                                 )]
+                               ()
+                               Public
+                               false
+                               false
+                               ),
+                              :test_pow
+                              (Function
+                               (SymbolTable
+                                2
+                                {
+                                 :a
+                                 (Variable
+                                  2
+                                  a
+                                  []
+                                  Local
+                                  ()
+                                  ()
+                                  Default
+                                  (Integer 4 [])
+                                  Source
+                                  Public
+                                  Required
+                                  false
+                                  ),
+                                 :pow
+                                 (ExternalSymbol
+                                  2
+                                  pow
+                                  6 pow
+                                  lpython_builtin
+                                  []
+                                  pow
+                                  Private
+                                  ),
+                                 :pow__AT____lpython_overloaded_0__pow
+                                 (ExternalSymbol
+                                  2
+                                  pow__AT____lpython_overloaded_0__pow
+                                  6 __lpython_overloaded_0__pow
+                                  lpython_builtin
+                                  []
+                                  __lpython_overloaded_0__pow
+                                  Public
+                                  )
+                                 })
+                               test_pow
+                               (FunctionType
+                                []
+                                ()
+                                Source
+                                Implementation
+                                ()
+                                false
+                                false
+                                false
+                                false
+                                false
+                                []
+                                []
+                                false
+                                )
+                               [pow__AT____lpython_overloaded_0__pow]
+                               []
+                               [(=
+                                 (Var 2 a)
+                                 (Cast
+                                  (FunctionCall
+                                   2 pow__AT____lpython_overloaded_0__pow
+                                   2 pow
+                                   [((IntegerConstant 2 (Integer 4 [])))
+                                    ((IntegerConstant 2 (Integer 4 [])))]
+                                   (Real 8 [])
+                                   (RealConstant
+                                    4.000000
+                                    (Real 8 [])
+                                    )
+                                   ()
+                                   )
+                                  RealToInteger
+                                  (Integer 4 [])
+                                  (IntegerConstant 4 (Integer 4 []))
+                                  )
+                                 ()
+                                 )]
+                               ()
+                               Public
+                               false
+                               false
+                               ),
+                              :test_pow_1
+                              (Function
+                               (SymbolTable
+                                3
+                                {
+                                 :_lpython_return_variable
+                                 (Variable
+                                  3
+                                  _lpython_return_variable
+                                  []
+                                  ReturnVar
+                                  ()
+                                  ()
+                                  Default
+                                  (Integer 4 [])
+                                  Source
+                                  Public
+                                  Required
+                                  false
+                                  ),
+                                 :a
+                                 (Variable
+                                  3
+                                  a
+                                  []
+                                  In
+                                  ()
+                                  ()
+                                  Default
+                                  (Integer 4 [])
+                                  Source
+                                  Public
+                                  Required
+                                  false
+                                  ),
+                                 :b
+                                 (Variable
+                                  3
+                                  b
+                                  []
+                                  In
+                                  ()
+                                  ()
+                                  Default
+                                  (Integer 4 [])
+                                  Source
+                                  Public
+                                  Required
+                                  false
+                                  ),
+                                 :pow
+                                 (ExternalSymbol
+                                  3
+                                  pow
+                                  6 pow
+                                  lpython_builtin
+                                  []
+                                  pow
+                                  Private
+                                  ),
+                                 :pow__AT____lpython_overloaded_0__pow
+                                 (ExternalSymbol
+                                  3
+                                  pow__AT____lpython_overloaded_0__pow
+                                  6 __lpython_overloaded_0__pow
+                                  lpython_builtin
+                                  []
+                                  __lpython_overloaded_0__pow
+                                  Public
+                                  ),
+                                 :res
+                                 (Variable
+                                  3
+                                  res
+                                  []
+                                  Local
+                                  ()
+                                  ()
+                                  Default
+                                  (Integer 4 [])
+                                  Source
+                                  Public
+                                  Required
+                                  false
+                                  )
+                                 })
+                               test_pow_1
+                               (FunctionType
+                                [(Integer 4 [])
+                                 (Integer 4 [])]
+                                (Integer 4 [])
+                                Source
+                                Implementation
+                                ()
+                                false
+                                false
+                                false
+                                false
+                                false
+                                []
+                                []
+                                false
+                                )
+                               [pow__AT____lpython_overloaded_0__pow]
+                               [(Var 3 a)
+                                (Var 3 b)]
+                               [(=
+                                 (Var 3 res)
+                                 (Cast
+                                  (FunctionCall
+                                   3 pow__AT____lpython_overloaded_0__pow
+                                   3 pow
+                                   [((Var 3 a))
+                                    ((Var 3 b))]
+                                   (Real 8 [])
+                                   ()
+                                   ()
+                                   )
+                                  RealToInteger
+                                  (Integer 4 [])
+                                  ()
+                                  )
+                                 ()
+                                 )
+                                (=
+                                 (Var 3 _lpython_return_variable)
+                                 (Var 3 res)
+                                 ()
+                                 )
+                                (Return)]
+                               (Var 3 _lpython_return_variable)
+                               Public
+                               false
+                               false
+                               )
+                              })
+                            _global_symbols
+                            [lpython_builtin]
+                            false
+                            false
+                            )
+                           })
+                         []
+                         ))]
+    (is (s/valid? ::asr/unit example))))
 
 
 ;; ================================================================

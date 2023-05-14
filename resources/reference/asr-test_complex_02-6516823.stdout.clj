@@ -108,10 +108,10 @@
                                                     complex
                                                     Private
                                                 ),
-                                            complex@:__lpython_overloaded_9__complex
+                                            :complex__AT____lpython_overloaded_9__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_9__complex
+                                                    complex__AT____lpython_overloaded_9__complex
                                                     7 __lpython_overloaded_9__complex
                                                     lpython_builtin
                                                     []
@@ -180,13 +180,13 @@
                                         []
                                         false
                                     )
-                                    [complex@__lpython_overloaded_9__complex]
+                                    [complex__AT____lpython_overloaded_9__complex]
                                     []
                                     [(=
                                         (Var 2 x)
                                         (Cast
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_9__complex
+                                                2 complex__AT____lpython_overloaded_9__complex
                                                 2 complex
                                                 [((IntegerConstant 3 (Integer 4 [])))
                                                 ((IntegerConstant 4 (Integer 4 [])))]
@@ -255,7 +255,7 @@
                                     (=
                                         (Var 2 y)
                                         (FunctionCall
-                                            2 complex@__lpython_overloaded_9__complex
+                                            2 complex__AT____lpython_overloaded_9__complex
                                             2 complex
                                             [((IntegerConstant 6 (Integer 4 [])))
                                             ((IntegerConstant 8 (Integer 4 [])))]

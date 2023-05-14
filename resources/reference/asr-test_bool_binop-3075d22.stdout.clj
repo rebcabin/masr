@@ -58,10 +58,10 @@
                                                     _lpython_floordiv
                                                     Private
                                                 ),
-                                            _lpython_floordiv@:__lpython_overloaded_6___lpython_floordiv
+                                            :_lpython_floordiv__AT____lpython_overloaded_6___lpython_floordiv
                                                 (ExternalSymbol
                                                     2
-                                                    _lpython_floordiv@__lpython_overloaded_6___lpython_floordiv
+                                                    _lpython_floordiv__AT____lpython_overloaded_6___lpython_floordiv
                                                     4 __lpython_overloaded_6___lpython_floordiv
                                                     lpython_builtin
                                                     []
@@ -145,7 +145,7 @@
                                         []
                                         false
                                     )
-                                    [_lpython_floordiv@__lpython_overloaded_6___lpython_floordiv]
+                                    [_lpython_floordiv__AT____lpython_overloaded_6___lpython_floordiv]
                                     []
                                     [(=
                                         (Var 2 i)
@@ -262,7 +262,7 @@
                                         (Var 2 i)
                                         (Cast
                                             (FunctionCall
-                                                2 _lpython_floordiv@__lpython_overloaded_6___lpython_floordiv
+                                                2 _lpython_floordiv__AT____lpython_overloaded_6___lpython_floordiv
                                                 2 _lpython_floordiv
                                                 [((LogicalConstant
                                                     true
@@ -299,7 +299,7 @@
                                         (Var 2 i)
                                         (Cast
                                             (FunctionCall
-                                                2 _lpython_floordiv@__lpython_overloaded_6___lpython_floordiv
+                                                2 _lpython_floordiv__AT____lpython_overloaded_6___lpython_floordiv
                                                 2 _lpython_floordiv
                                                 [((LogicalConstant
                                                     false

@@ -30,11 +30,11 @@
                                         []
                                         false
                                     )
-                                    [sys@global_initializer
+                                    [sys__AT__global_initializer
                                     test_for]
                                     []
                                     [(SubroutineCall
-                                        14 sys@global_initializer
+                                        14 sys__AT__global_initializer
                                         3 global_initializer
                                         []
                                         ()
@@ -60,10 +60,10 @@
                                     exit
                                     Public
                                 ),
-                            sys@:global_initializer
+                            :sys__AT__global_initializer
                                 (ExternalSymbol
                                     14
-                                    sys@global_initializer
+                                    sys__AT__global_initializer
                                     3 global_initializer
                                     sys
                                     []

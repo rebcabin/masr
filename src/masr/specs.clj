@@ -1196,6 +1196,13 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  IntrinsicModule symbol
+  (modulenym))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   ExternalSymbol symbol
   (symtab-id
    nym          extern-symref
@@ -1322,6 +1329,13 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  Cast expr
+  (arg cast-kind ttype value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   FunctionCall expr
   (nymref    orig-nymref    call-args
              return-type    value?    dt?))
@@ -1371,6 +1385,13 @@
 (defmasrtype
   IntegerConstant expr
   (int    Integer))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  RealConstant expr
+  (float    Real))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1907,6 +1928,16 @@
 (enum-like access       #{'Public 'Private})
 (enum-like presence     #{'Required 'Optional})
 (enum-like deftype      #{'Implementation, 'Interface})
+(enum-like cast-kind    #{'RealToInteger       'IntegerToReal
+                          'LogicalToReal       'RealToReal
+                          'IntegerToInteger    'RealToComplex
+                          'IntegerToComplex    'IntegerToLogical
+                          'RealToLogical       'CharacterToLogical
+                          'CharacterToInteger  'CharacterToList
+                          'ComplexToLogical    'ComplexToComplex
+                          'ComplexToReal       'ComplexToInteger
+                          'LogicalToInteger    'RealToCharacter
+                          'IntegerToCharacter  'LogicalToCharacter})
 ;; #+end_src
 
 ;;
@@ -2530,7 +2561,8 @@
         :logical-compare    ::LogicalCompare
         :integer-compare    ::IntegerCompare
         :logical-binop      ::LogicalBinOp
-        :if-else            ::IfExp
+        :cast               ::Cast      ;; TODO check return type!
+        :if-expr            ::IfExp     ;; TODO check return type!
         :named-expr         ::NamedExpr ;; TODO check return type!
         :var                ::Var       ;; TODO check return type!
         ;; TODO: integer-compare, etc.
@@ -2556,7 +2588,8 @@
 (s/def ::integer-expr
   (s/or :integer-constant   ::IntegerConstant
         :integer-binop      ::IntegerBinOp
-        :if-else            ::IfExp
+        :cast               ::Cast      ;; TODO check return type!
+        :if-expr            ::IfExp     ;; TODO check return type!
         :named-expr         ::NamedExpr ;; TODO check return type!
         :var                ::Var       ;; TODO check return type!
         ))
@@ -2569,6 +2602,63 @@
 
 (s/def ::integer-left  ::integer-expr)
 (s/def ::integer-right ::integer-expr)
+;; #+end_src
+
+
+;;
+;;
+;; ## CAST
+;;
+;;
+
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | Cast(expr arg, cast-kind kind, ttype type, expr? value)
+;; ```
+
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(Cast
+ (FunctionCall
+  2 pow__AT____lpython_overloaded_0__pow
+  2 pow
+  [((IntegerConstant 2 (Integer 4 [])))
+   ((IntegerConstant 2 (Integer 4 [])))]
+  (Real 8 [])
+  (RealConstant 4.000000 (Real 8 [])) ())
+ RealToInteger
+ (Integer 4 [])
+ (IntegerConstant 4 (Integer 4 [])))
+;; #+end_src
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn Cast
+  [arg, cast-kind, ttype, value?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head ::Cast
+              ::arg       arg
+              ::cast-kind cast-kind
+              ::ttype     ttype
+              ::value?    value?}}]
+    (if (s/valid? ::Cast cnd)
+      cnd
+      :invalid-cast)))
 ;; #+end_src
 
 
@@ -2735,7 +2825,9 @@
              ::asr-expr-head
              {::expr-head ::FunctionCall
               ::nymref      (apply symbol-ref fn-nymref)
-              ::orig-nymref orig-nymref ;; TODO
+              ::orig-nymref (if (empty? orig-nymref)
+                              orig-nymref
+                              (apply symbol-ref orig-nymref)) ;; TODO
               ::call-args   call-args
               ::return-type return-type
               ::value?      value?
@@ -2754,13 +2846,24 @@
 ;; #+begin_src clojure
 
 (defmacro FunctionCall
-  [stid, ident, orig-symref, args, rettype, value?, dt?]
-  `(FunctionCall-- ['~ident ~stid]
-                   ~orig-symref
-                   ~args
-                   ~rettype
-                   ~value?
-                   ~dt?))
+  ;; seven-ary
+  ([stid, ident, orig-symref,
+    args, rettype, value?, dt?]
+   `(FunctionCall-- ['~ident ~stid]
+                    ~orig-symref
+                    ~args
+                    ~rettype
+                    ~value?
+                    ~dt?))
+  ;; eight-ary
+  ([stid, ident, ostid, oident,
+    args, rettype, value?, dt?]
+   `(FunctionCall-- ['~ident, ~stid]
+                    ['~oident, ~ostid]
+                    ~args
+                    ~rettype
+                    ~value?
+                    ~dt?)))
 ;; #+end_src
 
 
@@ -2809,6 +2912,53 @@
   ([a-bool]
    "unary"
    (LogicalConstant a-bool (Logical))))
+;; #+end_src
+
+
+;;
+;;
+;; ## REAL CONSTANT
+;;
+;;
+
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; | RealConstant(float r, ttype type)
+;; ```
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(RealConstant 4.000000 (Real 8 []))
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn RealConstant
+  ;; arity-2
+  ([a-float, a-ttype]
+   (let [cnd {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ::RealConstant
+               ::float  a-float
+               ::Real   a-ttype}}]
+     (if (s/valid? ::RealConstant cnd)
+       cnd
+       :invalid-real-constant)))
+  ;; arity-1
+  ([a-float]
+   (RealConstant a-float (Real))))
 ;; #+end_src
 
 
@@ -4075,6 +4225,48 @@
 
 ;;
 ;;
+;; ## INTRINSIC MODULE
+;;
+;;
+
+
+;;
+;;
+;; ### Original ASDL
+;;
+;;
+;; There is no ASDL for this symbol in our snapshot.
+
+;;
+;;
+;; Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn IntrinsicModule-- [modnym]
+  (let [cnd {::term ::symbol
+             ::asr-symbol-head
+             {::symbol-head     ::IntrinsicModule
+              ::modulenym       modnym}}]
+    (if (s/valid? ::IntrinsicModule cnd)
+      cnd
+      :invalid-intrinsic-module)))
+;; #+end_src
+
+;;
+;;
+;; ### Legacy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defmacro IntrinsicModule [modnym]
+  `(IntrinsicModule-- '~modnym))
+;; #+end_src
+
+;;
+;;
 ;; ## MODULE
 ;;
 ;;
@@ -4084,8 +4276,11 @@
 ;;
 ;;
 ;; ```c
-;; | Module(symbol_table symtab, identifier name, identifier* dependencies,
-;;                       bool loaded_from_mod, bool intrinsic)
+;; | Module(symbol_table   symtab,
+;;          identifier     name,
+;;          identifier   * dependencies,
+;;          bool           loaded_from_mod,
+;;          bool           intrinsic)
 ;; ```
 
 ;;
@@ -4117,9 +4312,15 @@
 ;; #+begin_src clojure
 
 (defmacro Module
-  "Quote the mondnym"
+  "Quote the mondnym and the deps."
   [symtab, modnym, deps, loaded, intrinsic-]
-  `(Module-- ~symtab '~modnym ~deps ~loaded ~intrinsic-))
+  (let [quotes (vec (for [d deps] `'d))]
+    `(Module--
+      ~symtab
+      '~modnym
+      ~quotes
+      ~loaded
+      ~intrinsic-)))
 ;; #+end_src
 
 

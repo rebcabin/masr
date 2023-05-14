@@ -1709,10 +1709,10 @@
                                                     _mod
                                                     Private
                                                 ),
-                                            _mod@:__lpython_overloaded_4___mod
+                                            :_mod__AT____lpython_overloaded_4___mod
                                                 (ExternalSymbol
                                                     72
-                                                    _mod@__lpython_overloaded_4___mod
+                                                    _mod__AT____lpython_overloaded_4___mod
                                                     79 __lpython_overloaded_4___mod
                                                     lpython_builtin
                                                     []
@@ -1767,7 +1767,7 @@
                                         []
                                         false
                                     )
-                                    [_mod@__lpython_overloaded_4___mod]
+                                    [_mod__AT____lpython_overloaded_4___mod]
                                     [(Var 72 x1)
                                     (Var 72 x2)]
                                     [(If
@@ -1799,7 +1799,7 @@
                                     (=
                                         (Var 72 _lpython_return_variable)
                                         (FunctionCall
-                                            72 _mod@__lpython_overloaded_4___mod
+                                            72 _mod__AT____lpython_overloaded_4___mod
                                             72 _mod
                                             [((Var 72 x1))
                                             ((Var 72 x2))]
@@ -3572,10 +3572,10 @@
                                                     _mod
                                                     Private
                                                 ),
-                                            _mod@:__lpython_overloaded_2___mod
+                                            :_mod__AT____lpython_overloaded_2___mod
                                                 (ExternalSymbol
                                                     73
-                                                    _mod@__lpython_overloaded_2___mod
+                                                    _mod__AT____lpython_overloaded_2___mod
                                                     79 __lpython_overloaded_2___mod
                                                     lpython_builtin
                                                     []
@@ -3630,7 +3630,7 @@
                                         []
                                         false
                                     )
-                                    [_mod@__lpython_overloaded_2___mod]
+                                    [_mod__AT____lpython_overloaded_2___mod]
                                     [(Var 73 x1)
                                     (Var 73 x2)]
                                     [(If
@@ -3652,7 +3652,7 @@
                                     (=
                                         (Var 73 _lpython_return_variable)
                                         (FunctionCall
-                                            73 _mod@__lpython_overloaded_2___mod
+                                            73 _mod__AT____lpython_overloaded_2___mod
                                             73 _mod
                                             [((Var 73 x1))
                                             ((Var 73 x2))]

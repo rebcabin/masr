@@ -97,10 +97,10 @@
                                                                     _lpython_floordiv
                                                                     Private
                                                                 ),
-                                                            _lpython_floordiv@:__lpython_overloaded_4___lpython_floordiv
+                                                            :_lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                                 (ExternalSymbol
                                                                     193
-                                                                    _lpython_floordiv@__lpython_overloaded_4___lpython_floordiv
+                                                                    _lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                                     79 __lpython_overloaded_4___lpython_floordiv
                                                                     lpython_builtin
                                                                     []
@@ -112,7 +112,7 @@
                                                     [(=
                                                         (Var 186 i)
                                                         (FunctionCall
-                                                            193 _lpython_floordiv@__lpython_overloaded_4___lpython_floordiv
+                                                            193 _lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                             193 _lpython_floordiv
                                                             [((Var 186 k))
                                                             ((IntegerConstant 16 (Integer 4 [])))]
@@ -334,7 +334,7 @@
                                         []
                                         false
                                     )
-                                    [_lpython_floordiv@__lpython_overloaded_4___lpython_floordiv]
+                                    [_lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv]
                                     [(Var 186 d)]
                                     [(=
                                         (Var 186 eps)
@@ -687,10 +687,10 @@
                                                                     _lpython_floordiv
                                                                     Private
                                                                 ),
-                                                            _lpython_floordiv@:__lpython_overloaded_4___lpython_floordiv
+                                                            :_lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                                 (ExternalSymbol
                                                                     188
-                                                                    _lpython_floordiv@__lpython_overloaded_4___lpython_floordiv
+                                                                    _lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                                     79 __lpython_overloaded_4___lpython_floordiv
                                                                     lpython_builtin
                                                                     []
@@ -702,7 +702,7 @@
                                                     [(=
                                                         (Var 185 i)
                                                         (FunctionCall
-                                                            188 _lpython_floordiv@__lpython_overloaded_4___lpython_floordiv
+                                                            188 _lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                             188 _lpython_floordiv
                                                             [((Var 185 k))
                                                             ((IntegerConstant 16 (Integer 4 [])))]
@@ -795,10 +795,10 @@
                                                                     _lpython_floordiv
                                                                     Private
                                                                 ),
-                                                            _lpython_floordiv@:__lpython_overloaded_4___lpython_floordiv
+                                                            :_lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                                 (ExternalSymbol
                                                                     192
-                                                                    _lpython_floordiv@__lpython_overloaded_4___lpython_floordiv
+                                                                    _lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                                     79 __lpython_overloaded_4___lpython_floordiv
                                                                     lpython_builtin
                                                                     []
@@ -844,7 +844,7 @@
                                                     (=
                                                         (Var 185 j)
                                                         (FunctionCall
-                                                            192 _lpython_floordiv@__lpython_overloaded_4___lpython_floordiv
+                                                            192 _lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                             192 _lpython_floordiv
                                                             [((IntegerBinOp
                                                                 (Var 185 l)
@@ -1115,7 +1115,7 @@
                                         []
                                         false
                                     )
-                                    [_lpython_floordiv@__lpython_overloaded_4___lpython_floordiv]
+                                    [_lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv]
                                     [(Var 185 a)]
                                     [(=
                                         (Var 185 eps)
@@ -1334,10 +1334,10 @@
                                                                     _lpython_floordiv
                                                                     Private
                                                                 ),
-                                                            _lpython_floordiv@:__lpython_overloaded_4___lpython_floordiv
+                                                            :_lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                                 (ExternalSymbol
                                                                     201
-                                                                    _lpython_floordiv@__lpython_overloaded_4___lpython_floordiv
+                                                                    _lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                                     79 __lpython_overloaded_4___lpython_floordiv
                                                                     lpython_builtin
                                                                     []
@@ -1383,7 +1383,7 @@
                                                     (=
                                                         (Var 187 j)
                                                         (FunctionCall
-                                                            201 _lpython_floordiv@__lpython_overloaded_4___lpython_floordiv
+                                                            201 _lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                                             201 _lpython_floordiv
                                                             [((IntegerBinOp
                                                                 (Var 187 l)
@@ -1567,7 +1567,7 @@
                                         []
                                         false
                                     )
-                                    [_lpython_floordiv@__lpython_overloaded_4___lpython_floordiv
+                                    [_lpython_floordiv__AT____lpython_overloaded_4___lpython_floordiv
                                     test_nd_to_1d
                                     test_1d_to_nd]
                                     []
@@ -2999,10 +2999,10 @@
                                                     _mod
                                                     Private
                                                 ),
-                                            _mod@:__lpython_overloaded_4___mod
+                                            :_mod__AT____lpython_overloaded_4___mod
                                                 (ExternalSymbol
                                                     72
-                                                    _mod@__lpython_overloaded_4___mod
+                                                    _mod__AT____lpython_overloaded_4___mod
                                                     79 __lpython_overloaded_4___mod
                                                     lpython_builtin
                                                     []
@@ -3057,7 +3057,7 @@
                                         []
                                         false
                                     )
-                                    [_mod@__lpython_overloaded_4___mod]
+                                    [_mod__AT____lpython_overloaded_4___mod]
                                     [(Var 72 x1)
                                     (Var 72 x2)]
                                     [(If
@@ -3089,7 +3089,7 @@
                                     (=
                                         (Var 72 _lpython_return_variable)
                                         (FunctionCall
-                                            72 _mod@__lpython_overloaded_4___mod
+                                            72 _mod__AT____lpython_overloaded_4___mod
                                             72 _mod
                                             [((Var 72 x1))
                                             ((Var 72 x2))]
@@ -4862,10 +4862,10 @@
                                                     _mod
                                                     Private
                                                 ),
-                                            _mod@:__lpython_overloaded_2___mod
+                                            :_mod__AT____lpython_overloaded_2___mod
                                                 (ExternalSymbol
                                                     73
-                                                    _mod@__lpython_overloaded_2___mod
+                                                    _mod__AT____lpython_overloaded_2___mod
                                                     79 __lpython_overloaded_2___mod
                                                     lpython_builtin
                                                     []
@@ -4920,7 +4920,7 @@
                                         []
                                         false
                                     )
-                                    [_mod@__lpython_overloaded_2___mod]
+                                    [_mod__AT____lpython_overloaded_2___mod]
                                     [(Var 73 x1)
                                     (Var 73 x2)]
                                     [(If
@@ -4942,7 +4942,7 @@
                                     (=
                                         (Var 73 _lpython_return_variable)
                                         (FunctionCall
-                                            73 _mod@__lpython_overloaded_2___mod
+                                            73 _mod__AT____lpython_overloaded_2___mod
                                             73 _mod
                                             [((Var 73 x1))
                                             ((Var 73 x2))]

@@ -52,10 +52,10 @@
                                                     complex
                                                     Private
                                                 ),
-                                            complex@:__lpython_overloaded_5__complex
+                                            :complex__AT____lpython_overloaded_5__complex
                                                 (ExternalSymbol
                                                     4
-                                                    complex@__lpython_overloaded_5__complex
+                                                    complex__AT____lpython_overloaded_5__complex
                                                     13 __lpython_overloaded_5__complex
                                                     lpython_builtin
                                                     []
@@ -79,7 +79,7 @@
                                         []
                                         false
                                     )
-                                    [complex@__lpython_overloaded_5__complex]
+                                    [complex__AT____lpython_overloaded_5__complex]
                                     []
                                     [(=
                                         (Var 4 a)
@@ -208,7 +208,7 @@
                                             (IntrinsicFunction
                                                 Abs
                                                 [(FunctionCall
-                                                    4 complex@__lpython_overloaded_5__complex
+                                                    4 complex__AT____lpython_overloaded_5__complex
                                                     4 complex
                                                     [((RealConstant
                                                         3.450000
@@ -277,10 +277,10 @@
                                                     complex
                                                     Private
                                                 ),
-                                            complex@:__lpython_overloaded_9__complex
+                                            :complex__AT____lpython_overloaded_9__complex
                                                 (ExternalSymbol
                                                     6
-                                                    complex@__lpython_overloaded_9__complex
+                                                    complex__AT____lpython_overloaded_9__complex
                                                     13 __lpython_overloaded_9__complex
                                                     lpython_builtin
                                                     []
@@ -304,7 +304,7 @@
                                         []
                                         false
                                     )
-                                    [complex@__lpython_overloaded_9__complex]
+                                    [complex__AT____lpython_overloaded_9__complex]
                                     []
                                     [(=
                                         (Var 6 a)
@@ -356,7 +356,7 @@
                                         (Var 6 a)
                                         (Cast
                                             (FunctionCall
-                                                6 complex@__lpython_overloaded_9__complex
+                                                6 complex__AT____lpython_overloaded_9__complex
                                                 6 complex
                                                 [((IntegerConstant 0 (Integer 4 [])))
                                                 ((IntegerConstant 0 (Integer 4 [])))]

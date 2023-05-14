@@ -163,10 +163,10 @@
                                                     complex
                                                     Private
                                                 ),
-                                            complex@:__lpython_overloaded_9__complex
+                                            :complex__AT____lpython_overloaded_9__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_9__complex
+                                                    complex__AT____lpython_overloaded_9__complex
                                                     4 __lpython_overloaded_9__complex
                                                     lpython_builtin
                                                     []
@@ -318,120 +318,120 @@
                                                     pow
                                                     Private
                                                 ),
-                                            pow@:__lpython_overloaded_0__pow
+                                            :pow__AT____lpython_overloaded_0__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_0__pow
+                                                    pow__AT____lpython_overloaded_0__pow
                                                     4 __lpython_overloaded_0__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_0__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_10__pow
+                                            :pow__AT____lpython_overloaded_10__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_10__pow
+                                                    pow__AT____lpython_overloaded_10__pow
                                                     4 __lpython_overloaded_10__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_10__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_11__pow
+                                            :pow__AT____lpython_overloaded_11__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_11__pow
+                                                    pow__AT____lpython_overloaded_11__pow
                                                     4 __lpython_overloaded_11__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_11__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_1__pow
+                                            :pow__AT____lpython_overloaded_1__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_1__pow
+                                                    pow__AT____lpython_overloaded_1__pow
                                                     4 __lpython_overloaded_1__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_1__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_2__pow
+                                            :pow__AT____lpython_overloaded_2__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_2__pow
+                                                    pow__AT____lpython_overloaded_2__pow
                                                     4 __lpython_overloaded_2__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_2__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_3__pow
+                                            :pow__AT____lpython_overloaded_3__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_3__pow
+                                                    pow__AT____lpython_overloaded_3__pow
                                                     4 __lpython_overloaded_3__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_3__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_4__pow
+                                            :pow__AT____lpython_overloaded_4__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_4__pow
+                                                    pow__AT____lpython_overloaded_4__pow
                                                     4 __lpython_overloaded_4__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_4__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_5__pow
+                                            :pow__AT____lpython_overloaded_5__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_5__pow
+                                                    pow__AT____lpython_overloaded_5__pow
                                                     4 __lpython_overloaded_5__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_5__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_6__pow
+                                            :pow__AT____lpython_overloaded_6__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_6__pow
+                                                    pow__AT____lpython_overloaded_6__pow
                                                     4 __lpython_overloaded_6__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_6__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_7__pow
+                                            :pow__AT____lpython_overloaded_7__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_7__pow
+                                                    pow__AT____lpython_overloaded_7__pow
                                                     4 __lpython_overloaded_7__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_7__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_8__pow
+                                            :pow__AT____lpython_overloaded_8__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_8__pow
+                                                    pow__AT____lpython_overloaded_8__pow
                                                     4 __lpython_overloaded_8__pow
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_8__pow
                                                     Public
                                                 ),
-                                            pow@:__lpython_overloaded_9__pow
+                                            :pow__AT____lpython_overloaded_9__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_9__pow
+                                                    pow__AT____lpython_overloaded_9__pow
                                                     4 __lpython_overloaded_9__pow
                                                     lpython_builtin
                                                     []
@@ -485,19 +485,19 @@
                                         []
                                         false
                                     )
-                                    [pow@__lpython_overloaded_0__pow
-                                    pow@__lpython_overloaded_1__pow
-                                    pow@__lpython_overloaded_2__pow
-                                    pow@__lpython_overloaded_4__pow
-                                    pow@__lpython_overloaded_5__pow
-                                    pow@__lpython_overloaded_8__pow
-                                    pow@__lpython_overloaded_3__pow
-                                    pow@__lpython_overloaded_6__pow
-                                    pow@__lpython_overloaded_7__pow
-                                    pow@__lpython_overloaded_11__pow
-                                    pow@__lpython_overloaded_10__pow
-                                    complex@__lpython_overloaded_9__complex
-                                    pow@__lpython_overloaded_9__pow]
+                                    [pow__AT____lpython_overloaded_0__pow
+                                    pow__AT____lpython_overloaded_1__pow
+                                    pow__AT____lpython_overloaded_2__pow
+                                    pow__AT____lpython_overloaded_4__pow
+                                    pow__AT____lpython_overloaded_5__pow
+                                    pow__AT____lpython_overloaded_8__pow
+                                    pow__AT____lpython_overloaded_3__pow
+                                    pow__AT____lpython_overloaded_6__pow
+                                    pow__AT____lpython_overloaded_7__pow
+                                    pow__AT____lpython_overloaded_11__pow
+                                    pow__AT____lpython_overloaded_10__pow
+                                    complex__AT____lpython_overloaded_9__complex
+                                    pow__AT____lpython_overloaded_9__pow]
                                     []
                                     [(=
                                         (Var 2 eps)
@@ -521,7 +521,7 @@
                                         (IntegerCompare
                                             (Cast
                                                 (FunctionCall
-                                                    2 pow@__lpython_overloaded_0__pow
+                                                    2 pow__AT____lpython_overloaded_0__pow
                                                     2 pow
                                                     [((Var 2 a))
                                                     ((Var 2 b))]
@@ -554,7 +554,7 @@
                                         (IntegerCompare
                                             (Cast
                                                 (FunctionCall
-                                                    2 pow@__lpython_overloaded_0__pow
+                                                    2 pow__AT____lpython_overloaded_0__pow
                                                     2 pow
                                                     [((Var 2 a))
                                                     ((Var 2 b))]
@@ -587,7 +587,7 @@
                                         (IntegerCompare
                                             (Cast
                                                 (FunctionCall
-                                                    2 pow@__lpython_overloaded_0__pow
+                                                    2 pow__AT____lpython_overloaded_0__pow
                                                     2 pow
                                                     [((Var 2 a))
                                                     ((Var 2 b))]
@@ -658,7 +658,7 @@
                                         (IntegerCompare
                                             (Cast
                                                 (FunctionCall
-                                                    2 pow@__lpython_overloaded_1__pow
+                                                    2 pow__AT____lpython_overloaded_1__pow
                                                     2 pow
                                                     [((Var 2 i1))
                                                     ((Var 2 i2))]
@@ -763,7 +763,7 @@
                                     (=
                                         (Var 2 p)
                                         (FunctionCall
-                                            2 pow@__lpython_overloaded_2__pow
+                                            2 pow__AT____lpython_overloaded_2__pow
                                             2 pow
                                             [((Var 2 f1))
                                             ((Var 2 f2))]
@@ -776,7 +776,7 @@
                                     (=
                                         (Var 2 f1)
                                         (FunctionCall
-                                            2 pow@__lpython_overloaded_4__pow
+                                            2 pow__AT____lpython_overloaded_4__pow
                                             2 pow
                                             [((Var 2 a))
                                             ((Var 2 f2))]
@@ -789,7 +789,7 @@
                                     (=
                                         (Var 2 f1)
                                         (FunctionCall
-                                            2 pow@__lpython_overloaded_5__pow
+                                            2 pow__AT____lpython_overloaded_5__pow
                                             2 pow
                                             [((Var 2 f2))
                                             ((Var 2 a))]
@@ -818,7 +818,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                2 pow@__lpython_overloaded_8__pow
+                                                2 pow__AT____lpython_overloaded_8__pow
                                                 2 pow
                                                 [((Var 2 b1))
                                                 ((Var 2 b2))]
@@ -836,7 +836,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                2 pow@__lpython_overloaded_8__pow
+                                                2 pow__AT____lpython_overloaded_8__pow
                                                 2 pow
                                                 [((Var 2 b2))
                                                 ((Var 2 b1))]
@@ -854,7 +854,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                2 pow@__lpython_overloaded_8__pow
+                                                2 pow__AT____lpython_overloaded_8__pow
                                                 2 pow
                                                 [((Var 2 b1))
                                                 ((Var 2 b2))]
@@ -872,7 +872,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                2 pow@__lpython_overloaded_8__pow
+                                                2 pow__AT____lpython_overloaded_8__pow
                                                 2 pow
                                                 [((LogicalConstant
                                                     false
@@ -918,7 +918,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_3__pow
+                                                        2 pow__AT____lpython_overloaded_3__pow
                                                         2 pow
                                                         [((Var 2 a1))
                                                         ((Var 2 a2))]
@@ -951,7 +951,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_3__pow
+                                                        2 pow__AT____lpython_overloaded_3__pow
                                                         2 pow
                                                         [((Var 2 a2))
                                                         ((Var 2 a1))]
@@ -997,7 +997,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_6__pow
+                                                        2 pow__AT____lpython_overloaded_6__pow
                                                         2 pow
                                                         [((Var 2 x))
                                                         ((Var 2 y))]
@@ -1030,7 +1030,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_7__pow
+                                                        2 pow__AT____lpython_overloaded_7__pow
                                                         2 pow
                                                         [((Var 2 y))
                                                         ((Var 2 x))]
@@ -1063,7 +1063,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_6__pow
+                                                        2 pow__AT____lpython_overloaded_6__pow
                                                         2 pow
                                                         [((Var 2 x))
                                                         ((RealConstant
@@ -1099,7 +1099,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_1__pow
+                                                        2 pow__AT____lpython_overloaded_1__pow
                                                         2 pow
                                                         [((Cast
                                                             (IntegerConstant 2 (Integer 4 []))
@@ -1155,7 +1155,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_1__pow
+                                                        2 pow__AT____lpython_overloaded_1__pow
                                                         2 pow
                                                         [((Cast
                                                             (IntegerConstant 6 (Integer 4 []))
@@ -1211,7 +1211,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_1__pow
+                                                        2 pow__AT____lpython_overloaded_1__pow
                                                         2 pow
                                                         [((IntegerUnaryMinus
                                                             (Cast
@@ -1271,7 +1271,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_1__pow
+                                                        2 pow__AT____lpython_overloaded_1__pow
                                                         2 pow
                                                         [((Cast
                                                             (IntegerConstant 6 (Integer 4 []))
@@ -1327,7 +1327,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_3__pow
+                                                        2 pow__AT____lpython_overloaded_3__pow
                                                         2 pow
                                                         [((RealConstant
                                                             4.500000
@@ -1375,7 +1375,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_3__pow
+                                                        2 pow__AT____lpython_overloaded_3__pow
                                                         2 pow
                                                         [((RealConstant
                                                             2.300000
@@ -1423,7 +1423,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_3__pow
+                                                        2 pow__AT____lpython_overloaded_3__pow
                                                         2 pow
                                                         [((RealConstant
                                                             2.300000
@@ -1478,7 +1478,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_6__pow
+                                                        2 pow__AT____lpython_overloaded_6__pow
                                                         2 pow
                                                         [((IntegerConstant 2 (Integer 4 [])))
                                                         ((RealConstant
@@ -1523,7 +1523,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_6__pow
+                                                        2 pow__AT____lpython_overloaded_6__pow
                                                         2 pow
                                                         [((IntegerConstant 2 (Integer 4 [])))
                                                         ((RealUnaryMinus
@@ -1575,7 +1575,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_7__pow
+                                                        2 pow__AT____lpython_overloaded_7__pow
                                                         2 pow
                                                         [((RealConstant
                                                             3.400000
@@ -1620,7 +1620,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_7__pow
+                                                        2 pow__AT____lpython_overloaded_7__pow
                                                         2 pow
                                                         [((RealConstant
                                                             0.000000
@@ -1663,7 +1663,7 @@
                                         (IntegerCompare
                                             (Cast
                                                 (FunctionCall
-                                                    2 pow@__lpython_overloaded_0__pow
+                                                    2 pow__AT____lpython_overloaded_0__pow
                                                     2 pow
                                                     [((IntegerConstant 4 (Integer 4 [])))
                                                     ((IntegerConstant 2 (Integer 4 [])))]
@@ -1694,7 +1694,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        2 pow@__lpython_overloaded_7__pow
+                                                        2 pow__AT____lpython_overloaded_7__pow
                                                         2 pow
                                                         [((RealUnaryMinus
                                                             (RealConstant
@@ -1773,7 +1773,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                2 pow@__lpython_overloaded_11__pow
+                                                2 pow__AT____lpython_overloaded_11__pow
                                                 2 pow
                                                 [((Var 2 i))
                                                 ((Var 2 j))
@@ -1797,7 +1797,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                2 pow@__lpython_overloaded_10__pow
+                                                2 pow__AT____lpython_overloaded_10__pow
                                                 2 pow
                                                 [((IntegerConstant 102 (Integer 4 [])))
                                                 ((IntegerConstant 3 (Integer 4 [])))
@@ -1823,7 +1823,7 @@
                                         (Var 2 c1)
                                         (Cast
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_9__complex
+                                                2 complex__AT____lpython_overloaded_9__complex
                                                 2 complex
                                                 [((IntegerConstant 4 (Integer 4 [])))
                                                 ((IntegerConstant 5 (Integer 4 [])))]
@@ -1848,7 +1848,7 @@
                                     (=
                                         (Var 2 c1)
                                         (FunctionCall
-                                            2 pow@__lpython_overloaded_9__pow
+                                            2 pow__AT____lpython_overloaded_9__pow
                                             2 pow
                                             [((Var 2 c1))
                                             ((IntegerConstant 4 (Integer 4 [])))]

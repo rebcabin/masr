@@ -137,10 +137,10 @@
                                                     pow
                                                     Private
                                                 ),
-                                            pow@:__lpython_overloaded_0__pow
+                                            :pow__AT____lpython_overloaded_0__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_0__pow
+                                                    pow__AT____lpython_overloaded_0__pow
                                                     6 __lpython_overloaded_0__pow
                                                     lpython_builtin
                                                     []
@@ -164,13 +164,13 @@
                                         []
                                         false
                                     )
-                                    [pow@__lpython_overloaded_0__pow]
+                                    [pow__AT____lpython_overloaded_0__pow]
                                     []
                                     [(=
                                         (Var 2 a)
                                         (Cast
                                             (FunctionCall
-                                                2 pow@__lpython_overloaded_0__pow
+                                                2 pow__AT____lpython_overloaded_0__pow
                                                 2 pow
                                                 [((IntegerConstant 2 (Integer 4 [])))
                                                 ((IntegerConstant 2 (Integer 4 [])))]
@@ -252,10 +252,10 @@
                                                     pow
                                                     Private
                                                 ),
-                                            pow@:__lpython_overloaded_0__pow
+                                            :pow__AT____lpython_overloaded_0__pow
                                                 (ExternalSymbol
                                                     3
-                                                    pow@__lpython_overloaded_0__pow
+                                                    pow__AT____lpython_overloaded_0__pow
                                                     6 __lpython_overloaded_0__pow
                                                     lpython_builtin
                                                     []
@@ -295,14 +295,14 @@
                                         []
                                         false
                                     )
-                                    [pow@__lpython_overloaded_0__pow]
+                                    [pow__AT____lpython_overloaded_0__pow]
                                     [(Var 3 a)
                                     (Var 3 b)]
                                     [(=
                                         (Var 3 res)
                                         (Cast
                                             (FunctionCall
-                                                3 pow@__lpython_overloaded_0__pow
+                                                3 pow__AT____lpython_overloaded_0__pow
                                                 3 pow
                                                 [((Var 3 a))
                                                 ((Var 3 b))]

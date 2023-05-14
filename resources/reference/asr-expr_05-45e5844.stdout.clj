@@ -58,20 +58,20 @@
                                                     _mod
                                                     Private
                                                 ),
-                                            _mod@:__lpython_overloaded_2___mod
+                                            :_mod__AT____lpython_overloaded_2___mod
                                                 (ExternalSymbol
                                                     4
-                                                    _mod@__lpython_overloaded_2___mod
+                                                    _mod__AT____lpython_overloaded_2___mod
                                                     6 __lpython_overloaded_2___mod
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_2___mod
                                                     Public
                                                 ),
-                                            _mod@:__lpython_overloaded_5___mod
+                                            :_mod__AT____lpython_overloaded_5___mod
                                                 (ExternalSymbol
                                                     4
-                                                    _mod@__lpython_overloaded_5___mod
+                                                    _mod__AT____lpython_overloaded_5___mod
                                                     6 __lpython_overloaded_5___mod
                                                     lpython_builtin
                                                     []
@@ -217,8 +217,8 @@
                                     )
                                     [test_multiply
                                     test_mod
-                                    _mod@__lpython_overloaded_2___mod
-                                    _mod@__lpython_overloaded_5___mod]
+                                    _mod__AT____lpython_overloaded_2___mod
+                                    _mod__AT____lpython_overloaded_5___mod]
                                     []
                                     [(=
                                         (Var 4 a)
@@ -400,7 +400,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                4 _mod@__lpython_overloaded_2___mod
+                                                4 _mod__AT____lpython_overloaded_2___mod
                                                 4 _mod
                                                 [((Var 4 a))
                                                 ((Var 4 b))]
@@ -902,7 +902,7 @@
                                     (=
                                         (Var 4 a)
                                         (FunctionCall
-                                            4 _mod@__lpython_overloaded_2___mod
+                                            4 _mod__AT____lpython_overloaded_2___mod
                                             4 _mod
                                             [((Var 4 a))
                                             ((Var 4 b))]
@@ -1014,7 +1014,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                4 _mod@__lpython_overloaded_2___mod
+                                                4 _mod__AT____lpython_overloaded_2___mod
                                                 4 _mod
                                                 [((IntegerUnaryMinus
                                                     (IntegerConstant 8 (Integer 4 []))
@@ -1039,7 +1039,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                4 _mod@__lpython_overloaded_2___mod
+                                                4 _mod__AT____lpython_overloaded_2___mod
                                                 4 _mod
                                                 [((IntegerConstant 8 (Integer 4 [])))
                                                 ((IntegerUnaryMinus
@@ -1068,7 +1068,7 @@
                                     (Assert
                                         (IntegerCompare
                                             (FunctionCall
-                                                4 _mod@__lpython_overloaded_2___mod
+                                                4 _mod__AT____lpython_overloaded_2___mod
                                                 4 _mod
                                                 [((IntegerUnaryMinus
                                                     (IntegerConstant 8 (Integer 4 []))
@@ -1104,7 +1104,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        4 _mod@__lpython_overloaded_5___mod
+                                                        4 _mod__AT____lpython_overloaded_5___mod
                                                         4 _mod
                                                         [((RealConstant
                                                             11.000000
@@ -1166,7 +1166,7 @@
                                                 Abs
                                                 [(RealBinOp
                                                     (FunctionCall
-                                                        4 _mod@__lpython_overloaded_5___mod
+                                                        4 _mod__AT____lpython_overloaded_5___mod
                                                         4 _mod
                                                         [((RealUnaryMinus
                                                             (RealConstant
@@ -1250,10 +1250,10 @@
                                                     _mod
                                                     Private
                                                 ),
-                                            _mod@:__lpython_overloaded_2___mod
+                                            :_mod__AT____lpython_overloaded_2___mod
                                                 (ExternalSymbol
                                                     3
-                                                    _mod@__lpython_overloaded_2___mod
+                                                    _mod__AT____lpython_overloaded_2___mod
                                                     6 __lpython_overloaded_2___mod
                                                     lpython_builtin
                                                     []
@@ -1308,13 +1308,13 @@
                                         []
                                         false
                                     )
-                                    [_mod@__lpython_overloaded_2___mod]
+                                    [_mod__AT____lpython_overloaded_2___mod]
                                     [(Var 3 a)
                                     (Var 3 b)]
                                     [(=
                                         (Var 3 _lpython_return_variable)
                                         (FunctionCall
-                                            3 _mod@__lpython_overloaded_2___mod
+                                            3 _mod__AT____lpython_overloaded_2___mod
                                             3 _mod
                                             [((Var 3 a))
                                             ((Var 3 b))]

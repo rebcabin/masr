@@ -37,20 +37,20 @@
                                                     complex
                                                     Private
                                                 ),
-                                            complex@:__lpython_overloaded_5__complex
+                                            :complex__AT____lpython_overloaded_5__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_5__complex
+                                                    complex__AT____lpython_overloaded_5__complex
                                                     4 __lpython_overloaded_5__complex
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_5__complex
                                                     Public
                                                 ),
-                                            complex@:__lpython_overloaded_9__complex
+                                            :complex__AT____lpython_overloaded_9__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_9__complex
+                                                    complex__AT____lpython_overloaded_9__complex
                                                     4 __lpython_overloaded_9__complex
                                                     lpython_builtin
                                                     []
@@ -74,8 +74,8 @@
                                         []
                                         false
                                     )
-                                    [complex@__lpython_overloaded_9__complex
-                                    complex@__lpython_overloaded_5__complex]
+                                    [complex__AT____lpython_overloaded_9__complex
+                                    complex__AT____lpython_overloaded_5__complex]
                                     []
                                     [(=
                                         (Var 2 a)
@@ -183,7 +183,7 @@
                                         (Var 2 a)
                                         (ComplexCompare
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_9__complex
+                                                2 complex__AT____lpython_overloaded_9__complex
                                                 2 complex
                                                 [((IntegerConstant 3 (Integer 4 [])))
                                                 ((IntegerConstant 4 (Integer 4 [])))]
@@ -197,7 +197,7 @@
                                             )
                                             Eq
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_5__complex
+                                                2 complex__AT____lpython_overloaded_5__complex
                                                 2 complex
                                                 [((RealConstant
                                                     3.000000

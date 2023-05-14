@@ -284,60 +284,60 @@
                                                     complex
                                                     Private
                                                 ),
-                                            complex@:__lpython_overloaded_0__complex
+                                            :complex__AT____lpython_overloaded_0__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_0__complex
+                                                    complex__AT____lpython_overloaded_0__complex
                                                     5 __lpython_overloaded_0__complex
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_0__complex
                                                     Public
                                                 ),
-                                            complex@:__lpython_overloaded_13__complex
+                                            :complex__AT____lpython_overloaded_13__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_13__complex
+                                                    complex__AT____lpython_overloaded_13__complex
                                                     5 __lpython_overloaded_13__complex
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_13__complex
                                                     Public
                                                 ),
-                                            complex@:__lpython_overloaded_1__complex
+                                            :complex__AT____lpython_overloaded_1__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_1__complex
+                                                    complex__AT____lpython_overloaded_1__complex
                                                     5 __lpython_overloaded_1__complex
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_1__complex
                                                     Public
                                                 ),
-                                            complex@:__lpython_overloaded_2__complex
+                                            :complex__AT____lpython_overloaded_2__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_2__complex
+                                                    complex__AT____lpython_overloaded_2__complex
                                                     5 __lpython_overloaded_2__complex
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_2__complex
                                                     Public
                                                 ),
-                                            complex@:__lpython_overloaded_5__complex
+                                            :complex__AT____lpython_overloaded_5__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_5__complex
+                                                    complex__AT____lpython_overloaded_5__complex
                                                     5 __lpython_overloaded_5__complex
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_5__complex
                                                     Public
                                                 ),
-                                            complex@:__lpython_overloaded_9__complex
+                                            :complex__AT____lpython_overloaded_9__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_9__complex
+                                                    complex__AT____lpython_overloaded_9__complex
                                                     5 __lpython_overloaded_9__complex
                                                     lpython_builtin
                                                     []
@@ -361,18 +361,18 @@
                                         []
                                         false
                                     )
-                                    [complex@__lpython_overloaded_0__complex
-                                    complex@__lpython_overloaded_1__complex
-                                    complex@__lpython_overloaded_5__complex
-                                    complex@__lpython_overloaded_2__complex
-                                    complex@__lpython_overloaded_9__complex
-                                    complex@__lpython_overloaded_13__complex]
+                                    [complex__AT____lpython_overloaded_0__complex
+                                    complex__AT____lpython_overloaded_1__complex
+                                    complex__AT____lpython_overloaded_5__complex
+                                    complex__AT____lpython_overloaded_2__complex
+                                    complex__AT____lpython_overloaded_9__complex
+                                    complex__AT____lpython_overloaded_13__complex]
                                     []
                                     [(=
                                         (Var 2 c)
                                         (Cast
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_0__complex
+                                                2 complex__AT____lpython_overloaded_0__complex
                                                 2 complex
                                                 []
                                                 (Complex 8 [])
@@ -397,7 +397,7 @@
                                         (Var 2 c)
                                         (Cast
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_1__complex
+                                                2 complex__AT____lpython_overloaded_1__complex
                                                 2 complex
                                                 [((RealConstant
                                                     3.400000
@@ -425,7 +425,7 @@
                                         (Var 2 c)
                                         (Cast
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_5__complex
+                                                2 complex__AT____lpython_overloaded_5__complex
                                                 2 complex
                                                 [((RealConstant
                                                     5.000000
@@ -456,7 +456,7 @@
                                     (=
                                         (Var 2 c)
                                         (FunctionCall
-                                            2 complex@__lpython_overloaded_2__complex
+                                            2 complex__AT____lpython_overloaded_2__complex
                                             2 complex
                                             [((IntegerConstant 1 (Integer 4 [])))]
                                             (Complex 4 [])
@@ -473,7 +473,7 @@
                                         (Var 2 c1)
                                         (Cast
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_9__complex
+                                                2 complex__AT____lpython_overloaded_9__complex
                                                 2 complex
                                                 [((IntegerConstant 3 (Integer 4 [])))
                                                 ((IntegerConstant 4 (Integer 4 [])))]
@@ -499,7 +499,7 @@
                                         (Var 2 c2)
                                         (Cast
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_13__complex
+                                                2 complex__AT____lpython_overloaded_13__complex
                                                 2 complex
                                                 [((IntegerConstant 2 (Integer 4 [])))
                                                 ((RealConstant
@@ -527,7 +527,7 @@
                                     (=
                                         (Var 2 c3)
                                         (FunctionCall
-                                            2 complex@__lpython_overloaded_5__complex
+                                            2 complex__AT____lpython_overloaded_5__complex
                                             2 complex
                                             [((RealConstant
                                                 3.000000
@@ -612,7 +612,7 @@
                                         (Cast
                                             (ComplexBinOp
                                                 (FunctionCall
-                                                    2 complex@__lpython_overloaded_9__complex
+                                                    2 complex__AT____lpython_overloaded_9__complex
                                                     2 complex
                                                     [((IntegerConstant 1 (Integer 4 [])))
                                                     ((IntegerConstant 2 (Integer 4 [])))]
@@ -626,7 +626,7 @@
                                                 )
                                                 Pow
                                                 (FunctionCall
-                                                    2 complex@__lpython_overloaded_5__complex
+                                                    2 complex__AT____lpython_overloaded_5__complex
                                                     2 complex
                                                     [((RealConstant
                                                         3.345340
@@ -666,7 +666,7 @@
                                         (Cast
                                             (ComplexBinOp
                                                 (FunctionCall
-                                                    2 complex@__lpython_overloaded_9__complex
+                                                    2 complex__AT____lpython_overloaded_9__complex
                                                     2 complex
                                                     [((IntegerConstant 1 (Integer 4 [])))
                                                     ((IntegerConstant 2 (Integer 4 [])))]
@@ -680,7 +680,7 @@
                                                 )
                                                 Mul
                                                 (FunctionCall
-                                                    2 complex@__lpython_overloaded_9__complex
+                                                    2 complex__AT____lpython_overloaded_9__complex
                                                     2 complex
                                                     [((IntegerConstant 3 (Integer 4 [])))
                                                     ((IntegerConstant 4 (Integer 4 [])))]
@@ -714,7 +714,7 @@
                                         (Cast
                                             (ComplexBinOp
                                                 (FunctionCall
-                                                    2 complex@__lpython_overloaded_9__complex
+                                                    2 complex__AT____lpython_overloaded_9__complex
                                                     2 complex
                                                     [((IntegerConstant 4 (Integer 4 [])))
                                                     ((IntegerConstant 5 (Integer 4 [])))]
@@ -728,7 +728,7 @@
                                                 )
                                                 Sub
                                                 (FunctionCall
-                                                    2 complex@__lpython_overloaded_9__complex
+                                                    2 complex__AT____lpython_overloaded_9__complex
                                                     2 complex
                                                     [((IntegerConstant 3 (Integer 4 [])))
                                                     ((IntegerConstant 4 (Integer 4 [])))]

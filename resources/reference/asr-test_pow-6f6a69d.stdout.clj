@@ -58,10 +58,10 @@
                                                     pow
                                                     Private
                                                 ),
-                                            pow@:__lpython_overloaded_0__pow
+                                            :pow__AT____lpython_overloaded_0__pow
                                                 (ExternalSymbol
                                                     2
-                                                    pow@__lpython_overloaded_0__pow
+                                                    pow__AT____lpython_overloaded_0__pow
                                                     4 __lpython_overloaded_0__pow
                                                     lpython_builtin
                                                     []
@@ -85,12 +85,12 @@
                                         []
                                         false
                                     )
-                                    [pow@__lpython_overloaded_0__pow]
+                                    [pow__AT____lpython_overloaded_0__pow]
                                     []
                                     [(Print
                                         ()
                                         [(FunctionCall
-                                            2 pow@__lpython_overloaded_0__pow
+                                            2 pow__AT____lpython_overloaded_0__pow
                                             2 pow
                                             [((IntegerConstant 2 (Integer 4 [])))
                                             ((IntegerConstant 2 (Integer 4 [])))]

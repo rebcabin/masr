@@ -163,20 +163,20 @@
                                                     complex
                                                     Private
                                                 ),
-                                            complex@:__lpython_overloaded_13__complex
+                                            :complex__AT____lpython_overloaded_13__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_13__complex
+                                                    complex__AT____lpython_overloaded_13__complex
                                                     4 __lpython_overloaded_13__complex
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_13__complex
                                                     Public
                                                 ),
-                                            complex@:__lpython_overloaded_9__complex
+                                            :complex__AT____lpython_overloaded_9__complex
                                                 (ExternalSymbol
                                                     2
-                                                    complex@__lpython_overloaded_9__complex
+                                                    complex__AT____lpython_overloaded_9__complex
                                                     4 __lpython_overloaded_9__complex
                                                     lpython_builtin
                                                     []
@@ -245,8 +245,8 @@
                                         []
                                         false
                                     )
-                                    [complex@__lpython_overloaded_9__complex
-                                    complex@__lpython_overloaded_13__complex]
+                                    [complex__AT____lpython_overloaded_9__complex
+                                    complex__AT____lpython_overloaded_13__complex]
                                     []
                                     [(=
                                         (Var 2 a)
@@ -636,7 +636,7 @@
                                         (Var 2 c)
                                         (Cast
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_9__complex
+                                                2 complex__AT____lpython_overloaded_9__complex
                                                 2 complex
                                                 [((IntegerConstant 2 (Integer 4 [])))
                                                 ((IntegerConstant 3 (Integer 4 [])))]
@@ -671,7 +671,7 @@
                                         (Var 2 c)
                                         (Cast
                                             (FunctionCall
-                                                2 complex@__lpython_overloaded_9__complex
+                                                2 complex__AT____lpython_overloaded_9__complex
                                                 2 complex
                                                 [((IntegerConstant 0 (Integer 4 [])))
                                                 ((IntegerConstant 0 (Integer 4 [])))]
@@ -751,7 +751,7 @@
                                     (=
                                         (Var 2 c1)
                                         (FunctionCall
-                                            2 complex@__lpython_overloaded_13__complex
+                                            2 complex__AT____lpython_overloaded_13__complex
                                             2 complex
                                             [((IntegerConstant 0 (Integer 4 [])))
                                             ((RealConstant
@@ -781,7 +781,7 @@
                                         (LogicalNot
                                             (Cast
                                                 (FunctionCall
-                                                    2 complex@__lpython_overloaded_9__complex
+                                                    2 complex__AT____lpython_overloaded_9__complex
                                                     2 complex
                                                     [((IntegerConstant 0 (Integer 4 [])))
                                                     ((IntegerConstant 0 (Integer 4 [])))]
