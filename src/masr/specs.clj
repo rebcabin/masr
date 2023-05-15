@@ -1330,16 +1330,15 @@
 ;; #+begin_src clojure
 
 (defmasrtype
-  Cast expr
-  (arg cast-kind ttype value?))
+  IntegerBitNot expr
+  (integer-expr, Integer, integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
-  FunctionCall expr
-  (nymref    orig-nymref    call-args
-             return-type    value?    dt?))
+  IntegerUnaryMinus expr
+  (integer-expr, Integer, integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1353,9 +1352,31 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  IntegerCompare expr
+  (integer-left    cmpop           integer-right
+                   Integer         integer-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  RealUnaryMinus expr
+  (real-expr, Real, real-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   RealBinOp expr
   (real-left       real-binop      real-right
                    Real            real-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  LogicalNot expr
+  (logical-expr, Logical, logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1372,14 +1393,6 @@
   LogicalCompare expr
   (logical-left    logicalcmpop    logical-right
                    Logical         logical-value?))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  IntegerCompare expr
-  (integer-left    cmpop           integer-right
-                   Integer         integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1406,6 +1419,20 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  ComplexConstant expr
+  (real-part    imaginary-part    Complex))
+;; #+end_src
+
+;; #+begin_src clojure
+
+;; #+begin_src clojure
+
+(defmasrtype
+  ComplexUnaryMinus expr
+  (complex-expr, Complex, complex-value?))
+;; #+end_src
+
+(defmasrtype
   StringConstant expr
   (string Character))
 ;; #+end_src
@@ -1423,6 +1450,22 @@
   Var expr
   (symtab-id    varnym))
 ;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  Cast expr
+  (arg cast-kind ttype value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  FunctionCall expr
+  (nymref    orig-nymref    call-args
+             return-type    value?    dt?))
+;; #+end_src
+
 
 ;;
 ;; ## TTYPE
@@ -1464,7 +1507,7 @@
 
 (defmasrtype
   Character ttype
-  (character-kind len len-expr? dimension*))
+  (character-kind len disposition len-expr? dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1926,7 +1969,7 @@
 ;; #+begin_src clojure
 
 (enum-like logicalbinop  #{'And  'Or  'Xor  'NEqv  'Eqv})
-;; Collisions of names are NOT ALLOWED
+;; Collisions of names are NOT ALLOWED!
 ;; See Legacy Sugar for RealBinOp.
 (enum-like real-binop    #{'RAdd 'RSub 'RMul 'RDiv 'RPow})
 (enum-like integer-binop #{'Add 'Sub 'Mul 'Div 'Pow
@@ -2009,14 +2052,14 @@
 ;; #+begin_src clojure
 
 (defn abi
-  ;; arity 1 --- default "external"
+  ;; unary --- default "external"
   ([the-enum]
    (abi the-enum
         :external (not (= the-enum 'Source))))
-  ;; arity 2 --- invalid
+  ;; binary --- invalid
   ([the-enum, crap]
    ::invalid-abi)
-  ;; arity 3 --- light sugar
+  ;; trinary --- light sugar
   ([the-enum, ext-kw, the-bool]
    (cond
      (not (= ext-kw :external)) ::invalid-abi
@@ -2138,11 +2181,16 @@
 (s/def ::expr? (.? ::expr))
 ;; #+end_src
 
+;; For Character
+
 ;; #+begin_src clojure
 
-;;(s/def ::len       ::nat)
-(s/def ::len       ::int)   ;; Issues #36
-(s/def ::len-expr? ::expr?) ;; TODO: check that its >= 0
+(s/def ::len         ::int)   ;; Issues #36
+(s/def ::disposition #{'compile-time-length   ;; >= 0
+                       'inferred-at-run-time  ;; = -1
+                       'allocatable           ;; = -2
+                       'run-time-expression}) ;; = -3
+(s/def ::len-expr?   ::expr?) ;; TODO: check that it's >= 0
 ;; #+end_src
 
 ;;
@@ -2276,16 +2324,16 @@
        ;; positional arguments, like
        ;; (Integer 4 []), (Integer 4), (Integer)
        (defn ~scp ;; like Integer
-         ;; arity-2
+         ;; binary
          ([kindx# dimsx#]
           (~lcp {:kind kindx# :dimension* dimsx#}))
-         ;; arity-1
+         ;; unary
          ([kindy#]
           (~lcp {:kind kindy# :dimension* ~dfd}))
          ;; dfk = 4  is the default kinds for
          ;;          Integer, Real, Complex, Logical
          ;; dfd = [] is the default dimension*
-         ;; arity-0
+         ;; nullary
          ([]
           (~lcp {:kind ~dfk   :dimension* ~dfd})))
        ;; TODO ? entity keywords for ::Integer, ::Real, etc.
@@ -2343,15 +2391,19 @@
 ;;
 ;; #+begin_src clojure
 
-
 (defn Character
   ([kind, len, len-expr?, dims]
-   ;; 4-ary
+   ;; quaternary
    (let [cnd {::term ::ttype
               ::asr-ttype-head
               {::ttype-head ::Character
                ::character-kind kind
                ::len            len
+               ::disposition
+               (cond (>= len  0) 'compile-time-length
+                     (=  len -1) 'inferred-at-run-time
+                     (=  len -2) 'allocatable
+                     (=  len -3) 'run-time-expression)
                ::len-expr?      len-expr?
                ::dimension*     (dimension* dims)
                }}]
@@ -2578,7 +2630,10 @@
   (s/or :logical-constant   ::LogicalConstant
         :logical-compare    ::LogicalCompare
         :integer-compare    ::IntegerCompare
+        ;; :real-compare       ::RealCompare
+        ;; :complex-compare    ::ComplexCompare
         :logical-binop      ::LogicalBinOp
+        :logical-not        ::LogicalNot
         :cast               ::Cast      ;; TODO check return type!
         :if-expr            ::IfExp     ;; TODO check return type!
         :named-expr         ::NamedExpr ;; TODO check return type!
@@ -2605,12 +2660,14 @@
 ;; #+begin_src clojure
 
 (s/def ::integer-expr
-  (s/or :integer-constant   ::IntegerConstant
-        :integer-binop      ::IntegerBinOp
-        :cast               ::Cast      ;; TODO check return type!
-        :if-expr            ::IfExp     ;; TODO check return type!
-        :named-expr         ::NamedExpr ;; TODO check return type!
-        :var                ::Var       ;; TODO check return type!
+  (s/or :integer-constant    ::IntegerConstant
+        :integer-binop       ::IntegerBinOp
+        :integer-unary-minus ::IntegerUnaryMinus
+        :integer-bit-not     ::IntegerBitNot
+        :cast                ::Cast      ;; TODO check return type!
+        :if-expr             ::IfExp     ;; TODO check return type!
+        :named-expr          ::NamedExpr ;; TODO check return type!
+        :var                 ::Var       ;; TODO check return type!
         ))
 ;; #+end_src
 
@@ -2632,12 +2689,13 @@
 ;; #+begin_src clojure
 
 (s/def ::real-expr
-  (s/or :real-constant   ::RealConstant
-        :real-binop      ::RealBinOp
-        :cast            ::Cast      ;; TODO check return type!
-        :if-expr         ::IfExp     ;; TODO check return type!
-        :named-expr      ::NamedExpr ;; TODO check return type!
-        :var             ::Var       ;; TODO check return type!
+  (s/or :real-constant    ::RealConstant
+        :real-binop       ::RealBinOp
+        :real-unary-minus ::RealUnaryMinus
+        :cast             ::Cast      ;; TODO check return type!
+        :if-expr          ::IfExp     ;; TODO check return type!
+        :named-expr       ::NamedExpr ;; TODO check return type!
+        :var              ::Var       ;; TODO check return type!
         ))
 ;; #+end_src
 
@@ -2648,6 +2706,184 @@
 
 (s/def ::real-left  ::real-expr)
 (s/def ::real-right ::real-expr)
+;; #+end_src
+
+
+;;
+;;
+;; ### Complex Types
+;;
+;;
+
+;; #+begin_src clojure
+
+(s/def ::complex-expr
+  (s/or :complex-constant    ::ComplexConstant
+        ;; :complex-binop       ::ComplexBinOp
+        :complex-unary-minus ::ComplexUnaryMinus
+        :cast                ::Cast      ;; TODO check return type!
+        :if-expr             ::IfExp     ;; TODO check return type!
+        :named-expr          ::NamedExpr ;; TODO check return type!
+        :var                 ::Var       ;; TODO check return type!
+        ))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::real-part      ::float)
+(s/def ::imiginary-part ::float)
+
+(s/def ::complex-left  ::complex-expr)
+(s/def ::complex-right ::complex-expr)
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::complex-expr?  (.? ::complex-expr))
+(s/def ::complex-value?     ::complex-expr?)
+
+(s/def ::complex-left  ::complex-expr)
+(s/def ::complex-right ::complex-expr)
+;; #+end_src
+
+
+;;
+;;
+;; ## INTEGER BIT NOT
+;;
+;;
+
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; IntegerBitNot(expr arg, ttype type, expr? value)
+;; ```
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn IntegerBitNot
+  [iarg, ittype, ivalue?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head ::IntegerBitNot
+              ::integer-expr   iarg
+              ::Integer        ittype
+              ::integer-value? ivalue?}}]
+    (if (s/valid? ::IntegerBitNot cnd)
+      cnd
+      :invalid-integer-bit-not)))
+;; #+end_src
+
+
+;;
+;;
+;; ## INTEGER UNARY MINUS
+;;
+;;
+
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; IntegerUnaryMinus(expr arg, ttype type, expr? value)
+;; ```
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn IntegerUnaryMinus
+  [iarg, ittype, ivalue?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head ::IntegerUnaryMinus
+              ::integer-expr   iarg
+              ::Integer        ittype
+              ::integer-value? ivalue?}}]
+    (if (s/valid? ::IntegerUnaryMinus cnd)
+      cnd
+      :invalid-integer-unary-minus)))
+;; #+end_src
+
+
+;;
+;;
+;; ## REAL UNARY MINUS
+;;
+;;
+
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; RealUnaryMinus(expr arg, ttype type, expr? value)
+;; ```
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn RealUnaryMinus
+  [rarg, rttype, rvalue?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head ::RealUnaryMinus
+              ::real-expr   rarg
+              ::Real        rttype
+              ::real-value? rvalue?}}]
+    (if (s/valid? ::RealUnaryMinus cnd)
+      cnd
+      :invalid-real-unary-minus)))
+;; #+end_src
+
+
+;;
+;;
+;; ## COMPLEX UNARY MINUS
+;;
+;;
+
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; ComplexUnaryMinus(expr arg, ttype type, expr? value)
+;; ```
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn ComplexUnaryMinus
+  [iarg, ittype, ivalue?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head ::ComplexUnaryMinus
+              ::complex-expr   iarg
+              ::Complex        ittype
+              ::complex-value? ivalue?}}]
+    (if (s/valid? ::ComplexUnaryMinus cnd)
+      cnd
+      :invalid-complex-unary-minus)))
 ;; #+end_src
 
 
@@ -2992,7 +3228,7 @@
 ;; #+begin_src clojure
 
 (defn RealConstant
-  ;; arity-2
+  ;; binary
   ([a-float, a-ttype]
    (let [cnd {::term ::expr,
               ::asr-expr-head
@@ -3002,9 +3238,57 @@
      (if (s/valid? ::RealConstant cnd)
        cnd
        :invalid-real-constant)))
-  ;; arity-1
+  ;; unary
   ([a-float]
    (RealConstant a-float (Real))))
+;; #+end_src
+
+
+;;
+;;
+;; ## COMPLEX CONSTANT
+;;
+;;
+
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; ComplexConstant(float re, float im, ttype type)
+;; ```
+;;
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(ComplexConstant 3.000000 4.000000 (Complex 8 []))
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn ComplexConstant
+  ;; trinary
+  ([re-float, im-float c-ttype]
+   (let [cnd {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ::ComplexConstant
+               ::real-part      re-float
+               ::imaginary-part im-float
+               ::Complex        c-ttype}}]
+     (if (s/valid? ::ComplexConstant cnd)
+       cnd
+       :invalid-complex-constant)))
+  ;; binary
+  ([re-float, im-float]
+   (ComplexConstant re-float, im-float, (Complex))))
 ;; #+end_src
 
 
@@ -3040,7 +3324,7 @@
 ;; #+begin_src clojure
 
 (defn IntegerConstant
-  ;; arity-2
+  ;; binary
   ([an-int, a-ttype]
    (let [cnd {::term ::expr,
               ::asr-expr-head
@@ -3050,7 +3334,7 @@
      (if (s/valid? ::IntegerConstant cnd)
        cnd
        :invalid-integer-constant)))
-  ;; arity-1
+  ;; unary
   ([an-int]
    (IntegerConstant an-int (Integer))))
 ;; #+end_src
@@ -3554,6 +3838,40 @@
   [l- cmp- r- tt- val?-]
   (let [lop (symbol (str "L" cmp-))]
     `(LogicalCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
+
+
+;;
+;;
+;; ## LOGICAL NOT
+;;
+;;
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; LogicalNot(expr arg, ttype type, expr? value)
+;; ```
+
+;;
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn LogicalNot
+  [larg, lttype, lvalue?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head ::LogicalNot
+              ::logical-expr   larg
+              ::Logical        lttype
+              ::logical-value? lvalue?}}]
+    (if (s/valid? ::LogicalNot cnd)
+      cnd
+      :invalid-logical-not)))
+;; #+end_src
 
 
 ;;

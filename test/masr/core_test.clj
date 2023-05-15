@@ -4609,6 +4609,10 @@
 
     (testing "whole translation unit for -expr9-c6fe691"
       (is (s/valid? ::asr/unit (long-form-asr "-expr9-c6fe691"))))
+
+    (testing "whole translation unit for -expr10-31c163f"
+      (is (s/valid? ::asr/unit (long-form-asr "-expr10-31c163f"))))
+
     ))
 
 
