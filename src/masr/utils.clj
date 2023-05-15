@@ -30,3 +30,9 @@
   (with-open [w (io/writer filenamestr)]
     (binding [*out* w]
       (pprint obj))))
+
+
+(defn plnecho-file
+  [filenamestr, obj]
+  (pprint-file filenamestr, obj)
+  obj)

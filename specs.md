@@ -319,6 +319,7 @@ the rest of the code in this file.
 
   (:require [masr.logic                    :refer   [iff implies]]
             [masr.utils                    :refer   [plnecho
+                                                     plnecho-file
                                                      dosafely   ]]
             [masr.simplespecs              :refer   [nat
                                                      identifier-list
@@ -4030,7 +4031,7 @@ Heavy Sugar
              {::symbol-head     ::Module
               ::SymbolTable     symtab
               ::modulenym       modnym
-              ::dependencies    deps ;; TODO quote it
+              ::dependencies    deps
               ::loaded-from-mod loaded
               ::intrinsic       intrinsic-}}]
     (if (s/valid? ::Module cnd)
@@ -4046,7 +4047,7 @@ Heavy Sugar
 (defmacro Module
   "Quote the mondnym and the deps."
   [symtab, modnym, deps, loaded, intrinsic-]
-  (let [quotes (vec (for [d deps] `'d))]
+  (let [quotes (vec (for [d deps] `'~d))]
     `(Module--
       ~symtab
       '~modnym
