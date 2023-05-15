@@ -2874,13 +2874,13 @@
 ;; #+begin_src clojure
 
 (defn ComplexUnaryMinus
-  [iarg, ittype, ivalue?]
+  [carg, cttype, cvalue?]
   (let [cnd {::term ::expr,
              ::asr-expr-head
              {::expr-head ::ComplexUnaryMinus
-              ::complex-expr   iarg
-              ::Complex        ittype
-              ::complex-value? ivalue?}}]
+              ::complex-expr   carg
+              ::Complex        cttype
+              ::complex-value? cvalue?}}]
     (if (s/valid? ::ComplexUnaryMinus cnd)
       cnd
       :invalid-complex-unary-minus)))
