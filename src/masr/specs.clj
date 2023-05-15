@@ -2782,109 +2782,52 @@
       :invalid-integer-bit-not)))
 ;; #+end_src
 
+;;
+;;
+;; ## INTEGER, REAL, COMPLEX UNARY MINUS
+;;
+;;
 
-;;
-;;
-;; ## INTEGER UNARY MINUS
-;;
-;;
+;; ### Typed Uminus Macro
 
-
-;; ### Original ASDL
-;;
-;;
-;; ```c
-;; IntegerUnaryMinus(expr arg, ttype type, expr? value)
-;; ```
-
-;;
-;;
-;; ### Heavy Sugar
-;;
-;;
 ;; #+begin_src clojure
 
-(defn IntegerUnaryMinus
-  [iarg, ittype, ivalue?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head ::IntegerUnaryMinus
-              ::integer-expr   iarg
-              ::Integer        ittype
-              ::integer-value? ivalue?}}]
-    (if (s/valid? ::IntegerUnaryMinus cnd)
-      cnd
-      :invalid-integer-unary-minus)))
+(defmacro typed-uminus                 ;; -- Examples --
+  [ttype]                              ;; Integer
+  (let [ns    "masr.specs"
+        fnstr (str ttype "UnaryMinus") ;; "IntegerUnaryMinus"
+        fnsym (symbol fnstr)           ;; 'IntegerUnaryMinus
+        fnqkw (keyword ns fnstr)       ;; ::IntegerUnaryMinus
+        ttstr (str ttype)              ;; "Integer"
+        ttqkw (keyword ns ttstr)       ;; ::Integer
+        tlstr (str/lower-case ttstr)   ;; "integer"
+        testr (str tlstr "-expr")      ;; "integer-expr"
+        teqkw (keyword ns testr)       ;; ::integer-expr
+        tvstr (str tlstr "-value?")    ;; "integer-value?"
+        tvqkw (keyword ns tvstr)       ;; ::integer-value?
+        nvukw (keyword                 ;; :invalid-integer-unary-minus
+               (str "invalid-" (csk/->kebab-case fnstr)))]
+    `(defn ~fnsym                      ;; (defn IntegerConstant
+       [arg# ttype# val?#]             ;; ([arg ttype val?
+       (let [cnd#
+             {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ~fnqkw      ;; {::ex... ::IntegerUnaryMinus
+               ~teqkw       arg#       ;;  ::integer-expr   arg
+               ~ttqkw       ttype#     ;;  ::Integer        ttype
+               ~tvqkw       val?#}}]   ;;  ::integer-value? val?}}]
+         ;; (if (s/valid? ::IntegerUnaryMinus cnd)
+         (if (s/valid? ~fnqkw cnd#) cnd#
+             ~nvukw)))))               ;; :invalid-integer-unary-minus
 ;; #+end_src
 
+;; ### Using the Macro
 
-;;
-;;
-;; ## REAL UNARY MINUS
-;;
-;;
-
-
-;; ### Original ASDL
-;;
-;;
-;; ```c
-;; RealUnaryMinus(expr arg, ttype type, expr? value)
-;; ```
-
-;;
-;;
-;; ### Heavy Sugar
-;;
-;;
 ;; #+begin_src clojure
 
-(defn RealUnaryMinus
-  [rarg, rttype, rvalue?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head ::RealUnaryMinus
-              ::real-expr   rarg
-              ::Real        rttype
-              ::real-value? rvalue?}}]
-    (if (s/valid? ::RealUnaryMinus cnd)
-      cnd
-      :invalid-real-unary-minus)))
-;; #+end_src
-
-
-;;
-;;
-;; ## COMPLEX UNARY MINUS
-;;
-;;
-
-
-;; ### Original ASDL
-;;
-;;
-;; ```c
-;; ComplexUnaryMinus(expr arg, ttype type, expr? value)
-;; ```
-
-;;
-;;
-;; ### Heavy Sugar
-;;
-;;
-;; #+begin_src clojure
-
-(defn ComplexUnaryMinus
-  [carg, cttype, cvalue?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head ::ComplexUnaryMinus
-              ::complex-expr   carg
-              ::Complex        cttype
-              ::complex-value? cvalue?}}]
-    (if (s/valid? ::ComplexUnaryMinus cnd)
-      cnd
-      :invalid-complex-unary-minus)))
+(typed-uminus Integer)
+(typed-uminus Real)
+(typed-uminus Complex)
 ;; #+end_src
 
 
@@ -3149,13 +3092,11 @@
                     ~dt?)))
 ;; #+end_src
 
-
 ;;
 ;;
 ;; ## LOGICAL, INTEGER, REAL CONSTANTS
 ;;
 ;;
-
 
 ;; To reduce code duplication, we want to write
 ;; something like the following automatically for
@@ -3222,6 +3163,8 @@
         ;; (LogicalConstant a-bool (Logical))))
         (~fnsym ~vpsym (~ttsym))))))
 ;; #+end_src
+
+;; ### Using the Macro
 
 ;; #+begin_src clojure
 
