@@ -2140,8 +2140,9 @@
 
 ;; #+begin_src clojure
 
-(s/def ::len       ::nat)
-(s/def ::len-expr? ::expr?)
+;;(s/def ::len       ::nat)
+(s/def ::len       ::int)   ;; Issues #36
+(s/def ::len-expr? ::expr?) ;; TODO: check that its >= 0
 ;; #+end_src
 
 ;;
@@ -2414,28 +2415,30 @@
    pure-            module-            inline-
    static-          type-param*-       restrictions-
    is-restriction-  ]
-  (let [cnd {::term ::ttype
-             ::asr-ttype-head
-             {::ttype-head        ::FunctionType
+  (let [cnd (plnecho-file
+             "/tmp/a.clj"
+             {::term ::ttype
+              ::asr-ttype-head
+              {::ttype-head        ::FunctionType
 
-              ::param-type*       param-type*-
-              ::return-var-type?  return-var-type?-
-              ::abi               abi-
+               ::param-type*       param-type*-
+               ::return-var-type?  return-var-type?-
+               ::abi               abi-
 
-              ::deftype           deftype-
-              ::bindc-name        (if (empty? bindc-name-)
-                                    nil, bindc-name-)
-              ::elemental         elemental-
+               ::deftype           deftype-
+               ::bindc-name        (if (empty? bindc-name-)
+                                     nil, bindc-name-)
+               ::elemental         elemental-
 
-              ::pure              pure-
-              ::module            module-
-              ::inline            inline-
+               ::pure              pure-
+               ::module            module-
+               ::inline            inline-
 
-              ::static            static-
-              ::type-param*       type-param*-
-              ::restrictions      restrictions-
+               ::static            static-
+               ::type-param*       type-param*-
+               ::restrictions      restrictions-
 
-              ::is-restriction    is-restriction-}}]
+               ::is-restriction    is-restriction-}})]
     (if (s/valid? ::FunctionType  cnd)
       cnd
       :invalid-function-type)))
@@ -2870,11 +2873,11 @@
               ::nymref      (apply symbol-ref fn-nymref)
               ::orig-nymref (if (empty? orig-nymref)
                               orig-nymref
-                              (apply symbol-ref orig-nymref)) ;; TODO
+                              (apply symbol-ref orig-nymref))
               ::call-args   call-args
               ::return-type return-type
               ::value?      value?
-              ::dt?         dt?
+              ::dt?         dt? ;; TODO check arithmetic
               }}]
     (if (s/valid? ::FunctionCall cnd)
       cnd
@@ -2889,7 +2892,7 @@
 ;; #+begin_src clojure
 
 (defmacro FunctionCall
-  ;; seven-ary
+  ;; heptenary
   ([stid, ident, orig-symref,
     args, rettype, value?, dt?]
    `(FunctionCall-- ['~ident ~stid]
@@ -2898,7 +2901,7 @@
                     ~rettype
                     ~value?
                     ~dt?))
-  ;; eight-ary
+  ;; octenary
   ([stid, ident, ostid, oident,
     args, rettype, value?, dt?]
    `(FunctionCall-- ['~ident, ~stid]

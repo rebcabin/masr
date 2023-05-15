@@ -699,6 +699,7 @@
   (and (s/valid? ::asr/asr-term ttype)
        (s/valid? ::asr/ttype    ttype)
        (s/valid? intermediate   ttype)
+       ;; conform causes problems by inserting s/or keys.
        #_(= ttype (s/conform intermediate ttype))))
 
 
@@ -908,20 +909,41 @@
 ;; | (__/ _` (_-<  _|
 ;;  \___\__,_/__/\__|
 
-#_
+
 (deftest cast-test
+  (is (s/valid? ::asr/call-args
+                (legacy ;; fixes round brackets.
+                 [((IntegerConstant 2 (Integer 4 [])))
+                  ((IntegerConstant 2 (Integer 4 [])))])))
+
+  (let [example (legacy ;; fixes round brackets.
+                 (Cast
+                  (FunctionCall
+                   2 pow__AT____lpython_overloaded_0__pow
+                   2 pow
+                   [((IntegerConstant 2 (Integer 4 [])))
+                    ((IntegerConstant 2 (Integer 4 [])))]
+                   (Real 8 [])
+                   (RealConstant 4.000000 (Real 8 [])) ())
+                  RealToInteger
+                  (Integer 4 [])
+                  (IntegerConstant 4 (Integer 4 []))))]
+    (is (s/valid? ::asr/Cast example)))
+
   (let [example (Cast
                  (FunctionCall
                   2 pow__AT____lpython_overloaded_0__pow
                   2 pow
-                  [((IntegerConstant 2 (Integer 4 [])))
-                   ((IntegerConstant 2 (Integer 4 [])))]
+                  (legacy ;; fixes round brackets.
+                   [((IntegerConstant 2 (Integer 4 [])))
+                    ((IntegerConstant 2 (Integer 4 [])))])
                   (Real 8 [])
                   (RealConstant 4.000000 (Real 8 [])) ())
                  RealToInteger
                  (Integer 4 [])
                  (IntegerConstant 4 (Integer 4 [])))]
-    (is (s/valid? ::Cast example))))
+    (is (s/valid? ::asr/Cast example)))
+  )
 
 
 ;;  _  _                   _ ___
@@ -4585,7 +4607,30 @@
     (testing "whole translation unit for -expr8-2a4630a"
       (is (s/valid? ::asr/unit (long-form-asr "-expr8-2a4630a"))))
 
+    (testing "whole translation unit for -expr9-c6fe691"
+      (is (s/valid? ::asr/unit (long-form-asr "-expr9-c6fe691"))))
     ))
+
+
+(deftest bisecting-expr9-c6fe691
+  (let [example
+        (FunctionType
+         [(Integer 4 [])]
+         (Character 1 -2 () []) ;; negative length ? Issue #36
+         Source
+         Implementation
+         ()
+         false
+         false
+         false
+         false
+         false
+         []
+         []
+         false
+         )]
+    (is (s/valid? ::asr/FunctionType example)))
+  )
 
 
 (deftest bisecting-2ef3822-test
