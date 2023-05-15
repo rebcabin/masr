@@ -1,13 +1,16 @@
 (ns masr.core-test
   (:use     [masr.core]
             ;; https://groups.google.com/g/clojure/c/i770QaIFiF0 :
-            [masr.specs             :as    asr          ])
+            [masr.specs             :as    asr     ])
 
-  (:require [clojure.test           :refer :all         ]
-            [clojure.spec.alpha     :as    s            ]
-            [clojure.spec.gen.alpha :as    gen          ]
-            [clojure.pprint         :refer [pprint     ]]
-            [clojure.set            :as    set          ])
+  (:require [clojure.test           :refer :all    ]
+            [clojure.spec.alpha     :as    s       ]
+            [clojure.spec.gen.alpha :as    gen     ]
+            [clojure.pprint         :refer [pprint]]
+            [clojure.set            :as    set     ])
+
+  (:require [blaster.clj-fstring    :refer [f-str ]]
+            [camel-snake-kebab.core :as    csk     ])
 
   (:require [masr.utils             :refer [warnings-banner
                                             dosafely
@@ -2836,7 +2839,6 @@
           [lpython_builtin]
           false
           false))]
-    (is (nil? (s/explain ::asr/Module example)))
     (is (s/valid? ::asr/Module example))))
 
 
@@ -5018,3 +5020,108 @@
          (->asdl-type (Logical 4 [[6 60] []]))))
   (is (= "SubroutineCall(symbol name, symbol? original_name, call_arg* args, expr? dt)"
          (->asdl-type (SubroutineCall 7 test_fn1 () [] ())))))
+
+
+;; ================================================================
+;;  __  __ ___ ____   ____
+;; |  \/  |_ _/ ___| / ___|
+;; | |\/| || |\___ \| |
+;; | |  | || | ___) | |___
+;; |_|  |_|___|____/ \____|
+
+
+(defmacro typed-constant-type-nyms-test
+  [ttype ;; like Integer
+   spec  ;; like int
+   ]
+  (let [ns    "masr.specs"
+        fnstr (str ttype "Constant")   ;; like "IntegerConstant"
+        fnsym (symbol fnstr)           ;; like 'IntegerConstant
+        fnqkw (keyword ns fnstr)       ;; like ::IntegerConstant
+        ttstr (str ttype)              ;; like "Integer"
+        ttsym (symbol ttstr)           ;; like 'Integer
+        ttqkw (keyword ns ttstr)       ;; like ::Integer
+        spqkw (keyword ns (str spec))  ;; like ::int
+        nvukw (keyword (str "invalid-" ;; like :invalid-integer-constant
+                            (csk/->kebab-case
+                             fnstr)))
+        vpsym ;; like 'an-int
+        (symbol (case spec
+                  'int (str "an-" spec)
+                  (str "a-" spec)))
+
+        tpsym ;; like 'a-ttype
+        (symbol (str 'a-ttype))]
+    `{:fnstr  ~fnstr,
+      :fnsym '~fnsym,
+      :fnqkw  ~fnqkw,
+      :ttsym '~ttsym
+      :ttqkw  ~ttqkw,
+
+      :spqkw  ~spqkw,
+      :nvukw  ~nvukw,
+      :vpsym '~vpsym,
+      :tpsym '~tpsym}))
+
+
+;; Sometimes, a nym is a #{string? symbol? keyword?}
+(deftest camel-snake-kebab-test
+  (testing "constant names"
+
+    (let [nyms (typed-constant-type-nyms-test Logical bool)]
+      (is (= "LogicalConstant"         (:fnstr nyms)))
+      (is (= 'LogicalConstant          (:fnsym nyms)))
+      (is (= ::asr/LogicalConstant     (:fnqkw nyms)))
+      (is (= ::asr/Logical             (:ttqkw nyms)))
+      (is (= 'Logical                  (:ttsym nyms)))
+
+      (is (= ::asr/bool                (:spqkw nyms)))
+      (is (= :invalid-logical-constant (:nvukw nyms)))
+      (is (= 'a-bool                   (:vpsym nyms)))
+      (is (= 'a-ttype                  (:tpsym nyms))))
+
+    (let [nyms (typed-constant-type-nyms-test Integer int)]
+      (is (= "IntegerConstant"         (:fnstr nyms)))
+      (is (= 'IntegerConstant          (:fnsym nyms)))
+      (is (= ::asr/IntegerConstant     (:fnqkw nyms)))
+      (is (= ::asr/Integer             (:ttqkw nyms)))
+      (is (= 'Integer                  (:ttsym nyms)))
+
+      (is (= ::asr/int                 (:spqkw nyms)))
+      (is (= :invalid-integer-constant (:nvukw nyms)))
+      (is (= 'an-int                   (:vpsym nyms)))
+      (is (= 'a-ttype                  (:tpsym nyms))))
+
+    (let [nyms (typed-constant-type-nyms-test Real float)]
+      (is (= "RealConstant"            (:fnstr nyms)))
+      (is (= 'RealConstant             (:fnsym nyms)))
+      (is (= ::asr/RealConstant        (:fnqkw nyms)))
+      (is (= ::asr/Real                (:ttqkw nyms)))
+      (is (= 'Real                     (:ttsym nyms)))
+
+      (is (= ::asr/float               (:spqkw nyms)))
+      (is (= :invalid-real-constant    (:nvukw nyms)))
+      (is (= 'a-float                  (:vpsym nyms)))
+      (is (= 'a-ttype                  (:tpsym nyms))))
+
+    (let [nyms (typed-constant-type-nyms-test String string)]
+      (is (= "StringConstant"          (:fnstr nyms)))
+      (is (= 'StringConstant           (:fnsym nyms)))
+      (is (= ::asr/StringConstant      (:fnqkw nyms)))
+      (is (= ::asr/String              (:ttqkw nyms)))
+      (is (= 'String                   (:ttsym nyms)))
+
+      (is (= ::asr/string              (:spqkw nyms)))
+      (is (= :invalid-string-constant  (:nvukw nyms)))
+      (is (= 'a-string                 (:vpsym nyms)))
+      (is (= 'a-ttype                  (:tpsym nyms))))
+
+    ;; Complex is a special case
+    )
+  (testing "an unqualified keyword is a keyword"
+    (is (keyword?                 :foo))
+    (is (not (qualified-keyword?  :foo))))
+  (testing "a qualified keyword is a keyword"
+    (is (qualified-keyword?      ::foo))
+    (is (keyword?                ::foo)))
+  )

@@ -106,7 +106,8 @@
             #_[clojure.zip                 :as      z           ])
 
   (:require [hyperfiddle.rcf               :refer   [tests tap %]]
-            [blaster.clj-fstring           :refer   [f-str      ]])
+            [blaster.clj-fstring           :refer   [f-str      ]]
+            [camel-snake-kebab.core        :as      csk         ])
 
   (:require [masr.logic                    :refer   [iff implies]]
             [masr.utils                    :refer   [plnecho
@@ -3151,16 +3152,95 @@
 
 ;;
 ;;
-;; ## LOGICAL CONSTANT
+;; ## LOGICAL, INTEGER, REAL CONSTANTS
 ;;
 ;;
 
+
+;; To reduce code duplication, we want to write
+;; something like the following automatically for
+;; Logical, Integer, and Real. String is a special
+;; case because its ttype is Character and not
+;; String. Complex is a special case because it
+;; takes two Real inputs. Write those by hand.
+
+;; #+begin_src clojure
+
+#_(defn LogicalConstant
+    ([a-bool, a-ttype] "binary"
+     (let [cnd {::term ::expr,
+                ::asr-expr-head
+                {::expr-head ::LogicalConstant
+                 ::bool      a-bool
+                 ::Logical   a-ttype}}]
+       (if (s/valid? ::LogicalConstant cnd) cnd
+         :invalid-logical-constant)))
+    ([a-bool] "unary"
+     (LogicalConstant a-bool (Logical))))
+;; #+end_src
+
+;;
+;;
+;; ### Typed Constant Macro
+;;
+;;
+
+;; #+begin_src clojure
+
+(defmacro typed-constant              ;; -- Examples --
+  [ttype spec]                        ;; [Logical bool]
+  (let [ns    "masr.specs"
+        fnstr (str ttype "Constant")  ;; "LogicalConstant"
+        fnsym (symbol fnstr)          ;; 'LogicalConstant
+        fnqkw (keyword ns fnstr)      ;; ::LogicalConstant
+        ttstr (str ttype)             ;; "Logical"
+        ttsym (symbol ttstr)          ;; 'Logical
+        ttqkw (keyword ns ttstr)      ;; ::Logical
+        spqkw (keyword ns (str spec)) ;; ::bool
+        nvukw (keyword                ;; :invalid-logical-constant
+               (str "invalid-" (csk/->kebab-case fnstr)))
+        vpsym                         ;; 'a-bool
+        (symbol (case spec
+                  'int (str "an-" spec)
+                  (str "a-" spec)))
+        tpsym ;; 'a-ttype
+        (symbol (str 'a-ttype))]
+    `(defn ~fnsym                     ;; (defn LogicalConstant
+       ([~vpsym ~tpsym]               ;; ([a-bool, a-ttype]
+        "binary"
+        (let [cnd#
+              {::term ::expr,
+               ::asr-expr-head
+               {::expr-head ~fnqkw    ;; {::expr-head ::LogicalConstant
+                ~spqkw      ~vpsym    ;; ::bool       a-bool
+                ~ttqkw      ~tpsym}}] ;; ::Logical    a-ttype}}]
+          ;; (if (s/valid? ::LogicalConstant cnd)
+          (if (s/valid? ~fnqkw cnd#) cnd#
+              ~nvukw)))               ;; :invalid-logical-constant)))
+       ([~vpsym]                      ;; ([a-bool]
+        "unary"
+        ;; (LogicalConstant a-bool (Logical))))
+        (~fnsym ~vpsym (~ttsym))))))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(typed-constant Logical bool)
+(typed-constant Real    float)
+(typed-constant Integer int)
+;; #+end_src
+
+;;
+;;
+;; ## STRING CONSTANT
+;;
+;;
 
 ;; ### Original ASDL
 ;;
 ;;
 ;; ```c
-;; | LogicalConstant(bool value, ttype type)
+;; | StringConstant(string s, ttype type)
 ;; ```
 ;;
 ;;
@@ -3170,7 +3250,7 @@
 ;; #+begin_src clojure
 
 #_
-(LogicalConstant true (Logical 4 []))
+(StringConstant "3" (Character 1 1 () []))
 ;; #+end_src
 
 ;;
@@ -3180,76 +3260,27 @@
 ;;
 ;; #+begin_src clojure
 
-(defn LogicalConstant
-  ([a-bool, a-ttype]
+(defn StringConstant
+  ([string, char-ttype]
    "binary"
    (let [cnd {::term ::expr,
               ::asr-expr-head
-              {::expr-head ::LogicalConstant
-               ::bool      a-bool
-               ::Logical   a-ttype}}]
-     (if (s/valid? ::LogicalConstant cnd)
+              {::expr-head ::StringConstant
+               ::string    string
+               ::Character char-ttype}}]
+     (if (s/valid? ::StringConstant cnd)
        cnd
-       :invalid-logical-constant)))
-  ([a-bool]
+       :invalid-string-constant)))
+  ([string]
    "unary"
-   (LogicalConstant a-bool (Logical))))
+   (StringConstant string (Character))))
 ;; #+end_src
-
-
-;;
-;;
-;; ## REAL CONSTANT
-;;
-;;
-
-
-;; ### Original ASDL
-;;
-;;
-;; ```c
-;; | RealConstant(float r, ttype type)
-;; ```
-;;
-;;
-;; ### Example
-;;
-;;
-;; #+begin_src clojure
-
-#_
-(RealConstant 4.000000 (Real 8 []))
-
-;;
-;;
-;; ### Heavy Sugar
-;;
-;;
-;; #+begin_src clojure
-
-(defn RealConstant
-  ;; binary
-  ([a-float, a-ttype]
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::RealConstant
-               ::float  a-float
-               ::Real   a-ttype}}]
-     (if (s/valid? ::RealConstant cnd)
-       cnd
-       :invalid-real-constant)))
-  ;; unary
-  ([a-float]
-   (RealConstant a-float (Real))))
-;; #+end_src
-
 
 ;;
 ;;
 ;; ## COMPLEX CONSTANT
 ;;
 ;;
-
 
 ;; ### Original ASDL
 ;;
@@ -3266,6 +3297,7 @@
 
 #_
 (ComplexConstant 3.000000 4.000000 (Complex 8 []))
+;; #+end_src
 
 ;;
 ;;
@@ -3290,55 +3322,6 @@
   ([re-float, im-float]
    (ComplexConstant re-float, im-float, (Complex))))
 ;; #+end_src
-
-
-;;
-;;
-;; ## INTEGER CONSTANT
-;;
-;;
-
-
-;; ### Original ASDL
-;;
-;;
-;; ```c
-;; IntegerConstant(int n, ttype type)
-;; ```
-;;
-;;
-;; ### Example
-;;
-;;
-;; #+begin_src clojure
-
-#_
-(IntegerConstant 5 (Integer 4 []))
-;; #+end_src
-
-;;
-;;
-;; ### Heavy Sugar
-;;
-;;
-;; #+begin_src clojure
-
-(defn IntegerConstant
-  ;; binary
-  ([an-int, a-ttype]
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::IntegerConstant
-               ::int       an-int
-               ::Integer   a-ttype}}]
-     (if (s/valid? ::IntegerConstant cnd)
-       cnd
-       :invalid-integer-constant)))
-  ;; unary
-  ([an-int]
-   (IntegerConstant an-int (Integer))))
-;; #+end_src
-
 
 ;;
 ;;
@@ -3401,58 +3384,6 @@
 ;;
 ;; TODO: make Var look up a value in the
 ;; symbol-table! That's part of abstract execution.
-
-
-;;
-;;
-;; ## STRING CONSTANT
-;;
-;;
-
-
-;; ### Original ASDL
-;;
-;;
-;; ```c
-;; | StringConstant(string s, ttype type)
-;; ```
-;;
-;;
-;; ### Example
-;;
-;;
-;; #+begin_src clojure
-
-#_
-(StringConstant
- "3"
- (Character 1 1 () [])
- )
-
-;; #+end_src
-
-;;
-;;
-;; ### Heavy Sugar
-;;
-;;
-;; #+begin_src clojure
-
-(defn StringConstant
-  ([string, char-ttype]
-   "binary"
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::StringConstant
-               ::string    string
-               ::Character char-ttype}}]
-     (if (s/valid? ::StringConstant cnd)
-       cnd
-       :invalid-string-constant)))
-  ([string]
-   "unary"
-   (StringConstant string (Character))))
-;; #+end_src
 
 ;;
 ;;

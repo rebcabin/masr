@@ -116,58 +116,50 @@
     - [31.9.2. Example](#3192-example)
     - [31.9.3. Heavy Sugar](#3193-heavy-sugar)
     - [31.9.4. Legacy Sugar](#3194-legacy-sugar)
-  - [31.10. LOGICAL CONSTANT](#3110-logical-constant)
-    - [31.10.1. Original ASDL](#31101-original-asdl)
-    - [31.10.2. Example](#31102-example)
-    - [31.10.3. Heavy Sugar](#31103-heavy-sugar)
-  - [31.11. REAL CONSTANT](#3111-real-constant)
+  - [31.10. LOGICAL, INTEGER, REAL CONSTANTS](#3110-logical-integer-real-constants)
+    - [31.10.1. Typed Constant Macro](#31101-typed-constant-macro)
+  - [31.11. STRING CONSTANT](#3111-string-constant)
     - [31.11.1. Original ASDL](#31111-original-asdl)
     - [31.11.2. Example](#31112-example)
+    - [31.11.3. Heavy Sugar](#31113-heavy-sugar)
   - [31.12. COMPLEX CONSTANT](#3112-complex-constant)
     - [31.12.1. Original ASDL](#31121-original-asdl)
     - [31.12.2. Example](#31122-example)
-  - [31.13. INTEGER CONSTANT](#3113-integer-constant)
-    - [31.13.1. Original ASDL](#31131-original-asdl)
-    - [31.13.2. Example](#31132-example)
-    - [31.13.3. Heavy Sugar](#31133-heavy-sugar)
-  - [31.14. VAR](#3114-var)
-    - [31.14.1. Issue #23](#31141-issue-23)
-    - [31.14.2. Heavy Sugar](#31142-heavy-sugar)
-    - [31.14.3. Legacy Sugar](#31143-legacy-sugar)
-  - [31.15. STRING CONSTANT](#3115-string-constant)
+    - [31.12.3. Heavy Sugar](#31123-heavy-sugar)
+  - [31.13. VAR](#3113-var)
+    - [31.13.1. Issue #23](#31131-issue-23)
+    - [31.13.2. Heavy Sugar](#31132-heavy-sugar)
+    - [31.13.3. Legacy Sugar](#31133-legacy-sugar)
+  - [31.14. STRING ORD](#3114-string-ord)
+    - [31.14.1. Original ASDL](#31141-original-asdl)
+    - [31.14.2. Example](#31142-example)
+    - [31.14.3. Heavy Sugar](#31143-heavy-sugar)
+    - [31.14.4. Legacy Sugar](#31144-legacy-sugar)
+  - [31.15. LOGICAL BINOP](#3115-logical-binop)
     - [31.15.1. Original ASDL](#31151-original-asdl)
     - [31.15.2. Example](#31152-example)
     - [31.15.3. Heavy Sugar](#31153-heavy-sugar)
-  - [31.16. STRING ORD](#3116-string-ord)
+  - [31.16. INTEGER BINOP](#3116-integer-binop)
     - [31.16.1. Original ASDL](#31161-original-asdl)
     - [31.16.2. Example](#31162-example)
     - [31.16.3. Heavy Sugar](#31163-heavy-sugar)
-    - [31.16.4. Legacy Sugar](#31164-legacy-sugar)
-  - [31.17. LOGICAL BINOP](#3117-logical-binop)
+  - [31.17. REAL BINOP](#3117-real-binop)
     - [31.17.1. Original ASDL](#31171-original-asdl)
     - [31.17.2. Example](#31172-example)
     - [31.17.3. Heavy Sugar](#31173-heavy-sugar)
-  - [31.18. INTEGER BINOP](#3118-integer-binop)
+    - [31.17.4. Legacy Sugar](#31174-legacy-sugar)
+  - [31.18. INTEGER COMPARE](#3118-integer-compare)
     - [31.18.1. Original ASDL](#31181-original-asdl)
     - [31.18.2. Example](#31182-example)
     - [31.18.3. Heavy Sugar](#31183-heavy-sugar)
-  - [31.19. REAL BINOP](#3119-real-binop)
+  - [31.19. LOGICAL COMPARE](#3119-logical-compare)
     - [31.19.1. Original ASDL](#31191-original-asdl)
     - [31.19.2. Example](#31192-example)
     - [31.19.3. Heavy Sugar](#31193-heavy-sugar)
     - [31.19.4. Legacy Sugar](#31194-legacy-sugar)
-  - [31.20. INTEGER COMPARE](#3120-integer-compare)
+  - [31.20. LOGICAL NOT](#3120-logical-not)
     - [31.20.1. Original ASDL](#31201-original-asdl)
-    - [31.20.2. Example](#31202-example)
-    - [31.20.3. Heavy Sugar](#31203-heavy-sugar)
-  - [31.21. LOGICAL COMPARE](#3121-logical-compare)
-    - [31.21.1. Original ASDL](#31211-original-asdl)
-    - [31.21.2. Example](#31212-example)
-    - [31.21.3. Heavy Sugar](#31213-heavy-sugar)
-    - [31.21.4. Legacy Sugar](#31214-legacy-sugar)
-  - [31.22. LOGICAL NOT](#3122-logical-not)
-    - [31.22.1. Original ASDL](#31221-original-asdl)
-    - [31.22.2. Heavy Sugar](#31222-heavy-sugar)
+    - [31.20.2. Heavy Sugar](#31202-heavy-sugar)
 - [32. STMT](#32-stmt)
   - [32.1. Prerequisite Types and Aliases](#321-prerequisite-types-and-aliases)
 - [33. EXPLICIT DEALLOCATE](#33-explicit-deallocate)
@@ -334,7 +326,8 @@ the rest of the code in this file.
             #_[clojure.zip                 :as      z           ])
 
   (:require [hyperfiddle.rcf               :refer   [tests tap %]]
-            [blaster.clj-fstring           :refer   [f-str      ]])
+            [blaster.clj-fstring           :refer   [f-str      ]]
+            [camel-snake-kebab.core        :as      csk         ])
 
   (:require [masr.logic                    :refer   [iff implies]]
             [masr.utils                    :refer   [plnecho
@@ -2936,55 +2929,84 @@ ComplexUnaryMinus(expr arg, ttype type, expr? value)
 ```
 
 
-## 31.10. LOGICAL CONSTANT
+## 31.10. LOGICAL, INTEGER, REAL CONSTANTS
 
 
-### 31.10.1. Original ASDL
-
-
-```c
-| LogicalConstant(bool value, ttype type)
+To reduce code duplication, we want to write
+something like the following automatically for
+Logical, Integer, and Real. String is a special
+case because its ttype is Character and not
+String. Complex is a special case because it
+takes two Real inputs. Write those by hand.
+```clojure
+#_(defn LogicalConstant
+    ([a-bool, a-ttype] "binary"
+     (let [cnd {::term ::expr,
+                ::asr-expr-head
+                {::expr-head ::LogicalConstant
+                 ::bool      a-bool
+                 ::Logical   a-ttype}}]
+       (if (s/valid? ::LogicalConstant cnd) cnd
+         :invalid-logical-constant)))
+    ([a-bool] "unary"
+     (LogicalConstant a-bool (Logical))))
 ```
 
 
-### 31.10.2. Example
+### 31.10.1. Typed Constant Macro
 
 
 ```clojure
-#_
-(LogicalConstant true (Logical 4 []))
+(defmacro typed-constant              ;; -- Examples --
+  [ttype spec]                        ;; [Logical bool]
+  (let [ns    "masr.specs"
+        fnstr (str ttype "Constant")  ;; "LogicalConstant"
+        fnsym (symbol fnstr)          ;; 'LogicalConstant
+        fnqkw (keyword ns fnstr)      ;; ::LogicalConstant
+        ttstr (str ttype)             ;; "Logical"
+        ttsym (symbol ttstr)          ;; 'Logical
+        ttqkw (keyword ns ttstr)      ;; ::Logical
+        spqkw (keyword ns (str spec)) ;; ::bool
+        nvukw (keyword                ;; :invalid-logical-constant
+               (str "invalid-" (csk/->kebab-case fnstr)))
+        vpsym                         ;; 'a-bool
+        (symbol (case spec
+                  'int (str "an-" spec)
+                  (str "a-" spec)))
+        tpsym ;; 'a-ttype
+        (symbol (str 'a-ttype))]
+    `(defn ~fnsym                     ;; (defn LogicalConstant
+       ([~vpsym ~tpsym]               ;; ([a-bool, a-ttype]
+        "binary"
+        (let [cnd#
+              {::term ::expr,
+               ::asr-expr-head
+               {::expr-head ~fnqkw    ;; {::expr-head ::LogicalConstant
+                ~spqkw      ~vpsym    ;; ::bool       a-bool
+                ~ttqkw      ~tpsym}}] ;; ::Logical    a-ttype}}]
+          ;; (if (s/valid? ::LogicalConstant cnd)
+          (if (s/valid? ~fnqkw cnd#) cnd#
+              ~nvukw)))               ;; :invalid-logical-constant)))
+       ([~vpsym]                      ;; ([a-bool]
+        "unary"
+        ;; (LogicalConstant a-bool (Logical))))
+        (~fnsym ~vpsym (~ttsym))))))
 ```
-
-
-### 31.10.3. Heavy Sugar
-
-
 ```clojure
-(defn LogicalConstant
-  ([a-bool, a-ttype]
-   "binary"
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::LogicalConstant
-               ::bool      a-bool
-               ::Logical   a-ttype}}]
-     (if (s/valid? ::LogicalConstant cnd)
-       cnd
-       :invalid-logical-constant)))
-  ([a-bool]
-   "unary"
-   (LogicalConstant a-bool (Logical))))
+(typed-constant Logical bool)
+(typed-constant Real    float)
+(typed-constant Integer int)
 ```
 
 
-## 31.11. REAL CONSTANT
+## 31.11. STRING CONSTANT
 
 
 ### 31.11.1. Original ASDL
 
 
 ```c
-| RealConstant(float r, ttype type)
+| StringConstant(string s, ttype type)
 ```
 
 
@@ -2993,28 +3015,28 @@ ComplexUnaryMinus(expr arg, ttype type, expr? value)
 
 ```clojure
 #_
-(RealConstant 4.000000 (Real 8 []))
+(StringConstant "3" (Character 1 1 () []))
+```
 
-;;
-;;
-;; ### Heavy Sugar
-;;
-;;
+
+### 31.11.3. Heavy Sugar
+
+
 ```clojure
-(defn RealConstant
-  ;; binary
-  ([a-float, a-ttype]
+(defn StringConstant
+  ([string, char-ttype]
+   "binary"
    (let [cnd {::term ::expr,
               ::asr-expr-head
-              {::expr-head ::RealConstant
-               ::float  a-float
-               ::Real   a-ttype}}]
-     (if (s/valid? ::RealConstant cnd)
+              {::expr-head ::StringConstant
+               ::string    string
+               ::Character char-ttype}}]
+     (if (s/valid? ::StringConstant cnd)
        cnd
-       :invalid-real-constant)))
-  ;; unary
-  ([a-float]
-   (RealConstant a-float (Real))))
+       :invalid-string-constant)))
+  ([string]
+   "unary"
+   (StringConstant string (Character))))
 ```
 
 
@@ -3035,12 +3057,12 @@ ComplexConstant(float re, float im, ttype type)
 ```clojure
 #_
 (ComplexConstant 3.000000 4.000000 (Complex 8 []))
+```
 
-;;
-;;
-;; ### Heavy Sugar
-;;
-;;
+
+### 31.12.3. Heavy Sugar
+
+
 ```clojure
 (defn ComplexConstant
   ;; trinary
@@ -3060,51 +3082,10 @@ ComplexConstant(float re, float im, ttype type)
 ```
 
 
-## 31.13. INTEGER CONSTANT
+## 31.13. VAR
 
 
-### 31.13.1. Original ASDL
-
-
-```c
-IntegerConstant(int n, ttype type)
-```
-
-
-### 31.13.2. Example
-
-
-```clojure
-#_
-(IntegerConstant 5 (Integer 4 []))
-```
-
-
-### 31.13.3. Heavy Sugar
-
-
-```clojure
-(defn IntegerConstant
-  ;; binary
-  ([an-int, a-ttype]
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::IntegerConstant
-               ::int       an-int
-               ::Integer   a-ttype}}]
-     (if (s/valid? ::IntegerConstant cnd)
-       cnd
-       :invalid-integer-constant)))
-  ;; unary
-  ([an-int]
-   (IntegerConstant an-int (Integer))))
-```
-
-
-## 31.14. VAR
-
-
-### 31.14.1. Issue #23
+### 31.13.1. Issue #23
 
 
 Is the parameter `symbol` for `Var` really a `symbol`?
@@ -3126,7 +3107,7 @@ Var(symtab_id stid, identifier it)
 
 
 
-### 31.14.2. Heavy Sugar
+### 31.13.2. Heavy Sugar
 
 
 ```clojure
@@ -3143,7 +3124,7 @@ Var(symtab_id stid, identifier it)
 ```
 
 
-### 31.14.3. Legacy Sugar
+### 31.13.3. Legacy Sugar
 
 
 ```clojure
@@ -3155,55 +3136,10 @@ TODO: make Var look up a value in the
 symbol-table! That's part of abstract execution.
 
 
-## 31.15. STRING CONSTANT
+## 31.14. STRING ORD
 
 
-### 31.15.1. Original ASDL
-
-
-```c
-| StringConstant(string s, ttype type)
-```
-
-
-### 31.15.2. Example
-
-
-```clojure
-#_
-(StringConstant
- "3"
- (Character 1 1 () [])
- )
-
-```
-
-
-### 31.15.3. Heavy Sugar
-
-
-```clojure
-(defn StringConstant
-  ([string, char-ttype]
-   "binary"
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::StringConstant
-               ::string    string
-               ::Character char-ttype}}]
-     (if (s/valid? ::StringConstant cnd)
-       cnd
-       :invalid-string-constant)))
-  ([string]
-   "unary"
-   (StringConstant string (Character))))
-```
-
-
-## 31.16. STRING ORD
-
-
-### 31.16.1. Original ASDL
+### 31.14.1. Original ASDL
 
 
 ```c
@@ -3211,7 +3147,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.16.2. Example
+### 31.14.2. Example
 
 
 ```clojure
@@ -3227,7 +3163,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.16.3. Heavy Sugar
+### 31.14.3. Heavy Sugar
 
 
 ```clojure
@@ -3248,7 +3184,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.16.4. Legacy Sugar
+### 31.14.4. Legacy Sugar
 
 
 ```clojure
@@ -3269,10 +3205,10 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.17. LOGICAL BINOP
+## 31.15. LOGICAL BINOP
 
 
-### 31.17.1. Original ASDL
+### 31.15.1. Original ASDL
 
 
 ```c
@@ -3281,7 +3217,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.17.2. Example
+### 31.15.2. Example
 
 
 ```clojure
@@ -3298,7 +3234,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.17.3. Heavy Sugar
+### 31.15.3. Heavy Sugar
 
 
 ```clojure
@@ -3318,10 +3254,10 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.18. INTEGER BINOP
+## 31.16. INTEGER BINOP
 
 
-### 31.18.1. Original ASDL
+### 31.16.1. Original ASDL
 
 
 ```c
@@ -3333,7 +3269,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.18.2. Example
+### 31.16.2. Example
 
 
 ```clojure
@@ -3353,7 +3289,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.18.3. Heavy Sugar
+### 31.16.3. Heavy Sugar
 
 
 ```clojure
@@ -3373,10 +3309,10 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.19. REAL BINOP
+## 31.17. REAL BINOP
 
 
-### 31.19.1. Original ASDL
+### 31.17.1. Original ASDL
 
 
 ```c
@@ -3388,7 +3324,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.19.2. Example
+### 31.17.2. Example
 
 
 ```clojure
@@ -3408,7 +3344,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.19.3. Heavy Sugar
+### 31.17.3. Heavy Sugar
 
 
 ```clojure
@@ -3429,15 +3365,15 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.19.4. Legacy Sugar
+### 31.17.4. Legacy Sugar
 
 
 
 
-## 31.20. INTEGER COMPARE
+## 31.18. INTEGER COMPARE
 
 
-### 31.20.1. Original ASDL
+### 31.18.1. Original ASDL
 
 
 ```c
@@ -3449,7 +3385,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.20.2. Example
+### 31.18.2. Example
 
 
 ```clojure
@@ -3463,7 +3399,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.20.3. Heavy Sugar
+### 31.18.3. Heavy Sugar
 
 
 ```clojure
@@ -3482,10 +3418,10 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-## 31.21. LOGICAL COMPARE
+## 31.19. LOGICAL COMPARE
 
 
-### 31.21.1. Original ASDL
+### 31.19.1. Original ASDL
 
 
 ```c
@@ -3497,7 +3433,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.21.2. Example
+### 31.19.2. Example
 
 
 ```clojure
@@ -3510,7 +3446,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.21.3. Heavy Sugar
+### 31.19.3. Heavy Sugar
 
 
 ```clojure
@@ -3530,15 +3466,15 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.21.4. Legacy Sugar
+### 31.19.4. Legacy Sugar
 
 
 
 
-## 31.22. LOGICAL NOT
+## 31.20. LOGICAL NOT
 
 
-### 31.22.1. Original ASDL
+### 31.20.1. Original ASDL
 
 
 ```c
@@ -3546,7 +3482,7 @@ LogicalNot(expr arg, ttype type, expr? value)
 ```
 
 
-### 31.22.2. Heavy Sugar
+### 31.20.2. Heavy Sugar
 
 
 ```clojure

@@ -9,6 +9,7 @@
                  [org.clojure/math.numeric-tower   "0.0.5"]
                  [com.github.blasterai/clj-fstring "1.1.2"]
                  [com.hyperfiddle/rcf              "20220926-202227"]
+                 [camel-snake-kebab                "0.4.3"]
                  #_[org.clojure/data.zip             "1.0.0"]
                  ]
   :main ^:skip-aot masr.core
