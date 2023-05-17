@@ -3407,6 +3407,63 @@
 
 ;;
 ;;
+;; ## LOGICAL, INTEGER, REAL BINOP
+;;
+;;
+
+;; ### Typed BinOp Macro
+
+;; The following macro creates a heavy-sugar
+;; function with the name LogicalBinOp--,
+;; IntegerBinOp--, RealBinOp--, or ComplexBinOp--.
+;; The legacy-sugar functions LogicalBinOp,
+;; IntegerBinOp, RealBinOp, and ComplexBinOp must be
+;; written by hand. Their purpose is to switch to
+;; strongly-typed operators: Add, RAdd, CAdd, etc.
+
+;; #+begin_src clojure
+
+(defmacro typed-binop ;; -- Examples --
+  [ttype]             ;; Logical
+  (let [ns    "masr.specs"
+        fnstr (str ttype "BinOp--") ;; "LogicalBinOp--"
+        fnsym (symbol fnstr) ;; *** 'LogicalBinOp--
+        ttstr (str ttype)    ;; "Logical"
+        ttqkw (keyword ns ttstr) ;; *** ::Logical
+        fnqkw (keyword ns ttstr) ;; *** ::LogicalBinOp
+        tlstr (str/lower-case ttstr) ;; "logical"
+        tllef (str tlstr "-left") ;; "logical-left"
+        tqlef (keyword ns tllef) ;; *** ::logical-left
+
+        testr (str tlstr "-expr") ;; "logical-expr"
+        teqkw (keyword ns testr)  ;; ::logical-expr
+        tvstr (str tlstr "-value?") ;; "logical-value?"
+        tvqkw (keyword ns tvstr) ;; ::logical-value?
+        nvukw (keyword ;; :invalid-logical-unary-minus
+               (str "invalid-" (csk/->kebab-case fnstr)))]
+    `(defn ~fnsym          ;; (defn LogicalConstant
+       [arg# ttype# val?#] ;; ([arg ttype val?
+       (let [cnd#
+             {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ~fnqkw ;; {::ex... ::LogicalUnaryMinus
+               ~teqkw       arg# ;;  ::logical-expr   arg
+               ~ttqkw       ttype# ;;  ::Logical        ttype
+               ~tvqkw       val?#}}] ;;  ::logical-value? val?}}]
+         ;; (if (s/valid? ::LogicalUnaryMinus cnd)
+         (if (s/valid? ~fnqkw cnd#) cnd#
+             ~nvukw)))))               ;; :invalid-logical-unary-minus
+;; #+end_src
+
+;; ### Using the Macro
+
+;; #+begin_src clojure
+
+;; #+end_src
+
+
+;;
+;;
 ;; ## LOGICAL BINOP
 ;;
 ;;
@@ -3896,7 +3953,7 @@
 
 ;;
 ;;
-;; # ASSERT
+;; ## ASSERT
 ;;
 ;;
 
