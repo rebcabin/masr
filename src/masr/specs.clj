@@ -3,6 +3,8 @@
 ;; # PROLOGUE
 ;;
 ;;
+
+
 ;; This file is semi-literate programming.
 ;; "Semi-literate" means that blocks of code in the
 ;; Markdown file, `specs.md`, are extracted from the
@@ -79,11 +81,7 @@
 ;; ```
 ;;
 ;; However, that's not normal workflow.
-;;
-;;
 
-
-;;
 ;;
 ;; ## Namespace Declaration
 ;;
@@ -121,8 +119,6 @@
             ))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## Lightweight, Load-Time Testing:
 ;;
@@ -132,8 +128,6 @@
 (hyperfiddle.rcf/enable!)
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## Unmap External Names
 ;;
@@ -167,13 +161,8 @@
 ;; and also a physics pun, "Microwave Amplification
 ;; by Stimulated emission of Radiation." It is a
 ;; work-in-progress, intended eventually to replace
-;; the ASDL with by a more precise and
-;; discriminating type system.
-;;
-;;
-;; In general, MASR specs are more discriminating,
-;; precise, and detailed than ASDL could ever
-;; permit. That means ASR in MASR
+;; the aging ASDL with by a more precise and
+;; discriminating type system. ASR in MASR:
 ;;
 ;; * is less ambiguous than ASDL; For example, we
 ;;   distinguish names of programs from names of
@@ -182,13 +171,15 @@
 ;;
 ;; * is more explicit than ASDL. For example, in MASR,
 ;;   we can say that an argument list may have no more
-;;   than a certain `MAX-NUMBER-OF-CALL-ARGS`.
+;;   than a certain number of arguments.
 ;;
-;; * has fewer overloaded specs, e.g. `symbol` are
-;;   separate from `symbol_table`, `symbol-ref`
+;; * has finer-grained, less overloaded specs, e.g.
+;;   `symbol` is separate from `symbol_table`,
+;;   `symbol-ref`
 ;;
-;; * exposes secret semantics lifted from the current
-;;   C++ implementation into the specification level
+;; * exposes secret semantics currently expressed
+;;   only in the current C++ implementation, lifting
+;;   them into the specification level
 ;;
 ;;
 ;; Until MASR is integrated, it will have a legacy
@@ -202,7 +193,7 @@
 ;; specification, or, at least, a snapshot of it:
 ;; https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
 ;;
-;;
+
 ;; ### Terms (Nodes) in the ASDL Grammar
 ;;
 ;;
@@ -242,18 +233,14 @@
 ;; 30 enumtype        = IntegerConsecutiveFromZero | ... | NonInteger
 ;; ```
 ;;
-;;
 ;; ### Terms Used but not Defined in ASDL
-;;
 ;;
 ;; ```c
 ;; 31 symbol_table    = a clojure map
 ;; 32 dimension*      = dimension*, see below
 ;; ```
 ;;
-;;
 ;; ### Term-Like Things
-;;
 ;;
 ;; ```c
 ;;  0 atoms           = int, float, bool, string, nat, bignat
@@ -261,7 +248,6 @@
 ;; ```
 ;;
 ;; ### Mappings from ASDL to MASR
-;;
 ;;
 ;; * ASDL tuples like `(1 2)` are Clojure lists or
 ;;   vectors.
@@ -280,8 +266,7 @@
 ;;
 
 
-;; _Spec_ is short for _specification_. The_ noun
-;; "specification" derives from the verb "to specify."
+;; "Specification" derives from the verb "to specify."
 ;; "To specify" means "to describe specifically:
 ;; clearly, explicitly, precisely, unambiguously."
 ;; Also, "to specify" means "to distinguish a class
@@ -295,31 +280,34 @@
 ;; instance hash-map meet the general specification
 ;; of hash-maps of this type?" For
 ;; example, "does `(Integer 4 [])`, syntax sugar for
-;; an hash-map instance, meet the general
+;; a hash-map instance, meet the general
 ;; specification of an ASR `ttype`, which describes
 ;; an infinite class of instances?"
 ;;
 ;;
-;; In MASR, specs describe sets, and MASR type
-;; checking is often just finding out whether an
-;; instance inhabits a certain specified set.
+;; In MASR, specs describe sets of valid or
+;; conforming values, and MASR type checking is
+;; often just finding out whether an instance
+;; inhabits a certain specified set.
 ;;
 ;;
-;; A type system like like MASR's can act like a
-;; _set theory_ with respect to instances. See this
-;; Stack-Exchange question for the fine points of
-;; set theory versus type theory:
+;; Therefore, a type system like like MASR's can act
+;; like a _set theory_ with respect to instances.
+;; See this Stack-Exchange question for the fine
+;; points of set theory versus type theory:
 ;;
 ;;
 ;; https://math.stackexchange.com/questions/489369
 ;;
 ;;
 ;; The important point is that a type theory is a
-;; self-contained logic. Clojure specs are arbitrary
-;; predicate functions. Because we may build any
-;; type system that predicate logic can support,
-;; Clojure specs suffice for advanced types like
-;; dependency types and concurrency types.
+;; self-contained logic. It might be set theory or
+;; it might be something more general or otherwise
+;; different. Clojure specs are arbitrary predicate
+;; functions. Because we may build any type system
+;; that predicate logic can support, Clojure specs
+;; suffice for advanced types like dependency types
+;; and concurrency types.
 
 ;;
 ;;
@@ -331,17 +319,15 @@
 ;; For example, any `LogicalConstant` is an `expr`,
 ;; and any `expr` is an `asr-term`. These sets stand
 ;; in _subset_ relations. We can also check that
-;; `LogicalConstant` is _not_ a `ttype`. All these
-;; tests are in `core_test.clj`.
+;; `LogicalConstant` is _not_ a `ttype`. Tests like
+;; this are in `core_test.clj`.
 ;;
 ;;
-;; MASR types are recursive. Bigger types are defined
-;; in terms of smaller types, all the way to some
-;; primitives. All the fields of big entities are
-;; checked against specs, all the way down to the
-;; atoms.
-;;
-;;
+;; MASR types are recursive. Bigger types are
+;; defined in terms of smaller types, all the way to
+;; a handful of primitive _atoms_. All the fields of
+;; big entities are checked against specs, all the
+;; way down to the atoms.
 
 
 ;;
@@ -369,27 +355,76 @@
  ::intent-enum 'Local}
 ;; #+end_src
 
-;;
-;;
 ;; is an entity checked against specs for `::term`,
 ;; `::intent`, and `::intent-enum`.
 ;;
 ;;
 ;; In MASR, all keys in all hash-maps are
-;; namespace-qualified keywords. Namespace-qualified
-;; keywords have double colons in this file,
-;; `specs.clj`, which defines the namespace
-;; `masr.specs`. In other files, namespace-qualified
-;; keywords in the namespace `masr.specs` must be
-;; written with an explicit prefix as in
+;; namespace-qualified keywords that inhabit the
+;; namespace `masr.specs`. Namespace-qualified
+;; keywords in namespace `masr.specs` are denoted
+;; with double colons in this file, `specs.clj`,
+;; which defines the namespace `masr.specs`. In
+;; other files, namespace-qualified keywords in the
+;; namespace `masr.specs` must be written out in
+;; full with an explicit prefix as in
 ;; `:masr.specs/intent`, or with a namespace alias
-;; as in `::asr/intent`.
+;; as in `::asr/intent`. The test file,
+;; `core_tests.clj`, employs the namespace alias
+;; `asr`.
 ;;
 ;;
 ;; Namespace-qualified keywords may have specs
 ;; registered for them, or not. When a spec is
-;; registered for a namespace-qualified keywords,
-;; Clojure automatically checks types recursively.
+;; registered for a namespace-qualified keyword,
+;; Clojure automatically checks types of entities
+;; recursively.
+;;
+;;
+;; EXAMPLES -- all the following full-forms mean the
+;; same:
+;;
+;; * always acceptable, if verbose:
+;;
+;;
+;; #+begin_src clojure
+
+{:masr.specs/term        :masr.specs/intent,
+ :masr.specs/intent-enum 'Unspecified}
+;; #+end_src
+
+;;
+;; * Clojure-standard shorter form, always
+;; * acceptable:
+;;
+;;
+;; #+begin_src clojure
+
+#:masr.specs{:term        :intent,
+             :intent-enum 'Unspecified}
+;; #+end_src
+
+;;
+;; * when in this file or in namespace masr.specs
+;;   via the line `(in-ns 'masr.specs)`:
+;;
+;;
+;; #+begin_src clojure
+
+{::term        ::intent,
+ ::intent-enum 'Unspecified}
+;; #+end_src
+
+;;
+;; * if `masr.specs` is aliased to `asr`, as in
+;; `(:use [masr.specs :as asr])` in `core_test.clj`:
+;;
+;;
+;; #+begin_src clojure
+
+;; {::asr/term        ::asr/intent,
+;;  ::asr/intent-enum 'Unspecified}
+;; #+end_src
 
 
 ;;
@@ -407,29 +442,35 @@
 ;;    lpython and lfortran.
 ;;
 ;;
-;; Sugar comes in three flavors: light, heavy, and
-;; legacy.
+;; Sugar comes in three flavors: _light_, _heavy_,
+;; and _legacy_.
 ;;
-;; 1. Light sugar employs keyword arguments with
-;;    defaults. Light sugar is unambiguous but more
+;; 1. Light sugar employs functions with
+;;    non-qualified keyword arguments with default
+;;    values. Light sugar is unambiguous but more
 ;;    verbose than heavy sugar.
 ;;
-;; 2. Heavy sugar employs positional arguments with
-;;    defaults for some tail arguments. Heavy sugar is
-;;    short and mostly compatible with ASDL output from
-;;    `--show-asr`. Heavy sugar is more risky to write
-;;    and much harder to read than light sugar,
-;;    especially for long argument lists as with, say,
-;;    `Variable` and `FunctionType`.
+;; 2. Heavy sugar employs functions with positional
+;;    arguments with possible default values for
+;;    some tail arguments. Heavy sugar is short and
+;;    mostly compatible with ASDL output from
+;;    `--show-asr`. Heavy sugar is more risky to
+;;    write and much harder to read than light
+;;    sugar, especially for long argument lists as
+;;    with, say, `Variable` and `FunctionType`.
 ;;
 ;; 3. Legacy sugar is just like heavy sugar, just
 ;;    requiring fewer tick marks on symbols. Legacy
 ;;    sugar is the most compatible with ASDL output
 ;;    from `--show-asr`.
+
+
 ;;
 ;;
 ;; ## SUGAR NAMING CONVENTION
 ;;
+;;
+
 ;;
 ;; ### Light Sugar
 ;;
@@ -450,24 +491,22 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
 ;;
 ;;
 ;; The names of heavy-sugar functions, like
 ;; `Integer` or `Variable--`, have either zero or
 ;; two trailing hyphens. The difference concerns
-;; legacy. If a legacy sugar is needed for a term,
-;; the legacy sugar has the name with no hyphens,
-;; like `Variable`, and the heavy sugar has the name
-;; with two hyphens, like `Variable--`. Both legacy
-;; sugar and heavy sugar produce identical
-;; full-forms.
+;; legacy. If legacy sugar exists for a term, the
+;; legacy sugar has the name with no hyphens, like
+;; `Variable`, and the heavy sugar has the name with
+;; two hyphens, like `Variable--`. Both legacy sugar
+;; and heavy sugar produce identical full-forms.
 ;;
 ;;
 ;; For example, The following is heavy sugar for a
-;; `Variable`, representing the more progressive,
-;; desired form:
+;; `Variable`, similar but not identical to its
+;; legacy sugar:
 ;;
 ;;
 ;; #+begin_src clojure
@@ -479,12 +518,11 @@
             false)
 ;; #+end_src
 
-;;
-;;
-;; Heavy-sugar functions employ positional arguments
-;; that depend on order. Final arguments may have
-;; defaults. For example, the following examples
-;; conform to both `::asr-term` and to `::ttype`:
+;; Heavy sugar and legacy sugar employ positional
+;; arguments that depend on order. Heavy-sugar
+;; functions may have final arguments with defaults.
+;; For example, the following examples conform to
+;; both `::asr-term` and to `::ttype`:
 ;;
 ;;
 ;; #+begin_src clojure
@@ -496,18 +534,17 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
 ;;
 ;;
 ;; The purpose of legacy sugar is to auto-quote
-;; symbols and to correct certain defects in the
-;; original design of ASR in ASDL, such as a
-;; symbol-ref's sometimes being a list and sometimes
-;; being a naked par.
+;; symbols and to accommodate certain defects in the
+;; original design ASDL, such as a symbol-ref's
+;; sometimes being a list and sometimes being a
+;; naked par.
 ;;
 ;;
-;; Here is a legacy version of the entity above:
+;; Here is a legacy version of the Variable above:
 ;;
 ;;
 ;; #+begin_src clojure
@@ -518,8 +555,6 @@
           Public Required false)
 ;; #+end_src
 
-;;
-;;
 ;; Notice NO QUOTE MARK on the name of the variable.
 ;; That's the way `--show-asr` prints it. That's the
 ;; only difference between heavy sugar and legacy
@@ -529,8 +564,6 @@
 ;; For specs where MASR heavy sugar and ASDL legacy
 ;; are identical, like `Integer`, there is no
 ;; function with two trailing hyphens in its name.
-;;
-;;
 
 
 ;;
@@ -542,52 +575,7 @@
 
 ;; MASR _terms_ are models of terms or productions in
 ;; the ASDL grammar, items to the left of equals signs
-;; like symbol or stmt in the list above and in the
-;; snapshot cited above.
-;;
-;;
-;; EXAMPLE -- all these full-forms mean the same:
-;;
-;; * always acceptable, if verbose:
-;;
-;;
-;; #+begin_src clojure
-
-{:masr.specs/term        :masr.specs/intent,
- :masr.specs/intent-enum 'Unspecified}
-;; #+end_src
-
-;;
-;; * shorter form, always acceptable:
-;;
-;;
-;; #+begin_src clojure
-
-#:masr.specs{:term        :intent,
-             :intent-enum 'Unspecified}
-;; #+end_src
-
-;;
-;; * when in this file or in namespace masr.specs, via
-;;   the line (in-ns 'masr.specs):
-;;
-;;
-;; #+begin_src clojure
-
-{::term        ::intent,
- ::intent-enum 'Unspecified}
-;; #+end_src
-
-;;
-;; * if `masr.specs` is aliased to `asr`, as in `(:use
-;;   [masr.specs :as asr])` in `core_test.clj`:
-;;
-;;
-;; #+begin_src clojure
-
-;; {::asr/term        ::asr/intent,
-;;  ::asr/intent-enum 'Unspecified}
-;; #+end_src
+;; like `symbol` or `stmt`.
 
 
 ;;
@@ -598,15 +586,16 @@
 
 
 ;; `::term` is both a qualified keyword _and_ a
-;; tag-fetching function, which picks the value of
-;; the key :`:term` from any hash-map. For example,
+;; tag-fetching function. A tag-fetching function
+;; picks the value of the key :`:term` from any
+;; hash-map. For example,
 ;; `(::term {... the instance above ...})` produces
 ;; `::intent`.
 ;;
 ;;
-;; As a qualified keyword, `::term` can name a Clojure
-;; spec. The following spec will check
-;; whether `::intent` is a `::term`:
+;; As a qualified keyword, `::term` can name a
+;; Clojure spec registered to it. The following spec
+;; will check whether `::intent` is a `::term`:
 ;;
 ;;
 ;; #+begin_src clojure
@@ -614,7 +603,6 @@
 (s/def ::term qualified-keyword?)
 ;; #+end_src
 
-;;
 ;; EXAMPLE: "intent" is a valid "term"
 ;;
 ;;
@@ -632,21 +620,23 @@
 ;;
 
 
-;; `defmulti` defines a name, say `term` (no colons),
-;; for a collection of `defmethods` with the same name.
-;; The `defmulti` links the defmulti-defmethod name
+;; `defmulti` defines a name, say `term` (no
+;; colons), for a collection of `defmethods` with
+;; the same name. The `defmulti` links the name
 ;; `term` to a dispatcher function, here exactly the
-;; tag-fetcher `::term` (with colons), with this
-;; qualified keyword acting in its role of tag-fetcher.
-;; Each defmethod of `term` is also tagged by the value
-;; fetched from an entity via `::term`.
-;; defmulti/defmethod is a Clojure idiom for
-;; _polymorphism_, a `defmulti` function interface with
-;; many implementations. The interface is the same for
-;; all implementations -- it just accepts a term. The
-;; implementations differ from one to the other. That's
-;; the meaning of "polymorphism" -- one interface, many
-;; implementations.
+;; tag-fetcher `::term` (with colons), acting in its
+;; role of tag-fetching function. Each defmethod of
+;; `term` is tagged by the value fetched from an
+;; entity via `::term`. defmulti/defmethod is thus a
+;; Clojure idiom for _polymorphism_:, a single
+;; defmulti function interface with many
+;; implementations, one for each value of the
+;; `::term` keyword. The interface is the same for
+;; all implementations -- it just accepts a term
+;; entity. The implementations differ from one
+;; entity to the other, say `::symbol` from
+;; `::expr`. That's the meaning of "polymorphism" --
+;; one interface, many implementations.
 ;;
 ;;
 ;; #+begin_src clojure
@@ -867,7 +857,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; Uses of the `defmasrnested` macro:
 ;;
 ;;
@@ -1041,30 +1030,30 @@
                 ))"
   [head, term, keyseq]
   (let [ns "masr.specs"
-        ;; like "Program"
+        ;; like "Program":
         head-str  (str head)
-        ;; like ::Program
+        ;; like ::Program:
         head-key  (keyword ns head-str)
-        ;; ::keys
+        ;; ::keys:
         keys-key  (keyword ns "keys")
-        ;; like Program
+        ;; like Program:
         head-sym  (symbol head-str)
-        ;; like symbol
+        ;; like symbol:
         term-sym  (symbol (str term))
-        ;; like symbol-head
+        ;; like symbol-head:
         term-head (symbol (str term "-head"))
-        ;; like symbol->asdl-type
+        ;; like symbol->asdl-type:
         mthd-nym  (symbol (str term "->asdl-type"))
-        ;; like (symbol-head, SymbolTable, ..., body)
+        ;; like (symbol-head, SymbolTable, ..., body):
         sym-list  (conj keyseq term-head)
         ;; like [symbol-head, SymbolTable, ..., body]
-        ;; for destructuring
+        ;; for destructuring:
         parm-vec  (vec sym-list)
         ;; like (::symbol-head, ::SymbolTable, ..., ::body)
-        ;; for entity specs via s/keys
+        ;; for entity specs via s/keys:
         key-list  (map #(keyword ns (str %)) sym-list)
         ;; like [::symbol-head, ::SymbolTable, ..., ::body]
-        ;; for entity specs via s/keys
+        ;; for entity specs via s/keys:
         key-vec   (vec key-list)
         ]
 
@@ -1216,11 +1205,12 @@
 
 (defmasrtype
   Variable symbol
-  (symtab-id        varnym              dependencies
-                    intent              symbolic-value    value?
-                    storage-type        ttype             abi
-                    access              presence          value-attr
-                    type-declaration))
+  (symtab-id
+   varnym              dependencies
+   intent              symbolic-value    value?
+   storage-type        ttype             abi
+   access              presence          value-attr
+   type-declaration))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1304,7 +1294,7 @@
 
 (defmasrtype
   WhileLoop stmt
-  (unknown-tuple    test-expr    body))
+  (while-exit-target    test-expr    body))
 ;; #+end_src
 
 ;;
@@ -1467,7 +1457,6 @@
              return-type    value?    dt?))
 ;; #+end_src
 
-
 ;;
 ;; ## TTYPE
 ;;
@@ -1515,11 +1504,12 @@
 
 (defmasrtype
   FunctionType ttype
-  (param-type*    return-var-type?    abi
-                  deftype            bindc-name     elemental
-                  pure               module         inline
-                  static             type-param*    restrictions
-                  is-restriction))
+  (param-type*
+   return-var-type?    abi
+   deftype            bindc-name     elemental
+   pure               module         inline
+   static             type-param*    restrictions
+   is-restriction))
 ;; #+end_src
 
 
@@ -1532,7 +1522,7 @@
 
 ;; The `legacy` macro currently just converts `=`
 ;; into `Assignment` in a whole tree. Apply "legacy"
-;; to a whole expression.
+;; to a whole sugar expression.
 ;;
 ;;
 ;; TODO: ASDL output from `--show-asr` currently
@@ -1606,9 +1596,8 @@
 ;;
 ;;
 
-
-;; ## Issues
 ;;
+;; ## Issues
 ;;
 ;; https://github.com/rebcabin/masr/issues/32
 ;; `call-arg` intentionally introduces a level of
@@ -1617,7 +1606,6 @@
 ;;
 ;;
 ;; ## Original ASDL
-;;
 ;;
 ;; ```c
 ;; call_arg = (expr? value)
@@ -1631,7 +1619,7 @@
              :min-count 1   ;; Issue 32
              :max-count 1))
 ;; #+end_src
-;;
+
 ;;
 ;; ## Examples
 ;;
@@ -1650,10 +1638,9 @@
 ;; `Dimension` is a term without nested multi-specs.
 ;; It is a handwritten special case, not defined via
 ;; `defmasrtype`.
-;;
+
 ;;
 ;; ## Original ASDL
-;;
 ;;
 ;; ```c
 ;; dimension = (expr? start, expr? length)
@@ -1731,7 +1718,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## Heavy Sugar
 ;;
 ;;
@@ -1780,7 +1766,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## Heavy Sugar
 ;;
 ;;
@@ -1825,7 +1810,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## Heavy Sugar
 ;;
 ;;
@@ -1863,7 +1847,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## Heavy Sugar
 ;;
 ;;
@@ -1892,7 +1875,7 @@
 ;; ASDL `access` has two possibilities: `Public`
 ;; and `Private`. MASR automates all of enum-likes
 ;; via one macro, `enum-like`.
-;;
+
 ;;
 ;; ## Helpers for Enum-Like
 ;;
@@ -1922,7 +1905,6 @@
     `(list ~@cmds)))
 ;; #+end_src
 
-;;
 ;;
 ;; ## Enum-Like, Proper
 ;;
@@ -1962,7 +1944,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## Most Enum-Likes
 ;;
 ;;
@@ -1971,14 +1952,14 @@
 
 (enum-like logicalbinop  #{'And  'Or  'Xor  'NEqv  'Eqv})
 ;; Collisions of names are NOT ALLOWED!
-;; See Legacy Sugar for RealBinOp.
+;; See Legacy Sugar for `RealBinOp.`
 (enum-like real-binop    #{'RAdd 'RSub 'RMul 'RDiv 'RPow})
 (enum-like integer-binop #{'Add 'Sub 'Mul 'Div 'Pow
                            'BitAnd 'BitOr 'BitXor
                            'BitLShift 'BitRShift})
 (enum-like cmpop         #{'Eq 'NotEq  'Lt  'LtE  'Gt  'GtE })
 ;; Collisions of names are NOT ALLOWED!
-;; See Legacy Sugar for LogicalCompare.
+;; See Legacy Sugar for `LogicalCompare.`
 (enum-like logicalcmpop  #{'LEq 'LNotEq})
 (enum-like intent        #{'Local 'In 'Out 'InOut 'ReturnVar
                            'Unspecified})
@@ -2020,7 +2001,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Full-Form
 ;;
 ;;
@@ -2045,7 +2025,6 @@
 (def-term-entity-key abi)
 ;; #+end_src
 
-;;
 ;;
 ;; ### Heavy Sugar
 ;;
@@ -2074,7 +2053,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### The ABIs
 ;;
 ;;
@@ -2099,7 +2077,6 @@
 ;; `Ttype` is a term with nested multi-specs.
 
 
-;;
 ;;
 ;; ## Prerequisite Types and Aliases
 ;;
@@ -2195,7 +2172,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## Kind
 ;;
 ;;
@@ -2238,7 +2214,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## Heavy Sugar for `ttype`
 ;;
 ;;
@@ -2267,7 +2242,6 @@
       ::invalid-ttype)))
 ;; #+end_src
 
-;;
 ;;
 ;; ## Sugar for the Kinds
 ;;
@@ -2341,8 +2315,6 @@
        )))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## INTEGER, REAL, COMPLEX, LOGICAL
 ;;
@@ -2357,24 +2329,18 @@
 (def-ttype-and-head Logical)
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## CHARACTER
 ;;
 ;;
 
-
-;;
 ;;
 ;; ### Original ASDL
-;;
 ;;
 ;; ```c
 ;; | Character(int kind, int len, expr? len_expr, dimension* dims)
 ;; ```
 
-;;
 ;;
 ;; ### Example
 ;;
@@ -2385,7 +2351,6 @@
 (Character 1 1 () [])
 ;; #+end_src
 
-;;
 ;;
 ;; ### Heavy Sugar
 ;;
@@ -2427,7 +2392,6 @@
 
 
 ;;
-;;
 ;; ## FUNCTION-TYPE
 ;;
 ;;
@@ -2437,7 +2401,6 @@
 ;;
 ;;
 ;; ### Original ASDL
-;;
 ;;
 ;; ```c
 ;; | FunctionType(ttype*  arg_types,       ;; rename param-type*
@@ -2455,7 +2418,6 @@
 ;;                bool    is_restriction)
 ;; ```
 
-;;
 ;;
 ;; ### Heavy Sugar
 ;;
@@ -2497,14 +2459,11 @@
       :invalid-function-type)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## TODO The Rest of the `ttypes`
 ;;
 ;;
 ;; ### Original ASDL
-;;
 ;;
 ;; ```c
 ;; >>> Integer, Real, Complex, Logical are already done ...
@@ -2538,16 +2497,14 @@
 ;; things we haven't fully defined yet
 
 ;;
-;;
 ;; ## UNKNOWN TUPLE
 ;;
 ;;
 ;; #+begin_src clojure
 
-(s/def ::unknown-tuple      empty?)
+(s/def ::while-exit-target      empty?)
 ;; #+end_src
 
-;;
 ;;
 ;; ## SYMBOLIC VALUE
 ;;
@@ -2557,7 +2514,6 @@
 (s/def ::symbolic-value empty?)
 ;; #+end_src
 
-;;
 ;;
 ;; ### Sugar
 ;;
@@ -2574,9 +2530,10 @@
 ;;
 ;;
 
-
+;;
 ;; ## Prerequisite Types and Aliases
-
+;;
+;;
 ;; #+begin_src clojure
 
 (s/def ::arg ::expr)
@@ -2620,7 +2577,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Logical Types
 ;;
 ;;
@@ -2653,7 +2609,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Integer Types
 ;;
 ;;
@@ -2682,7 +2637,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Real Types
 ;;
 ;;
@@ -2709,8 +2663,6 @@
 (s/def ::real-right ::real-expr)
 ;; #+end_src
 
-
-;;
 ;;
 ;; ### Complex Types
 ;;
@@ -2749,20 +2701,17 @@
 
 
 ;;
-;;
 ;; ## INTEGER BIT NOT
 ;;
 ;;
 
-
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; IntegerBitNot(expr arg, ttype type, expr? value)
 ;; ```
 
-;;
 ;;
 ;; ### Heavy Sugar
 ;;
@@ -2783,13 +2732,13 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## INTEGER, REAL, COMPLEX UNARY MINUS
 ;;
 ;;
 
+;;
 ;; ### Typed Uminus Macro
-
+;;
 ;; #+begin_src clojure
 
 (defmacro typed-uminus                 ;; -- Examples --
@@ -2830,22 +2779,18 @@
 (typed-uminus Complex)
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## CAST
 ;;
 ;;
 
-
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | Cast(expr arg, cast-kind kind, ttype type, expr? value)
 ;; ```
 
-;;
 ;;
 ;; ### Example
 ;;
@@ -2867,7 +2812,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
 ;;
 ;;
@@ -2887,16 +2831,13 @@
       :invalid-cast)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## IF EXP
 ;;
 ;;
 
-
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;;  IfExp(expr test,
@@ -2906,8 +2847,6 @@
 ;;        expr? value)
 ;; ```
 
-
-;;
 ;;
 ;; ### Example
 ;;
@@ -2932,7 +2871,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
 ;;
 ;;
@@ -2952,25 +2890,20 @@
       :invalid-if-exp)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## NAMED EXPR
 ;;
 ;;
 
-
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | NamedExpr(expr target, expr value, ttype type)
 ;; ```
 
 ;;
-;;
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -2982,7 +2915,6 @@
  )
 ;; #+end_src
 
-;;
 ;;
 ;; ### Heavy Sugar
 ;;
@@ -3001,16 +2933,13 @@
       :invalid-named-expr)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## FUNCTION CALL
 ;;
 ;;
 
-
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | FunctionCall(symbol     name,
@@ -3021,9 +2950,9 @@
 ;;                expr     ? dt)
 ;; ```
 ;;
+
 ;;
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3039,9 +2968,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3065,9 +2992,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3092,7 +3017,6 @@
                     ~dt?)))
 ;; #+end_src
 
-;;
 ;;
 ;; ## LOGICAL, INTEGER, REAL CONSTANTS
 ;;
@@ -3121,11 +3045,8 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Typed Constant Macro
 ;;
-;;
-
 ;; #+begin_src clojure
 
 (defmacro typed-constant              ;; -- Examples --
@@ -3164,8 +3085,9 @@
         (~fnsym ~vpsym (~ttsym))))))
 ;; #+end_src
 
+;;
 ;; ### Using the Macro
-
+;;
 ;; #+begin_src clojure
 
 (typed-constant Logical bool)
@@ -3174,21 +3096,19 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## STRING CONSTANT
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | StringConstant(string s, ttype type)
 ;; ```
-;;
+
 ;;
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3197,9 +3117,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3220,21 +3138,20 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## COMPLEX CONSTANT
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; ComplexConstant(float re, float im, ttype type)
 ;; ```
 ;;
+
 ;;
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3243,9 +3160,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3267,14 +3182,12 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## VAR
 ;;
 ;;
 
-
-;; ### Issue #23
 ;;
+;; ### Issue #23
 ;;
 ;; Is the parameter `symbol` for `Var` really a `symbol`?
 ;; Or just an identifier? #23
@@ -3295,9 +3208,7 @@
 ;;
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3314,9 +3225,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3329,22 +3238,19 @@
 ;; symbol-table! That's part of abstract execution.
 
 ;;
-;;
 ;; ## STRING ORD
 ;;
 ;;
 
-
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | StringOrd(expr arg, ttype type, expr? value)
 ;; ```
-;;
+
 ;;
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3360,9 +3266,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3383,9 +3287,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3406,76 +3308,23 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## LOGICAL, INTEGER, REAL BINOP
 ;;
 ;;
 
-;; ### Typed BinOp Macro
-
-;; The following macro creates a heavy-sugar
-;; function with the name LogicalBinOp--,
-;; IntegerBinOp--, RealBinOp--, or ComplexBinOp--.
-;; The legacy-sugar functions LogicalBinOp,
-;; IntegerBinOp, RealBinOp, and ComplexBinOp must be
-;; written by hand. Their purpose is to switch to
-;; strongly-typed operators: Add, RAdd, CAdd, etc.
-
-;; #+begin_src clojure
-
-(defmacro typed-binop ;; -- Examples --
-  [ttype]             ;; Logical
-  (let [ns    "masr.specs"
-        fnstr (str ttype "BinOp--") ;; "LogicalBinOp--"
-        fnsym (symbol fnstr) ;; *** 'LogicalBinOp--
-        ttstr (str ttype)    ;; "Logical"
-        ttqkw (keyword ns ttstr) ;; *** ::Logical
-        fnqkw (keyword ns ttstr) ;; *** ::LogicalBinOp
-        tlstr (str/lower-case ttstr) ;; "logical"
-        tllef (str tlstr "-left") ;; "logical-left"
-        tqlef (keyword ns tllef) ;; *** ::logical-left
-
-        testr (str tlstr "-expr") ;; "logical-expr"
-        teqkw (keyword ns testr)  ;; ::logical-expr
-        tvstr (str tlstr "-value?") ;; "logical-value?"
-        tvqkw (keyword ns tvstr) ;; ::logical-value?
-        nvukw (keyword ;; :invalid-logical-unary-minus
-               (str "invalid-" (csk/->kebab-case fnstr)))]
-    `(defn ~fnsym          ;; (defn LogicalConstant
-       [arg# ttype# val?#] ;; ([arg ttype val?
-       (let [cnd#
-             {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ~fnqkw ;; {::ex... ::LogicalUnaryMinus
-               ~teqkw       arg# ;;  ::logical-expr   arg
-               ~ttqkw       ttype# ;;  ::Logical        ttype
-               ~tvqkw       val?#}}] ;;  ::logical-value? val?}}]
-         ;; (if (s/valid? ::LogicalUnaryMinus cnd)
-         (if (s/valid? ~fnqkw cnd#) cnd#
-             ~nvukw)))))               ;; :invalid-logical-unary-minus
-;; #+end_src
-
-;; ### Using the Macro
-
-;; #+begin_src clojure
-
-;; #+end_src
-
-
-;;
 ;;
 ;; ## LOGICAL BINOP
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | LogicalBinOp(expr left, logicalbinop op, expr
 ;;   right, ttype type, expr? value)
 ;; ```
-;;
+
 ;;
 ;; ### Example
 ;;
@@ -3495,9 +3344,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3516,15 +3363,13 @@
       :invalid-logical-bin-op)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## INTEGER BINOP
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | IntegerBinOp(expr  left,
@@ -3534,9 +3379,8 @@
 ;;                expr? value)
 ;; ```
 ;;
-;;
+
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3556,9 +3400,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3577,15 +3419,13 @@
       :invalid-integer-bin-op)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## REAL BINOP
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | RealBinOp(expr  left,
@@ -3594,10 +3434,9 @@
 ;;                ttype type,
 ;;                expr? value)
 ;; ```
-;;
+
 ;;
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3617,9 +3456,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3640,25 +3477,24 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
 ;;
-;;
+;; #+begin_src clojure
 
 (defmacro RealBinOp
   "Must use Add, Mul, etc."
   [left- bo- right- rtt- rval?-]
   (let [rop (symbol (str "R" bo-))]
     `(RealBinOp-- ~left- ~rop ~right- ~rtt- ~rval?-)))
+;; #+end_src
 
-;;
 ;;
 ;; ## INTEGER COMPARE
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | IntegerCompare(expr  left,
@@ -3667,10 +3503,9 @@
 ;;                  ttype type,
 ;;                  expr? value)
 ;; ```
-;;
+
 ;;
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3684,9 +3519,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3704,15 +3537,13 @@
       :invalid-integer-compare)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## LOGICAL COMPARE
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | LogicalCompare(expr left,   ;; must have type ::Logical
@@ -3725,7 +3556,6 @@
 ;;
 ;; ### Example
 ;;
-;;
 ;; #+begin_src clojure
 
 #_
@@ -3737,9 +3567,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3759,7 +3587,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
 ;;
 ;;
@@ -3772,22 +3599,19 @@
 
 
 ;;
-;;
 ;; ## LOGICAL NOT
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; LogicalNot(expr arg, ttype type, expr? value)
 ;; ```
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3811,8 +3635,6 @@
 ;;
 ;;
 
-
-;;
 ;;
 ;; ## Prerequisite Types and Aliases
 ;;
@@ -3919,24 +3741,20 @@
                             :nil empty?))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## EXPLICIT DEALLOCATE
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;;     | ExplicitDeallocate(expr* vars)
 ;; ```
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3950,24 +3768,20 @@
       :invalid-explicit-deallocate)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## ASSERT
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | Assert(expr test, expr? msg)
 ;; ```
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -3982,24 +3796,20 @@
       :invalid-if)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## IF
 ;;
 ;;
 
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | If(expr test, stmt* body, stmt* orelse)
 ;; ```
 
 ;;
-;;
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4027,9 +3837,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4045,22 +3853,19 @@
       :invalid-if)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## ASSIGNMENT
 ;;
 ;;
 
-
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | Assignment(expr target, expr value, stmt? overloaded)
 ;;          --- Var ---
 ;; ```
-;;
+
 ;;
 ;; ### Issues
 ;;
@@ -4068,13 +3873,9 @@
 ;; https://github.com/rebcabin/masr/issues/21
 ;; https://github.com/rebcabin/masr/issues/22
 ;; https://github.com/rebcabin/masr/issues/26
-;;
-;;
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4092,23 +3893,19 @@
 
 
 ;;
-;;
 ;; ## WHILE LOOP
 ;;
 ;;
 
-
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | WhileLoop(expr test, stmt* body)
 ;; ```
 
 ;;
-;;
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4129,20 +3926,18 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
 (defn WhileLoop
-  [unknown-tuple, test-expr, body]
+  [exit-target, test-expr, body]
   (let [cnd {::term ::stmt
              ::asr-stmt-head
              {::stmt-head ::WhileLoop
-              ::unknown-tuple unknown-tuple
-              ::test-expr     test-expr
-              ::body          body}}]
+              ::while-exit-target exit-target
+              ::test-expr         test-expr
+              ::body              body}}]
     (if (s/valid? ::WhileLoop cnd)
       cnd
       :invalid-while-loop)))
@@ -4184,13 +3979,10 @@
       :invalid-print)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## RETURN
 ;;
 ;;
-
 
 ;; #+begin_src clojure
 
@@ -4203,8 +3995,6 @@
       :invalid-return)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## SUBROUTINE CALL
 ;;
@@ -4225,8 +4015,7 @@
 ;;                  expr     ? dt)
 ;; ```
 
-;;
-;;
+
 ;; #+begin_src clojure
 
 (s/def ::call-args (s/coll-of ::call-arg))
@@ -4238,9 +4027,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Examples
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4258,9 +4045,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4279,11 +4064,8 @@
       :invalid-subroutine-call)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ### Legacy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4309,8 +4091,6 @@
 ;;
 ;;
 
-
-;;
 ;;
 ;; ## EXTERNAL SYMBOL
 ;;
@@ -4328,10 +4108,9 @@
 ;;                  identifier   original_name, ~~~> orig-nym
 ;;                  access       access)        ~~~> access
 ;; ```
-;;
+
 ;;
 ;; ### Example
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4348,9 +4127,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4377,7 +4154,6 @@
       :invalid-external-symbol)))
 ;; #+end_src
 
-;;
 ;;
 ;; ### Legacy Sugar
 ;;
@@ -4412,14 +4188,12 @@
      ~access)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## VARIABLE
 ;;
 ;;
 
-
+;;
 ;; ### Original ASDL
 ;;
 ;;
@@ -4461,11 +4235,8 @@
  .false.)                ;   bool            value-attr
 ;; #+end_src
 
-
-;;
 ;;
 ;; ### Light Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4518,9 +4289,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4571,9 +4340,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4603,15 +4370,11 @@
     ~value-attr-))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## INTRINSIC MODULE
 ;;
 ;;
 
-
-;;
 ;;
 ;; ### Original ASDL
 ;;
@@ -4619,9 +4382,7 @@
 ;; There is no ASDL for this symbol in our snapshot.
 
 ;;
-;;
 ;; Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4636,9 +4397,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4647,14 +4406,12 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## MODULE
 ;;
 ;;
 
-
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | Module(symbol_table   symtab,
@@ -4665,9 +4422,7 @@
 ;; ```
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4686,9 +4441,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4704,16 +4457,13 @@
       ~intrinsic-)))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## FUNCTION
 ;;
 ;;
 
-
-;; ### Original ASDL
 ;;
+;; ### Original ASDL
 ;;
 ;; ```c
 ;; | Function(symbol_table symtab,
@@ -4731,9 +4481,7 @@
 ;; ```
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4765,9 +4513,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4783,14 +4529,12 @@
                ~access-, ~determ, ~sefree))
 ;; #+end_src
 
-
-;;
 ;;
 ;; ## PROGRAM
 ;;
 ;;
 
-
+;;
 ;; ### Original ASDL
 ;;
 ;;
@@ -4802,9 +4546,7 @@
 ;; ```
 
 ;;
-;;
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4822,9 +4564,7 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ### Legacy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -4862,7 +4602,6 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## Pluralities
 ;;
 ;;
@@ -4876,13 +4615,11 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## TRANSLATION UNIT
 ;;
 ;;
 
 ;; ### Heavy Sugar
-;;
 ;;
 ;; #+begin_src clojure
 
