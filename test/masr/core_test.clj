@@ -4617,11 +4617,54 @@
 
     (testing "whole translation unit for -expr11-1134d3f"
       (is (s/valid? ::asr/unit (long-form-asr "-expr11-1134d3f"))))
-    #_
+
     (testing "whole translation unit for -expr12-2a30333"
       (is (s/valid? ::asr/unit (long-form-asr "-expr12-2a30333"))))
 
+    (testing "whole translation unit for -expr13-10040d8"
+      (is (s/valid? ::asr/unit (long-form-asr "-expr13-10040d8"))))
+
     ))
+
+
+(deftest bisecting-expr13-10040d8
+  (is (not (s/valid? ::asr/IntegerCompare
+                     (legacy (IntegerCompare
+                              (IntegerConstant 5 (Integer 4 []))
+                              Gt
+                              (IntegerConstant 4 (Integer 4 []))
+                              (Integer 4 [])
+                              (LogicalConstant
+                               true
+                               (Logical 4 [])
+                               ))))))
+  (is (s/valid? ::asr/IntegerCompare
+                (legacy (IntegerCompare
+                         (IntegerConstant 5 (Integer 4 []))
+                         Gt
+                         (IntegerConstant 4 (Integer 4 []))
+                         (Logical 4 [])
+                         (LogicalConstant
+                          true
+                          (Logical 4 [])
+                          )))))
+  (is (s/valid? ::asr/StringCompare
+                (legacy (StringCompare
+                         (StringConstant
+                          "abc"
+                          (Character 1 3 () [])
+                          )
+                         Gt
+                         (StringConstant
+                          "abd"
+                          (Character 1 3 () [])
+                          )
+                         (Logical 4 [])
+                         (LogicalConstant
+                          false
+                          (Logical 4 [])
+                          )
+                         )))))
 
 
 (deftest bisecting-expr9-c6fe691
