@@ -5,6 +5,7 @@
 ;;
 
 
+;;
 ;; This file is semi-literate programming.
 ;; "Semi-literate" means that blocks of code in the
 ;; Markdown file, `specs.md`, are extracted from the
@@ -153,7 +154,7 @@
 ;;
 ;;
 
-
+;; ----------------------------------------------------------------
 ;; ## MASR IS A TYPE SYSTEM
 ;;
 ;;
@@ -194,6 +195,7 @@
 ;; https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
 ;;
 
+;;
 ;; ### Terms (Nodes) in the ASDL Grammar
 ;;
 ;;
@@ -266,6 +268,7 @@
 ;;
 
 
+;;
 ;; "Specification" derives from the verb "to specify."
 ;; "To specify" means "to describe specifically:
 ;; clearly, explicitly, precisely, unambiguously."
@@ -296,9 +299,11 @@
 ;; See this Stack-Exchange question for the fine
 ;; points of set theory versus type theory:
 ;;
+
 ;;
-;; https://math.stackexchange.com/questions/489369
+;;   https://math.stackexchange.com/questions/489369
 ;;
+
 ;;
 ;; The important point is that a type theory is a
 ;; self-contained logic. It might be set theory or
@@ -308,13 +313,14 @@
 ;; that predicate logic can support, Clojure specs
 ;; suffice for advanced types like dependency types
 ;; and concurrency types.
+;;
 
-;;
-;;
+;; ----------------------------------------------------------------
 ;; ## CHECKING INSTANCES
 ;;
 ;;
 
+;;
 ;; An instance hash-map may inhabit multiple sets.
 ;; For example, any `LogicalConstant` is an `expr`,
 ;; and any `expr` is an `asr-term`. These sets stand
@@ -328,6 +334,7 @@
 ;; a handful of primitive _atoms_. All the fields of
 ;; big entities are checked against specs, all the
 ;; way down to the atoms.
+;;
 
 
 ;;
@@ -337,6 +344,7 @@
 ;;
 
 
+;;
 ;; Every MASR `asr-term` has a full-form. A full-form
 ;; is a Clojure _hash-map_ that contains the key
 ;; `::term`. Clojure hash-maps are collections of
@@ -434,6 +442,7 @@
 ;;
 
 
+;;
 ;; Most entities have sugared forms that are
 ;;
 ;; 1. easier for humans to read and write
@@ -463,10 +472,9 @@
 ;;    requiring fewer tick marks on symbols. Legacy
 ;;    sugar is the most compatible with ASDL output
 ;;    from `--show-asr`.
-
-
 ;;
-;;
+
+;; ----------------------------------------------------------------
 ;; ## SUGAR NAMING CONVENTION
 ;;
 ;;
@@ -573,9 +581,11 @@
 ;;
 
 
+;;
 ;; MASR _terms_ are models of terms or productions in
 ;; the ASDL grammar, items to the left of equals signs
 ;; like `symbol` or `stmt`.
+;;
 
 
 ;;
@@ -620,6 +630,7 @@
 ;;
 
 
+;;
 ;; `defmulti` defines a name, say `term` (no
 ;; colons), for a collection of `defmethods` with
 ;; the same name. The `defmulti` links the name
@@ -656,6 +667,7 @@
 ;; is `::asr-term`, a qualified keyword, as must be
 ;; the names of all Clojure specs. Multi-specs act
 ;; like tagged unions in C -- polymorphic structs.
+;;
 
 
 ;;
@@ -665,6 +677,7 @@
 ;;
 
 
+;;
 ;; At the top level, term multi-specs dispatch on
 ;; values of the `::term` key, values like `::intent`,
 ;; `::symbol`, `::unit`, etc. Defmethods for those
@@ -680,6 +693,7 @@
 ;; that dispatch on _heads_, like `Variable` or
 ;; `Program`. MASR handles nested multi-specs via some
 ;; techniques shown below.
+;;
 
 
 ;;
@@ -689,6 +703,7 @@
 ;;
 
 
+;;
 ;; All multi-spec names in MASR, nested or not, begin
 ;; with `::asr-...`, as in `::asr-term` (not nested)
 ;; and `::asr-ttype-head` (nested in ttypes).
@@ -708,6 +723,7 @@
 ;;
 
 
+;;
 ;; A given entity (instance hash-map) may be
 ;;
 ;; * an `::asr-term` -- any one of the terms
@@ -737,6 +753,7 @@
 ;; `::LogicalBinOp` is an `::expr`. Horizontally, both
 ;; `::LogicalBinOp` and `::LogicalCompare` are
 ;; `::expr`, and both are `::asr-term`.
+;;
 
 
 ;;
@@ -746,6 +763,7 @@
 ;;
 
 
+;;
 ;; Each term, like symbol, needs its own spec, named by
 ;; a qualified keyword like `::symbol`. MASR
 ;; recursively checks specs when entity keys like
@@ -784,6 +802,7 @@
 ;;
 
 
+;;
 ;; Automate construction of nested multi-specs,
 ;; removing all duplicated wordage. The docstring of
 ;; defmasrnested shows an example with all the
@@ -877,6 +896,7 @@
 ;;
 
 
+;;
 ;; We need specs for each nested multi-spec
 ;; like `::Variable` and `::FunctionType`.
 ;;
@@ -928,6 +948,7 @@
 ;;
 
 
+;;
 ;; `defmasrtype` is the easiest way to add new specs
 ;; that have nested multi-specs to MASR. Terms
 ;; without nested multi-specs are few. They are
@@ -938,6 +959,13 @@
 ;; particular heads like `Variable` and `Assignment`,
 ;; and (2) a function, `->asdl-type`, that extracts
 ;; the ASDL type from any instance hash-map.
+;;
+;;
+;; We must define it later in the narrative because
+;; we must define some other things first (this is
+;; only semi-literate programming, so we must break
+;; narrative order for the sake of the compiler).
+;;
 
 
 ;;
@@ -947,12 +975,13 @@
 ;;
 
 
+;;
 ;; MASR automatically type-checks entities before
 ;; projecting them back to the less discriminating
 ;; and unchecked ASDL types. Recursive type-checking
 ;; pertains to terms with and without nested
 ;; multi-specs.
-
+;;
 
 ;;
 ;;
@@ -1074,6 +1103,7 @@
 ;;
 
 
+;;
 ;; The function `->asdl-type` relies on multimethods
 ;; for terms that have a nested multi-spec. The
 ;; multimethods dispatch on the "head" keys of each
@@ -1125,6 +1155,7 @@
 ;;
 
 
+;;
 ;; The following blocks of code are as close to the
 ;; ASDL specs as we care to get in MASR. MASR is
 ;; more discriminating than ASDL. For example, the
@@ -1144,6 +1175,7 @@
 ;; discriminating types, like `prognym` and
 ;; `left-logical`, before they're defined as specs
 ;; via `s/def`.
+;;
 
 
 ;;
@@ -1152,7 +1184,7 @@
 ;;
 ;;
 
-;;
+;; ----------------------------------------------------------------
 ;; ## UNIT
 ;;
 ;;
@@ -1168,7 +1200,7 @@
    nodes))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## SYMBOL
 ;;
 ;;
@@ -1233,7 +1265,7 @@
    ))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## STMT
 ;;
 ;;
@@ -1297,7 +1329,7 @@
   (loop-exit-target    test-expr    body))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## EXPR
 ;;
 ;;
@@ -1359,8 +1391,16 @@
 
 (defmasrtype
   RealBinOp expr
-  (real-left       real-binop      real-right
-                   Real            real-value?))
+  (real-left       real-binop       real-right
+                   Real             real-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  ComplexBinOp expr
+  (complex-left    complex-binop    complex-right
+                   Complex          complex-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1483,12 +1523,20 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  IntrinsicFunction expr
+  (intrinsic-ident    call-arg-or-args      overload-id
+                      return-type           value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   FunctionCall expr
   (nymref    orig-nymref    call-args
              return-type    value?    dt?))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## TTYPE
 ;;
 ;;
@@ -1551,6 +1599,7 @@
 ;;
 
 
+;;
 ;; The `legacy` macro currently just converts `=`
 ;; into `Assignment` in a whole tree. Apply "legacy"
 ;; to a whole sugar expression.
@@ -1617,8 +1666,10 @@
 ;;
 
 
+;;
 ;; The remaining sections of this document describe
 ;; detailed implementations.
+;;
 
 
 ;;
@@ -1649,6 +1700,12 @@
   (s/coll-of ::expr?
              :min-count 1   ;; Issue 32
              :max-count 1))
+
+(s/def ::call-args (s/coll-of ::call-arg))
+
+(s/def ::call-arg-or-args
+  (s/or :call-arg  ::call-arg
+        :call-args ::call-args))
 ;; #+end_src
 
 ;;
@@ -1666,9 +1723,11 @@
 ;;
 
 
+;;
 ;; `Dimension` is a term without nested multi-specs.
 ;; It is a handwritten special case, not defined via
 ;; `defmasrtype`.
+;;
 
 ;;
 ;; ## Original ASDL
@@ -1682,13 +1741,14 @@
 ;; in secret C++ code, is that we have either both
 ;; `start` and `length` or we just have nothing. MASR
 ;; makes exposes this secret explicitly.
-
 ;;
+
 ;;
 ;; ## Dimension-Content
 ;;
 ;;
 
+;;
 ;; The next spec says that a `::dimension-content` is
 ;; a collection of `::nat` with either two or zero
 ;; elements. TODO Consider a regex-spec.
@@ -1709,11 +1769,11 @@
 ;; #+end_src
 
 ;;
-;;
 ;; ## Full-Form
 ;;
 ;;
 
+;;
 ;; The next spec says that a `dimension` in full-form
 ;; is an entity hash-map with keys `::term` and
 ;; `::dimension-content`.
@@ -1775,10 +1835,6 @@
 ;;
 
 
-;;
-;; TODO Consider a regex-spec.
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::dimension*
@@ -1826,6 +1882,7 @@
 ;;
 
 
+;;
 ;; In ASDL, `symbol_table` sometimes means a
 ;; `SymbolTable` and sometimes means an integer id of a
 ;; `SymbolTable` that is specified elsewhere. MASR does
@@ -1860,6 +1917,7 @@
 ;;
 
 
+;;
 ;; `SymbolTable` is an unwritten term. It doesn't have
 ;; nested multi-specs. Write it out fully by hand.
 ;;
@@ -1900,12 +1958,14 @@
 ;;
 
 
+;;
 ;; Many ASDL types are like enums: they are just a
 ;; set of alternative symbols, without parentheses
 ;; and without parameters _qua_ arguments. Example:
 ;; ASDL `access` has two possibilities: `Public`
 ;; and `Private`. MASR automates all of enum-likes
 ;; via one macro, `enum-like`.
+;;
 
 ;;
 ;; ## Helpers for Enum-Like
@@ -1936,7 +1996,7 @@
     `(list ~@cmds)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## Enum-Like, Proper
 ;;
 ;;
@@ -1985,6 +2045,7 @@
 ;; Collisions of names are NOT ALLOWED!
 ;; See Legacy Sugar for `RealBinOp.`
 (enum-like real-binop    #{'RAdd 'RSub 'RMul 'RDiv 'RPow})
+(enum-like complex-binop #{'CAdd 'CSub 'CMul 'CDiv 'CPow})
 (enum-like integer-binop #{'Add 'Sub 'Mul 'Div 'Pow
                            'BitAnd 'BitOr 'BitXor
                            'BitLShift 'BitRShift})
@@ -2015,12 +2076,12 @@
                            'IntegerToCharacter  'LogicalToCharacter})
 ;; #+end_src
 
-;;
-;;
+;; ----------------------------------------------------------------
 ;; ## Abi
 ;;
 ;;
 
+;;
 ;; `Abi` is a special case of enum-like with rich logic.
 ;;
 ;; #+begin_src clojure
@@ -2110,27 +2171,21 @@
 ;;
 
 
-;; `Ttype` is a term with nested multi-specs.
-
-
 ;;
+;; `Ttype` is a term with nested multi-specs.
+;;
+
+
+;; ----------------------------------------------------------------
 ;; ## Prerequisite Types and Aliases
 ;;
 ;;
 
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::ttype* (s/coll-of ::ttype))
 ;; #+end_src
 
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
 ;; #+begin_src clojure
 
 (defmacro .? [ttype]
@@ -2157,19 +2212,11 @@
 (s/def ::type-param*      ::ttype*)
 ;; #+end_src
 
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::symbols (s/coll-of ::symbol))
 ;; #+end_src
 
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::symbol?     (.? ::symbol))
@@ -2177,19 +2224,11 @@
 (s/def ::is-restriction  ::bool)
 ;; #+end_src
 
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::expr* (s/coll-of ::expr))
 ;; #+end_src
 
-;;
-;; TODO: Consider a regex-spec.
-;;
-;;
 ;; #+begin_src clojure
 
 (s/def ::expr? (.? ::expr))
@@ -2199,19 +2238,20 @@
 
 ;; #+begin_src clojure
 
-(s/def ::len         ::int)   ;; Issues #36
-(s/def ::disposition #{'compile-time-length   ;; >= 0
+(s/def ::len            ::int)   ;; Issues #36
+(s/def ::disposition    #{'compile-time-length   ;; >= 0
                        'inferred-at-run-time  ;; = -1
                        'allocatable           ;; = -2
                        'run-time-expression}) ;; = -3
-(s/def ::len-expr?   ::expr?) ;; TODO: check that it's >= 0
+(s/def ::len-expr?      ::expr?) ;; TODO: check that it's >= 0
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## Kind
 ;;
 ;;
 
+;;
 ;; The `kind` member selects the kind of a given `ttype`.
 ;; MASR currently supports the following:
 ;;
@@ -2234,9 +2274,9 @@
 ;;    default integer"; we currently use `kind=4` as
 ;;    default for Integer, so we also use `kind=4` as
 ;;    default for Logical.
+;;
 
-;;
-;;
+;; ----------------------------------------------------------------
 ;; ## Support Specs For Kinds
 ;;
 ;;
@@ -2249,7 +2289,7 @@
 (s/def ::character-kind #{1})
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## Heavy Sugar for `ttype`
 ;;
 ;;
@@ -2278,7 +2318,7 @@
       ::invalid-ttype)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## Sugar for the Kinds
 ;;
 ;;
@@ -2351,7 +2391,7 @@
        )))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## INTEGER, REAL, COMPLEX, LOGICAL
 ;;
 ;;
@@ -2365,7 +2405,7 @@
 (def-ttype-and-head Logical)
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## CHARACTER
 ;;
 ;;
@@ -2427,12 +2467,12 @@
 ;; #+end_src
 
 
-;;
+;; ----------------------------------------------------------------
 ;; ## FUNCTION-TYPE
 ;;
 ;;
 
-
+;;
 ;; This is a rich `ttype` that we spell out by hand.
 ;;
 ;;
@@ -2495,7 +2535,7 @@
       :invalid-function-type)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## TODO The Rest of the `ttypes`
 ;;
 ;;
@@ -2530,9 +2570,11 @@
 ;;
 
 
-;; things we haven't fully defined yet
-
 ;;
+;; things we haven't fully defined yet
+;;
+
+;; ----------------------------------------------------------------
 ;; ## UNKNOWN TUPLE
 ;;
 ;;
@@ -2541,7 +2583,7 @@
 (s/def ::while-exit-target      empty?)
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## SYMBOLIC VALUE
 ;;
 ;;
@@ -2566,7 +2608,7 @@
 ;;
 ;;
 
-;;
+;; ----------------------------------------------------------------
 ;; ## Prerequisite Types and Aliases
 ;;
 ;;
@@ -2603,15 +2645,15 @@
 
 ;; #+begin_src clojure
 
-(s/def ::return-type   ::ttype)
+(s/def ::return-type          ::ttype)
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::varnym        ::identifier)
+(s/def ::varnym               ::identifier)
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ### Logical Types
 ;;
 ;;
@@ -2619,30 +2661,30 @@
 ;; #+begin_src clojure
 
 (s/def ::logical-expr
-  (s/or :logical-constant   ::LogicalConstant
-        :logical-compare    ::LogicalCompare
-        :integer-compare    ::IntegerCompare
-        :real-compare       ::RealCompare
-        :complex-compare    ::ComplexCompare
-        :logical-binop      ::LogicalBinOp
-        :logical-not        ::LogicalNot
-        :cast               ::Cast      ;; TODO check return type!
-        :if-expr            ::IfExp     ;; TODO check return type!
-        :named-expr         ::NamedExpr ;; TODO check return type!
-        :var                ::Var       ;; TODO check return type!
+  (s/or :logical-constant     ::LogicalConstant
+        :logical-compare      ::LogicalCompare
+        :integer-compare      ::IntegerCompare
+        :real-compare         ::RealCompare
+        :complex-compare      ::ComplexCompare
+        :logical-binop        ::LogicalBinOp
+        :logical-not          ::LogicalNot
+        :cast                 ::Cast      ;; TODO check return type!
+        :if-expr              ::IfExp     ;; TODO check return type!
+        :named-expr           ::NamedExpr ;; TODO check return type!
+        :var                  ::Var       ;; TODO check return type!
         ))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::logical-expr?  (.? ::logical-expr))
-(s/def ::logical-value?     ::logical-expr?)
+(s/def ::logical-expr?    (.? ::logical-expr))
+(s/def ::logical-value?       ::logical-expr?)
 
-(s/def ::logical-left       ::logical-expr)
-(s/def ::logical-right      ::logical-expr)
+(s/def ::logical-left         ::logical-expr)
+(s/def ::logical-right        ::logical-expr)
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ### Integer Types
 ;;
 ;;
@@ -2650,28 +2692,28 @@
 ;; #+begin_src clojure
 
 (s/def ::integer-expr
-  (s/or :integer-constant    ::IntegerConstant
-        :integer-binop       ::IntegerBinOp
-        :integer-unary-minus ::IntegerUnaryMinus
-        :integer-bit-not     ::IntegerBitNot
-        :string-ord          ::StringOrd
-        :cast                ::Cast      ;; TODO check return type!
-        :if-expr             ::IfExp     ;; TODO check return type!
-        :named-expr          ::NamedExpr ;; TODO check return type!
-        :var                 ::Var       ;; TODO check return type!
+  (s/or :integer-constant     ::IntegerConstant
+        :integer-binop        ::IntegerBinOp
+        :integer-unary-minus  ::IntegerUnaryMinus
+        :integer-bit-not      ::IntegerBitNot
+        :string-ord           ::StringOrd
+        :cast                 ::Cast      ;; TODO check return type!
+        :if-expr              ::IfExp     ;; TODO check return type!
+        :named-expr           ::NamedExpr ;; TODO check return type!
+        :var                  ::Var       ;; TODO check return type!
         ))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::integer-expr?  (.? ::integer-expr))
-(s/def ::integer-value?     ::integer-expr?)
+(s/def ::integer-expr?    (.? ::integer-expr))
+(s/def ::integer-value?       ::integer-expr?)
 
-(s/def ::integer-left  ::integer-expr)
-(s/def ::integer-right ::integer-expr)
+(s/def ::integer-left         ::integer-expr)
+(s/def ::integer-right        ::integer-expr)
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ### Real Types
 ;;
 ;;
@@ -2679,26 +2721,26 @@
 ;; #+begin_src clojure
 
 (s/def ::real-expr
-  (s/or :real-constant    ::RealConstant
-        :real-binop       ::RealBinOp
-        :real-unary-minus ::RealUnaryMinus
-        :cast             ::Cast      ;; TODO check return type!
-        :if-expr          ::IfExp     ;; TODO check return type!
-        :named-expr       ::NamedExpr ;; TODO check return type!
-        :var              ::Var       ;; TODO check return type!
+  (s/or :real-constant        ::RealConstant
+        :real-binop           ::RealBinOp
+        :real-unary-minus     ::RealUnaryMinus
+        :cast                 ::Cast      ;; TODO check return type!
+        :if-expr              ::IfExp     ;; TODO check return type!
+        :named-expr           ::NamedExpr ;; TODO check return type!
+        :var                  ::Var       ;; TODO check return type!
         ))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::real-expr?  (.? ::real-expr))
-(s/def ::real-value?     ::real-expr?)
+(s/def ::real-expr?       (.? ::real-expr))
+(s/def ::real-value?          ::real-expr?)
 
-(s/def ::real-left  ::real-expr)
-(s/def ::real-right ::real-expr)
+(s/def ::real-left            ::real-expr)
+(s/def ::real-right           ::real-expr)
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ### Complex Types
 ;;
 ;;
@@ -2706,35 +2748,35 @@
 ;; #+begin_src clojure
 
 (s/def ::complex-expr
-  (s/or :complex-constant    ::ComplexConstant
-        ;; :complex-binop       ::ComplexBinOp
-        :complex-unary-minus ::ComplexUnaryMinus
-        :cast                ::Cast      ;; TODO check return type!
-        :if-expr             ::IfExp     ;; TODO check return type!
-        :named-expr          ::NamedExpr ;; TODO check return type!
-        :var                 ::Var       ;; TODO check return type!
+  (s/or :complex-constant     ::ComplexConstant
+        :complex-binop        ::ComplexBinOp
+        :complex-unary-minus  ::ComplexUnaryMinus
+        :cast                 ::Cast      ;; TODO check return type!
+        :if-expr              ::IfExp     ;; TODO check return type!
+        :named-expr           ::NamedExpr ;; TODO check return type!
+        :var                  ::Var       ;; TODO check return type!
         ))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::real-part      ::float)
-(s/def ::imiginary-part ::float)
+(s/def ::real-part            ::float)
+(s/def ::imiginary-part       ::float)
 
-(s/def ::complex-left  ::complex-expr)
-(s/def ::complex-right ::complex-expr)
+(s/def ::complex-left         ::complex-expr)
+(s/def ::complex-right        ::complex-expr)
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::complex-expr?  (.? ::complex-expr))
-(s/def ::complex-value?     ::complex-expr?)
+(s/def ::complex-expr?    (.? ::complex-expr))
+(s/def ::complex-value?       ::complex-expr?)
 
-(s/def ::complex-left  ::complex-expr)
-(s/def ::complex-right ::complex-expr)
+(s/def ::complex-left         ::complex-expr)
+(s/def ::complex-right        ::complex-expr)
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ### String Types
 ;;
 ;;
@@ -2742,18 +2784,28 @@
 ;; #+begin_src clojure
 
 (s/def ::string-expr
-  (s/or :string-constant  ::StringConstant
-        :string-repeat    ::StringRepeat
+  (s/or :string-constant      ::StringConstant
+        :string-repeat        ::StringRepeat
         ))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::string-expr? (.? ::string-expr))
-(s/def ::string-value?    ::string-expr?)
+(s/def ::string-expr?     (.? ::string-expr))
+(s/def ::string-value?        ::string-expr?)
 ;; #+end_src
 
-;;
+
+;; For `IntrinsicFunction`:
+
+
+;; #+begin_src clojure
+
+(s/def ::intrinsic-ident      ::identifier)
+(s/def ::overload-id          ::nat)
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ## INTEGER BIT NOT
 ;;
 ;;
@@ -2784,7 +2836,7 @@
       :invalid-integer-bit-not)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## INTEGER, REAL, COMPLEX UNARY MINUS
 ;;
 ;;
@@ -2832,7 +2884,7 @@
 (typed-uminus Complex)
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## CAST
 ;;
 ;;
@@ -2884,7 +2936,7 @@
       :invalid-cast)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## IF EXP
 ;;
 ;;
@@ -2939,7 +2991,7 @@
       :invalid-if-exp)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## NAMED EXPR
 ;;
 ;;
@@ -2960,8 +3012,7 @@
 (NamedExpr
  (Var 2 y)
  (IntegerConstant 0 (Integer 4 []))
- (Integer 4 [])
- )
+ (Integer 4 [])    )
 ;; #+end_src
 
 ;;
@@ -2982,7 +3033,7 @@
       :invalid-named-expr)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## FUNCTION CALL
 ;;
 ;;
@@ -3012,8 +3063,7 @@
  []
  (Integer 4 [])
  ()
- ()
- )
+ ()    )
 ;; #+end_src
 
 ;;
@@ -3025,15 +3075,15 @@
                       return-type value? dt?]
   (let [cnd {::term ::expr,
              ::asr-expr-head
-             {::expr-head ::FunctionCall
-              ::nymref      (apply symbol-ref fn-nymref)
-              ::orig-nymref (if (empty? orig-nymref)
-                              orig-nymref
-                              (apply symbol-ref orig-nymref))
-              ::call-args   call-args
-              ::return-type return-type
-              ::value?      value?
-              ::dt?         dt? ;; TODO check arithmetic
+             {::expr-head    ::FunctionCall
+              ::nymref       (apply symbol-ref fn-nymref)
+              ::orig-nymref  (if (empty? orig-nymref)
+                               orig-nymref
+                               (apply symbol-ref orig-nymref))
+              ::call-args    call-args
+              ::return-type  return-type
+              ::value?       value?
+              ::dt?          dt? ;; TODO check arithmetic
               }}]
     (if (s/valid? ::FunctionCall cnd)
       cnd
@@ -3066,17 +3116,91 @@
                     ~dt?)))
 ;; #+end_src
 
+;; ----------------------------------------------------------------
+;; ## INTRINSIC FUNCTION
 ;;
+;;
+
+;;
+;; ### Original ASDL
+;;
+;; ```c
+;; IntrinsicFunction(int    intrinsic_id,
+;;                   expr * args,
+;;                   int    overload_id,
+;;                   ttype  type,
+;;                   expr?  value)
+;; ```
+;;
+
+;;
+;; ### Example
+;;
+;; #+begin_src clojure
+
+#_
+(IntrinsicFunction
+ Abs
+ [(RealBinOp
+   (Var 2 a3)
+   Sub
+   (RealConstant
+    9.000000
+    (Real 8 []))
+   (Real 8 [])    ()    )]
+ 0
+ (Real 8 [])   ()   )
+;; #+end_src
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn IntrinsicFunction--
+  [intrinsic-ident    call-arg-or-args    overload-id
+   return-type        value?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head           ::IntrinsicFunction
+              ::intrinsic-ident     intrinsic-ident
+              ::call-arg-or-args    call-arg-or-args
+              ::overload-id         overload-id
+              ::return-type         return-type
+              ::value?              value?
+              }}]
+    (if (s/valid? ::IntrinsicFunction cnd)
+      cnd
+      :invalid-intrinsic-function)))
+;; #+end_src
+
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+(defmacro IntrinsicFunction
+  "Quote the intrinsic identifier."
+  [intrinsic-ident    call-args    overload-id
+   return-type        value?]
+  `(IntrinsicFunction--
+    '~intrinsic-ident, ~call-args, ~overload-id,
+    ~return-type,      ~value?))
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ## LOGICAL, INTEGER, REAL CONSTANTS
 ;;
 ;;
 
+;;
 ;; To reduce code duplication, we want to write
 ;; something like the following automatically for
 ;; Logical, Integer, and Real. String is a special
 ;; case because its ttype is Character and not
 ;; String. Complex is a special case because it
 ;; takes two Real inputs. Write those by hand.
+;;
 
 ;; #+begin_src clojure
 
@@ -3088,7 +3212,7 @@
                  ::bool      a-bool
                  ::Logical   a-ttype}}]
        (if (s/valid? ::LogicalConstant cnd) cnd
-         :invalid-logical-constant)))
+           :invalid-logical-constant)))
     ([a-bool] "unary"
      (LogicalConstant a-bool (Logical))))
 ;; #+end_src
@@ -3144,7 +3268,7 @@
 (typed-constant Integer int)
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## STRING CONSTANT
 ;;
 ;;
@@ -3186,7 +3310,7 @@
    (StringConstant string (Character))))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## STRING REPEAT
 ;;
 ;;
@@ -3214,7 +3338,7 @@
    (StringRepeat string-expr (Character) ())))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## COMPLEX CONSTANT
 ;;
 ;;
@@ -3258,7 +3382,7 @@
    (ComplexConstant re-float, im-float, (Complex))))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## VAR
 ;;
 ;;
@@ -3281,8 +3405,6 @@
 ;; ```c
 ;; Var(symtab_id stid, identifier it)
 ;; ```
-;;
-;;
 
 ;;
 ;; ### Heavy Sugar
@@ -3314,7 +3436,7 @@
 ;; TODO: make Var look up a value in the
 ;; symbol-table! That's part of abstract execution.
 
-;;
+;; ----------------------------------------------------------------
 ;; ## STRING ORD
 ;;
 ;;
@@ -3385,12 +3507,7 @@
    (StringOrd strconst, (Integer) int-val?)))
 ;; #+end_src
 
-;;
-;; ## LOGICAL, INTEGER, REAL BINOP
-;;
-;;
-
-;;
+;; ----------------------------------------------------------------
 ;; ## LOGICAL BINOP
 ;;
 ;;
@@ -3441,7 +3558,7 @@
       :invalid-logical-bin-op)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## INTEGER BINOP
 ;;
 ;;
@@ -3497,7 +3614,7 @@
       :invalid-integer-bin-op)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## REAL BINOP
 ;;
 ;;
@@ -3566,7 +3683,56 @@
     `(RealBinOp-- ~left- ~rop ~right- ~rtt- ~rval?-)))
 ;; #+end_src
 
+;; ----------------------------------------------------------------
+;; ## COMPLEX BINOP
 ;;
+;;
+
+;;
+;; ### Original ASDL
+;;
+;; ```c
+;; | ComplexBinOp(expr  left,
+;;                binop op,
+;;                expr  right,
+;;                ttype type,
+;;                expr? value)
+;; ```
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn ComplexBinOp-- [left- bo- right- ctt- cval?-]
+  "Must use CAdd, CMul, etc."
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::ComplexBinOp
+              ::complex-left   left-
+              ::complex-binop  bo-
+              ::complex-right  right-
+              ::Complex        ctt-
+              ::complex-value? cval?- ;; TODO: Check arithmetic!
+              }}]
+    (if (s/valid? ::ComplexBinOp cnd)
+      cnd
+      :invalid-complex-bin-op)))
+;; #+end_src
+
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+(defmacro ComplexBinOp
+  "Must use Add, Mul, etc."
+  [left- bo- right- ctt- cval?-]
+  (let [rop (symbol (str "C" bo-))]
+    `(ComplexBinOp-- ~left- ~rop ~right- ~ctt- ~cval?-)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ## INTEGER COMPARE
 ;;
 ;;
@@ -3615,7 +3781,7 @@
       :invalid-integer-compare)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## REAL COMPARE
 ;;
 ;;
@@ -3650,7 +3816,7 @@
     `(RealCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## COMPLEX COMPARE
 ;;
 ;;
@@ -3685,7 +3851,7 @@
     `(ComplexCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## STRING COMPARE
 ;;
 ;;
@@ -3720,7 +3886,7 @@
     `(StringCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## LOGICAL COMPARE
 ;;
 ;;
@@ -3781,7 +3947,7 @@
     `(LogicalCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## LOGICAL NOT
 ;;
 ;;
@@ -3811,6 +3977,11 @@
       :invalid-logical-not)))
 ;; #+end_src
 
+;; ----------------------------------------------------------------
+;; ## ABS INTRINSIC
+;;
+;;
+
 
 ;;
 ;;
@@ -3818,7 +3989,7 @@
 ;;
 ;;
 
-;;
+;; ----------------------------------------------------------------
 ;; ## Prerequisite Types and Aliases
 ;;
 ;;
@@ -3840,22 +4011,22 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::lvalue     ::Var)
-(s/def ::rvalue     ::expr)
-(s/def ::overloaded ::stmt?)
+(s/def ::lvalue             ::Var)
+(s/def ::rvalue             ::expr)
+(s/def ::overloaded         ::stmt?)
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::symbol-ref? (.? ::symbol-ref))
+(s/def ::symbol-ref?    (.? ::symbol-ref))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::format?    ::expr?)
-(s/def ::value*     ::expr*)
-(s/def ::separator? ::expr?)
-(s/def ::end?       ::expr?)
+(s/def ::format?            ::expr?)
+(s/def ::value*             ::expr*)
+(s/def ::separator?         ::expr?)
+(s/def ::end?               ::expr?)
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -3924,7 +4095,7 @@
                             :nil empty?))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## EXPLICIT DEALLOCATE
 ;;
 ;;
@@ -3951,7 +4122,7 @@
       :invalid-explicit-deallocate)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## ASSERT
 ;;
 ;;
@@ -3979,7 +4150,7 @@
       :invalid-if)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## IF
 ;;
 ;;
@@ -4003,20 +4174,15 @@
   (StringOrd
    (StringConstant
     "3"
-    (Character 1 1 () [])
-    )
+    (Character 1 1 () [])  )
    (Integer 4 [])
-   (IntegerConstant 51 (Integer 4 []))
-   )
-  (Integer 4 [])
-  )
+   (IntegerConstant 51 (Integer 4 []))  )
+  (Integer 4 [])  )
  [(=
    (Var 2 x)
    (IntegerConstant 1 (Integer 4 []))
    ()
-   )]
- []
- )
+   )]  []  )
 ;; #+end_src
 
 ;;
@@ -4036,7 +4202,7 @@
       :invalid-if)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## ASSIGNMENT
 ;;
 ;;
@@ -4075,7 +4241,7 @@
 ;; #+end_src
 
 
-;;
+;; ----------------------------------------------------------------
 ;; ## WHILE LOOP
 ;;
 ;;
@@ -4126,9 +4292,7 @@
       :invalid-while-loop)))
 ;; #+end_src
 
-
-;;
-;;
+;; ----------------------------------------------------------------
 ;; ## PRINT
 ;;
 ;;
@@ -4141,7 +4305,6 @@
 ;; ```
 ;;
 
-;;
 ;;
 ;; ### Heavy Sugar
 ;;
@@ -4162,7 +4325,7 @@
       :invalid-print)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## RETURN
 ;;
 ;;
@@ -4178,7 +4341,7 @@
       :invalid-return)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## SUBROUTINE CALL
 ;;
 ;;
@@ -4197,12 +4360,6 @@
 ;;                  call_arg * args,          ~~~> call_args
 ;;                  expr     ? dt)
 ;; ```
-
-
-;; #+begin_src clojure
-
-(s/def ::call-args (s/coll-of ::call-arg))
-;; #+end_src
 
 ;; #+begin_src clojure
 
@@ -4274,7 +4431,7 @@
 ;;
 ;;
 
-;;
+;; ----------------------------------------------------------------
 ;; ## EXTERNAL SYMBOL
 ;;
 ;;
@@ -4371,7 +4528,7 @@
      ~access)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## VARIABLE
 ;;
 ;;
@@ -4553,7 +4710,7 @@
     ~value-attr-))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## INTRINSIC MODULE
 ;;
 ;;
@@ -4588,7 +4745,7 @@
   `(IntrinsicModule-- '~modnym))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## MODULE
 ;;
 ;;
@@ -4640,7 +4797,7 @@
       ~intrinsic-)))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## FUNCTION
 ;;
 ;;
@@ -4712,7 +4869,7 @@
                ~access-, ~determ, ~sefree))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## PROGRAM
 ;;
 ;;
@@ -4768,7 +4925,7 @@
 ;;
 ;;
 
-
+;; ----------------------------------------------------------------
 ;; ## Prerequisite Type Aliases
 ;;
 ;;
@@ -4797,7 +4954,7 @@
 (s/def ::nodes (s/coll-of ::node))
 ;; #+end_src
 
-;;
+;; ----------------------------------------------------------------
 ;; ## TRANSLATION UNIT
 ;;
 ;;

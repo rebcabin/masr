@@ -34,6 +34,7 @@
 ;; | ' \ || | '  \| '_ \/ -_) '_(_-<
 ;; |_||_\_,_|_|_|_|_.__/\___|_| /__/
 
+
 (let [huge     951132862023730457951132862023730457
       biggish  4200000000000
       biggest  0x7FFFFFFFFFFFFFFF
@@ -1275,6 +1276,72 @@
   (is (s/valid? ::asr/expr? (legacy (Var 42 x))))
   (is (s/valid? ::asr/expr  (legacy (Var 42 x))))
   (is (s/valid? ::asr/Var   (legacy (Var 42 x))))  )
+
+
+;;  ___     _       _         _    ___             _   _
+;; |_ _|_ _| |_ _ _(_)_ _  __(_)__| __|  _ _ _  __| |_(_)___ _ _
+;;  | || ' \  _| '_| | ' \(_-< / _| _| || | ' \/ _|  _| / _ \ ' \
+;; |___|_||_\__|_| |_|_||_/__/_\__|_| \_,_|_||_\__|\__|_\___/_||_|
+
+
+(deftest intrinsic-function-test
+  (is (s/valid? ::asr/intrinsic-ident 'Abs))
+  (is (s/valid? ::asr/call-arg-or-args
+                [(RealBinOp
+                  (Var 2 a3)
+                  Sub
+                  (RealConstant 9.000000 (Real 8 []))
+                  (Real 8 [])  ()  )]))
+  (let [arg (legacy
+             (RealBinOp
+              (Var 2 a3)
+              Sub
+              (RealConstant 9.000000 (Real 8 []))
+              (Real 8 [])  ()  ))]
+    (is (s/valid? ::asr/call-arg [arg]))
+    (is (s/valid? ::asr/expr?     arg)))
+  (is (s/valid? ::asr/IntrinsicFunction
+                (legacy
+                 (IntrinsicFunction
+                  Abs
+                  [(RealBinOp
+                    (Var 2 a3)
+                    Sub
+                    (RealConstant 9.000000 (Real 8 []))
+                    (Real 8 [])  ()  )]
+                  0
+                  (Real 8 [])  ()  )
+                 ))))
+
+
+;;   ___                _         ___ _      ___
+;;  / __|___ _ __  _ __| |_____ _| _ |_)_ _ / _ \ _ __
+;; | (__/ _ \ '  \| '_ \ / -_) \ / _ \ | ' \ (_) | '_ \
+;;  \___\___/_|_|_| .__/_\___/_\_\___/_|_||_\___/| .__/
+;;                |_|                            |_|
+
+
+(deftest complex-binop-test
+  (is (s/valid? ::asr/ComplexBinOp
+                (legacy
+                 (ComplexBinOp
+                  (Cast
+                   (IntegerConstant 5 (Integer 4 []))
+                   IntegerToComplex
+                   (Complex 4 [])
+                   (ComplexConstant 5.000000 0.000000
+                    (Complex 4 []) ) )
+                  Add
+                  (Cast
+                   (ComplexConstant 0.000000 6.000000
+                    (Complex 8 []) )
+                   ComplexToComplex
+                   (Complex 4 [])
+                   (ComplexConstant 0.000000 6.000000
+                    (Complex 4 []) ) )
+                  (Complex 4 [])
+                  (ComplexConstant 5.000000 6.000000
+                   (Complex 4 []) ) )))))
 
 
 ;; ================================================================
@@ -4623,7 +4690,7 @@
 
     (testing "whole translation unit for -expr13-10040d8"
       (is (s/valid? ::asr/unit (long-form-asr "-expr13-10040d8"))))
-    #_
+
     (testing "whole translation unit for -expr_14-6023c49"
       (is (s/valid? ::asr/unit (long-form-asr "-expr_14-6023c49"))))
 
