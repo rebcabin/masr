@@ -4615,6 +4615,12 @@
     (testing "whole translation unit for -expr10-31c163f"
       (is (s/valid? ::asr/unit (long-form-asr "-expr10-31c163f"))))
 
+    (testing "whole translation unit for -expr11-1134d3f"
+      (is (s/valid? ::asr/unit (long-form-asr "-expr11-1134d3f"))))
+    #_
+    (testing "whole translation unit for -expr12-2a30333"
+      (is (s/valid? ::asr/unit (long-form-asr "-expr12-2a30333"))))
+
     ))
 
 

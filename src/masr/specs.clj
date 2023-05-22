@@ -1294,7 +1294,7 @@
 
 (defmasrtype
   WhileLoop stmt
-  (while-exit-target    test-expr    body))
+  (loop-exit-target    test-expr    body))
 ;; #+end_src
 
 ;;
@@ -1416,12 +1416,12 @@
 
 ;; #+begin_src clojure
 
-;; #+begin_src clojure
-
 (defmasrtype
   ComplexUnaryMinus expr
   (complex-expr, Complex, complex-value?))
 ;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   StringConstant expr
@@ -1431,8 +1431,15 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  StringRepeat expr
+  (string-expr integer-expr Character string-expr?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   StringOrd expr
-  (StringConstant Integer IntegerConstant?))
+  (string-expr Integer IntegerConstant?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2568,7 +2575,6 @@
 ;; #+begin_src clojure
 
 (s/def ::return-type   ::ttype)
-(s/def ::value?        ::expr?)
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2620,6 +2626,7 @@
         :integer-binop       ::IntegerBinOp
         :integer-unary-minus ::IntegerUnaryMinus
         :integer-bit-not     ::IntegerBitNot
+        :string-ord          ::StringOrd
         :cast                ::Cast      ;; TODO check return type!
         :if-expr             ::IfExp     ;; TODO check return type!
         :named-expr          ::NamedExpr ;; TODO check return type!
@@ -2699,6 +2706,23 @@
 (s/def ::complex-right ::complex-expr)
 ;; #+end_src
 
+;;
+;; ### String Types
+;;
+;;
+
+;; #+begin_src clojure
+
+(s/def ::string-expr
+  (s/or :string-constant  ::StringConstant
+        :string-repeat    ::StringRepeat
+        ))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::string-expr? (.? ::string-expr))
+;; #+end_src
 
 ;;
 ;; ## INTEGER BIT NOT
@@ -3138,6 +3162,34 @@
 ;; #+end_src
 
 ;;
+;; ## STRING REPEAT
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn StringRepeat
+  ([string-expr, integer-expr, char-ttype, compiler-computed?]
+   "quaternary"
+   (let [cnd {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ::StringRepeat
+               ::string-expr    string-expr
+               ::integer-expr   integer-expr
+               ::Character      char-ttype
+               ::string-expr?   compiler-computed?}}]
+     (if (s/valid? ::StringRepeat cnd)
+       cnd
+       :invalid-string-repeated)))
+  ([string-expr integer-expr]
+   "binary"
+   (StringRepeat string-expr (Character) ())))
+;; #+end_src
+
+;;
 ;; ## COMPLEX CONSTANT
 ;;
 ;;
@@ -3271,12 +3323,12 @@
 ;; #+begin_src clojure
 
 (defn StringOrd--
-  ([strconst, int-ttype, int-val?]
+  ([strexpr, int-ttype, int-val?]
    "trinary"
    (let [cnd {::term ::expr,
               ::asr-expr-head
               {::expr-head ::StringOrd
-               ::StringConstant      strconst
+               ::string-expr         strexpr
                ::Integer             int-ttype
                ::IntegerConstant?    int-val?}}]
      (if (s/valid? ::StringOrd cnd)
@@ -3292,12 +3344,13 @@
 ;; #+begin_src clojure
 
 (defn StringOrd
-  ([strconst, int-ttype, int-val?]
-   "trinary"
+  ([strexpr, int-ttype, int-val?]
+   "trinary ... Return ascii value of the indicated
+   character in the string."
    (let [cnd {::term ::expr,
               ::asr-expr-head
               {::expr-head ::StringOrd
-               ::StringConstant      strconst
+               ::string-expr         strexpr
                ::Integer             int-ttype
                ::IntegerConstant?    int-val?}}]
      (if (s/valid? ::StringOrd cnd)
@@ -3935,9 +3988,9 @@
   (let [cnd {::term ::stmt
              ::asr-stmt-head
              {::stmt-head ::WhileLoop
-              ::while-exit-target exit-target
-              ::test-expr         test-expr
-              ::body              body}}]
+              ::loop-exit-target exit-target
+              ::test-expr        test-expr
+              ::body             body}}]
     (if (s/valid? ::WhileLoop cnd)
       cnd
       :invalid-while-loop)))
