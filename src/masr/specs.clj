@@ -1406,6 +1406,20 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  ComplexRe expr
+  (complex-expr    Real    real-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  ComplexIm expr
+  (complex-expr    Real    real-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   RealCompare expr
   (real-left       real-cmpop      real-right
                    Logical         logical-value?))
@@ -3731,6 +3745,43 @@
   (let [rop (symbol (str "C" bo-))]
     `(ComplexBinOp-- ~left- ~rop ~right- ~ctt- ~cval?-)))
 ;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## COMPLEX RE
+;;
+;; #+begin_src clojure
+
+(defn ComplexRe [cexpr, rtt, rv?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::ComplexRe
+              ::complex-expr   cexpr
+              ::Real           rtt
+              ::real-value?    rv? ;; TODO: Check arithmetic!
+              }}]
+    (if (s/valid? ::ComplexRe cnd)
+      cnd
+      :invalid-complex-re)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## COMPLEX IM
+;;
+;; #+begin_src clojure
+
+(defn ComplexIm [cexpr, rtt, rv?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::ComplexIm
+              ::complex-expr   cexpr
+              ::Real           rtt
+              ::real-value?    rv? ;; TODO: Check arithmetic!
+              }}]
+    (if (s/valid? ::ComplexIm cnd)
+      cnd
+      :invalid-complex-im)))
+;; #+end_src
+
 
 ;; ----------------------------------------------------------------
 ;; ## INTEGER COMPARE

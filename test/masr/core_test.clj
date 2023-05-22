@@ -4694,6 +4694,12 @@
     (testing "whole translation unit for -expr_14-6023c49"
       (is (s/valid? ::asr/unit (long-form-asr "-expr_14-6023c49"))))
 
+    (testing "whole translation unit for -test_bool_binop-3075d22"
+      (is (s/valid? ::asr/unit (long-form-asr "-test_bool_binop-3075d22"))))
+
+    (testing "whole translation unit for -test_complex_01-c199562"
+      (is (s/valid? ::asr/unit (long-form-asr "-test_complex_01-c199562"))))
+
     ))
 
 

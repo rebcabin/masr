@@ -156,28 +156,30 @@
     - [31.19.1. Original ASDL](#31191-original-asdl)
     - [31.19.2. Heavy Sugar](#31192-heavy-sugar)
     - [31.19.3. Legacy Sugar](#31193-legacy-sugar)
-  - [31.20. INTEGER COMPARE](#3120-integer-compare)
-    - [31.20.1. Original ASDL](#31201-original-asdl)
-    - [31.20.2. Example](#31202-example)
-    - [31.20.3. Heavy Sugar](#31203-heavy-sugar)
-  - [31.21. REAL COMPARE](#3121-real-compare)
-    - [31.21.1. Heavy Sugar](#31211-heavy-sugar)
-    - [31.21.2. Legacy Sugar](#31212-legacy-sugar)
-  - [31.22. COMPLEX COMPARE](#3122-complex-compare)
-    - [31.22.1. Heavy Sugar](#31221-heavy-sugar)
-    - [31.22.2. Legacy Sugar](#31222-legacy-sugar)
-  - [31.23. STRING COMPARE](#3123-string-compare)
+  - [31.20. COMPLEX RE](#3120-complex-re)
+  - [31.21. COMPLEX IM](#3121-complex-im)
+  - [31.22. INTEGER COMPARE](#3122-integer-compare)
+    - [31.22.1. Original ASDL](#31221-original-asdl)
+    - [31.22.2. Example](#31222-example)
+    - [31.22.3. Heavy Sugar](#31223-heavy-sugar)
+  - [31.23. REAL COMPARE](#3123-real-compare)
     - [31.23.1. Heavy Sugar](#31231-heavy-sugar)
     - [31.23.2. Legacy Sugar](#31232-legacy-sugar)
-  - [31.24. LOGICAL COMPARE](#3124-logical-compare)
-    - [31.24.1. Original ASDL](#31241-original-asdl)
-    - [31.24.2. Example](#31242-example)
-    - [31.24.3. Heavy Sugar](#31243-heavy-sugar)
-    - [31.24.4. Legacy Sugar](#31244-legacy-sugar)
-  - [31.25. LOGICAL NOT](#3125-logical-not)
-    - [31.25.1. Original ASDL](#31251-original-asdl)
-    - [31.25.2. Heavy Sugar](#31252-heavy-sugar)
-  - [31.26. ABS INTRINSIC](#3126-abs-intrinsic)
+  - [31.24. COMPLEX COMPARE](#3124-complex-compare)
+    - [31.24.1. Heavy Sugar](#31241-heavy-sugar)
+    - [31.24.2. Legacy Sugar](#31242-legacy-sugar)
+  - [31.25. STRING COMPARE](#3125-string-compare)
+    - [31.25.1. Heavy Sugar](#31251-heavy-sugar)
+    - [31.25.2. Legacy Sugar](#31252-legacy-sugar)
+  - [31.26. LOGICAL COMPARE](#3126-logical-compare)
+    - [31.26.1. Original ASDL](#31261-original-asdl)
+    - [31.26.2. Example](#31262-example)
+    - [31.26.3. Heavy Sugar](#31263-heavy-sugar)
+    - [31.26.4. Legacy Sugar](#31264-legacy-sugar)
+  - [31.27. LOGICAL NOT](#3127-logical-not)
+    - [31.27.1. Original ASDL](#31271-original-asdl)
+    - [31.27.2. Heavy Sugar](#31272-heavy-sugar)
+  - [31.28. ABS INTRINSIC](#3128-abs-intrinsic)
 - [32. STMT](#32-stmt)
   - [32.1. Prerequisite Types and Aliases](#321-prerequisite-types-and-aliases)
   - [32.2. EXPLICIT DEALLOCATE](#322-explicit-deallocate)
@@ -1475,6 +1477,16 @@ via `s/def`.
   ComplexBinOp expr
   (complex-left    complex-binop    complex-right
                    Complex          complex-value?))
+```
+```clojure
+(defmasrtype
+  ComplexRe expr
+  (complex-expr    Real    real-value?))
+```
+```clojure
+(defmasrtype
+  ComplexIm expr
+  (complex-expr    Real    real-value?))
 ```
 ```clojure
 (defmasrtype
@@ -3465,11 +3477,43 @@ TODO: make Var look up a value in the
     `(ComplexBinOp-- ~left- ~rop ~right- ~ctt- ~cval?-)))
 ```
 ----------------------------------------------------------------
-## 31.20. INTEGER COMPARE
+## 31.20. COMPLEX RE
+
+```clojure
+(defn ComplexRe [cexpr, rtt, rv?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::ComplexRe
+              ::complex-expr   cexpr
+              ::Real           rtt
+              ::real-value?    rv? ;; TODO: Check arithmetic!
+              }}]
+    (if (s/valid? ::ComplexRe cnd)
+      cnd
+      :invalid-complex-re)))
+```
+----------------------------------------------------------------
+## 31.21. COMPLEX IM
+
+```clojure
+(defn ComplexIm [cexpr, rtt, rv?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::ComplexIm
+              ::complex-expr   cexpr
+              ::Real           rtt
+              ::real-value?    rv? ;; TODO: Check arithmetic!
+              }}]
+    (if (s/valid? ::ComplexIm cnd)
+      cnd
+      :invalid-complex-im)))
+```
+----------------------------------------------------------------
+## 31.22. INTEGER COMPARE
 
 
 
-### 31.20.1. Original ASDL
+### 31.22.1. Original ASDL
 
 ```c
 | IntegerCompare(expr  left,
@@ -3479,7 +3523,7 @@ TODO: make Var look up a value in the
                  expr? value)
 ```
 
-### 31.20.2. Example
+### 31.22.2. Example
 
 ```clojure
 #_
@@ -3491,7 +3535,7 @@ TODO: make Var look up a value in the
  ())
 ```
 
-### 31.20.3. Heavy Sugar
+### 31.22.3. Heavy Sugar
 
 ```clojure
 (defn IntegerCompare [l- cmp- r- tt- val?-]
@@ -3508,11 +3552,11 @@ TODO: make Var look up a value in the
       :invalid-integer-compare)))
 ```
 ----------------------------------------------------------------
-## 31.21. REAL COMPARE
+## 31.23. REAL COMPARE
 
 
 
-### 31.21.1. Heavy Sugar
+### 31.23.1. Heavy Sugar
 
 ```clojure
 (defn RealCompare-- [l- cmp- r- tt- val?-]
@@ -3529,7 +3573,7 @@ TODO: make Var look up a value in the
       :invalid-real-compare)))
 ```
 
-### 31.21.2. Legacy Sugar
+### 31.23.2. Legacy Sugar
 
 ```clojure
 (defmacro RealCompare
@@ -3538,11 +3582,11 @@ TODO: make Var look up a value in the
     `(RealCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ```
 ----------------------------------------------------------------
-## 31.22. COMPLEX COMPARE
+## 31.24. COMPLEX COMPARE
 
 
 
-### 31.22.1. Heavy Sugar
+### 31.24.1. Heavy Sugar
 
 ```clojure
 (defn ComplexCompare-- [l- cmp- r- tt- val?-]
@@ -3559,7 +3603,7 @@ TODO: make Var look up a value in the
       :invalid-complex-compare)))
 ```
 
-### 31.22.2. Legacy Sugar
+### 31.24.2. Legacy Sugar
 
 ```clojure
 (defmacro ComplexCompare
@@ -3568,11 +3612,11 @@ TODO: make Var look up a value in the
     `(ComplexCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ```
 ----------------------------------------------------------------
-## 31.23. STRING COMPARE
+## 31.25. STRING COMPARE
 
 
 
-### 31.23.1. Heavy Sugar
+### 31.25.1. Heavy Sugar
 
 ```clojure
 (defn StringCompare-- [l- cmp- r- tt- val?-]
@@ -3589,7 +3633,7 @@ TODO: make Var look up a value in the
       :invalid-string-compare)))
 ```
 
-### 31.23.2. Legacy Sugar
+### 31.25.2. Legacy Sugar
 
 ```clojure
 (defmacro StringCompare
@@ -3598,11 +3642,11 @@ TODO: make Var look up a value in the
     `(StringCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ```
 ----------------------------------------------------------------
-## 31.24. LOGICAL COMPARE
+## 31.26. LOGICAL COMPARE
 
 
 
-### 31.24.1. Original ASDL
+### 31.26.1. Original ASDL
 
 ```c
 | LogicalCompare(expr left,   ;; must have type ::Logical
@@ -3613,7 +3657,7 @@ TODO: make Var look up a value in the
 ```
 
 
-### 31.24.2. Example
+### 31.26.2. Example
 
 ```clojure
 #_
@@ -3624,7 +3668,7 @@ TODO: make Var look up a value in the
   (Logical 4 []) ())
 ```
 
-### 31.24.3. Heavy Sugar
+### 31.26.3. Heavy Sugar
 
 ```clojure
 (defn LogicalCompare-- [l- cmp- r- tt- val?-]
@@ -3642,7 +3686,7 @@ TODO: make Var look up a value in the
       :invalid-logical-compare)))
 ```
 
-### 31.24.4. Legacy Sugar
+### 31.26.4. Legacy Sugar
 
 ```clojure
 (defmacro LogicalCompare
@@ -3652,17 +3696,17 @@ TODO: make Var look up a value in the
     `(LogicalCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ```
 ----------------------------------------------------------------
-## 31.25. LOGICAL NOT
+## 31.27. LOGICAL NOT
 
 
 
-### 31.25.1. Original ASDL
+### 31.27.1. Original ASDL
 
 ```c
 LogicalNot(expr arg, ttype type, expr? value)
 ```
 
-### 31.25.2. Heavy Sugar
+### 31.27.2. Heavy Sugar
 
 ```clojure
 (defn LogicalNot
@@ -3678,7 +3722,7 @@ LogicalNot(expr arg, ttype type, expr? value)
       :invalid-logical-not)))
 ```
 ----------------------------------------------------------------
-## 31.26. ABS INTRINSIC
+## 31.28. ABS INTRINSIC
 
 
 
