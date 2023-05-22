@@ -17,6 +17,10 @@ Radiation. Yes, it's a physics pun. We like physics puns.
 
 `specs.md`
 
+Looks best in the IntelliJ IDEs. Doesn't look so good in
+Visual-Studio Code. Any renderer of Markdown should be
+serviceable.
+
 # Modify
 
 - Write Clojure code and Markdown in `specs.clj` and `core_tests.clj`.

@@ -1564,8 +1564,8 @@ via `s/def`.
 ```clojure
 (defmasrtype
   IntrinsicFunction expr
-  (intrinsic-ident    call-arg-or-args      overload-id
-                      return-type           value?))
+  (intrinsic-ident    expr*          overload-id
+                      return-type    value?))
 ```
 ```clojure
 (defmasrtype
@@ -2957,13 +2957,13 @@ IntrinsicFunction(int    intrinsic_id,
 
 ```clojure
 (defn IntrinsicFunction--
-  [intrinsic-ident    call-arg-or-args    overload-id
+  [intrinsic-ident    expr*    overload-id
    return-type        value?]
   (let [cnd {::term ::expr,
              ::asr-expr-head
              {::expr-head           ::IntrinsicFunction
               ::intrinsic-ident     intrinsic-ident
-              ::call-arg-or-args    call-arg-or-args
+              ::expr*               expr*
               ::overload-id         overload-id
               ::return-type         return-type
               ::value?              value?
@@ -2978,10 +2978,10 @@ IntrinsicFunction(int    intrinsic_id,
 ```clojure
 (defmacro IntrinsicFunction
   "Quote the intrinsic identifier."
-  [intrinsic-ident    call-args    overload-id
+  [intrinsic-ident    expr*    overload-id
    return-type        value?]
   `(IntrinsicFunction--
-    '~intrinsic-ident, ~call-args, ~overload-id,
+    '~intrinsic-ident, ~expr*, ~overload-id,
     ~return-type,      ~value?))
 ```
 ----------------------------------------------------------------
