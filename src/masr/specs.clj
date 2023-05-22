@@ -1658,7 +1658,7 @@
          ;; Replace ((Var 42 i)) with [(Var 42 i)]...
          (vec x) ;; ... and other such cases.
          ;; Replace = in function position of a list.
-         (replace {'= 'Assignment--} x))
+         (replace {'= 'Assignment} x))
        x))
    it))
 ;; #+end_src
@@ -4279,7 +4279,7 @@
 ;;
 ;; #+begin_src clojure
 
-(defn Assignment-- [lhs, rhs, unk]
+(defn Assignment [lhs, rhs, unk]
   (let [cnd {::term ::stmt,
              ::asr-stmt-head
              {::stmt-head   ::Assignment

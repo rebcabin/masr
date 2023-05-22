@@ -1419,12 +1419,12 @@
 
 (deftest Assignment-test
   (is (s/valid? ::asr/Assignment
-                (Assignment--
+                (Assignment
                  (Var 2 a)
                  (LogicalConstant false (Logical 4 []))
                  ())))
   (testing "legacy"
-    (is (= (Assignment--
+    (is (= (Assignment
             (Var 2 a)
             (LogicalConstant false (Logical 4 []))
             ())
