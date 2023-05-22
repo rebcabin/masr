@@ -151,14 +151,23 @@
     - [31.18.1. Original ASDL](#31181-original-asdl)
     - [31.18.2. Example](#31182-example)
     - [31.18.3. Heavy Sugar](#31183-heavy-sugar)
-  - [31.19. LOGICAL COMPARE](#3119-logical-compare)
-    - [31.19.1. Original ASDL](#31191-original-asdl)
-    - [31.19.2. Example](#31192-example)
-    - [31.19.3. Heavy Sugar](#31193-heavy-sugar)
-    - [31.19.4. Legacy Sugar](#31194-legacy-sugar)
-  - [31.20. LOGICAL NOT](#3120-logical-not)
-    - [31.20.1. Original ASDL](#31201-original-asdl)
-    - [31.20.2. Heavy Sugar](#31202-heavy-sugar)
+  - [31.19. REAL COMPARE](#3119-real-compare)
+    - [31.19.1. Heavy Sugar](#31191-heavy-sugar)
+    - [31.19.2. Legacy Sugar](#31192-legacy-sugar)
+  - [31.20. COMPLEX COMPARE](#3120-complex-compare)
+    - [31.20.1. Heavy Sugar](#31201-heavy-sugar)
+    - [31.20.2. Legacy Sugar](#31202-legacy-sugar)
+  - [31.21. STRING COMPARE](#3121-string-compare)
+    - [31.21.1. Heavy Sugar](#31211-heavy-sugar)
+    - [31.21.2. Legacy Sugar](#31212-legacy-sugar)
+  - [31.22. LOGICAL COMPARE](#3122-logical-compare)
+    - [31.22.1. Original ASDL](#31221-original-asdl)
+    - [31.22.2. Example](#31222-example)
+    - [31.22.3. Heavy Sugar](#31223-heavy-sugar)
+    - [31.22.4. Legacy Sugar](#31224-legacy-sugar)
+  - [31.23. LOGICAL NOT](#3123-logical-not)
+    - [31.23.1. Original ASDL](#31231-original-asdl)
+    - [31.23.2. Heavy Sugar](#31232-heavy-sugar)
 - [32. STMT](#32-stmt)
   - [32.1. Prerequisite Types and Aliases](#321-prerequisite-types-and-aliases)
   - [32.2. EXPLICIT DEALLOCATE](#322-explicit-deallocate)
@@ -1404,8 +1413,8 @@ via `s/def`.
 ```clojure
 (defmasrtype
   IntegerCompare expr
-  (integer-left    cmpop           integer-right
-                   Integer         integer-value?))
+  (integer-left    integer-cmpop   integer-right
+                   Logical         logical-value?))
 ```
 ```clojure
 (defmasrtype
@@ -1417,6 +1426,24 @@ via `s/def`.
   RealBinOp expr
   (real-left       real-binop      real-right
                    Real            real-value?))
+```
+```clojure
+(defmasrtype
+  RealCompare expr
+  (real-left       real-cmpop      real-right
+                   Logical         logical-value?))
+```
+```clojure
+(defmasrtype
+  StringCompare expr
+  (string-left     string-cmpop    string-right
+                   Logical         logical-value?))
+```
+```clojure
+(defmasrtype
+  ComplexCompare expr
+  (complex-left    complex-cmpop   complex-right
+                   Logical         logical-value?))
 ```
 ```clojure
 (defmasrtype
@@ -1432,7 +1459,7 @@ via `s/def`.
 ```clojure
 (defmasrtype
   LogicalCompare expr
-  (logical-left    logicalcmpop    logical-right
+  (logical-left    logical-cmpop   logical-right
                    Logical         logical-value?))
 ```
 ```clojure
@@ -1910,10 +1937,15 @@ via one macro, `enum-like`.
 (enum-like integer-binop #{'Add 'Sub 'Mul 'Div 'Pow
                            'BitAnd 'BitOr 'BitXor
                            'BitLShift 'BitRShift})
-(enum-like cmpop         #{'Eq 'NotEq  'Lt  'LtE  'Gt  'GtE })
+(enum-like integer-cmpop #{'Eq 'NotEq  'Lt  'LtE  'Gt  'GtE})
+(enum-like real-cmpop    #{'REq 'RNotEq  'RLt  'RLtE  'RGt  'RGtE})
+(enum-like complex-cmpop #{'CEq 'CNotEq})
+(enum-like string-cmpop  #{'SEq 'SNotEq  'SLt  'SLtE  'SGt  'SGtE})
 ;; Collisions of names are NOT ALLOWED!
 ;; See Legacy Sugar for `LogicalCompare.`
-(enum-like logicalcmpop  #{'LEq 'LNotEq})
+(enum-like logical-cmpop #{'LEq 'LNotEq
+                           ;; some weird ones: see Issue #38
+                           'LLt  'LLtE  'LGt  'LGtE})
 (enum-like intent        #{'Local 'In 'Out 'InOut 'ReturnVar
                            'Unspecified})
 (enum-like storage-type  #{'Default, 'Save, 'Parameter, 'Allocatable})
@@ -2452,15 +2484,14 @@ things we haven't fully defined yet
   (s/or :logical-constant   ::LogicalConstant
         :logical-compare    ::LogicalCompare
         :integer-compare    ::IntegerCompare
-        ;; :real-compare       ::RealCompare
-        ;; :complex-compare    ::ComplexCompare
+        :real-compare       ::RealCompare
+        :complex-compare    ::ComplexCompare
         :logical-binop      ::LogicalBinOp
         :logical-not        ::LogicalNot
         :cast               ::Cast      ;; TODO check return type!
         :if-expr            ::IfExp     ;; TODO check return type!
         :named-expr         ::NamedExpr ;; TODO check return type!
         :var                ::Var       ;; TODO check return type!
-        ;; TODO: integer-compare, etc.
         ))
 ```
 ```clojure
@@ -2557,6 +2588,7 @@ things we haven't fully defined yet
 ```
 ```clojure
 (s/def ::string-expr? (.? ::string-expr))
+(s/def ::string-value?    ::string-expr?)
 ```
 
 ## 31.2. INTEGER BIT NOT
@@ -2703,10 +2735,6 @@ IntegerBitNot(expr arg, ttype type, expr? value)
  (LogicalConstant true (Logical 4 []))
  (LogicalConstant false (Logical 4 []))
  (Logical 4 []) () )
-(defmasrtype
-  IfExp expr
-  (test-expr body orelse ttype value?))
-
 ```
 
 ### 31.5.3. Heavy Sugar
@@ -3315,20 +3343,110 @@ symbol-table! That's part of abstract execution.
              ::asr-expr-head
              {::expr-head      ::IntegerCompare
               ::integer-left   l-
-              ::cmpop          cmp-
+              ::integer-cmpop  cmp-
               ::integer-right  r-
-              ::Integer        tt-
-              ::integer-value? val?-}}]
+              ::Logical        tt-
+              ::logical-value? val?-}}]
     (if (s/valid? ::IntegerCompare cnd)
       cnd
       :invalid-integer-compare)))
 ```
 
-## 31.19. LOGICAL COMPARE
+## 31.19. REAL COMPARE
 
 
 
-### 31.19.1. Original ASDL
+### 31.19.1. Heavy Sugar
+
+```clojure
+(defn RealCompare-- [l- cmp- r- tt- val?-]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head   ::RealCompare
+              ::real-left   l-
+              ::real-cmpop  cmp-
+              ::real-right  r-
+              ::Logical     tt-
+              ::logical-value? val?-}}]
+    (if (s/valid? ::RealCompare cnd)
+      cnd
+      :invalid-real-compare)))
+```
+
+### 31.19.2. Legacy Sugar
+
+```clojure
+(defmacro RealCompare
+  [l- cmp- r- tt- val?-]
+  (let [lop (symbol (str "R" cmp-))]
+    `(RealCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
+```
+
+## 31.20. COMPLEX COMPARE
+
+
+
+### 31.20.1. Heavy Sugar
+
+```clojure
+(defn ComplexCompare-- [l- cmp- r- tt- val?-]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head   ::ComplexCompare
+              ::complex-left   l-
+              ::complex-cmpop  cmp-
+              ::complex-right  r-
+              ::Logical        tt-
+              ::logical-value? val?-}}]
+    (if (s/valid? ::ComplexCompare cnd)
+      cnd
+      :invalid-complex-compare)))
+```
+
+### 31.20.2. Legacy Sugar
+
+```clojure
+(defmacro ComplexCompare
+  [l- cmp- r- tt- val?-]
+  (let [lop (symbol (str "C" cmp-))]
+    `(ComplexCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
+```
+
+## 31.21. STRING COMPARE
+
+
+
+### 31.21.1. Heavy Sugar
+
+```clojure
+(defn StringCompare-- [l- cmp- r- tt- val?-]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head   ::StringCompare
+              ::string-left    l-
+              ::string-cmpop   cmp-
+              ::string-right   r-
+              ::Logical        tt-
+              ::logical-value? val?-}}]
+    (if (s/valid? ::StringCompare cnd)
+      cnd
+      :invalid-string-compare)))
+```
+
+### 31.21.2. Legacy Sugar
+
+```clojure
+(defmacro StringCompare
+  [l- cmp- r- tt- val?-]
+  (let [lop (symbol (str "S" cmp-))]
+    `(StringCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
+```
+
+## 31.22. LOGICAL COMPARE
+
+
+
+### 31.22.1. Original ASDL
 
 ```c
 | LogicalCompare(expr left,   ;; must have type ::Logical
@@ -3339,7 +3457,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### 31.19.2. Example
+### 31.22.2. Example
 
 ```clojure
 #_
@@ -3350,7 +3468,7 @@ symbol-table! That's part of abstract execution.
   (Logical 4 []) ())
 ```
 
-### 31.19.3. Heavy Sugar
+### 31.22.3. Heavy Sugar
 
 ```clojure
 (defn LogicalCompare-- [l- cmp- r- tt- val?-]
@@ -3359,7 +3477,7 @@ symbol-table! That's part of abstract execution.
              ::asr-expr-head
              {::expr-head      ::LogicalCompare
               ::logical-left   l-
-              ::logicalcmpop   cmp-
+              ::logical-cmpop  cmp-
               ::logical-right  r-
               ::Logical        tt-
               ::logical-value? val?-}}]
@@ -3368,21 +3486,27 @@ symbol-table! That's part of abstract execution.
       :invalid-logical-compare)))
 ```
 
-### 31.19.4. Legacy Sugar
+### 31.22.4. Legacy Sugar
+
+```clojure
+(defmacro LogicalCompare
+  "Must use Eq, NotEq."
+  [l- cmp- r- tt- val?-]
+  (let [lop (symbol (str "L" cmp-))]
+    `(LogicalCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
+```
+
+## 31.23. LOGICAL NOT
 
 
 
-## 31.20. LOGICAL NOT
-
-
-
-### 31.20.1. Original ASDL
+### 31.23.1. Original ASDL
 
 ```c
 LogicalNot(expr arg, ttype type, expr? value)
 ```
 
-### 31.20.2. Heavy Sugar
+### 31.23.2. Heavy Sugar
 
 ```clojure
 (defn LogicalNot

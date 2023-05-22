@@ -4623,6 +4623,9 @@
 
     (testing "whole translation unit for -expr13-10040d8"
       (is (s/valid? ::asr/unit (long-form-asr "-expr13-10040d8"))))
+    #_
+    (testing "whole translation unit for -expr_14-6023c49"
+      (is (s/valid? ::asr/unit (long-form-asr "-expr_14-6023c49"))))
 
     ))
 
@@ -4633,7 +4636,7 @@
                               (IntegerConstant 5 (Integer 4 []))
                               Gt
                               (IntegerConstant 4 (Integer 4 []))
-                              (Integer 4 [])
+                              (Integer 4 []) ;; <~~~ booger
                               (LogicalConstant
                                true
                                (Logical 4 [])
