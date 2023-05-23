@@ -4868,6 +4868,13 @@
     (test-unit -test_complex_01-c199562)
     (test-unit -test_complex_02-6516823)
     (test-unit -test_builtin-4f04bbc)
+    (test-unit -test_builtin_abs-06a7e49)
+    (test-unit -test_builtin_bin-0ca34fe)
+    (test-unit -test_builtin_bool-fe3fe33)
+    (test-unit -test_builtin_float-97f9316)
+    (test-unit -test_builtin_hex-d4abc3e)
+    (test-unit -test_builtin_int-990d1de)
+    #_(test-unit -test_builtin_len-922cf65)
 
     ))
 
