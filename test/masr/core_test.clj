@@ -1070,15 +1070,6 @@
 
 (deftest StringOrd-test
   (is (s/valid? ::asr/StringOrd
-                (StringOrd--
-                 (StringConstant "boofar"),
-                 (Integer),
-                 (IntegerConstant 51 (Integer)))))
-  (is (s/valid? ::asr/StringOrd
-                (StringOrd--
-                 (StringConstant "boofar"),
-                 (IntegerConstant 51 (Integer)))))
-  (is (s/valid? ::asr/StringOrd
                 (StringOrd
                  (StringConstant "boofar"),
                  (Integer),
@@ -4543,6 +4534,13 @@
            eval)))
 
 
+(defmacro test-unit [filenamefrag]
+  (let [tstr (str "whole translation unit for " filenamefrag)
+        fstr (str filenamefrag)]
+    `(testing ~tstr
+       (is (s/valid? ::asr/unit (long-form-asr ~fstr))))))
+
+
 (deftest slurp-test
   (let [hand-written-quoted-e2e0267
         '(TranslationUnit
@@ -4852,56 +4850,24 @@
     (testing "textual identity of slurped e2e0267"
       (is (= hand-written-quoted-e2e0267 slurped-e2e0267)))
 
-    (testing "whole translation unit for 5311701"
-      (is (s/valid? ::asr/unit (long-form-asr "_expr2_5311701"))))
-
-    (testing "whole translation unit for dde511e"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr1-dde511e"))))
-
-    (testing "whole translation unit for 03055c0"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr_01-03055c0"))))
-
-    (testing "whole translation unit for eafd41c"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr_01-eafd41c"))))
-
-    (testing "whole translation unit for -expr4-cf512ef"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr4-cf512ef"))))
-
-    (testing "whole translation unit for -expr6-bfb3384"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr6-bfb3384"))))
-
-    (testing "whole translation unit for -expr7-2ef3822"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr7-2ef3822"))))
-
-    (testing "whole translation unit for -expr8-2a4630a"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr8-2a4630a"))))
-
-    (testing "whole translation unit for -expr9-c6fe691"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr9-c6fe691"))))
-
-    (testing "whole translation unit for -expr10-31c163f"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr10-31c163f"))))
-
-    (testing "whole translation unit for -expr11-1134d3f"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr11-1134d3f"))))
-
-    (testing "whole translation unit for -expr12-2a30333"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr12-2a30333"))))
-
-    (testing "whole translation unit for -expr13-10040d8"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr13-10040d8"))))
-
-    (testing "whole translation unit for -expr_14-6023c49"
-      (is (s/valid? ::asr/unit (long-form-asr "-expr_14-6023c49"))))
-
-    (testing "whole translation unit for -test_bool_binop-3075d22"
-      (is (s/valid? ::asr/unit (long-form-asr "-test_bool_binop-3075d22"))))
-
-    (testing "whole translation unit for -test_complex_01-c199562"
-      (is (s/valid? ::asr/unit (long-form-asr "-test_complex_01-c199562"))))
-
-    (testing "whole translation unit for -test_complex_02-6516823"
-      (is (s/valid? ::asr/unit (long-form-asr "-test_complex_02-6516823"))))
+    (test-unit _expr2_5311701)
+    (test-unit -expr1-dde511e)
+    (test-unit -expr_01-03055c0)
+    (test-unit -expr_01-eafd41c)
+    (test-unit -expr4-cf512ef)
+    (test-unit -expr6-bfb3384)
+    (test-unit -expr7-2ef3822)
+    (test-unit -expr8-2a4630a)
+    (test-unit -expr9-c6fe691)
+    (test-unit -expr10-31c163f)
+    (test-unit -expr11-1134d3f)
+    (test-unit -expr12-2a30333)
+    (test-unit -expr13-10040d8)
+    (test-unit -expr_14-6023c49)
+    (test-unit -test_bool_binop-3075d22)
+    (test-unit -test_complex_01-c199562)
+    (test-unit -test_complex_02-6516823)
+    (test-unit -test_builtin-4f04bbc)
 
     ))
 

@@ -1517,7 +1517,14 @@
 
 (defmasrtype
   StringOrd expr
-  (string-expr Integer IntegerConstant?))
+  (string-expr Integer integer-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  StringChr expr
+  (string-expr Character string-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -3452,6 +3459,35 @@
 ;; symbol-table! That's part of abstract execution.
 
 ;; ----------------------------------------------------------------
+;; ## STRING CHR
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn StringChr
+  ([str-expr, char-ttype, string-val?]
+   "trinary ... Return ascii value of the indicated
+   character in the string."
+   (let [cnd {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ::StringChr
+               ::string-expr       str-expr
+               ::Character         char-ttype
+               ::string-value?     string-val?}}]
+     (if (s/valid? ::StringChr cnd)
+       cnd
+       :invalid-string-chr)))
+  ([str-expr, string-val?]
+   (StringChr str-expr, (Character) string-val?)))
+;; #+end_src
+
+
+
+;; ----------------------------------------------------------------
 ;; ## STRING ORD
 ;;
 ;;
@@ -3480,46 +3516,25 @@
 ;; #+end_src
 
 ;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn StringOrd--
-  ([strexpr, int-ttype, int-val?]
-   "trinary"
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::StringOrd
-               ::string-expr         strexpr
-               ::Integer             int-ttype
-               ::IntegerConstant?    int-val?}}]
-     (if (s/valid? ::StringOrd cnd)
-       cnd
-       :invalid-string-ord)))
-  ([strconst, int-val?]
-   (StringOrd-- strconst, (Integer) int-val?)))
-;; #+end_src
-
-;;
 ;; ### Legacy Sugar
 ;;
 ;; #+begin_src clojure
 
 (defn StringOrd
-  ([strexpr, int-ttype, int-val?]
+  ([str-expr, int-ttype, int-val?]
    "trinary ... Return ascii value of the indicated
    character in the string."
    (let [cnd {::term ::expr,
               ::asr-expr-head
               {::expr-head ::StringOrd
-               ::string-expr         strexpr
-               ::Integer             int-ttype
-               ::IntegerConstant?    int-val?}}]
+               ::string-expr       str-expr
+               ::Integer           int-ttype
+               ::integer-value?    int-val?}}]
      (if (s/valid? ::StringOrd cnd)
        cnd
        :invalid-string-ord)))
-  ([strconst, int-val?]
-   (StringOrd strconst, (Integer) int-val?)))
+  ([str-expr, int-val?]
+   (StringOrd str-expr, (Integer) int-val?)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
