@@ -72,11 +72,12 @@
     - [29.7.1. Original ASDL](#2971-original-asdl)
     - [29.7.2. Example](#2972-example)
     - [29.7.3. Heavy Sugar](#2973-heavy-sugar)
-  - [29.8. FUNCTION-TYPE](#298-function-type)
-    - [29.8.1. Original ASDL](#2981-original-asdl)
-    - [29.8.2. Heavy Sugar](#2982-heavy-sugar)
-  - [29.9. TODO The Rest of the `ttypes`](#299-todo-the-rest-of-the-ttypes)
+  - [29.8. TUPLE](#298-tuple)
+  - [29.9. FUNCTION-TYPE](#299-function-type)
     - [29.9.1. Original ASDL](#2991-original-asdl)
+    - [29.9.2. Heavy Sugar](#2992-heavy-sugar)
+  - [29.10. TODO The Rest of the `ttypes`](#2910-todo-the-rest-of-the-ttypes)
+    - [29.10.1. Original ASDL](#29101-original-asdl)
 - [30. PLACEHOLDERS](#30-placeholders)
   - [30.1. UNKNOWN TUPLE](#301-unknown-tuple)
   - [30.2. SYMBOLIC VALUE](#302-symbolic-value)
@@ -1621,6 +1622,11 @@ via `s/def`.
 ```
 ```clojure
 (defmasrtype
+  Tuple ttype
+  (ttype*))
+```
+```clojure
+(defmasrtype
   Character ttype
   (character-kind len disposition len-expr? dimension*))
 ```
@@ -2389,14 +2395,27 @@ See also `defmasrtypes` at top of the file.
    (Character 1 1 () [])))
 ```
 ----------------------------------------------------------------
-## 29.8. FUNCTION-TYPE
+## 29.8. TUPLE
+
+```clojure
+(defn Tuple [ttypes]
+  (let [cnd {::term ::ttype,
+             ::asr-ttype-head
+             {::expr-head ::Tuple
+              ::ttype*   ttypes}}]
+    (if (s/valid? ::Tuple cnd)
+      cnd
+      :invalid-tuple)))
+```
+----------------------------------------------------------------
+## 29.9. FUNCTION-TYPE
 
 
 
 This is a rich `ttype` that we spell out by hand.
 
 
-### 29.8.1. Original ASDL
+### 29.9.1. Original ASDL
 
 ```c
 | FunctionType(ttype*  arg_types,       ;; rename param-type*
@@ -2414,7 +2433,7 @@ This is a rich `ttype` that we spell out by hand.
                bool    is_restriction)
 ```
 
-### 29.8.2. Heavy Sugar
+### 29.9.2. Heavy Sugar
 
 
 ```clojure
@@ -2453,10 +2472,10 @@ This is a rich `ttype` that we spell out by hand.
       :invalid-function-type)))
 ```
 ----------------------------------------------------------------
-## 29.9. TODO The Rest of the `ttypes`
+## 29.10. TODO The Rest of the `ttypes`
 
 
-### 29.9.1. Original ASDL
+### 29.10.1. Original ASDL
 
 ```c
 >>> Integer, Real, Complex, Logical are already done ...
@@ -2465,7 +2484,7 @@ This is a rich `ttype` that we spell out by hand.
 | Character(int kind, int len, expr? len_expr, dimension* dims)
 | Set(ttype type)
 | List(ttype type)
-| Tuple(ttype* type)
+>>> Tuple(ttype* type)
 | Struct(symbol derived_type, dimension* dims)
 | Enum(symbol enum_type, dimension *dims)
 | Union(symbol union_type, dimension *dims)

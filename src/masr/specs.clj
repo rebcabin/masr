@@ -1596,6 +1596,13 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  Tuple ttype
+  (ttype*))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   Character ttype
   (character-kind len disposition len-expr? dimension*))
 ;; #+end_src
@@ -2487,6 +2494,21 @@
    (Character 1 1 () [])))
 ;; #+end_src
 
+;; ----------------------------------------------------------------
+;; ## TUPLE
+;;
+;; #+begin_src clojure
+
+(defn Tuple [ttypes]
+  (let [cnd {::term ::ttype,
+             ::asr-ttype-head
+             {::expr-head ::Tuple
+              ::ttype*   ttypes}}]
+    (if (s/valid? ::Tuple cnd)
+      cnd
+      :invalid-tuple)))
+;; #+end_src
+
 
 ;; ----------------------------------------------------------------
 ;; ## FUNCTION-TYPE
@@ -2569,7 +2591,7 @@
 ;; | Character(int kind, int len, expr? len_expr, dimension* dims)
 ;; | Set(ttype type)
 ;; | List(ttype type)
-;; | Tuple(ttype* type)
+;; >>> Tuple(ttype* type)
 ;; | Struct(symbol derived_type, dimension* dims)
 ;; | Enum(symbol enum_type, dimension *dims)
 ;; | Union(symbol union_type, dimension *dims)
