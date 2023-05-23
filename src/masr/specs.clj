@@ -1459,6 +1459,20 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  ListConstant expr
+  (expr* ttype))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  ListLen expr
+  (list-expr Integer integer-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   LogicalCompare expr
   (logical-left    logical-cmpop   logical-right
                    Logical         logical-value?))
@@ -1517,6 +1531,13 @@
 
 (defmasrtype
   StringOrd expr
+  (string-expr Integer integer-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  StringLen expr
   (string-expr Integer integer-value?))
 ;; #+end_src
 
@@ -1598,6 +1619,20 @@
 (defmasrtype
   Tuple ttype
   (ttype*))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  List ttype
+  (ttype))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  Set ttype
+  (ttype))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2509,6 +2544,35 @@
       :invalid-tuple)))
 ;; #+end_src
 
+;; ----------------------------------------------------------------
+;; ## List
+;;
+;; #+begin_src clojure
+
+(defn List [ttype]
+  (let [cnd {::term ::ttype,
+             ::asr-ttype-head
+             {::expr-head ::List
+              ::ttype   ttype}}]
+    (if (s/valid? ::List cnd)
+      cnd
+      :invalid-list)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## Set
+;;
+;; #+begin_src clojure
+
+(defn Set [ttype]
+  (let [cnd {::term ::ttype,
+             ::asr-ttype-head
+             {::expr-head ::Set
+              ::ttype   ttype}}]
+    (if (s/valid? ::Set cnd)
+      cnd
+      :invalid-set)))
+;; #+end_src
 
 ;; ----------------------------------------------------------------
 ;; ## FUNCTION-TYPE
@@ -2589,8 +2653,8 @@
 ;; >>> FunctionType is done.
 ;; >>> Here are the rest of the ttypes.
 ;; | Character(int kind, int len, expr? len_expr, dimension* dims)
-;; | Set(ttype type)
-;; | List(ttype type)
+;; >>> Set(ttype type)
+;; >>> List(ttype type)
 ;; >>> Tuple(ttype* type)
 ;; | Struct(symbol derived_type, dimension* dims)
 ;; | Enum(symbol enum_type, dimension *dims)
@@ -2743,6 +2807,7 @@
         :integer-unary-minus  ::IntegerUnaryMinus
         :integer-bit-not      ::IntegerBitNot
         :string-ord           ::StringOrd
+        :string-len           ::StringLen
         :cast                 ::Cast      ;; TODO check return type!
         :if-expr              ::IfExp     ;; TODO check return type!
         :named-expr           ::NamedExpr ;; TODO check return type!
@@ -2823,6 +2888,18 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
+;; ### List Types
+;;
+;;
+
+;; #+begin_src clojure
+
+(s/def ::list-expr
+  (s/or :list-constant        ::ListConstant
+        ))
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ### String Types
 ;;
 ;;
@@ -2831,6 +2908,7 @@
 
 (s/def ::string-expr
   (s/or :string-constant      ::StringConstant
+        :string-chr           ::StringChr
         :string-repeat        ::StringRepeat
         ))
 ;; #+end_src
@@ -3507,7 +3585,32 @@
    (StringChr str-expr, (Character) string-val?)))
 ;; #+end_src
 
+;; ----------------------------------------------------------------
+;; ## STRING LEN
+;;
+;;
 
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+(defn StringLen
+  ([str-expr, int-ttype, int-val?]
+   "trinary ... Return ascii value of the indicated
+   character in the string."
+   (let [cnd {::term ::expr,
+              ::asr-expr-head
+              {::expr-head ::StringLen
+               ::string-expr       str-expr
+               ::Integer           int-ttype
+               ::integer-value?    int-val?}}]
+     (if (s/valid? ::StringLen cnd)
+       cnd
+       :invalid-string-len)))
+  ([str-expr, int-val?]
+   (StringLen str-expr, (Integer) int-val?)))
+;; #+end_src
 
 ;; ----------------------------------------------------------------
 ;; ## STRING ORD
@@ -3557,6 +3660,52 @@
        :invalid-string-ord)))
   ([str-expr, int-val?]
    (StringOrd str-expr, (Integer) int-val?)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## LIST CONSTANT
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn ListConstant [expr* ttype]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::ListConstant
+              ::expr*          expr*
+              ;; TODO: check that all exprs have the ttype
+              ::ttype          ttype
+              }}]
+    (if (s/valid? ::ListConstant cnd)
+      cnd
+      :invalid-list-constant)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## LIST LEN
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn ListLen [list-expr int-ttype int-val?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::ListLen
+              ::list-expr      list-expr
+              ::Integer        ttype
+              ::integer-value? int-val?
+              }}]
+    (if (s/valid? ::ListLen cnd)
+      cnd
+      :invalid-list-len)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
