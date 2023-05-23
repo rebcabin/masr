@@ -1140,8 +1140,8 @@ multi-specs.
    ::logical-kind "int kind"
    ::logicalbinop "logicalbinop"
    ::lvalue       "expr target"
-   ::nymref       "symbol name"
-   ::orig-nymref  "symbol? original_name"
+   ::symbol-ref   "symbol name"
+   ::orig-symref  "symbol? original_name"
    ::overloaded   "stmt? overloaded"
    ::prognym      "identifier program_name"
    ::rvalue       "expr value"
@@ -1415,7 +1415,7 @@ via `s/def`.
 ```clojure
 (defmasrtype
   SubroutineCall stmt
-  (nymref    orig-nymref    call-args    dt?))
+  (symbol-ref    orig-symref    call-args    dt?))
 ```
 ```clojure
 (defmasrtype
@@ -1582,8 +1582,8 @@ via `s/def`.
 ```clojure
 (defmasrtype
   FunctionCall expr
-  (nymref    orig-nymref    call-args
-             return-type    value?    dt?))
+  (symbol-ref    orig-symref    call-args
+                 return-type    value?    dt?))
 ```
 ----------------------------------------------------------------
 ## 20.5. TTYPE
@@ -1677,7 +1677,7 @@ appropriate.
          ;; Replace ((Var 42 i)) with [(Var 42 i)]...
          (vec x) ;; ... and other such cases.
          ;; Replace = in function position of a list.
-         (replace {'= 'Assignment--} x))
+         (replace {'= 'Assignment} x))
        x))
    it))
 ```
@@ -2525,6 +2525,8 @@ things we haven't fully defined yet
 (s/def ::symbol-ref
   (s/keys :req [::identifier
                 ::symtab-id]))
+(s/def ::symbol-ref? (.? ::symbol-ref))
+(s/def ::orig-symref ::symbol-ref?)
 ```
 ```clojure
 (defn symbol-ref [ident, stid]
@@ -2884,21 +2886,19 @@ IntegerBitNot(expr arg, ttype type, expr? value)
  []
  (Integer 4 [])
  ()
- ()    )
+ () )
 ```
 
 ### 31.7.3. Heavy Sugar
 
 ```clojure
-(defn FunctionCall-- [fn-nymref orig-nymref call-args
+(defn FunctionCall-- [fn-symref orig-symref call-args
                       return-type value? dt?]
   (let [cnd {::term ::expr,
              ::asr-expr-head
              {::expr-head    ::FunctionCall
-              ::nymref       (apply symbol-ref fn-nymref)
-              ::orig-nymref  (if (empty? orig-nymref)
-                               orig-nymref
-                               (apply symbol-ref orig-nymref))
+              ::symbol-ref   fn-symref
+              ::orig-symref  orig-symref
               ::call-args    call-args
               ::return-type  return-type
               ::value?       value?
@@ -2916,7 +2916,7 @@ IntegerBitNot(expr arg, ttype type, expr? value)
   ;; heptenary
   ([stid, ident, orig-symref,
     args, rettype, value?, dt?]
-   `(FunctionCall-- ['~ident ~stid]
+   `(FunctionCall-- (symbol-ref '~ident ~stid)
                     ~orig-symref
                     ~args
                     ~rettype
@@ -2925,8 +2925,8 @@ IntegerBitNot(expr arg, ttype type, expr? value)
   ;; octenary
   ([stid, ident, ostid, oident,
     args, rettype, value?, dt?]
-   `(FunctionCall-- ['~ident, ~stid]
-                    ['~oident, ~ostid]
+   `(FunctionCall-- (symbol-ref '~ident, ~stid)
+                    (symbol-ref '~oident, ~ostid)
                     ~args
                     ~rettype
                     ~value?
@@ -3922,7 +3922,7 @@ https://github.com/rebcabin/masr/issues/26
 ### 32.5.3. Heavy Sugar
 
 ```clojure
-(defn Assignment-- [lhs, rhs, unk]
+(defn Assignment [lhs, rhs, unk]
   (let [cnd {::term ::stmt,
              ::asr-stmt-head
              {::stmt-head   ::Assignment
@@ -4031,8 +4031,8 @@ abuses the word `symbol` to mean a `symbol-ref`.
 
 
 ```c
-| SubroutineCall(symbol     name,          ~~~> nymref
-                 symbol   ? original_name, ~~~> orig-nymref
+| SubroutineCall(symbol     name,          ~~~> symref
+                 symbol   ? original_name, ~~~> orig-symref
                  call_arg * args,          ~~~> call_args
                  expr     ? dt)
 ```
@@ -4064,8 +4064,8 @@ abuses the word `symbol` to mean a `symbol-ref`.
   (let [cnd {::term ::stmt,
              ::asr-stmt-head
              {::stmt-head    ::SubroutineCall
-              ::nymref       (apply symbol-ref subr-symref)
-              ::orig-nymref  orig-symref ;; TODO
+              ::symbol-ref   subr-symref
+              ::orig-symref  orig-symref ;; TODO
               ::call-args    args
               ::dt?          dt?
               }}]
@@ -4080,11 +4080,11 @@ abuses the word `symbol` to mean a `symbol-ref`.
 (defmacro SubroutineCall
   [stid, ident, orig-symref, args, dt?]
   (if (empty? args)
-    `(SubroutineCall-- ['~ident ~stid]
+    `(SubroutineCall-- (symbol-ref '~ident ~stid)
                        ~orig-symref
                        ~args
                        ~dt?)
-    `(SubroutineCall-- ['~ident ~stid]
+    `(SubroutineCall-- (symbol-ref '~ident ~stid)
                        ~orig-symref
                        ;; Took a while to find this ...
                        ;; (map vec ~args) does not work!

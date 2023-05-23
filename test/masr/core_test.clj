@@ -1154,6 +1154,14 @@
                  (Integer 4 [])
                  (IntegerConstant 5 (Integer 4 [])))))
 
+  (is (not (s/valid? ::asr/IntegerBinOp
+                     (IntegerBinOp
+                      (IntegerConstant 2 (Integer 4 []))
+                      Add
+                      (IntegerConstant 3 (Integer 4 []))
+                      (Logical 4 []) ;; <~~~ booger
+                      (IntegerConstant 5 (Integer 4 []))))))
+
   (is (s/valid? ::asr/IntegerBinOp
                 (IntegerBinOp
                  (IntegerBinOp
@@ -1166,6 +1174,19 @@
                  (IntegerConstant 5 (Integer 4 []))
                  (Integer 4 [])
                  (IntegerConstant 25 (Integer 4 [])))))
+
+  (is (not (s/valid? ::asr/IntegerBinOp
+                     (IntegerBinOp
+                      (IntegerBinOp
+                       (IntegerConstant 2 (Integer 4 []))
+                       Add
+                       (IntegerConstant 3 (Integer 4 []))
+                       (Complex 4 [])  ;; <~~~ booger
+                       (IntegerConstant 5 (Integer 4 [])))
+                      Mul
+                      (IntegerConstant 5 (Integer 4 []))
+                      (Integer 4 [])
+                      (IntegerConstant 25 (Integer 4 []))))))
   )
 
 
@@ -1196,6 +1217,44 @@
                  (Real 4 [])
                  (RealConstant 5.0 (Real 4 []))
                  )))
+
+  (is (s/valid? ::asr/RealBinOp
+                (RealBinOp
+                 (RealConstant 2.0 (Real 4 []))
+                 Add ;; legacy sugar
+                 (RealConstant 3.0 (Real 4 []))
+                 (Real 4 [])
+                 () ;; <~~~ no precompute
+                 )))
+
+  (is (not (s/valid? ::asr/RealBinOp
+                     (RealBinOp
+                      (RealConstant 2.0 (Real 4 []))
+                      Add ;; legacy sugar
+                      (RealConstant 3.0 (Real 4 []))
+                      () ;; <~~~ missing ttype
+                      () ;; <~~~ no precompute
+                      ))))
+
+  ;; TODO: check incorrect precompute.
+
+  (is (not (s/valid? ::asr/RealBinOp
+                     (RealBinOp
+                      (RealConstant 2.0 (Real 4 []))
+                      Add ;; legacy sugar
+                      (RealConstant 3.0 (Real 4 []))
+                      (Complex 4 []) ;; <~~~ booger
+                      (RealConstant 5.0 (Real 4 []))
+                      ))))
+
+  (is (not (s/valid? ::asr/RealBinOp
+                     (RealBinOp
+                      (IntegerConstant 2 (Integer 4 [])) ;; <~~~ booger
+                      Add                                ;; legacy sugar
+                      (RealConstant 3.0 (Real 4 []))
+                      (Real 4 []) ;; <~~~ booger
+                      (RealConstant 5.0 (Real 4 []))
+                      ))))
 
   (is (s/valid? ::asr/RealBinOp
                 (RealBinOp
@@ -1232,6 +1291,17 @@
                   (Logical 4 []) ())
                  (Logical 4 []) ())))
 
+  (is (not (s/valid? ::asr/LogicalBinOp
+                     (LogicalBinOp
+                      (Var 2 a)
+                      And
+                      (LogicalCompare
+                       (Var 2 b)
+                       Eq
+                       (Var 2 b)
+                       (Integer 4 []) ())  ;; <~~~ wrong type
+                      (Logical 4 []) ()))))
+
   (is (s/valid? ::asr/LogicalBinOp
                 (LogicalBinOp
                  (Var 2 a)
@@ -1254,7 +1324,23 @@
                  (Var 2 b)
                  Eq
                  (Var 2 b)
-                 (Logical 4 []) ()))))
+                 (Logical 4 []) ())))
+  (is (not (s/valid? ::asr/LogicalCompare
+                     (LogicalCompare
+                      ;; wrong type
+                      (IntegerConstant 2 (Integer 4 []))
+                      Eq
+                      (Var 2 b)
+                      (Logical 4 []) ())
+                     )))
+  (is (not (s/valid? ::asr/LogicalCompare
+                 (LogicalCompare
+                  (Var 2 b)
+                  Eq
+                  (Var 2 b)
+                  (Integer 4 []) ()) ;; <~~~ wrong type
+                 )))
+  )
 
 
 ;;  _
@@ -1301,6 +1387,23 @@
     (is (s/valid? ::asr/call-arg [arg]))
     (is (s/valid? ::asr/expr?     arg)))
   (is (s/valid? ::asr/IntrinsicFunction
+                ;; no "legacy"
+                (IntrinsicFunction
+                 Abs
+                 [] ;; empty args
+                 0
+                 (Real 8 [])  ()  )
+                ))
+  (is (s/valid? ::asr/IntrinsicFunction
+                (legacy
+                 (IntrinsicFunction
+                  Abs
+                  [] ;; empty args
+                  0
+                  (Real 8 [])  ()  )
+                 )))
+  ;; TODO: signature check of each intrinsic
+  (is (s/valid? ::asr/IntrinsicFunction
                 (legacy
                  (IntrinsicFunction
                   Abs
@@ -1322,6 +1425,22 @@
 
 
 (deftest complex-binop-test
+  (is (not (s/valid? ::asr/ComplexBinOp
+                     (legacy
+                      (ComplexBinOp
+                       ;; wrong type
+                       (IntegerConstant 5 (Integer 4 []))
+                       Add
+                       (Cast
+                        (ComplexConstant 0.000000 6.000000
+                                         (Complex 8 []) )
+                        ComplexToComplex
+                        (Complex 4 [])
+                        (ComplexConstant 0.000000 6.000000
+                                         (Complex 4 []) ) )
+                       (Complex 4 [])
+                       (ComplexConstant 5.000000 6.000000
+                                        (Complex 4 []) ) )))))
   (is (s/valid? ::asr/ComplexBinOp
                 (legacy
                  (ComplexBinOp
@@ -1330,18 +1449,18 @@
                    IntegerToComplex
                    (Complex 4 [])
                    (ComplexConstant 5.000000 0.000000
-                    (Complex 4 []) ) )
+                                    (Complex 4 []) ) )
                   Add
                   (Cast
                    (ComplexConstant 0.000000 6.000000
-                    (Complex 8 []) )
+                                    (Complex 8 []) )
                    ComplexToComplex
                    (Complex 4 [])
                    (ComplexConstant 0.000000 6.000000
-                    (Complex 4 []) ) )
+                                    (Complex 4 []) ) )
                   (Complex 4 [])
                   (ComplexConstant 5.000000 6.000000
-                   (Complex 4 []) ) )))))
+                                   (Complex 4 []) ) )))))
 
 
 ;; ================================================================
@@ -1362,24 +1481,30 @@
   (is (s/valid?
        ::asr/If
        (legacy
-        (If
+        (If ;; TODO: weird: integer value in the pocket?
+         ;; Issue 40
          (NamedExpr
           (Var 2 a)
           (StringOrd
-           (StringConstant
-            "3"
-            (Character 1 1 () [])
-            )
+           (StringConstant "3" (Character 1 1 () []) )
            (Integer 4 [])
-           (IntegerConstant 51 (Integer 4 []))
-           )
-          (Integer 4 [])
-          )
+           (IntegerConstant 51 (Integer 4 [])) )
+          (Integer 4 []) )
          [(=
            (Var 2 x)
            (IntegerConstant 1 (Integer 4 []))
-           ()
-           )]
+           () )]
+         []
+         ))))
+  (is (s/valid?
+       ::asr/If
+       (legacy
+        (If
+         (LogicalConstant true (Logical 4 []))
+         [(=
+           (Var 2 x)
+           (IntegerConstant 1 (Integer 4 []))
+           () )]
          []
          )))))
 
@@ -1397,11 +1522,11 @@
        (legacy
         (WhileLoop
          ()
+         ;; Issue 40: Integer value in the test-expr pocket:
          (NamedExpr
           (Var 2 a)
           (IntegerConstant 1 (Integer 4 []))
-          (Integer 4 [])
-          )
+          (Integer 4 []))
          [(=
            (Var 2 y)
            (IntegerConstant 1 (Integer 4 []))
@@ -1423,6 +1548,12 @@
                  (Var 2 a)
                  (LogicalConstant false (Logical 4 []))
                  ())))
+  (is (not (s/valid? ::asr/Assignment
+                     (Assignment
+                      ;; wrong type of target
+                      (LogicalConstant false (Logical 4 []))
+                      (LogicalConstant false (Logical 4 []))
+                      ()))))
   (testing "legacy"
     (is (= (Assignment
             (Var 2 a)
@@ -1521,12 +1652,32 @@
 (deftest SubroutineCall-test
 
   (testing "heavy sugar"
+    (is (not (s/valid? ::asr/identifier "test_fn1")))
+    (is (s/valid? ::asr/symbol-ref
+                  (symbol-ref 'test_fn1 7)))
+    (is (s/valid? ::asr/symbol-ref
+                  (apply symbol-ref ['test_fn1 7])))
+    (is (not (s/valid? ::asr/symbol-ref
+                       (symbol-ref "test_fn1" 7))))
+    (is (not (s/valid? ::asr/symbol-ref
+                       (apply symbol-ref ["test_fn1" 7]))))
     (is (s/valid? ::asr/SubroutineCall
                   (SubroutineCall--
-                   ['test_fn1 7]
-                   ()    []    ()
-                   ))))
+                   (symbol-ref 'test_fn1 7)
+                   ()    []    ())))
+    (is (s/valid? ::asr/orig-symref ())))
   (testing "legacy sugar"
+
+    (is (not (s/valid? ::asr/symbol-ref
+                       (apply symbol-ref ["test_fn1" 7]))))
+    (is (not (s/valid? ::asr/SubroutineCall
+                       (SubroutineCall
+                        'garbage 'booger
+                        ()    []    ()))))
+    (is (not (s/valid? ::asr/SubroutineCall
+                       (SubroutineCall
+                        7 "test_fn1"
+                        ()    []    ()))))
     (is (s/valid? ::asr/SubroutineCall
                   (SubroutineCall
                    7 test_fn1
@@ -1565,21 +1716,21 @@
 
     (is (s/valid? ::asr/SubroutineCall
                   (SubroutineCall--
-                   ['test_fn1 7]
+                   (symbol-ref 'test_fn1 7)
                    ()
                    [[(Var 42 i)]]
                    ())))
     (is (s/valid? ::asr/SubroutineCall
                   (legacy ;; replace call brackets with vector
                    (SubroutineCall--
-                    ['test_fn1 7]
+                    (symbol-ref 'test_fn1 7)
                     ()
                     (((Var 42 i)) ((Var 43 j))) ;; call brackets
                     ()))))
     (is (s/valid? ::asr/SubroutineCall
                   (legacy ;; replace call brackets with vector
                    (SubroutineCall--
-                    ['test_fn1 7]
+                    (symbol-ref 'test_fn1 7)
                     ()
                     (((Var 42 i))) ;; call brackets
                     ()))))))
