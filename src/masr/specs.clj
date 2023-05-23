@@ -2648,8 +2648,9 @@
 (s/def ::symbol-ref
   (s/keys :req [::identifier
                 ::symtab-id]))
-(s/def ::symbol-ref? (.? ::symbol-ref))
-(s/def ::orig-symref ::symbol-ref?)
+(s/def ::symbol-ref?  (.? ::symbol-ref))
+(s/def ::extern-symref    ::symbol-ref?)
+(s/def ::orig-symref      ::symbol-ref?)
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -4069,11 +4070,6 @@
 
 ;; #+begin_src clojure
 
-(s/def ::symbol-ref?    (.? ::symbol-ref))
-;; #+end_src
-
-;; #+begin_src clojure
-
 (s/def ::format?            ::expr?)
 (s/def ::value*             ::expr*)
 (s/def ::separator?         ::expr?)
@@ -4083,7 +4079,6 @@
 ;; #+begin_src clojure
 
 (s/def ::nym                ::identifier)
-(s/def ::extern-symref      ::symbol-ref?)
 (s/def ::scope-nyms         ::identifier-set)
 (s/def ::orig-nym           ::identifier)
 ;; #+end_src
@@ -4557,7 +4552,7 @@
     orig-symref-stid, orig-symref-ident,
     modnym, scope-nyms, orig-nym,
     access]
-   "eight-parameter overload"
+   "octenary"
    `(ExternalSymbol--
      ~stid, '~nym,
      (symbol-ref '~orig-symref-ident, ~orig-symref-stid),
@@ -4569,7 +4564,7 @@
     empty-symref,
     modnym, scope-nyms, orig-nym,
     access]
-   "seven-parameter overload"
+   "heptenary"
    `(ExternalSymbol--
      ~stid, '~nym,
      ~empty-symref,

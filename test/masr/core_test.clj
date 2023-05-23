@@ -1762,8 +1762,16 @@
     (is (s/valid? ::asr/symbol-ref? vsr))
     (is (s/valid? ::asr/symbol-ref? []))
     (is (s/valid? ::asr/symbol-ref? ()))
-    (is (not (s/valid? ::asr/symbol-ref? [vsr, vsr]))))
-  )
+    (is (not (s/valid? ::asr/symbol-ref? [vsr, vsr])))
+    (is (s/valid? ::asr/orig-symref vsr))
+    (is (s/valid? ::asr/orig-symref []))
+    (is (s/valid? ::asr/orig-symref ()))
+    (is (not (s/valid? ::asr/orig-symref [vsr, vsr])))
+    (is (s/valid? ::asr/extern-symref vsr))
+    (is (s/valid? ::asr/extern-symref []))
+    (is (s/valid? ::asr/extern-symref ()))
+    (is (not (s/valid? ::asr/extern-symref [vsr, vsr]))))
+    )
 
 
 ;;  ___     _                     _ ___            _         _
@@ -1798,6 +1806,16 @@
                  Public
                  )))
 
+  (is (not (s/valid? ::asr/ExternalSymbol
+                     (ExternalSymbol--
+                      5 "_lpython_main_program"
+                      (symbol-ref '_lpython_main_program 7)
+                      '_global_symbols
+                      []
+                      '_lpython_main_program
+                      Public
+                      ))))
+
   (is (s/valid? ::asr/ExternalSymbol
                 (ExternalSymbol
                  5, _lpython_main_program
@@ -1807,6 +1825,15 @@
                  _lpython_main_program
                  Public)))
 
+  (is (not (s/valid? ::asr/ExternalSymbol
+                     (ExternalSymbol
+                      5, _lpython_main_program
+                      7, "_lpython_main_program",
+                      _global_symbols
+                      []
+                      _lpython_main_program
+                      Public))))
+
   (is (s/valid? ::asr/ExternalSymbol
                 (ExternalSymbol
                  5, _lpython_main_program
@@ -1815,6 +1842,15 @@
                  []
                  _lpython_main_program
                  Public)))
+
+  (is (not (s/valid? ::asr/ExternalSymbol
+                     (ExternalSymbol
+                      () ()
+                      ()
+                      _global_symbols
+                      []
+                      _lpython_main_program
+                      Public))))
 
   (is (s/valid? ::asr/ExternalSymbol
                 (ExternalSymbol
@@ -1864,9 +1900,6 @@
           avl-2  (Variable- :varnym     'x
                             :symtab-id  2
                             :ttype      (Integer 42))]
-      ;; (is (= a-var       (s/conform ::asr/asr-term a-var)))
-      ;; (is (= a-var-light (s/conform ::asr/asr-term a-var)))
-      ;; (is (= a-var-light (s/conform ::asr/Variable a-var)))
 
       (is (= (s/valid? ::asr/asr-symbol-head a-var-head) true))
 
@@ -1905,6 +1938,14 @@
                      )]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/Variable a-valid)))
+    (let [a-valid
+          (Variable- :symtab-id 2,
+                     :varnym    "x",
+                     :intent    (intent 'Local) ;; explicit
+                     :ttype     (Integer 4 [[1 42]]))]
+      (is (not (s/valid? ::asr/asr-term a-valid)))
+      (is (not (s/valid? ::asr/symbol   a-valid)))
+      (is (not (s/valid? ::asr/Variable a-valid))))
     (let [a-valid
           (Variable- :symtab-id 2,
                      :varnym    'x,
@@ -2113,7 +2154,15 @@
       ;; using telescoping specs
       (is (s/valid? ::asr/Variable v))
       (is (s/valid? ::asr/symbol   v))
-      (is (s/valid? ::asr/asr-term v))))
+      (is (s/valid? ::asr/asr-term v)))
+    (let [v (Variable
+             2 'a []
+             Local () ()
+             Default (Logical 4 []) Source
+             Public Required false)]
+      (is (not (s/valid? ::asr/Variable v)))
+      (is (not (s/valid? ::asr/symbol   v)))
+      (is (not (s/valid? ::asr/asr-term v)))))
   (testing "SymbolTable with Variable"
     (let [st (SymbolTable
               2 {:a
@@ -4850,6 +4899,9 @@
 
     (testing "whole translation unit for -test_complex_01-c199562"
       (is (s/valid? ::asr/unit (long-form-asr "-test_complex_01-c199562"))))
+
+    (testing "whole translation unit for -test_complex_02-6516823"
+      (is (s/valid? ::asr/unit (long-form-asr "-test_complex_02-6516823"))))
 
     ))
 
