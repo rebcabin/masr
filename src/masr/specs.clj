@@ -1564,6 +1564,26 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  StringItem expr
+  (string-expr index?
+               Integer
+               integer-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  StringSection expr
+  (string-expr index-start?
+               index-end?
+               index-step?
+               Character
+               string-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   StringOrd expr
   (string-expr Integer integer-value?))
 ;; #+end_src
@@ -2853,6 +2873,7 @@
         :integer-bit-not      ::IntegerBitNot
         :string-ord           ::StringOrd
         :string-len           ::StringLen
+        :string-item          ::StringItem
         :tuple-len            ::TupleLen
         :list-len             ::ListLen
         :cast                 ::Cast      ;; TODO check return type!
@@ -2869,6 +2890,24 @@
 
 (s/def ::integer-left         ::integer-expr)
 (s/def ::integer-right        ::integer-expr)
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ### Index Types
+;;
+;;
+
+;; #+begin_src clojure
+
+(s/def ::index                ::integer-expr)
+(s/def ::index-start          ::integer-expr)
+(s/def ::index-end            ::integer-expr)
+(s/def ::index-step           ::integer-expr)
+
+(s/def ::index?               ::integer-expr?)
+(s/def ::index-start?         ::integer-expr?)
+(s/def ::index-end?           ::integer-expr?)
+(s/def ::index-step?          ::integer-expr?)
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -2979,7 +3018,9 @@
 (s/def ::string-expr
   (s/or :string-constant      ::StringConstant
         :string-chr           ::StringChr
+        :string-section       ::StringSection
         :string-repeat        ::StringRepeat
+        :var                  ::Var
         ))
 ;; #+end_src
 
@@ -3661,7 +3702,7 @@
 ;;
 
 ;;
-;; ### Legacy Sugar
+;; ### Heavy Sugar
 ;;
 ;; #+begin_src clojure
 
@@ -3680,6 +3721,66 @@
        :invalid-string-len)))
   ([str-expr, int-val?]
    (StringLen str-expr, (Integer) int-val?)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## STRING ITEM
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn StringItem
+  [string-expr
+   index?
+   Integer
+   integer-value?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head         ::StringItem
+              ::string-expr       string-expr
+              ::index?            index?
+              ::Integer           Integer
+              ::integer-value?    integer-value?
+              }}]
+    (if (s/valid? ::StringItem cnd)
+      cnd
+      :invalid-string-item)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## STRING SECTION
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn StringSection
+  [string-expr
+   index-start?
+   index-end?
+   index-step?
+   Character
+   string-value?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head        ::StringSection
+              ::string-expr      string-expr
+              ::index-start?     index-start?
+              ::index-end?       index-end?
+              ::index-step?      index-step?
+              ::Character        Character
+              ::string-value?    string-value?
+              }}]
+    (if (s/valid? ::StringSection cnd)
+      cnd
+      :invalid-string-section)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------

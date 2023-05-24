@@ -4999,23 +4999,21 @@
     (testing "textual identity of slurped e2e0267"
       (is (= hand-written-quoted-e2e0267 slurped-e2e0267)))
 
-    (test-unit _expr2_5311701)
     (test-unit -expr1-dde511e)
-    (test-unit -expr_01-03055c0)
-    (test-unit -expr_01-eafd41c)
+    (test-unit -expr10-31c163f)
+    (test-unit -expr11-1134d3f)
+    (test-unit -expr12-2a30333)
+    (test-unit -expr13-10040d8)
     (test-unit -expr4-cf512ef)
     (test-unit -expr6-bfb3384)
     (test-unit -expr7-2ef3822)
     (test-unit -expr8-2a4630a)
     (test-unit -expr9-c6fe691)
-    (test-unit -expr10-31c163f)
-    (test-unit -expr11-1134d3f)
-    (test-unit -expr12-2a30333)
-    (test-unit -expr13-10040d8)
+    (test-unit -expr_01-03055c0)
+    (test-unit -expr_01-eafd41c)
     (test-unit -expr_14-6023c49)
     (test-unit -test_bool_binop-3075d22)
-    (test-unit -test_complex_01-c199562)
-    (test-unit -test_complex_02-6516823)
+    (test-unit -test_bool_binop-3075d22)
     (test-unit -test_builtin-4f04bbc)
     (test-unit -test_builtin_abs-06a7e49)
     (test-unit -test_builtin_bin-0ca34fe)
@@ -5024,8 +5022,28 @@
     (test-unit -test_builtin_hex-d4abc3e)
     (test-unit -test_builtin_int-990d1de)
     (test-unit -test_builtin_len-922cf65)
-
+    (test-unit -test_builtin_oct-490a98b)
+    (test-unit -test_builtin_pow-cea529e)
+    (test-unit -test_builtin_round-cca5cba)
+    (test-unit -test_builtin_str-fcdedc2)
+    (test-unit -test_complex_01-c199562)
+    (test-unit -test_complex_02-6516823)
+    (test-unit _expr2_5311701)
+    (test-unit _expr_10_e2e0267)
     ))
+
+
+(deftest bisecting-fcdedc2
+  (is (s/valid? ::asr/StringItem
+                (legacy
+                 (StringItem
+                  (Var 5 __tmp_assign_for_loop)
+                  (IntegerBinOp
+                   (Var 5 __explicit_iterator)
+                   Add
+                   (IntegerConstant 1 (Integer 4 []))
+                   (Integer 4 [])    ()    )
+                  (Integer 4 [])    ()    )))))
 
 
 (deftest bisecting-922cf65-test-2
