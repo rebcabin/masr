@@ -1500,6 +1500,155 @@
          )))))
 
 
+;;  ____        _
+;; |  _ \  ___ | |    ___   ___  _ __
+;; | | | |/ _ \| |   / _ \ / _ \| '_ \
+;; | |_| | (_) | |__| (_) | (_) | |_) |
+;; |____/ \___/|_____\___/ \___/| .__/
+;;                              |_|
+
+
+(deftest do-loop-test
+  (testing "bisection of DoLoop"
+    (is (s/valid?
+         ::asr/escape-target ()))
+    (is (s/valid?
+         ::asr/loop-v (Var 2 i)))
+    (is (s/valid?
+         ::asr/loop-start
+         (IntegerConstant 0 (Integer 4 []))))
+    (is (s/valid?
+         ::asr/IntegerConstant
+         (IntegerConstant 0 (Integer 4 []))))
+    (is (not (s/valid?
+              ::asr/Integer
+              (IntegerConstant 0 (Integer 4 [])))))
+    (is (s/valid?
+         ::asr/expr
+         (IntegerConstant 0 (Integer 4 []))))
+    (is (s/valid?
+         ::asr/loop-end
+         (IntegerBinOp
+          (IntegerConstant 50 (Integer 4 []))
+          Sub
+          (IntegerConstant 1 (Integer 4 []))
+          (Integer 4 [])
+          (IntegerConstant 49 (Integer 4 [])))))
+    (is (s/valid?
+         ::asr/loop-increment
+         (IntegerConstant 1 (Integer 4 []))))
+    (is (s/valid?
+         ::asr/do-loop-head
+         (legacy
+          (do-loop-head
+           ((Var 2 i)
+            (IntegerConstant 0 (Integer 4 []))
+            (IntegerBinOp
+             (IntegerConstant 50 (Integer 4 []))
+             Sub
+             (IntegerConstant 1 (Integer 4 []))
+             (Integer 4 [])
+             (IntegerConstant 49 (Integer 4 [])))
+            (IntegerConstant 1 (Integer 4 [])))))))
+    (is (s/valid?
+         ::asr/do-loop-head
+         {::asr/loop-v         (Var 2 i)
+          ::asr/loop-start     (IntegerConstant 0 (Integer 4 []))
+          ::asr/loop-end       (IntegerConstant 1 (Integer 4 []))
+          ::asr/loop-increment (IntegerConstant 1 (Integer 4 []))}))
+    (is (s/valid?
+         ::asr/ListAppend
+         (ListAppend
+          (Var 2 l3)
+          (Var 2 i)
+          )))
+    (is (s/valid?
+         ::asr/Var
+         (Var 2 l3)))
+    (is (s/valid?
+         ::asr/list-expr
+         (Var 2 l3)))
+    (is (s/valid?
+         ::asr/list-element
+         (Var 2 i)))
+    (is (s/valid?
+         ::asr/Var
+         (Var 2 i)))
+    (is (s/valid?
+         ::asr/expr
+         (Var 2 i)))
+    (is (s/valid?
+         ::asr/body
+         [(ListAppend
+           (Var 2 l3)
+           (Var 2 i)
+           )])))
+  (testing "DoLoop proper"
+    (is (s/valid?
+         ::asr/DoLoop
+         {::asr/term ::asr/stmt,
+          ::asr/asr-stmt-head
+          {::asr/stmt-head ::asr/DoLoop
+           ::asr/escape-target   ()
+           ::asr/do-loop-head
+           {::asr/loop-v         (Var 2 i)
+            ::asr/loop-start     (IntegerConstant 0 (Integer 4 []))
+            ::asr/loop-end       (IntegerConstant 1 (Integer 4 []))
+            ::asr/loop-increment (IntegerConstant 1 (Integer 4 []))}
+           ::asr/body [(ListAppend
+                        (Var 2 l3)
+                        (Var 2 i)
+                        )]}}
+         ))
+    (is (s/valid?
+         ::asr/DoLoop
+         (DoLoop
+          ()
+          [(Var 2 i)
+           (IntegerConstant 0 (Integer 4 []))
+           (IntegerConstant 0 (Integer 4 []))
+           (IntegerConstant 1 (Integer 4 []))]
+          [(ListAppend
+            (Var 2 l3)
+            (Var 2 i)
+            )] )))
+    (is (s/valid?
+         ::asr/DoLoop
+         (DoLoop
+          ()
+          [(Var 2 i)
+           (IntegerConstant 0 (Integer 4 []))
+           (IntegerBinOp
+            (IntegerConstant 50 (Integer 4 []))
+            Sub
+            (IntegerConstant 1 (Integer 4 []))
+            (Integer 4 [])
+            (IntegerConstant 49 (Integer 4 [])))
+           (IntegerConstant 1 (Integer 4 []))]
+          [(ListAppend
+            (Var 2 l3)
+            (Var 2 i)
+            )] )))
+    (is (s/valid?
+         ::asr/DoLoop
+         (legacy
+          (DoLoop
+           ()
+           ((Var 2 i)
+            (IntegerConstant 0 (Integer 4 []))
+            (IntegerBinOp
+             (IntegerConstant 50 (Integer 4 []))
+             Sub
+             (IntegerConstant 1 (Integer 4 []))
+             (Integer 4 [])
+             (IntegerConstant 49 (Integer 4 [])))
+            (IntegerConstant 1 (Integer 4 [])))
+           [(ListAppend
+             (Var 2 l3)
+             (Var 2 i)
+             )] ))))))
+
+
 ;; __      ___    _ _     _
 ;; \ \    / / |_ (_) |___| |   ___  ___ _ __
 ;;  \ \/\/ /| ' \| | / -_) |__/ _ \/ _ \ '_ \
@@ -4874,9 +5023,159 @@
     (test-unit -test_builtin_float-97f9316)
     (test-unit -test_builtin_hex-d4abc3e)
     (test-unit -test_builtin_int-990d1de)
-    #_(test-unit -test_builtin_len-922cf65)
+    (test-unit -test_builtin_len-922cf65)
 
     ))
+
+
+(deftest bisecting-922cf65-test-2
+  (is (s/valid? ::asr/TranslationUnit
+                (TranslationUnit
+                 (SymbolTable 1 {})
+                 [])))
+  (is (s/valid? ::asr/tuple-expr
+                (Var 2 t2)))
+  (is (s/valid? ::asr/Integer
+                (Integer 4 [])))
+  (is (s/valid? ::asr/integer-value?
+                (IntegerConstant 5 (Integer 4 []))))
+  (is (s/valid? ::asr/TupleLen
+                (TupleLen
+                 (Var 2 t2)
+                 (Integer 4 [])
+                 (IntegerConstant 5 (Integer 4 []))
+                 )))
+  (is (s/valid? ::asr/loop-v (Var 2 i)))
+  (is (s/valid? ::asr/loop-start (IntegerConstant 0 (Integer 4 []))))
+  (is (s/valid? ::asr/loop-end
+                (IntegerBinOp
+                 (TupleLen
+                  (Var 2 t2)
+                  (Integer 4 [])
+                  (IntegerConstant 5 (Integer 4 [])))
+                 Sub
+                 (IntegerConstant 1 (Integer 4 []))
+                 (Integer 4 [])
+                 (IntegerConstant 4 (Integer 4 [])))))
+  (is (s/valid? ::asr/loop-increment
+                (IntegerConstant 1 (Integer 4 []))))
+  (is (s/valid? ::asr/do-loop-head
+                {::asr/loop-v         (Var 2 i)
+                 ::asr/loop-start     (IntegerConstant 0 (Integer 4 []))
+                 ::asr/loop-end       (IntegerBinOp
+                                       (TupleLen
+                                        (Var 2 t2)
+                                        (Integer 4 [])
+                                        (IntegerConstant 5 (Integer 4 [])))
+                                       Sub
+                                       (IntegerConstant 1 (Integer 4 []))
+                                       (Integer 4 [])
+                                       (IntegerConstant 4 (Integer 4 [])))
+                 ::asr/loop-increment (IntegerConstant 1 (Integer 4 []))}))
+  (is (= {::asr/loop-v         (Var 2 i)
+          ::asr/loop-start     (IntegerConstant 0 (Integer 4 []))
+          ::asr/loop-end       (IntegerBinOp
+                                (TupleLen
+                                 (Var 2 t2)
+                                 (Integer 4 [])
+                                 (IntegerConstant 5 (Integer 4 [])))
+                                Sub
+                                (IntegerConstant 1 (Integer 4 []))
+                                (Integer 4 [])
+                                (IntegerConstant 4 (Integer 4 [])))
+          ::asr/loop-increment (IntegerConstant 1 (Integer 4 []))}
+         (do-loop-head
+          (legacy
+           ((Var 2 i)
+            (IntegerConstant 0 (Integer 4 []))
+            (IntegerBinOp
+             (TupleLen
+              (Var 2 t2)
+              (Integer 4 [])
+              (IntegerConstant 5 (Integer 4 [])))
+             Sub
+             (IntegerConstant 1 (Integer 4 []))
+             (Integer 4 [])
+             (IntegerConstant 4 (Integer 4 [])))
+            (IntegerConstant 1 (Integer 4 [])))))))
+  (is (s/valid? ::asr/do-loop-head
+                (legacy
+                 (do-loop-head
+                  ((Var 2 i)
+                   (IntegerConstant 0 (Integer 4 []))
+                   (IntegerBinOp
+                    (TupleLen
+                     (Var 2 t2)
+                     (Integer 4 [])
+                     (IntegerConstant 5 (Integer 4 [])))
+                    Sub
+                    (IntegerConstant 1 (Integer 4 []))
+                    (Integer 4 [])
+                    (IntegerConstant 4 (Integer 4 [])))
+                   (IntegerConstant 1 (Integer 4 [])))))
+                ))
+  (is (s/valid? ::asr/DoLoop
+                (legacy
+                 (DoLoop
+                  ()
+                  ((Var 2 i)
+                   (IntegerConstant 0 (Integer 4 []))
+                   (IntegerBinOp
+                    (TupleLen
+                     (Var 2 t2)
+                     (Integer 4 [])
+                     (IntegerConstant 5 (Integer 4 []))
+                     )
+                    Sub
+                    (IntegerConstant 1 (Integer 4 []))
+                    (Integer 4 [])
+                    (IntegerConstant 4 (Integer 4 []))
+                    )
+                   (IntegerConstant 1 (Integer 4 [])))
+                  [(ListAppend
+                    (Var 2 l)
+                    (Var 2 i)
+                    )]
+                  ))))
+  )
+
+
+(deftest bisecting-922cf65-test
+  (is (s/valid? ::asr/elements
+                [(IntegerConstant 1 (Integer 4 []))
+                 (IntegerConstant 2 (Integer 4 []))
+                 (StringConstant
+                  "a"
+                  (Character 1 1 () [])
+                  )]))
+  (is (s/valid? ::asr/ttype* [(Integer 4 [])
+                              (Integer 4 [])
+                              (Character 1 1 () [])]))
+  (is (s/valid? ::asr/Tuple
+                {::asr/term ::asr/ttype
+                 ::asr/asr-ttype-head
+                 {::asr/ttype-head ::asr/Tuple
+                  ::asr/ttype* [(Integer 4 [])
+                                (Integer 4 [])
+                                (Character 1 1 () [])]}}))
+  (is (s/valid? ::asr/Tuple
+                (Tuple
+                 [(Integer 4 [])
+                  (Integer 4 [])
+                  (Character 1 1 () [])])))
+  (is (s/valid? ::asr/TupleConstant
+                (TupleConstant
+                 [(IntegerConstant 1 (Integer 4 []))
+                  (IntegerConstant 2 (Integer 4 []))
+                  (StringConstant
+                   "a"
+                   (Character 1 1 () [])
+                   )]
+                 (Tuple
+                  [(Integer 4 [])
+                   (Integer 4 [])
+                   (Character 1 1 () [])]))))
+  )
 
 
 (deftest bisecting-expr13-10040d8

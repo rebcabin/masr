@@ -1186,9 +1186,7 @@
 
 (defmasrtype
   TranslationUnit unit
-  ;; types of the attributes:
-  (SymbolTable
-   nodes))
+  (SymbolTable    nodes))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -1199,19 +1197,33 @@
 
 (defmulti  symbol->asdl-type ::symbol-head)
 (term->asdl-type symbol) ;; Don't expand in CIDER! console only.
-
-(defmasrtype
-  Program symbol
-  ;; types of the attributes:
-  (SymbolTable
-   prognym    dependencies    body))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
-  IntrinsicModule symbol
-  (modulenym))
+  Program symbol
+  (SymbolTable    prognym    dependencies    body))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  Module symbol
+  (SymbolTable
+   modulenym       dependencies    loaded-from-mod
+   intrinsic))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  Function symbol
+  (SymbolTable ;; not a symtab-id!
+   function-name    function-signature    dependencies
+   param*           body                  return-var?
+   access           deterministic         side-effect-free
+   ))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1238,22 +1250,10 @@
 
 ;; #+begin_src clojure
 
+;; not in ASDL
 (defmasrtype
-  Module symbol
-  (SymbolTable
-   modulenym       dependencies    loaded-from-mod
-   intrinsic))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  Function symbol
-  (SymbolTable ;; not a symtab-id!
-   function-name    function-signature    dependencies
-   param*           body                  return-var?
-   access           deterministic         side-effect-free
-   ))
+  IntrinsicModule symbol
+  (modulenym))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -1281,8 +1281,10 @@
 ;; #+begin_src clojure
 
 (defmasrtype
-  Assert stmt
-  (test-expr message?))
+  DoLoop stmt
+  (escape-target ;; UNCHECKED! NO SPEC!
+   do-loop-head ;; NOT AN ASR HEAD!
+   body))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1309,6 +1311,13 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  Assert stmt
+  (test-expr message?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   SubroutineCall stmt
   (symbol-ref    orig-symref    call-args    dt?))
 ;; #+end_src
@@ -1317,7 +1326,15 @@
 
 (defmasrtype
   WhileLoop stmt
-  (loop-exit-target    test-expr    body))
+  (escape-target ;; NO SPEC! NO TARGET!
+   test-expr    body))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  ListAppend stmt
+  (list-expr    list-element))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -1328,6 +1345,16 @@
 
 (defmulti  expr->asdl-type ::expr-head)
 (term->asdl-type expr)
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  IfExp expr
+  (test-expr body orelse ttype value?))
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   NamedExpr expr
@@ -1337,8 +1364,24 @@
 ;; #+begin_src clojure
 
 (defmasrtype
-  IfExp expr
-  (test-expr body orelse ttype value?))
+  FunctionCall expr
+  (symbol-ref    orig-symref    call-args
+                 return-type    value?    dt?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  IntrinsicFunction expr
+  (intrinsic-ident    expr*          overload-id
+                      return-type    value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  IntegerConstant expr
+  (int    Integer))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1358,14 +1401,6 @@
 ;; #+begin_src clojure
 
 (defmasrtype
-  IntegerBinOp expr
-  (integer-left    integer-binop   integer-right
-                   Integer         integer-value?))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
   IntegerCompare expr
   (integer-left    integer-cmpop   integer-right
                    Logical         logical-value?))
@@ -1374,38 +1409,23 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  IntegerBinOp expr
+  (integer-left    integer-binop   integer-right
+                   Integer         integer-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  RealConstant expr
+  (float    Real))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   RealUnaryMinus expr
   (real-expr, Real, real-value?))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  RealBinOp expr
-  (real-left       real-binop       real-right
-                   Real             real-value?))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  ComplexBinOp expr
-  (complex-left    complex-binop    complex-right
-                   Complex          complex-value?))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  ComplexRe expr
-  (complex-expr    Real    real-value?))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  ComplexIm expr
-  (complex-expr    Real    real-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1419,9 +1439,23 @@
 ;; #+begin_src clojure
 
 (defmasrtype
-  StringCompare expr
-  (string-left     string-cmpop    string-right
-                   Logical         logical-value?))
+  RealBinOp expr
+  (real-left       real-binop       real-right
+                   Real             real-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  ComplexConstant expr
+  (real-part    imaginary-part    Complex))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  ComplexUnaryMinus expr
+  (complex-expr, Complex, complex-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1435,8 +1469,31 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  ComplexBinOp expr
+  (complex-left    complex-binop    complex-right
+                   Complex          complex-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  LogicalConstant expr
+  (bool    Logical))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   LogicalNot expr
   (logical-expr, Logical, logical-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  LogicalCompare expr
+  (logical-left    logical-cmpop   logical-right
+                   Logical         logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1464,44 +1521,15 @@
 ;; #+begin_src clojure
 
 (defmasrtype
-  LogicalCompare expr
-  (logical-left    logical-cmpop   logical-right
-                   Logical         logical-value?))
+  TupleConstant expr
+  (elements ttype))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
-  LogicalConstant expr
-  (bool    Logical))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  IntegerConstant expr
-  (int    Integer))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  RealConstant expr
-  (float    Real))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  ComplexConstant expr
-  (real-part    imaginary-part    Complex))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  ComplexUnaryMinus expr
-  (complex-expr, Complex, complex-value?))
+  TupleLen expr
+  (tuple-expr Integer integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1514,6 +1542,14 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  StringCompare expr
+  (string-left     string-cmpop    string-right
+                   Logical         logical-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   StringRepeat expr
   (string-expr integer-expr Character string-expr?))
 ;; #+end_src
@@ -1521,14 +1557,14 @@
 ;; #+begin_src clojure
 
 (defmasrtype
-  StringOrd expr
+  StringLen expr
   (string-expr Integer integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
-  StringLen expr
+  StringOrd expr
   (string-expr Integer integer-value?))
 ;; #+end_src
 
@@ -1556,17 +1592,15 @@
 ;; #+begin_src clojure
 
 (defmasrtype
-  IntrinsicFunction expr
-  (intrinsic-ident    expr*          overload-id
-                      return-type    value?))
+  ComplexRe expr
+  (complex-expr    Real    real-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
-  FunctionCall expr
-  (symbol-ref    orig-symref    call-args
-                 return-type    value?    dt?))
+  ComplexIm expr
+  (complex-expr    Real    real-value?))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -1847,7 +1881,7 @@
 ;;
 ;; #+begin_src clojure
 
-    (def-term-entity-key dimension)
+(def-term-entity-key dimension)
 ;; #+end_src
 
 ;;
@@ -2288,7 +2322,27 @@
 (s/def ::expr? (.? ::expr))
 ;; #+end_src
 
-;; For Character
+;;
+;; ### For Loop Statements
+;;
+
+;; #+begin_src clojure
+
+(s/def ::loop-v         ::expr?) ;; TODO: ?
+(s/def ::loop-start     ::expr?)
+(s/def ::loop-end       ::expr?)
+(s/def ::loop-increment ::expr?)
+
+(s/def ::do-loop-head
+  (s/keys :req [::loop-v
+                ::loop-start
+                ::loop-end
+                ::loop-increment]))
+;; #+end_src
+
+;;
+;; ### For Character
+;;
 
 ;; #+begin_src clojure
 
@@ -2528,8 +2582,8 @@
 (defn Tuple [ttypes]
   (let [cnd {::term ::ttype,
              ::asr-ttype-head
-             {::expr-head ::Tuple
-              ::ttype*   ttypes}}]
+             {::ttype-head ::Tuple
+              ::ttype*     ttypes}}]
     (if (s/valid? ::Tuple cnd)
       cnd
       :invalid-tuple)))
@@ -2673,12 +2727,12 @@
 ;;
 
 ;; ----------------------------------------------------------------
-;; ## UNKNOWN TUPLE
+;; ## ESCAPE TARGET
 ;;
 ;;
 ;; #+begin_src clojure
 
-(s/def ::while-exit-target      empty?)
+(s/def ::escape-target empty?)
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -2799,6 +2853,8 @@
         :integer-bit-not      ::IntegerBitNot
         :string-ord           ::StringOrd
         :string-len           ::StringLen
+        :tuple-len            ::TupleLen
+        :list-len             ::ListLen
         :cast                 ::Cast      ;; TODO check return type!
         :if-expr              ::IfExp     ;; TODO check return type!
         :named-expr           ::NamedExpr ;; TODO check return type!
@@ -2881,14 +2937,37 @@
 ;; ----------------------------------------------------------------
 ;; ### List Types
 ;;
-;;
-
 ;; #+begin_src clojure
 
 (s/def ::list-expr
-  (s/or :list-constant        ::ListConstant)
+  (s/or :list-constant        ::ListConstant
+        :var                  ::Var)
   )
 ;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::list-element
+  (s/or :expr                 ::expr)
+  )
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ### Tuple Types
+;;
+;; #+begin_src clojure
+
+(s/def ::tuple-expr
+  (s/or :tuple-constant       ::TupleConstant
+        :var                  ::Var)
+  )
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::elements             ::expr*)
+;; #+end_src
+
 
 ;; ----------------------------------------------------------------
 ;; ### String Types
@@ -2976,7 +3055,7 @@
         tvqkw (keyword ns tvstr)       ;; ::integer-value?
         nvukw (keyword                 ;; :invalid-integer-unary-minus
                (str "invalid-" (csk/->kebab-case fnstr)))]
-    `(defn ~fnsym                      ;; (defn IntegerConstant
+    `(defn ~fnsym                      ;; (defn IntegerUnaryMinus
        [arg# ttype# val?#]             ;; ([arg ttype val?
        (let [cnd#
              {::term ::expr,
@@ -3654,103 +3733,6 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
-;; ## LIST CONSTANT
-;;
-;;
-
-;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn ListConstant [expr* ttype]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::ListConstant
-              ::expr*          expr*
-              ;; TODO: check that all exprs have the ttype
-              ::ttype          ttype
-              }}]
-    (if (s/valid? ::ListConstant cnd)
-      cnd
-      :invalid-list-constant)))
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## LIST LEN
-;;
-;;
-
-;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn ListLen [list-expr int-ttype int-val?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::ListLen
-              ::list-expr      list-expr
-              ::Integer        ttype
-              ::integer-value? int-val?
-              }}]
-    (if (s/valid? ::ListLen cnd)
-      cnd
-      :invalid-list-len)))
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## LOGICAL BINOP
-;;
-;;
-
-;;
-;; ### Original ASDL
-;;
-;; ```c
-;; | LogicalBinOp(expr left, logicalbinop op, expr
-;;   right, ttype type, expr? value)
-;; ```
-
-;;
-;; ### Example
-;;
-;;
-;; #+begin_src clojure
-
-#_
-(LogicalBinOp
- (Var 2 a)
- And
- (LogicalCompare
-  (Var 2 b)
-  Eq
-  (Var 2 b)
-  (Logical 4 []) ())
- (Logical 4 []) ())
-;; #+end_src
-
-;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn LogicalBinOp [left- lbo- right- tt- val?-]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::LogicalBinOp
-              ::logical-left   left-
-              ::logicalbinop   lbo-
-              ::logical-right  right-
-              ::Logical        tt-
-              ::logical-value? val?-  ;; TODO: Check arithmetic!
-              }}]
-    (if (s/valid? ::LogicalBinOp cnd)
-      cnd
-      :invalid-logical-bin-op)))
-;; #+end_src
-
-;; ----------------------------------------------------------------
 ;; ## INTEGER BINOP
 ;;
 ;;
@@ -3922,6 +3904,148 @@
   [left- bo- right- ctt- cval?-]
   (let [rop (symbol (str "C" bo-))]
     `(ComplexBinOp-- ~left- ~rop ~right- ~ctt- ~cval?-)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## LOGICAL BINOP
+;;
+;;
+
+;;
+;; ### Original ASDL
+;;
+;; ```c
+;; | LogicalBinOp(expr left, logicalbinop op, expr
+;;   right, ttype type, expr? value)
+;; ```
+
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(LogicalBinOp
+ (Var 2 a)
+ And
+ (LogicalCompare
+  (Var 2 b)
+  Eq
+  (Var 2 b)
+  (Logical 4 []) ())
+ (Logical 4 []) ())
+;; #+end_src
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn LogicalBinOp [left- lbo- right- tt- val?-]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::LogicalBinOp
+              ::logical-left   left-
+              ::logicalbinop   lbo-
+              ::logical-right  right-
+              ::Logical        tt-
+              ::logical-value? val?-  ;; TODO: Check arithmetic!
+              }}]
+    (if (s/valid? ::LogicalBinOp cnd)
+      cnd
+      :invalid-logical-bin-op)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## LIST CONSTANT
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn ListConstant [expr* ttype]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::ListConstant
+              ::expr*          expr*
+              ;; TODO: check that all exprs have the ttype
+              ::ttype          ttype
+              }}]
+    (if (s/valid? ::ListConstant cnd)
+      cnd
+      :invalid-list-constant)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## LIST LEN
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn ListLen [list-expr int-ttype int-val?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::ListLen
+              ::list-expr      list-expr
+              ::Integer        ttype
+              ::integer-value? int-val?
+              }}]
+    (if (s/valid? ::ListLen cnd)
+      cnd
+      :invalid-list-len)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## TUPLE CONSTANT
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn TupleConstant [elements ttype]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::TupleConstant
+              ::elements       elements
+              ::ttype          ttype
+              }}]
+    (if (s/valid? ::TupleConstant cnd)
+      cnd
+      :invalid-tuple-constant)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## TUPLE LEN
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn TupleLen [tuple-expr int-ttype int-val?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::TupleLen
+              ::tuple-expr     tuple-expr
+              ::Integer        int-ttype
+              ::integer-value? int-val?
+              }}]
+    (if (s/valid? ::TupleLen cnd)
+      cnd
+      :invalid-tuple-len)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4319,6 +4443,23 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
+;; ## LIST APPEND
+;;
+;; #+begin_src clojure
+
+(defn ListAppend [list-expr list-element]
+  (let [cnd {::term ::stmt,
+             ::asr-stmt-head
+             {::stmt-head      ::ListAppend
+              ::list-expr      list-expr
+              ::list-element   list-element
+              }}]
+    (if (s/valid? ::ListAppend cnd)
+      cnd
+      :invalid-list-element)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ## EXPLICIT DEALLOCATE
 ;;
 ;;
@@ -4465,6 +4606,71 @@
 
 
 ;; ----------------------------------------------------------------
+;; ## DO LOOP
+;;
+;;
+
+;;
+;; ### Example
+;;
+;;
+
+;; #+begin_src clojure
+
+#_(DoLoop
+ ()
+ ((Var 2 i)
+  (IntegerConstant 0 (Integer 4 []))
+  (IntegerBinOp
+   (IntegerConstant 50 (Integer 4 []))
+   Sub
+   (IntegerConstant 1 (Integer 4 []))
+   (Integer 4 [])
+   (IntegerConstant 49 (Integer 4 [])))
+  (IntegerConstant 1 (Integer 4 [])))
+ [(ListAppend
+   (Var 2 l3)
+   (Var 2 i)
+   )] )
+;; #+end_src
+
+;;
+;; ### Do-Loop Head Support
+;;
+;; #+begin_src clojure
+
+(defn do-loop-head [[var start end incr]]
+  {::loop-v         var
+   ::loop-start     start
+   ::loop-end       end
+   ::loop-increment incr})
+;; #+end_src
+
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn DoLoop [escape-target
+              [var start end incr]
+              body]
+  (let [cnd {::term ::stmt,
+             ::asr-stmt-head
+             {::stmt-head ::DoLoop
+              ::escape-target   escape-target
+              ::do-loop-head
+              {::loop-v         var
+               ::loop-start     start
+               ::loop-end       end
+               ::loop-increment incr}
+              ::body            body}}]
+    (if (s/valid? ::DoLoop cnd)
+      cnd
+      :invalid-do-loop)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ## WHILE LOOP
 ;;
 ;;
@@ -4503,11 +4709,11 @@
 ;; #+begin_src clojure
 
 (defn WhileLoop
-  [exit-target, test-expr, body]
+  [escape-target, test-expr, body]
   (let [cnd {::term ::stmt
              ::asr-stmt-head
              {::stmt-head ::WhileLoop
-              ::loop-exit-target exit-target
+              ::escape-target escape-target
               ::test-expr        test-expr
               ::body             body}}]
     (if (s/valid? ::WhileLoop cnd)
