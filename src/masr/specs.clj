@@ -542,7 +542,8 @@
 ;;
 ;; #+begin_src clojure
 
-#_(Variable-- 2 'x (Integer 4)
+#_
+(Variable-- 2 'x (Integer 4)
             nil [] Local
             [] []  Default
             Source Public Required
@@ -580,7 +581,8 @@
 ;;
 ;; #+begin_src clojure
 
-#_(Variable 2 x []
+#_
+(Variable 2 x []
           Local () ()
           Default (Integer 4 []) Source
           Public Required false)
@@ -1229,6 +1231,16 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  GenericProcedure symbol
+  (symtab-id
+   function-name
+   symbol-ref*
+   access))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   ExternalSymbol symbol
   (symtab-id
    nym          extern-symref
@@ -1246,6 +1258,15 @@
    storage-type        ttype             abi
    access              presence          value-attr
    type-declaration))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  Block symbol
+  (SymbolTable
+   blocknym
+   body))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1325,9 +1346,24 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  Block stmt
+  (label symbol-ref))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   WhileLoop stmt
   (escape-target ;; NO SPEC! NO TARGET!
    test-expr    body))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  BlockCall stmt
+  (label
+   symbol-ref))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1600,6 +1636,27 @@
 (defmasrtype
   Var expr
   (symtab-id    varnym))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  ArrayItem expr
+  (array-expr
+   array-index*
+   ttype
+   array-storage
+   expr?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  ArrayReshape expr
+  (array-expr
+   array-shape
+   ttype
+   array-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2172,6 +2229,8 @@
 (enum-like access        #{'Public 'Private})
 (enum-like presence      #{'Required 'Optional})
 (enum-like deftype       #{'Implementation, 'Interface})
+(enum-like arraybound    #{'LBound 'UBound})
+(enum-like arraystorage  #{'RowMajor 'ColMajor})
 (enum-like cast-kind     #{'RealToInteger       'IntegerToReal
                            'LogicalToReal       'RealToReal
                            'IntegerToInteger    'RealToComplex
@@ -2296,50 +2355,53 @@
 
 ;; #+begin_src clojure
 
-(defmacro .? [ttype]
-  `(s/or :type ~ttype
+(defmacro .? [thing]
+  `(s/or :thing ~thing
          :empty empty?))
 
-(s/def ::ttype? (.? ::ttype))
+(defmacro .* [thing]
+  `(s/coll-of ~thing))
+
+(s/def ::ttype?           (.? ::ttype))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::param-type*      ::ttype*)
-(s/def ::return-var-type? ::ttype?)
+(s/def ::param-type*          ::ttype*)
+(s/def ::return-var-type?     ::ttype?)
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::bindc-name       (s/nilable string?))
-(s/def ::elemental        ::bool)
-(s/def ::pure             ::bool)
-(s/def ::module           ::bool)
-(s/def ::inline           ::bool)
-(s/def ::static           ::bool)
-(s/def ::type-param*      ::ttype*)
+(s/def ::bindc-name           (s/nilable string?))
+(s/def ::elemental            ::bool)
+(s/def ::pure                 ::bool)
+(s/def ::module               ::bool)
+(s/def ::inline               ::bool)
+(s/def ::static               ::bool)
+(s/def ::type-param*          ::ttype*)
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::symbols (s/coll-of ::symbol))
+(s/def ::symbols          (.* ::symbol))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::symbol?     (.? ::symbol))
-(s/def ::restrictions    ::symbols)
-(s/def ::is-restriction  ::bool)
+(s/def ::symbol?          (.? ::symbol))
+(s/def ::restrictions         ::symbols)
+(s/def ::is-restriction       ::bool)
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::expr* (s/coll-of ::expr))
+(s/def ::expr*            (.* ::expr))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::expr? (.? ::expr))
+(s/def ::expr?            (.? ::expr))
 ;; #+end_src
 
 ;;
@@ -2348,10 +2410,10 @@
 
 ;; #+begin_src clojure
 
-(s/def ::loop-v         ::expr?) ;; TODO: ?
-(s/def ::loop-start     ::expr?)
-(s/def ::loop-end       ::expr?)
-(s/def ::loop-increment ::expr?)
+(s/def ::loop-v               ::expr?) ;; TODO: ?
+(s/def ::loop-start           ::expr?)
+(s/def ::loop-end             ::expr?)
+(s/def ::loop-increment       ::expr?)
 
 (s/def ::do-loop-head
   (s/keys :req [::loop-v
@@ -2366,12 +2428,12 @@
 
 ;; #+begin_src clojure
 
-(s/def ::len            ::int)   ;; Issues #36
-(s/def ::disposition    #{'compile-time-length   ;; >= 0
+(s/def ::len                  ::int)   ;; Issues #36
+(s/def ::disposition          #{'compile-time-length   ;; >= 0
                        'inferred-at-run-time  ;; = -1
                        'allocatable           ;; = -2
                        'run-time-expression}) ;; = -3
-(s/def ::len-expr?      ::expr?) ;; TODO: check that it's >= 0
+(s/def ::len-expr?            ::expr?) ;; TODO: check that it's >= 0
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -2410,11 +2472,11 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::integer-kind   #{1 2 4 8 16})
-(s/def ::real-kind      #{4 8})
-(s/def ::complex-kind   #{4 8})
-(s/def ::logical-kind   #{1 2 4})
-(s/def ::character-kind #{1})
+(s/def ::integer-kind        #{1 2 4 8 16})
+(s/def ::real-kind           #{4 8})
+(s/def ::complex-kind        #{4 8})
+(s/def ::logical-kind        #{1 2 4})
+(s/def ::character-kind      #{1})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -2806,9 +2868,10 @@
 (s/def ::symbol-ref
   (s/keys :req [::identifier
                 ::symtab-id]))
-(s/def ::symbol-ref?  (.? ::symbol-ref))
-(s/def ::extern-symref    ::symbol-ref?)
-(s/def ::orig-symref      ::symbol-ref?)
+(s/def ::symbol-ref?      (.? ::symbol-ref))
+(s/def ::symbol-ref*      (.* ::symbol-ref))
+(s/def ::extern-symref        ::symbol-ref?)
+(s/def ::orig-symref          ::symbol-ref?)
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2974,13 +3037,46 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
+;; ### Array Types
+;;
+;; #+begin_src clojure
+
+(s/def ::array-expr
+  (s/or :var                    ::Var)
+  )
+;; #+end_src
+
+;; TODO: `array-shape` and `array-value?` are
+;; work-in-progress:
+
+;; #+begin_src clojure
+
+(s/def ::array-shape            ::expr)
+(s/def ::array-value?           ::expr?)
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::array-index-start?     ::integer-expr?)
+(s/def ::array-index-end?       ::integer-expr?)
+(s/def ::array-index-increment? ::integer-expr?)
+
+(s/def ::array-index
+  (s/keys :req [::array-index-start?
+                ::array-index-end?
+                ::array-index-increment?]))
+
+(s/def ::array-index*       (.* ::array-index))
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ### List Types
 ;;
 ;; #+begin_src clojure
 
 (s/def ::list-expr
-  (s/or :list-constant        ::ListConstant
-        :var                  ::Var)
+  (s/or :list-constant          ::ListConstant
+        :var                    ::Var)
   )
 ;; #+end_src
 
@@ -3004,7 +3100,7 @@
 
 ;; #+begin_src clojure
 
-(s/def ::elements             ::expr*)
+(s/def ::elements               ::expr*)
 ;; #+end_src
 
 
@@ -3026,8 +3122,8 @@
 
 ;; #+begin_src clojure
 
-(s/def ::string-expr?     (.? ::string-expr))
-(s/def ::string-value?        ::string-expr?)
+(s/def ::string-expr?       (.? ::string-expr))
+(s/def ::string-value?          ::string-expr?)
 ;; #+end_src
 
 
@@ -3036,8 +3132,8 @@
 
 ;; #+begin_src clojure
 
-(s/def ::intrinsic-ident      ::identifier)
-(s/def ::overload-id          ::nat)
+(s/def ::intrinsic-ident        ::identifier)
+(s/def ::overload-id            ::nat)
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3437,7 +3533,8 @@
 
 ;; #+begin_src clojure
 
-#_(defn LogicalConstant
+#_
+(defn LogicalConstant
     ([a-bool, a-ttype] "binary"
      (let [cnd {::term ::expr,
                 ::asr-expr-head
@@ -3668,6 +3765,97 @@
 ;;
 ;; TODO: make Var look up a value in the
 ;; symbol-table! That's part of abstract execution.
+
+;; ----------------------------------------------------------------
+;; ## ARRAY ITEM
+;;
+;;
+
+;;
+;; ### Example
+;;
+;; #+begin_src clojure
+
+#_
+(ArrayItem
+ (Var 186 b)
+ [(()
+   (Var 186 k)
+   ())]
+ (Real 8 [])
+ RowMajor
+ ())
+;; #+end_src
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn array-index [[start, end, incr]]
+  {::array-index-start?     start
+   ::array-index-end?       end
+   ::array-index-increment? incr})
+
+(defn ArrayItem [array-expr
+                 array-index*
+                 ttype
+                 array-storage
+                 expr?]
+  (let [cnd {::term ::expr
+             ::asr-expr-head
+             {::expr-head ::ArrayItem
+              ::array-expr      array-expr
+              ::array-index*    (map array-index array-index*)
+              ::ttype           ttype
+              ::array-storage   array-storage
+              ::expr?           expr?
+              }}]
+    (if (s/valid? ::ArrayItem cnd)
+      cnd
+      :invalid-array-item)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## ARRAY RESHAPE
+;;
+;;
+
+;;
+;; ### Example
+;;
+;; #+begin_src clojure
+
+#_
+(ArrayReshape
+ (Var 186 b)
+ (Var 186 newshape)
+ (Real 8 [(() ())])
+ ())
+;; #+end_src
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn ArrayReshape
+  [array-expr
+   array-shape
+   ttype
+   array-value?]
+  (let [cnd {::term ::expr
+             ::asr-expr-head
+             {::expr-head ::ArrayReshape
+              ::array-expr   array-expr
+              ::array-shape  array-shape
+              ::ttype        ttype
+              ::array-value? array-value?
+              }}]
+    (if (s/valid? ::ArrayReshape cnd)
+      cnd
+      :invalid-array-reshape)))
+;; #+end_src
 
 ;; ----------------------------------------------------------------
 ;; ## STRING CHR
@@ -4185,7 +4373,6 @@
       :invalid-complex-im)))
 ;; #+end_src
 
-
 ;; ----------------------------------------------------------------
 ;; ## INTEGER COMPARE
 ;;
@@ -4431,12 +4618,6 @@
       :invalid-logical-not)))
 ;; #+end_src
 
-;; ----------------------------------------------------------------
-;; ## ABS INTRINSIC
-;;
-;;
-
-
 ;;
 ;;
 ;; # STMT
@@ -4449,13 +4630,13 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::stmt* (s/coll-of ::stmt))
+(s/def ::stmt*          (.* ::stmt))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(s/def ::stmt? (.? ::stmt))
-(s/def ::vars  (s/coll-of ::Var))
+(s/def ::stmt?          (.? ::stmt))
+(s/def ::vars           (.* ::Var))
 ;; #+end_src
 
 ;;
@@ -4507,19 +4688,6 @@
 
 ;; #+begin_src clojure
 
-(s/def ::modulenym          ::identifier)
-(s/def ::loaded-from-mod    ::bool)
-(s/def ::intrinsic          ::bool)
-;; #+end_src
-
-;; #+begin_src clojure
-
-(s/def ::function-name      ::identifier)
-(s/def ::function-signature ::FunctionType)
-;; #+end_src
-
-;; #+begin_src clojure
-
 (s/def ::param*             ::expr*) ;; renamed from args
 (s/def ::body               ::stmt*)
 (s/def ::return-var?        ::expr?)
@@ -4532,7 +4700,6 @@
 
 ;; #+begin_src clojure
 
-(s/def ::prognym            ::identifier)
 (s/def ::test-expr          ::logical-expr)
 (s/def ::orelse             ::stmt*)
 ;; #+end_src
@@ -4876,7 +5043,6 @@
 ;;
 ;;
 
-
 ;; `SubroutineCall` is a special case because it
 ;; abuses the word `symbol` to mean a `symbol-ref`.
 ;;
@@ -4885,10 +5051,10 @@
 ;;
 ;;
 ;; ```c
-;; | SubroutineCall(symbol     name,          ~~~> symref
-;;                  symbol   ? original_name, ~~~> orig-symref
-;;                  call_arg * args,          ~~~> call_args
-;;                  expr     ? dt)
+;; SubroutineCall(symbol     name,          ~~~> symref
+;;                symbol   ? original_name, ~~~> orig-symref
+;;                call_arg * args,          ~~~> call_args
+;;                expr     ? dt)
 ;; ```
 
 ;; #+begin_src clojure
@@ -4901,13 +5067,15 @@
 ;;
 ;; #+begin_src clojure
 
-#_(SubroutineCall
+#_
+(SubroutineCall
    7 test_fn1
    ()
    []
    ())
 
-#_(SubroutineCall
+#_
+(SubroutineCall
    7 test_fn1
    ()
    ((Var 42 i))
@@ -4954,12 +5122,329 @@
                        ~dt?)))
 ;; #+end_src
 
+;; ----------------------------------------------------------------
+;; ## BLOCK CALL
+;;
+;;
+
+;; `BlockCall` abuses `symbol` to mean `symbol-ref`.
+;;
+;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; BlockCall(int    label,
+;;           symbol m)   // <~~~ symref
+;; ```
+
+;; #+begin_src clojure
+
+(s/def ::label ::nat)
+;; #+end_src
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn BlockCall--
+  [label, symref]
+  (let [cnd {::term ::stmt,
+             ::asr-stmt-head
+             {::stmt-head    ::BlockCall
+              ::label        label
+              ::symbol-ref   symref
+              }}]
+    (if (s/valid? ::BlockCall cnd)
+      cnd
+      :invalid-block-call)))
+;; #+end_src
+
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+(defmacro BlockCall
+  [label,
+   stid ident]
+  `(BlockCall--
+    ~label
+    (symbol-ref '~ident ~stid)))
+;; #+end_src
+
 
 ;;
 ;;
 ;; # SYMBOL
 ;;
 ;;
+
+;; ----------------------------------------------------------------
+;; ## Prerequisite Types and Aliases
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::modulenym          ::identifier)
+(s/def ::loaded-from-mod    ::bool)
+(s/def ::intrinsic          ::bool)
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::function-name      ::identifier)
+(s/def ::function-signature ::FunctionType)
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::prognym            ::identifier)
+(s/def ::blocknym           ::identifier)
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## PROGRAM
+;;
+;;
+
+;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; = Program(symbol_table symtab,
+;;           identifier   name,
+;;           identifier*  dependencies,
+;;           stmt*        body)
+;; ```
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn Program-- [stab, nym, deps, body-]
+  (let [cnd {::term ::symbol,
+             ::asr-symbol-head
+             {::symbol-head  ::Program
+              ::SymbolTable  stab
+              ::prognym      nym
+              ::dependencies deps
+              ::body         body-}}]
+    (if (s/valid? ::Program cnd)
+      cnd
+      ::invalid-program)))
+;; #+end_src
+
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+(defmacro Program
+  "Quote the nym and the dependencies."
+  [stab, nym, deps, body-]
+  `(Program--
+    ~stab,
+    '~nym,
+    (for [e# '~deps] e#),
+    ~body-))
+;; #+end_src
+
+
+;; ----------------------------------------------------------------
+;; ## MODULE
+;;
+;;
+
+;;
+;; ### Original ASDL
+;;
+;; ```c
+;; | Module(symbol_table   symtab,
+;;          identifier     name,
+;;          identifier   * dependencies,
+;;          bool           loaded_from_mod,
+;;          bool           intrinsic)
+;; ```
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn Module-- [symtab, modnym, deps, loaded, intrinsic-]
+  (let [cnd {::term ::symbol
+             ::asr-symbol-head
+             {::symbol-head     ::Module
+              ::SymbolTable     symtab
+              ::modulenym       modnym
+              ::dependencies    deps
+              ::loaded-from-mod loaded
+              ::intrinsic       intrinsic-}}]
+    (if (s/valid? ::Module cnd)
+      cnd
+      :invalid-module)))
+;; #+end_src
+
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+(defmacro Module
+  "Quote the mondnym and the deps."
+  [symtab, modnym, deps, loaded, intrinsic-]
+  (let [quotes (vec (for [d deps] `'~d))]
+    `(Module--
+      ~symtab
+      '~modnym
+      ~quotes
+      ~loaded
+      ~intrinsic-)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## FUNCTION
+;;
+;;
+
+;;
+;; ### Original ASDL
+;;
+;; ```c
+;; | Function(symbol_table symtab,
+;;            identifier   name,
+;;            ttype        function_signature,
+;;            identifier*  dependencies,
+;;
+;;            expr*        args,              ;; rename ::params
+;;            stmt*        body,
+;;            expr?        return_var,
+;;
+;;            access       access,
+;;            bool         deterministic,
+;;            bool         side_effect_free)
+;; ```
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn Function-- [symtab,
+                  fnnym,   fnsig,  deps,
+                  param*-, body-,  retvar,
+                  access-, determ, sefree]
+  (let [cnd {::term ::symbol
+             ::asr-symbol-head
+             {::symbol-head         ::Function
+
+              ::SymbolTable         symtab
+
+              ::function-name       fnnym
+              ::function-signature  fnsig
+              ::dependencies        deps
+
+              ::param*              param*-
+              ::body                body-
+              ::return-var?         retvar
+
+              ::access              access-
+              ::deterministic       determ
+              ::side-effect-free    sefree
+              }}]
+    (if (s/valid? ::Function cnd)
+      cnd
+      :invalid-function)))
+;; #+end_src
+
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+(defmacro Function
+  "Quote the fnnym and the deps."
+  [symtab,
+   fnnym,   fnsig,  deps,
+   param*-, body-,  retvar,
+   access-, determ, sefree]
+  `(Function-- ~symtab,
+               '~fnnym,  ~fnsig,  (for [d# '~deps] d#),
+               ~param*-, ~body-,  ~retvar,
+               ~access-, ~determ, ~sefree))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## GENERIC PROCEDURE
+;;
+;;
+
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
+;;                  identifier     name,
+;;                  symbol       * procs,         <~~~ symbol-refs
+;;                  access         access)
+;; ```
+
+;;
+;; ### Example
+;;
+;; #+begin_src clojure
+
+#_
+(GenericProcedure
+ 3
+ arccos
+ [3 __lpython_overloaded_0__arccos
+  3 __lpython_overloaded_1__arccos]
+ Public )
+;; #+end_src
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn GenericProcedure--
+  [stid, fnym, symrefs, access]
+  (let [cnd {::term ::symbol,
+             ::asr-symbol-head
+             {::symbol-head   ::GenericProcedure
+              ::symtab-id     stid
+              ::function-name fnym
+              ::symbol-ref*   symrefs
+              ::access        access}
+             }]
+    (if (s/valid? ::GenericProcedure cnd)
+      cnd
+      :invalid-generic-procedure)))
+;; #+end_src
+
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+
+
+(defmacro GenericProcedure
+  [stid, fnym, naked-pairs, access]
+  (let [pairs (partition 2 naked-pairs)
+        fpairs (for [[fid fnym] pairs]
+                 (symbol-ref fnym fid) )]
+    `(GenericProcedure--
+      ~stid
+      '~fnym
+      '~fpairs
+      ~access)))
+;; #+end_src
 
 ;; ----------------------------------------------------------------
 ;; ## EXTERNAL SYMBOL
@@ -5241,6 +5726,52 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
+;; ## BLOCK
+;;
+;;
+
+;;
+;; ### Original ASDL
+;;
+;;
+;; ```c
+;; Block(symbol_table symtab, identifier name, stmt* body)
+;; ```
+;;
+
+
+;;
+;; Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn Block-- [SymbolTable
+               blocknym
+               body]
+  (let [cnd {::term ::symbol
+             ::asr-symbol-head
+             {::symbol-head     ::Block
+              ::SymbolTable     SymbolTable
+              ::blocknym        blocknym
+              ::body            body
+              }}]
+    (if (s/valid? ::Block cnd)
+      cnd
+      :invalid-block)))
+;; #+end_src
+
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+(defmacro Block [SymbolTable
+                 blocknym
+                 body]
+  `(Block-- ~SymbolTable '~blocknym ~body))
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ## INTRINSIC MODULE
 ;;
 ;;
@@ -5275,180 +5806,6 @@
   `(IntrinsicModule-- '~modnym))
 ;; #+end_src
 
-;; ----------------------------------------------------------------
-;; ## MODULE
-;;
-;;
-
-;;
-;; ### Original ASDL
-;;
-;; ```c
-;; | Module(symbol_table   symtab,
-;;          identifier     name,
-;;          identifier   * dependencies,
-;;          bool           loaded_from_mod,
-;;          bool           intrinsic)
-;; ```
-
-;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn Module-- [symtab, modnym, deps, loaded, intrinsic-]
-  (let [cnd {::term ::symbol
-             ::asr-symbol-head
-             {::symbol-head     ::Module
-              ::SymbolTable     symtab
-              ::modulenym       modnym
-              ::dependencies    deps
-              ::loaded-from-mod loaded
-              ::intrinsic       intrinsic-}}]
-    (if (s/valid? ::Module cnd)
-      cnd
-      :invalid-module)))
-;; #+end_src
-
-;;
-;; ### Legacy Sugar
-;;
-;; #+begin_src clojure
-
-(defmacro Module
-  "Quote the mondnym and the deps."
-  [symtab, modnym, deps, loaded, intrinsic-]
-  (let [quotes (vec (for [d deps] `'~d))]
-    `(Module--
-      ~symtab
-      '~modnym
-      ~quotes
-      ~loaded
-      ~intrinsic-)))
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## FUNCTION
-;;
-;;
-
-;;
-;; ### Original ASDL
-;;
-;; ```c
-;; | Function(symbol_table symtab,
-;;            identifier   name,
-;;            ttype        function_signature,
-;;            identifier*  dependencies,
-;;
-;;            expr*        args,              ;; rename ::params
-;;            stmt*        body,
-;;            expr?        return_var,
-;;
-;;            access       access,
-;;            bool         deterministic,
-;;            bool         side_effect_free)
-;; ```
-
-;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn Function-- [symtab,
-                  fnnym,   fnsig,  deps,
-                  param*-, body-,  retvar,
-                  access-, determ, sefree]
-  (let [cnd {::term ::symbol
-             ::asr-symbol-head
-             {::symbol-head         ::Function
-
-              ::SymbolTable         symtab
-
-              ::function-name       fnnym
-              ::function-signature  fnsig
-              ::dependencies        deps
-
-              ::param*              param*-
-              ::body                body-
-              ::return-var?         retvar
-
-              ::access              access-
-              ::deterministic       determ
-              ::side-effect-free    sefree
-              }}]
-    (if (s/valid? ::Function cnd)
-      cnd
-      :invalid-function)))
-;; #+end_src
-
-;;
-;; ### Legacy Sugar
-;;
-;; #+begin_src clojure
-
-(defmacro Function
-  "Quote the fnnym and the deps."
-  [symtab,
-   fnnym,   fnsig,  deps,
-   param*-, body-,  retvar,
-   access-, determ, sefree]
-  `(Function-- ~symtab,
-               '~fnnym,  ~fnsig,  (for [d# '~deps] d#),
-               ~param*-, ~body-,  ~retvar,
-               ~access-, ~determ, ~sefree))
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## PROGRAM
-;;
-;;
-
-;;
-;; ### Original ASDL
-;;
-;;
-;; ```c
-;; = Program(symbol_table symtab,
-;;           identifier   name,
-;;           identifier*  dependencies,
-;;           stmt*        body)
-;; ```
-
-;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn Program-- [stab, nym, deps, body-]
-  (let [cnd {::term ::symbol,
-             ::asr-symbol-head
-             {::symbol-head  ::Program
-              ::SymbolTable  stab
-              ::prognym      nym
-              ::dependencies deps
-              ::body         body-}}]
-    (if (s/valid? ::Program cnd)
-      cnd
-      ::invalid-program)))
-;; #+end_src
-
-;;
-;; ### Legacy Sugar
-;;
-;; #+begin_src clojure
-
-(defmacro Program
-  "Quote the nym and the dependencies."
-  [stab, nym, deps, body-]
-  `(Program--
-    ~stab,
-    '~nym,
-    (for [e# '~deps] e#),
-    ~body-))
-;; #+end_src
-
-
 ;;
 ;;
 ;; # UNIT
@@ -5481,7 +5838,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::nodes (s/coll-of ::node))
+(s/def ::nodes (.* ::node))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------

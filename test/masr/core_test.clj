@@ -1500,12 +1500,47 @@
          )))))
 
 
-;;  ____        _
-;; |  _ \  ___ | |    ___   ___  _ __
-;; | | | |/ _ \| |   / _ \ / _ \| '_ \
-;; | |_| | (_) | |__| (_) | (_) | |_) |
-;; |____/ \___/|_____\___/ \___/| .__/
-;;                              |_|
+;;    _                     ___ _
+;;   /_\  _ _ _ _ __ _ _  _|_ _| |_ ___ _ __
+;;  / _ \| '_| '_/ _` | || || ||  _/ -_) '  \
+;; /_/ \_\_| |_| \__,_|\_, |___|\__\___|_|_|_|
+;;                     |__/
+
+
+(deftest ArrayItem-test
+  (is (s/valid? ::asr/array-index-start?
+                ()))
+  (is (s/valid? ::asr/array-index-end?
+                (Var 186 k)))
+  (is (s/valid? ::asr/array-index-increment?
+                ()))
+  (is (s/valid? ::asr/array-index
+                (legacy
+                 (array-index (()
+                               (Var 186 k)
+                               ())))))
+  (is (s/valid? ::asr/array-index*
+                (legacy
+                 (map array-index [(()
+                                    (Var 186 k)
+                                    ())]))))
+  (is (s/valid? ::asr/ArrayItem
+                (legacy
+                 (ArrayItem
+                  (Var 186 b)
+                  [(()
+                    (Var 186 k)
+                    ())]
+                  (Real 8 [])
+                  RowMajor
+                  ())))))
+
+
+;;  ___      _
+;; |   \ ___| |   ___  ___ _ __
+;; | |) / _ \ |__/ _ \/ _ \ '_ \
+;; |___/\___/____\___/\___/ .__/
+;;                        |_|
 
 
 (deftest do-loop-test
@@ -1598,8 +1633,7 @@
            ::asr/body [(ListAppend
                         (Var 2 l3)
                         (Var 2 i)
-                        )]}}
-         ))
+                        )]}}))
     (is (s/valid?
          ::asr/DoLoop
          (DoLoop
@@ -5026,11 +5060,26 @@
     (test-unit -test_builtin_pow-cea529e)
     (test-unit -test_builtin_round-cca5cba)
     (test-unit -test_builtin_str-fcdedc2)
+    (test-unit -test_c_interop_01-8bee4ec)
     (test-unit -test_complex_01-c199562)
     (test-unit -test_complex_02-6516823)
+    (test-unit -test_end_sep_keywords-49ea13f)
+    (test-unit -test_integer_bitnot-0d0eafa)
+    (test-unit -test_max_min-e73decc)
+    (test-unit -test_numpy_03-6dd742e)
     (test-unit _expr2_5311701)
     (test-unit _expr_10_e2e0267)
     ))
+
+
+(deftest bisecting-6dd742e
+  (is (s/valid? ::asr/GenericProcedure
+                (GenericProcedure
+                 3
+                 arccos
+                 [3 __lpython_overloaded_0__arccos
+                  3 __lpython_overloaded_1__arccos]
+                 Public ))))
 
 
 (deftest bisecting-fcdedc2
