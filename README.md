@@ -6,26 +6,33 @@ Radiation. Yes, it's a physics pun. We like physics puns.
 
 # Run
 
-- Install leiningen (look it up on the web, there is only one)
+- Install leiningen (look it up on the web, there is only one).
 
-- type `lein test` at the terminal. Interacting with the tests is the
+- Type `lein test` at the terminal. Interacting with the tests is the
   best way, by far, to learn the code.
 
-- type `lein run` at the terminal
+- Type `lein test :only masr.core-test/Module-test`, for example,
+  to run just one of the tests.
+
+- Type `lein run` at the terminal; doesn't do much, yet.
 
 # Read
 
-`specs.md`
+- `core_tests.clj`
 
-Looks best in the IntelliJ IDEs. Doesn't look so good in
-Visual-Studio Code. Any renderer of Markdown should be
-serviceable.
+- example inputs in the `resources/reference` subdirectory
+
+- `specs.md`
+
+  Looks best in the IntelliJ IDEs. Doesn't look so good in
+  Visual-Studio Code. Any renderer of Markdown should be
+  serviceable.
 
 # Modify
 
 - Write Clojure code and Markdown in `specs.clj` and `core_tests.clj`.
 
-- Extract the Markdown file from the code via the following:
+- Extract the Markdown file from the code as follows:
 
 ```bash
 awk -f md4code.awk < ./src/masr/specs.clj > specs.md

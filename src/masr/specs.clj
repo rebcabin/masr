@@ -1571,6 +1571,14 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  TupleCompare expr
+  (tuple-left any-cmpop tuple-right
+              Logical logical-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   StringConstant expr
   (string Character))
 ;; #+end_src
@@ -1641,6 +1649,15 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  ArrayConstant expr
+  (expr*
+   ttype
+   array-storage))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   ArrayItem expr
   (array-expr
    array-index*
@@ -1664,6 +1681,13 @@
 (defmasrtype
   Cast expr
   (arg cast-kind ttype value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  TupleItem expr
+  (tuple-expr index ttype value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2173,12 +2197,12 @@
   ::asr-term. Add an entity-key spec like ::intent,
   and a heavy sugar function like intent."
   [term, heads]
-  (let [ns "masr.specs"
-        trm (keyword ns "term")     ;; like ::term
-        art (keyword ns "asr-term") ;; like ::asr-term
-        tkw (keyword ns (str term)) ;; like ::intent
-        tke (keyword ns (str term "-enum")) ;; like ::intent-enum
-        tki (keyword ns (str "invalid-" term))]
+  (let [ns "masr.specs"                         ;; -- Examples --
+        trm (keyword ns "term")                 ;; ::term
+        art (keyword ns "asr-term")             ;; ::asr-term
+        tkw (keyword ns (str term))             ;; ::intent
+        tke (keyword ns (str term "-enum"))     ;; ::intent-enum
+        tki (keyword ns (str "invalid-" term))] ;; ::invalid-intent
     `(do
        (s/def ~tke ~heads)
        ;; for the multi-spec
@@ -2206,23 +2230,70 @@
 
 ;; #+begin_src clojure
 
-(enum-like logicalbinop  #{'And  'Or  'Xor  'NEqv  'Eqv})
+(def logical-binops #{'And  'Or  'Xor  'NEqv  'Eqv})
+(def real-binops    #{'RAdd 'RSub 'RMul 'RDiv 'RPow})
+(def complex-binops #{'CAdd 'CSub 'CMul 'CDiv 'CPow})
+(def integer-binops #{'Add 'Sub 'Mul 'Div 'Pow
+                      'BitAnd 'BitOr 'BitXor
+                      'BitLShift 'BitRShift})
+;; #+end_src
+
+;; #+begin_src clojure
+
+(def logical-cmpops #{'LEq 'LNotEq
+                      ;; some weird ones: see Issue #38
+                      'LLt 'LLtE 'LGt 'LGtE})
+(def real-cmpops    #{'REq 'RNotEq 'RLt 'RLtE 'RGt 'RGtE})
+(def complex-cmpops #{'CEq 'CNotEq})
+(def integer-cmpops #{'Eq 'NotEq 'Lt 'LtE 'Gt 'GtE})
+(def string-cmpops  #{'SEq 'SNotEq 'SLt 'SLtE 'SGt 'SGtE})
+(def all-cmpops     (set/union logical-cmpops
+                               real-cmpops
+                               complex-cmpops
+                               integer-cmpops
+                               string-cmpops))
+;; #+end_src
+
+;;
 ;; Collisions of names are NOT ALLOWED!
 ;; See Legacy Sugar for `RealBinOp.`
-(enum-like real-binop    #{'RAdd 'RSub 'RMul 'RDiv 'RPow})
-(enum-like complex-binop #{'CAdd 'CSub 'CMul 'CDiv 'CPow})
-(enum-like integer-binop #{'Add 'Sub 'Mul 'Div 'Pow
-                           'BitAnd 'BitOr 'BitXor
-                           'BitLShift 'BitRShift})
-(enum-like integer-cmpop #{'Eq 'NotEq  'Lt  'LtE  'Gt  'GtE})
-(enum-like real-cmpop    #{'REq 'RNotEq  'RLt  'RLtE  'RGt  'RGtE})
-(enum-like complex-cmpop #{'CEq 'CNotEq})
-(enum-like string-cmpop  #{'SEq 'SNotEq  'SLt  'SLtE  'SGt  'SGtE})
+;;
+
+;; #+begin_src clojure
+
+(enum-like logicalbinop  logical-binops)
+(enum-like real-binop    real-binops)
+(enum-like complex-binop complex-binops)
+(enum-like integer-binop integer-binops)
+
+(s/def ::any-binop (set/union logical-binops
+                              real-binops
+                              complex-binops
+                              integer-binops))
+;; #+end_src
+
+;;
 ;; Collisions of names are NOT ALLOWED!
 ;; See Legacy Sugar for `LogicalCompare.`
-(enum-like logical-cmpop #{'LEq 'LNotEq
-                           ;; some weird ones: see Issue #38
-                           'LLt  'LLtE  'LGt  'LGtE})
+;;
+
+;; #+begin_src clojure
+
+(enum-like logical-cmpop logical-cmpops)
+(enum-like real-cmpop    real-cmpops)
+(enum-like complex-cmpop complex-cmpops)
+(enum-like integer-cmpop integer-cmpops)
+(enum-like string-cmpop  string-cmpops)
+
+(s/def ::any-cmpop (set/union logical-cmpops
+                              real-cmpops
+                              complex-cmpops
+                              integer-cmpops
+                              string-cmpops))
+;; #+end_src
+
+;; #+begin_src clojure
+
 (enum-like intent        #{'Local 'In 'Out 'InOut 'ReturnVar
                            'Unspecified})
 (enum-like storage-type  #{'Default, 'Save, 'Parameter, 'Allocatable})
@@ -2892,10 +2963,36 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
-;; ### Logical Types
+;; ### Unchecked Element Types
 ;;
 ;;
 
+;;
+;; The following represent types of elements of
+;; collections. TODO: MASR does not currently check
+;; them because checking them requires checking that
+;; the type of the element matches types stored
+;; along with the collection. The cross-logic to
+;; check these types must be implemented in each
+;; collection type
+;;
+;;
+;; #+begin_src clojure
+
+(s/def ::unchecked-element-expr
+  (s/or :array-item           ::ArrayItem ;; TODO check return type!
+        :tuple-item           ::TupleItem ;; TODO check return type!
+        :cast                 ::Cast      ;; TODO check return type!
+        :if-expr              ::IfExp     ;; TODO check return type!
+        :named-expr           ::NamedExpr ;; TODO check return type!
+        :var                  ::Var       ;; TODO check return type!
+))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ### Logical Types
+;;
+;;
 ;; #+begin_src clojure
 
 (s/def ::logical-expr
@@ -2904,13 +3001,10 @@
         :integer-compare      ::IntegerCompare
         :real-compare         ::RealCompare
         :complex-compare      ::ComplexCompare
+        :tuple-compare        ::TupleCompare
         :logical-binop        ::LogicalBinOp
         :logical-not          ::LogicalNot
-        :cast                 ::Cast      ;; TODO check return type!
-        :if-expr              ::IfExp     ;; TODO check return type!
-        :named-expr           ::NamedExpr ;; TODO check return type!
-        :var                  ::Var       ;; TODO check return type!
-        ))
+        :unchecked            ::unchecked-element-expr))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2939,11 +3033,7 @@
         :string-item          ::StringItem
         :tuple-len            ::TupleLen
         :list-len             ::ListLen
-        :cast                 ::Cast      ;; TODO check return type!
-        :if-expr              ::IfExp     ;; TODO check return type!
-        :named-expr           ::NamedExpr ;; TODO check return type!
-        :var                  ::Var       ;; TODO check return type!
-        ))
+        :unchecked            ::unchecked-element-expr))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2959,7 +3049,6 @@
 ;; ### Index Types
 ;;
 ;;
-
 ;; #+begin_src clojure
 
 (s/def ::index                ::integer-expr)
@@ -2984,11 +3073,7 @@
   (s/or :real-constant        ::RealConstant
         :real-binop           ::RealBinOp
         :real-unary-minus     ::RealUnaryMinus
-        :cast                 ::Cast      ;; TODO check return type!
-        :if-expr              ::IfExp     ;; TODO check return type!
-        :named-expr           ::NamedExpr ;; TODO check return type!
-        :var                  ::Var       ;; TODO check return type!
-        ))
+        :unchecked            ::unchecked-element-expr))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -3011,11 +3096,7 @@
   (s/or :complex-constant     ::ComplexConstant
         :complex-binop        ::ComplexBinOp
         :complex-unary-minus  ::ComplexUnaryMinus
-        :cast                 ::Cast      ;; TODO check return type!
-        :if-expr              ::IfExp     ;; TODO check return type!
-        :named-expr           ::NamedExpr ;; TODO check return type!
-        :var                  ::Var       ;; TODO check return type!
-        ))
+        :unchecked            ::unchecked-element-expr))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -3039,11 +3120,13 @@
 ;; ----------------------------------------------------------------
 ;; ### Array Types
 ;;
+;;
 ;; #+begin_src clojure
 
 (s/def ::array-expr
-  (s/or :var                    ::Var)
-  )
+  (s/or :var                    ::Var
+        :array-constant         ::ArrayConstant
+        :unchecked              ::unchecked-element-expr))
 ;; #+end_src
 
 ;; TODO: `array-shape` and `array-value?` are
@@ -3076,15 +3159,14 @@
 
 (s/def ::list-expr
   (s/or :list-constant          ::ListConstant
-        :var                    ::Var)
-  )
+        :var                    ::Var
+        :unchecked              ::unchecked-element-expr)  )
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (s/def ::list-element
-  (s/or :expr                 ::expr)
-  )
+  (s/or :expr                   ::expr))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3093,9 +3175,10 @@
 ;; #+begin_src clojure
 
 (s/def ::tuple-expr
-  (s/or :tuple-constant       ::TupleConstant
-        :var                  ::Var)
-  )
+  (s/or :tuple-constant         ::TupleConstant
+        :unchecked              ::unchecked-element-expr))
+(s/def ::tuple-left             ::tuple-expr)
+(s/def ::tuple-right            ::tuple-expr)
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -3112,12 +3195,12 @@
 ;; #+begin_src clojure
 
 (s/def ::string-expr
-  (s/or :string-constant      ::StringConstant
-        :string-chr           ::StringChr
-        :string-section       ::StringSection
-        :string-repeat        ::StringRepeat
-        :var                  ::Var
-        ))
+  (s/or :string-constant        ::StringConstant
+        :string-item            ::StringItem
+        :string-chr             ::StringChr
+        :string-section         ::StringSection
+        :string-repeat          ::StringRepeat
+        :unchecked              ::unchecked-element-expr))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -3134,6 +3217,61 @@
 
 (s/def ::intrinsic-ident        ::identifier)
 (s/def ::overload-id            ::nat)
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## IF EXP
+;;
+;;
+
+;;
+;; ### Original ASDL
+;;
+;; ```c
+;;  IfExp(expr test,
+;;        expr body,
+;;        expr orelse,
+;;        ttype type,
+;;        expr? value)
+;; ```
+
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(IfExp
+ (IntegerCompare
+  (Var 2 b)
+  Gt
+  (IntegerConstant 5 (Integer 4 []))
+  (Logical 4 [])
+  ())
+ (LogicalConstant true (Logical 4 []))
+ (LogicalConstant false (Logical 4 []))
+ (Logical 4 []) () )
+;; #+end_src
+
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn IfExp [test-expr, body, orelse, ttype, value?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head ::IfExp
+              ::test-expr test-expr
+              ::body      body
+              ::orelse    orelse
+              ::ttype     ttype
+              ::value?    value?}}]
+    (if (s/valid? ::IfExp cnd)
+      cnd
+      :invalid-if-exp)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3213,113 +3351,6 @@
 (typed-uminus Integer)
 (typed-uminus Real)
 (typed-uminus Complex)
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## CAST
-;;
-;;
-
-;;
-;; ### Original ASDL
-;;
-;; ```c
-;; | Cast(expr arg, cast-kind kind, ttype type, expr? value)
-;; ```
-
-;;
-;; ### Example
-;;
-;;
-;; #+begin_src clojure
-
-#_
-(Cast
- (FunctionCall
-  2 pow__AT____lpython_overloaded_0__pow
-  2 pow
-  [((IntegerConstant 2 (Integer 4 [])))
-   ((IntegerConstant 2 (Integer 4 [])))]
-  (Real 8 [])
-  (RealConstant 4.000000 (Real 8 [])) ())
- RealToInteger
- (Integer 4 [])
- (IntegerConstant 4 (Integer 4 [])))
-;; #+end_src
-
-;;
-;; ### Heavy Sugar
-;;
-;;
-;; #+begin_src clojure
-
-(defn Cast
-  [arg, cast-kind, ttype, value?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head ::Cast
-              ::arg       arg
-              ::cast-kind cast-kind
-              ::ttype     ttype
-              ::value?    value?}}]
-    (if (s/valid? ::Cast cnd)
-      cnd
-      :invalid-cast)))
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## IF EXP
-;;
-;;
-
-;;
-;; ### Original ASDL
-;;
-;; ```c
-;;  IfExp(expr test,
-;;        expr body,
-;;        expr orelse,
-;;        ttype type,
-;;        expr? value)
-;; ```
-
-;;
-;; ### Example
-;;
-;;
-;; #+begin_src clojure
-
-#_
-(IfExp
- (IntegerCompare
-  (Var 2 b)
-  Gt
-  (IntegerConstant 5 (Integer 4 []))
-  (Logical 4 [])
-  ())
- (LogicalConstant true (Logical 4 []))
- (LogicalConstant false (Logical 4 []))
- (Logical 4 []) () )
-;; #+end_src
-
-;;
-;; ### Heavy Sugar
-;;
-;;
-;; #+begin_src clojure
-
-(defn IfExp [test-expr, body, orelse, ttype, value?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head ::IfExp
-              ::test-expr test-expr
-              ::body      body
-              ::orelse    orelse
-              ::ttype     ttype
-              ::value?    value?}}]
-    (if (s/valid? ::IfExp cnd)
-      cnd
-      :invalid-if-exp)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3765,6 +3796,25 @@
 ;;
 ;; TODO: make Var look up a value in the
 ;; symbol-table! That's part of abstract execution.
+
+;; ----------------------------------------------------------------
+;; ## ARRAY CONSTANT
+;;
+;;
+;; #+begin_src clojure
+
+(defn ArrayConstant [args, ttype, arraystorage]
+  (let [cnd {::term ::expr
+             ::asr-expr-head
+             {::expr-head ::ArrayConstant
+              ::expr*           args
+              ::ttype           ttype
+              ::array-storage   arraystorage
+              }}]
+    (if (s/valid? ::ArrayConstant cnd)
+      cnd
+      :invalid-array-constant)))
+;; #+end_src
 
 ;; ----------------------------------------------------------------
 ;; ## ARRAY ITEM
@@ -4338,6 +4388,32 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
+;; ## TUPLE COMPARE
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn TupleCompare [tuple-left any-cmpop tuple-right
+                    logical-ttype logical-value?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head      ::TupleCompare
+              ::tuple-left     tuple-left
+              ::any-cmpop      any-cmpop
+              ::tuple-right    tuple-right
+              ::Logical        logical-ttype
+              ::logical-value? logical-value?
+              }}]
+    (if (s/valid? ::TupleCompare cnd)
+      cnd
+      :invalid-tuple-compare)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ## COMPLEX RE
 ;;
 ;; #+begin_src clojure
@@ -4617,6 +4693,79 @@
       cnd
       :invalid-logical-not)))
 ;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## CAST
+;;
+;;
+
+;;
+;; ### Original ASDL
+;;
+;; ```c
+;; | Cast(expr arg, cast-kind kind, ttype type, expr? value)
+;; ```
+
+;;
+;; ### Example
+;;
+;;
+;; #+begin_src clojure
+
+#_
+(Cast
+ (FunctionCall
+  2 pow__AT____lpython_overloaded_0__pow
+  2 pow
+  [((IntegerConstant 2 (Integer 4 [])))
+   ((IntegerConstant 2 (Integer 4 [])))]
+  (Real 8 [])
+  (RealConstant 4.000000 (Real 8 [])) ())
+ RealToInteger
+ (Integer 4 [])
+ (IntegerConstant 4 (Integer 4 [])))
+;; #+end_src
+
+;;
+;; ### Heavy Sugar
+;;
+;;
+;; #+begin_src clojure
+
+(defn Cast
+  [arg, cast-kind, ttype, value?]
+  (let [cnd {::term ::expr,
+             ::asr-expr-head
+             {::expr-head ::Cast
+              ::arg       arg
+              ::cast-kind cast-kind
+              ::ttype     ttype
+              ::value?    value?}}]
+    (if (s/valid? ::Cast cnd)
+      cnd
+      :invalid-cast)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## TUPLE ITEM
+;;
+;;
+;; #+begin_src clojure
+
+(defn TupleItem [tuple-expr index ttype value?]
+  (let [cnd {::term ::expr
+             ::asr-expr-head
+             {::expr-head       ::TupleItem
+              ::tuple-expr      tuple-expr
+              ::index           index
+              ::ttype           ttype
+              ::value?          value?
+              }}]
+    (if (s/valid? ::TupleItem cnd)
+      cnd
+      :invalid-tuple-item)))
+;; #+end_src
+
 
 ;;
 ;;
@@ -5431,8 +5580,6 @@
 ;; ### Legacy Sugar
 ;;
 ;; #+begin_src clojure
-
-
 
 (defmacro GenericProcedure
   [stid, fnym, naked-pairs, access]
