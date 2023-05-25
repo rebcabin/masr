@@ -5073,7 +5073,37 @@
     (test-unit -vec_01-9b22f33)
     (test-unit _expr2_5311701)
     (test-unit _expr_10_e2e0267)
+    (test-unit _pass_inline_function_calls-func_inline_01-6cf8821)
     ))
+
+
+(deftest bisecting-6cf8821
+  (is (s/valid? ::asr/identifier '__1))
+  (is (s/valid? ::asr/GoTo
+                (GoTo 1 __1)))
+  (is (s/valid? ::asr/If
+                (legacy
+                 (If
+                  (IntegerCompare
+                   (Var 3 n_fib)
+                   Lt
+                   (Cast
+                    (IntegerConstant 2 (Integer 4 []))
+                    IntegerToInteger
+                    (Integer 8 [])
+                    (IntegerConstant 2 (Integer 8 [])))
+                   (Logical 4 [])
+                   ())
+                  [(=
+                    (Var 3 _lpython_return_variable_fib)
+                    (Var 3 n_fib)
+                    ())
+                   (GoTo 1 __1)]
+                  []))))
+
+  (is (s/valid? ::asr/BlockCall
+                (legacy
+                 (BlockCall 1 3 __TILDE__empty_block)))))
 
 
 (deftest bisecting-6dd742e

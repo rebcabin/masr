@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         5
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -236,14 +236,14 @@
                                                     Required
                                                     false
                                                 ),
-                                            ~:empty_block
+                                            :__TILDE__empty_block
                                                 (Block
                                                     (SymbolTable
                                                         7
                                                         {
-                                                            
+
                                                         })
-                                                    ~empty_block
+                                                    __TILDE__empty_block
                                                     []
                                                 )
                                         })
@@ -357,7 +357,7 @@
                                     )
                                     (BlockCall
                                         1
-                                        3 ~empty_block
+                                        3 __TILDE__empty_block
                                     )
                                     (=
                                         (Var 3 ans)

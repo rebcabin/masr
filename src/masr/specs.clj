@@ -1311,6 +1311,13 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  GoTo stmt
+  (goto-target identifier))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   If stmt
   (test-expr body orelse))
 ;; #+end_src
@@ -4859,6 +4866,11 @@
                             :nil empty?))
 ;; #+end_src
 
+;; #+begin_src clojure
+
+(s/def ::goto-target        ::nat)
+;; #+end_src
+
 ;; ----------------------------------------------------------------
 ;; ## LIST APPEND
 ;;
@@ -4929,6 +4941,36 @@
     (if (s/valid? ::Assert cnd)
       cnd
       :invalid-if)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## GOTO
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn GoTo-- [goto-target identifier]
+  (let [cnd {::term ::stmt
+             ::asr-stmt-head
+             {::stmt-head ::GoTo
+              ::goto-target goto-target
+              ::identifier  identifier}}]
+    (if (s/valid? ::GoTo cnd)
+      cnd
+      :invalid-goto)))
+;; #+end_src
+
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+(defmacro GoTo [goto-target identifier]
+  `(GoTo-- ~goto-target '~identifier))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------

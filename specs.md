@@ -222,35 +222,38 @@
   - [29.4. ASSERT](#294-assert)
     - [29.4.1. Original ASDL](#2941-original-asdl)
     - [29.4.2. Heavy Sugar](#2942-heavy-sugar)
-  - [29.5. IF](#295-if)
-    - [29.5.1. Original ASDL](#2951-original-asdl)
-    - [29.5.2. Example](#2952-example)
-    - [29.5.3. Heavy Sugar](#2953-heavy-sugar)
-  - [29.6. ASSIGNMENT](#296-assignment)
+  - [29.5. GOTO](#295-goto)
+    - [29.5.1. Heavy Sugar](#2951-heavy-sugar)
+    - [29.5.2. Legacy Sugar](#2952-legacy-sugar)
+  - [29.6. IF](#296-if)
     - [29.6.1. Original ASDL](#2961-original-asdl)
-    - [29.6.2. Issues](#2962-issues)
+    - [29.6.2. Example](#2962-example)
     - [29.6.3. Heavy Sugar](#2963-heavy-sugar)
-  - [29.7. DO LOOP](#297-do-loop)
-    - [29.7.1. Example](#2971-example)
-    - [29.7.2. Do-Loop Head Support](#2972-do-loop-head-support)
+  - [29.7. ASSIGNMENT](#297-assignment)
+    - [29.7.1. Original ASDL](#2971-original-asdl)
+    - [29.7.2. Issues](#2972-issues)
     - [29.7.3. Heavy Sugar](#2973-heavy-sugar)
-  - [29.8. WHILE LOOP](#298-while-loop)
-    - [29.8.1. Original ASDL](#2981-original-asdl)
-    - [29.8.2. Example](#2982-example)
+  - [29.8. DO LOOP](#298-do-loop)
+    - [29.8.1. Example](#2981-example)
+    - [29.8.2. Do-Loop Head Support](#2982-do-loop-head-support)
     - [29.8.3. Heavy Sugar](#2983-heavy-sugar)
-  - [29.9. PRINT](#299-print)
+  - [29.9. WHILE LOOP](#299-while-loop)
     - [29.9.1. Original ASDL](#2991-original-asdl)
-    - [29.9.2. Heavy Sugar](#2992-heavy-sugar)
-  - [29.10. RETURN](#2910-return)
-  - [29.11. SUBROUTINE CALL](#2911-subroutine-call)
-    - [29.11.1. Original ASDL](#29111-original-asdl)
-    - [29.11.2. Examples](#29112-examples)
-    - [29.11.3. Heavy Sugar](#29113-heavy-sugar)
-    - [29.11.4. Legacy Sugar](#29114-legacy-sugar)
-  - [29.12. BLOCK CALL](#2912-block-call)
+    - [29.9.2. Example](#2992-example)
+    - [29.9.3. Heavy Sugar](#2993-heavy-sugar)
+  - [29.10. PRINT](#2910-print)
+    - [29.10.1. Original ASDL](#29101-original-asdl)
+    - [29.10.2. Heavy Sugar](#29102-heavy-sugar)
+  - [29.11. RETURN](#2911-return)
+  - [29.12. SUBROUTINE CALL](#2912-subroutine-call)
     - [29.12.1. Original ASDL](#29121-original-asdl)
-    - [29.12.2. Heavy Sugar](#29122-heavy-sugar)
-    - [29.12.3. Legacy Sugar](#29123-legacy-sugar)
+    - [29.12.2. Examples](#29122-examples)
+    - [29.12.3. Heavy Sugar](#29123-heavy-sugar)
+    - [29.12.4. Legacy Sugar](#29124-legacy-sugar)
+  - [29.13. BLOCK CALL](#2913-block-call)
+    - [29.13.1. Original ASDL](#29131-original-asdl)
+    - [29.13.2. Heavy Sugar](#29132-heavy-sugar)
+    - [29.13.3. Legacy Sugar](#29133-legacy-sugar)
 - [30. SYMBOL](#30-symbol)
   - [30.1. Prerequisite Types and Aliases](#301-prerequisite-types-and-aliases)
   - [30.2. PROGRAM](#302-program)
@@ -1461,6 +1464,11 @@ on the _head_ keys of each multi-spec, like
   (escape-target ;; UNCHECKED! NO SPEC!
    do-loop-head ;; NOT AN ASR HEAD!
    body))
+```
+```clojure
+(defmasrtype
+  GoTo stmt
+  (goto-target identifier))
 ```
 ```clojure
 (defmasrtype
@@ -4460,6 +4468,9 @@ TODO: there is ambiguity regarding identifier-sets and lists:
 (s/def ::message?     (s/or :str string?
                             :nil empty?))
 ```
+```clojure
+(s/def ::goto-target        ::nat)
+```
 ----------------------------------------------------------------
 ## 29.2. LIST APPEND
 
@@ -4523,17 +4534,42 @@ TODO: there is ambiguity regarding identifier-sets and lists:
       :invalid-if)))
 ```
 ----------------------------------------------------------------
-## 29.5. IF
+## 29.5. GOTO
 
 
 
-### 29.5.1. Original ASDL
+### 29.5.1. Heavy Sugar
+
+```clojure
+(defn GoTo-- [goto-target identifier]
+  (let [cnd {::term ::stmt
+             ::asr-stmt-head
+             {::stmt-head ::GoTo
+              ::goto-target goto-target
+              ::identifier  identifier}}]
+    (if (s/valid? ::GoTo cnd)
+      cnd
+      :invalid-goto)))
+```
+
+### 29.5.2. Legacy Sugar
+
+```clojure
+(defmacro GoTo [goto-target identifier]
+  `(GoTo-- ~goto-target '~identifier))
+```
+----------------------------------------------------------------
+## 29.6. IF
+
+
+
+### 29.6.1. Original ASDL
 
 ```c
 | If(expr test, stmt* body, stmt* orelse)
 ```
 
-### 29.5.2. Example
+### 29.6.2. Example
 
 ```clojure
 #_
@@ -4554,7 +4590,7 @@ TODO: there is ambiguity regarding identifier-sets and lists:
    )]  []  )
 ```
 
-### 29.5.3. Heavy Sugar
+### 29.6.3. Heavy Sugar
 
 ```clojure
 (defn If [test-expr body orelse]
@@ -4569,25 +4605,25 @@ TODO: there is ambiguity regarding identifier-sets and lists:
       :invalid-if)))
 ```
 ----------------------------------------------------------------
-## 29.6. ASSIGNMENT
+## 29.7. ASSIGNMENT
 
 
 
-### 29.6.1. Original ASDL
+### 29.7.1. Original ASDL
 
 ```c
 | Assignment(expr target, expr value, stmt? overloaded)
          --- Var ---
 ```
 
-### 29.6.2. Issues
+### 29.7.2. Issues
 
 
 https://github.com/rebcabin/masr/issues/21
 https://github.com/rebcabin/masr/issues/22
 https://github.com/rebcabin/masr/issues/26
 
-### 29.6.3. Heavy Sugar
+### 29.7.3. Heavy Sugar
 
 ```clojure
 (defn Assignment [lhs, rhs, unk]
@@ -4602,11 +4638,11 @@ https://github.com/rebcabin/masr/issues/26
       :invalid-assignment)))
 ```
 ----------------------------------------------------------------
-## 29.7. DO LOOP
+## 29.8. DO LOOP
 
 
 
-### 29.7.1. Example
+### 29.8.1. Example
 
 
 ```clojure
@@ -4627,7 +4663,7 @@ https://github.com/rebcabin/masr/issues/26
    )] )
 ```
 
-### 29.7.2. Do-Loop Head Support
+### 29.8.2. Do-Loop Head Support
 
 ```clojure
 (defn do-loop-head [[var start end incr]]
@@ -4637,7 +4673,7 @@ https://github.com/rebcabin/masr/issues/26
    ::loop-increment incr})
 ```
 
-### 29.7.3. Heavy Sugar
+### 29.8.3. Heavy Sugar
 
 ```clojure
 (defn DoLoop [escape-target
@@ -4658,17 +4694,17 @@ https://github.com/rebcabin/masr/issues/26
       :invalid-do-loop)))
 ```
 ----------------------------------------------------------------
-## 29.8. WHILE LOOP
+## 29.9. WHILE LOOP
 
 
 
-### 29.8.1. Original ASDL
+### 29.9.1. Original ASDL
 
 ```c
 | WhileLoop(expr test, stmt* body)
 ```
 
-### 29.8.2. Example
+### 29.9.2. Example
 
 ```clojure
 #_
@@ -4687,7 +4723,7 @@ https://github.com/rebcabin/masr/issues/26
  )
 ```
 
-### 29.8.3. Heavy Sugar
+### 29.9.3. Heavy Sugar
 
 ```clojure
 (defn WhileLoop
@@ -4703,17 +4739,17 @@ https://github.com/rebcabin/masr/issues/26
       :invalid-while-loop)))
 ```
 ----------------------------------------------------------------
-## 29.9. PRINT
+## 29.10. PRINT
 
 
-### 29.9.1. Original ASDL
+### 29.10.1. Original ASDL
 
 ```c
 | Print(expr? fmt, expr* values, expr? separator, expr? end)
 ```
 
 
-### 29.9.2. Heavy Sugar
+### 29.10.2. Heavy Sugar
 
 
 ```clojure
@@ -4731,7 +4767,7 @@ https://github.com/rebcabin/masr/issues/26
       :invalid-print)))
 ```
 ----------------------------------------------------------------
-## 29.10. RETURN
+## 29.11. RETURN
 
 
 ```clojure
@@ -4744,14 +4780,14 @@ https://github.com/rebcabin/masr/issues/26
       :invalid-return)))
 ```
 ----------------------------------------------------------------
-## 29.11. SUBROUTINE CALL
+## 29.12. SUBROUTINE CALL
 
 
 `SubroutineCall` is a special case because it
 abuses the word `symbol` to mean a `symbol-ref`.
 
 
-### 29.11.1. Original ASDL
+### 29.12.1. Original ASDL
 
 
 ```c
@@ -4764,7 +4800,7 @@ SubroutineCall(symbol     name,          ~~~> symref
 (s/def ::dt? ::expr?)
 ```
 
-### 29.11.2. Examples
+### 29.12.2. Examples
 
 ```clojure
 #_
@@ -4782,7 +4818,7 @@ SubroutineCall(symbol     name,          ~~~> symref
    ())
 ```
 
-### 29.11.3. Heavy Sugar
+### 29.12.3. Heavy Sugar
 
 ```clojure
 (defn SubroutineCall--
@@ -4800,7 +4836,7 @@ SubroutineCall(symbol     name,          ~~~> symref
       :invalid-subroutine-call)))
 ```
 
-### 29.11.4. Legacy Sugar
+### 29.12.4. Legacy Sugar
 
 ```clojure
 (defmacro SubroutineCall
@@ -4818,13 +4854,13 @@ SubroutineCall(symbol     name,          ~~~> symref
                        ~dt?)))
 ```
 ----------------------------------------------------------------
-## 29.12. BLOCK CALL
+## 29.13. BLOCK CALL
 
 
 `BlockCall` abuses `symbol` to mean `symbol-ref`.
 
 
-### 29.12.1. Original ASDL
+### 29.13.1. Original ASDL
 
 
 ```c
@@ -4835,7 +4871,7 @@ BlockCall(int    label,
 (s/def ::label ::nat)
 ```
 
-### 29.12.2. Heavy Sugar
+### 29.13.2. Heavy Sugar
 
 ```clojure
 (defn BlockCall--
@@ -4851,7 +4887,7 @@ BlockCall(int    label,
       :invalid-block-call)))
 ```
 
-### 29.12.3. Legacy Sugar
+### 29.13.3. Legacy Sugar
 
 ```clojure
 (defmacro BlockCall
