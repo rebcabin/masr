@@ -5070,6 +5070,7 @@
     (test-unit -test_numpy_04-3376b7a)
     (test-unit -test_pow-6f6a69d)
     (test-unit -tuple1-ce358d9)
+    (test-unit -vec_01-9b22f33)
     (test-unit _expr2_5311701)
     (test-unit _expr_10_e2e0267)
     ))
