@@ -2369,8 +2369,8 @@
             false [] [] false)
         afn (Function
              (SymbolTable 42 {})
-             test_boolOp ft []
-             [] [] ()
+             test_boolOp, ft, []
+             [] [] () ;; param*, body, retvar
              Public false false)]
     (is (s/valid? ::asr/asr-term afn))
     (is (s/valid? ::asr/symbol   afn))
@@ -5074,6 +5074,10 @@
     (test-unit _expr2_5311701)
     (test-unit _expr_10_e2e0267)
     (test-unit _pass_inline_function_calls-func_inline_01-6cf8821)
+    (comment "too big for evaluation"
+             "see big_test.clj for bisection and analysis")
+    #_
+    (test-unit _pass_print_list_tuple-print_02-1bcc4ec)
     ))
 
 
@@ -5763,7 +5767,6 @@
       :nvukw  ~nvukw,
       :vpsym '~vpsym,
       :tpsym '~tpsym}))
-
 
 ;; Sometimes, a nym is a #{string? symbol? keyword?}
 (deftest camel-snake-kebab-test

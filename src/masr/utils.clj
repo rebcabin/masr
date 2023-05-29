@@ -15,7 +15,8 @@
   "preimage and value"
   [x]
   `(let [x# ~x]
-     (do (println '~x "~~>" x#)
+     (do (println '~x "~~~~>")
+         (pprint x#)
          x#)))
 
 

@@ -1693,6 +1693,13 @@
 ;; #+begin_src clojure
 
 (defmasrtype
+  ListItem expr
+  (list-expr index ttype value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
   TupleItem expr
   (tuple-expr index ttype value?))
 ;; #+end_src
@@ -1814,6 +1821,8 @@
 ;;
 ;;
 ;; ```sed
+;; s/\~/__TILDE__/g
+;; s/\@/__AT__/g
 ;; s/\(\([_a-zA-Z0-9]*\)\:\)/:\2/g
 ;; s/\.\(false\)\./\1/g
 ;; s/\.\(true\)\./\1/g
@@ -1826,11 +1835,19 @@
 ;; appropriate.
 ;;
 ;;
+
+;; #+begin_src clojure
+
+
+;; #+end_src
+
+
 ;; #+begin_src clojure
 
 (defn rewrite-for-legacy
   "Replace = with Assignment anywhere in a MASR
-  sugared expression."
+  sugared expression. Replace nested lists with
+  vectors of lists."
   [it]
   (prewalk
    (fn [x]
@@ -1839,7 +1856,6 @@
        (if (list? (first x))
          ;; Replace ((Var 42 i)) with [(Var 42 i)]...
          (vec x) ;; ... and other such cases.
-         ;; Replace = in function position of a list.
          (replace {'= 'Assignment} x))
        x))
    it))
@@ -2757,8 +2773,8 @@
 (defn List [ttype]
   (let [cnd {::term ::ttype,
              ::asr-ttype-head
-             {::expr-head ::List
-              ::ttype   ttype}}]
+             {::ttype-head ::List
+              ::ttype      ttype}}]
     (if (s/valid? ::List cnd)
       cnd
       :invalid-list)))
@@ -2772,8 +2788,8 @@
 (defn Set [ttype]
   (let [cnd {::term ::ttype,
              ::asr-ttype-head
-             {::expr-head ::Set
-              ::ttype   ttype}}]
+             {::ttype-head ::Set
+              ::ttype      ttype}}]
     (if (s/valid? ::Set cnd)
       cnd
       :invalid-set)))
@@ -2989,6 +3005,7 @@
 (s/def ::unchecked-element-expr
   (s/or :array-item           ::ArrayItem ;; TODO check return type!
         :tuple-item           ::TupleItem ;; TODO check return type!
+        :list-item            ::ListItem  ;; TODO check return type!
         :cast                 ::Cast      ;; TODO check return type!
         :if-expr              ::IfExp     ;; TODO check return type!
         :named-expr           ::NamedExpr ;; TODO check return type!
@@ -4341,7 +4358,7 @@
              ::asr-expr-head
              {::expr-head      ::ListLen
               ::list-expr      list-expr
-              ::Integer        ttype
+              ::Integer        int-ttype
               ::integer-value? int-val?
               }}]
     (if (s/valid? ::ListLen cnd)
@@ -4751,6 +4768,26 @@
     (if (s/valid? ::Cast cnd)
       cnd
       :invalid-cast)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## LIST ITEM
+;;
+;;
+;; #+begin_src clojure
+
+(defn ListItem [list-expr index ttype value?]
+  (let [cnd {::term ::expr
+             ::asr-expr-head
+             {::expr-head       ::ListItem
+              ::list-expr       list-expr
+              ::index           index
+              ::ttype           ttype
+              ::value?          value?
+              }}]
+    (if (s/valid? ::ListItem cnd)
+      cnd
+      :invalid-list-item)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5300,18 +5337,12 @@
 
 (defmacro SubroutineCall
   [stid, ident, orig-symref, args, dt?]
-  (if (empty? args)
-    `(SubroutineCall-- (symbol-ref '~ident ~stid)
-                       ~orig-symref
-                       ~args
-                       ~dt?)
-    `(SubroutineCall-- (symbol-ref '~ident ~stid)
-                       ~orig-symref
-                       ;; Took a while to find this ...
-                       ;; (map vec ~args) does not work!
-                       (map (fn [a#] [a#]) ~args)
-                       ~dt?)))
-;; #+end_src
+  `(SubroutineCall-- (symbol-ref '~ident ~stid)
+                     ~orig-symref
+                     ;; Took a while to find this ...
+                     ;; (map vec ~args) does not work!
+                     (map (fn [a#] [a#]) ~args)
+                     ~dt?));; #+end_src
 
 ;; ----------------------------------------------------------------
 ;; ## BLOCK CALL
@@ -5527,7 +5558,7 @@
 
 (defn Function-- [symtab,
                   fnnym,   fnsig,  deps,
-                  param*-, body-,  retvar,
+                  param*-, body-,  retvar?,
                   access-, determ, sefree]
   (let [cnd {::term ::symbol
              ::asr-symbol-head
@@ -5541,7 +5572,7 @@
 
               ::param*              param*-
               ::body                body-
-              ::return-var?         retvar
+              ::return-var?         retvar?
 
               ::access              access-
               ::deterministic       determ
@@ -5555,17 +5586,25 @@
 ;;
 ;; ### Legacy Sugar
 ;;
+;; The bodies of functions can get very big, too big
+;; for Clojure to eval due to a limit in Java of
+;; 64KB per method body (ludicrous in 2023). So
+;; we'll just iterate over the statements in the
+;; bodies, replacing them with their full-forms.
+;;
 ;; #+begin_src clojure
 
 (defmacro Function
   "Quote the fnnym and the deps."
   [symtab,
    fnnym,   fnsig,  deps,
-   param*-, body-,  retvar,
+   param*-, body-,  retvar?,
    access-, determ, sefree]
   `(Function-- ~symtab,
                '~fnnym,  ~fnsig,  (for [d# '~deps] d#),
-               ~param*-, ~body-,  ~retvar,
+               ~param*-,
+               ~body-,  ;; <~~~ iterate over the statements inside
+               ~retvar?,
                ~access-, ~determ, ~sefree))
 ;; #+end_src
 
@@ -5615,7 +5654,7 @@
              }]
     (if (s/valid? ::GenericProcedure cnd)
       cnd
-      :invalid-generic-procedure)))
+      ::invalid-generic-procedure)))
 ;; #+end_src
 
 ;;
@@ -5695,7 +5734,7 @@
              }]
     (if (s/valid? ::ExternalSymbol cnd)
       cnd
-      :invalid-external-symbol)))
+      ::invalid-external-symbol)))
 ;; #+end_src
 
 ;;
@@ -5946,7 +5985,7 @@
               }}]
     (if (s/valid? ::Block cnd)
       cnd
-      :invalid-block)))
+      ::invalid-block)))
 ;; #+end_src
 
 ;;
@@ -5983,7 +6022,7 @@
               ::modulenym       modnym}}]
     (if (s/valid? ::IntrinsicModule cnd)
       cnd
-      :invalid-intrinsic-module)))
+      ::invalid-intrinsic-module)))
 ;; #+end_src
 
 ;;
@@ -6014,7 +6053,7 @@
 (defn node [candidate]
   (if (s/valid? ::node candidate)
     candidate
-    :invalid-node))
+    ::invalid-node))
 ;; #+end_src
 
 ;;
@@ -6049,5 +6088,5 @@
           ::nodes        node-cnd}}]
     (if (s/valid? ::TranslationUnit cnd)
       cnd
-      :invalid-translation-unit)))
+      ::invalid-translation-unit)))
 ;; #+end_src
