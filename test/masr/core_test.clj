@@ -5156,6 +5156,23 @@
     ))
 
 
+(deftest bisecting-6dd742e
+  (is (not (s/valid? ::asr/GenericProcedure
+                     (GenericProcedure
+                      "crap"
+                      arccos
+                      [3 __lpython_overloaded_0__arccos
+                       3 __lpython_overloaded_1__arccos]
+                      Public ))))
+  (is (s/valid? ::asr/GenericProcedure
+                (GenericProcedure
+                 3
+                 arccos
+                 [3 __lpython_overloaded_0__arccos
+                  3 __lpython_overloaded_1__arccos]
+                 Public ))))
+
+
 (deftest bisecting-6cf8821
   (is (s/valid? ::asr/identifier '__1))
   (is (s/valid? ::asr/GoTo
@@ -5183,16 +5200,6 @@
   (is (s/valid? ::asr/BlockCall
                 (legacy
                  (BlockCall 1 3 __TILDE__empty_block)))))
-
-
-(deftest bisecting-6dd742e
-  (is (s/valid? ::asr/GenericProcedure
-                (GenericProcedure
-                 3
-                 arccos
-                 [3 __lpython_overloaded_0__arccos
-                  3 __lpython_overloaded_1__arccos]
-                 Public ))))
 
 
 (deftest bisecting-fcdedc2

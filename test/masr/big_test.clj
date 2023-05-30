@@ -26,9 +26,6 @@
   )
 
 
-(warnings-banner)
-
-
 ;; ================================================================
 ;;  ____  _    _   _ ____  ____  _____ ____
 ;; / ___|| |  | | | |  _ \|  _ \| ____|  _ \
@@ -79,6 +76,8 @@
     (is (not (nil? _1bcc4ec))))
 
   (comment "too big for eval")
+  #_
+  (test-translation-unit -test_numpy_03-6dd742e)
   #_
   (test-translation-unit _pass_print_list_tuple-print_02-1bcc4ec)
   )

@@ -2149,13 +2149,9 @@
 ;; #+begin_src clojure
 
 (defn SymbolTable-- [id, hash-map]
-  (let [cnd {::term      ::SymbolTable
-            ::symtab-id id
-            ::hash-map  hash-map}]
-    cnd #_ ;; ? TODO UNNECESSARY ?
-    (if (s/invalid? cnd)
-      ::invalid-symbol-table
-      cnd)))
+  {::term      ::SymbolTable
+   ::symtab-id id
+   ::hash-map  hash-map})
 ;; #+end_src
 
 ;;
