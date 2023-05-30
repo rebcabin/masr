@@ -2032,11 +2032,9 @@
           (map? candidate-contents))
     ::invalid-dimension ;; return this,
     ;; else
-    (let [cnd {::term ::dimension,
-               ::dimension-content candidate-contents}]
-      (if (s/valid? dimension cnd)
-        cnd
-        ::invalid-dimension))))
+    {::term ::dimension,
+     ::dimension-content candidate-contents}
+    ))
 ;; #+end_src
 
 
@@ -2115,10 +2113,7 @@
 ;;
 ;; #+begin_src clojure
 
-(defn symtab-id [it]
-  (if (s/valid? ::symtab-id it)
-    it
-    ::invalid-symtab-id))
+(defn symtab-id [it] it)
 ;; #+end_src
 
 
@@ -2153,13 +2148,34 @@
 ;;
 ;; #+begin_src clojure
 
-(defn SymbolTable [id, hash-map]
-  (let [st {::term      ::SymbolTable
+(defn SymbolTable-- [id, hash-map]
+  (let [cnd {::term      ::SymbolTable
             ::symtab-id id
             ::hash-map  hash-map}]
-    (if (s/invalid? st)
+    cnd #_ ;; ? TODO UNNECESSARY ?
+    (if (s/invalid? cnd)
       ::invalid-symbol-table
-      st)))
+      cnd)))
+;; #+end_src
+
+;;
+;; Legacy Sugar
+;;
+;; Defeat the Java limitation on method-code size.
+;;
+;; #+begin_src
+
+(defmacro SymbolTable [id, hash-map]
+  `(SymbolTable--
+    ~id #_
+    '~hash-map
+    (update-keys
+     '~hash-map
+     (fn [v#]
+       (->> v#
+            rewrite-for-legacy
+            eval)))
+    ))
 ;; #+end_src
 
 
@@ -2225,7 +2241,7 @@
         art (keyword ns "asr-term")             ;; ::asr-term
         tkw (keyword ns (str term))             ;; ::intent
         tke (keyword ns (str term "-enum"))     ;; ::intent-enum
-        tki (keyword ns (str "invalid-" term))] ;; ::invalid-intent
+        ]
     `(do
        (s/def ~tke ~heads)
        ;; for the multi-spec
@@ -2237,10 +2253,8 @@
                 ;; like the predicate #(= ::intent (::term %))
                 (term-selector-spec ~tkw)))
        (defn ~term [it#] ;; the sugar
-         (let [cnd# {~trm ~tkw
-                     ~tke it#}
-               result# (if (s/valid? ~art cnd#) cnd#, ~tki)]
-           result#))
+         {~trm ~tkw
+          ~tke it#})
        #_(symbolicate ~heads)
        (legacicate ~term ~heads)
        )))
@@ -2402,12 +2416,9 @@
    (cond
      (not (= ext-kw :external)) ::invalid-abi
      :else
-     (let [cnd {::term         ::abi,
-                ::abi-enum     the-enum,
-                ::abi-external the-bool}]
-       (if (s/valid? ::abi cnd)
-         cnd
-         ::invalid-abi)))))
+     {::term         ::abi,
+      ::abi-enum     the-enum,
+      ::abi-external the-bool})))
 ;; #+end_src
 
 ;;
@@ -2595,11 +2606,8 @@
         ::integer-kind 4,
         ::dimension*   []}}"
   [it]
-  (let [cnd {::term ::ttype,
-             ::asr-ttype-head it}]
-    (if (s/valid? ::ttype cnd)
-      cnd
-      ::invalid-ttype)))
+  {::term ::ttype,
+   ::asr-ttype-head it})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -2720,22 +2728,19 @@
 (defn Character
   ([kind, len, len-expr?, dims]
    ;; quaternary
-   (let [cnd {::term ::ttype
-              ::asr-ttype-head
-              {::ttype-head ::Character
-               ::character-kind kind
-               ::len            len
-               ::disposition
-               (cond (>= len  0) 'compile-time-length
-                     (=  len -1) 'inferred-at-run-time
-                     (=  len -2) 'allocatable
-                     (=  len -3) 'run-time-expression)
-               ::len-expr?      len-expr?
-               ::dimension*     (dimension* dims)
-               }}]
-     (if (s/valid? ::Character cnd)
-       cnd
-       :invalid-character)))
+   {::term ::ttype
+    ::asr-ttype-head
+    {::ttype-head ::Character
+     ::character-kind kind
+     ::len            len
+     ::disposition
+     (cond (>= len  0) 'compile-time-length
+           (=  len -1) 'inferred-at-run-time
+           (=  len -2) 'allocatable
+           (=  len -3) 'run-time-expression)
+     ::len-expr?      len-expr?
+     ::dimension*     (dimension* dims)
+     }})
   ([kind, len, dims]
    ;; trinary
    (Character kind len () dims))
@@ -2756,13 +2761,10 @@
 ;; #+begin_src clojure
 
 (defn Tuple [ttypes]
-  (let [cnd {::term ::ttype,
-             ::asr-ttype-head
-             {::ttype-head ::Tuple
-              ::ttype*     ttypes}}]
-    (if (s/valid? ::Tuple cnd)
-      cnd
-      :invalid-tuple)))
+  {::term ::ttype,
+   ::asr-ttype-head
+   {::ttype-head ::Tuple
+    ::ttype*     ttypes}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -2771,13 +2773,10 @@
 ;; #+begin_src clojure
 
 (defn List [ttype]
-  (let [cnd {::term ::ttype,
-             ::asr-ttype-head
-             {::ttype-head ::List
-              ::ttype      ttype}}]
-    (if (s/valid? ::List cnd)
-      cnd
-      :invalid-list)))
+  {::term ::ttype,
+   ::asr-ttype-head
+   {::ttype-head ::List
+    ::ttype      ttype}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -2786,13 +2785,10 @@
 ;; #+begin_src clojure
 
 (defn Set [ttype]
-  (let [cnd {::term ::ttype,
-             ::asr-ttype-head
-             {::ttype-head ::Set
-              ::ttype      ttype}}]
-    (if (s/valid? ::Set cnd)
-      cnd
-      :invalid-set)))
+  {::term ::ttype,
+   ::asr-ttype-head
+   {::ttype-head ::Set
+    ::ttype      ttype}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -2834,33 +2830,30 @@
    pure-            module-            inline-
    static-          type-param*-       restrictions-
    is-restriction-  ]
-  (let [cnd (plnecho-file
-             "/tmp/a.clj"
-             {::term ::ttype
-              ::asr-ttype-head
-              {::ttype-head        ::FunctionType
+  (plnecho-file
+   "/tmp/a.clj"
+   {::term ::ttype
+    ::asr-ttype-head
+    {::ttype-head        ::FunctionType
 
-               ::param-type*       param-type*-
-               ::return-var-type?  return-var-type?-
-               ::abi               abi-
+     ::param-type*       param-type*-
+     ::return-var-type?  return-var-type?-
+     ::abi               abi-
 
-               ::deftype           deftype-
-               ::bindc-name        (if (empty? bindc-name-)
-                                     nil, bindc-name-)
-               ::elemental         elemental-
+     ::deftype           deftype-
+     ::bindc-name        (if (empty? bindc-name-)
+                           nil, bindc-name-)
+     ::elemental         elemental-
 
-               ::pure              pure-
-               ::module            module-
-               ::inline            inline-
+     ::pure              pure-
+     ::module            module-
+     ::inline            inline-
 
-               ::static            static-
-               ::type-param*       type-param*-
-               ::restrictions      restrictions-
+     ::static            static-
+     ::type-param*       type-param*-
+     ::restrictions      restrictions-
 
-               ::is-restriction    is-restriction-}})]
-    (if (s/valid? ::FunctionType  cnd)
-      cnd
-      :invalid-function-type)))
+     ::is-restriction    is-restriction-}}))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3285,17 +3278,14 @@
 ;; #+begin_src clojure
 
 (defn IfExp [test-expr, body, orelse, ttype, value?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head ::IfExp
-              ::test-expr test-expr
-              ::body      body
-              ::orelse    orelse
-              ::ttype     ttype
-              ::value?    value?}}]
-    (if (s/valid? ::IfExp cnd)
-      cnd
-      :invalid-if-exp)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head ::IfExp
+    ::test-expr test-expr
+    ::body      body
+    ::orelse    orelse
+    ::ttype     ttype
+    ::value?    value?}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3318,15 +3308,12 @@
 
 (defn IntegerBitNot
   [iarg, ittype, ivalue?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head ::IntegerBitNot
-              ::integer-expr   iarg
-              ::Integer        ittype
-              ::integer-value? ivalue?}}]
-    (if (s/valid? ::IntegerBitNot cnd)
-      cnd
-      :invalid-integer-bit-not)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head ::IntegerBitNot
+    ::integer-expr   iarg
+    ::Integer        ittype
+    ::integer-value? ivalue?}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3352,20 +3339,16 @@
         teqkw (keyword ns testr)       ;; ::integer-expr
         tvstr (str tlstr "-value?")    ;; "integer-value?"
         tvqkw (keyword ns tvstr)       ;; ::integer-value?
-        nvukw (keyword                 ;; :invalid-integer-unary-minus
-               (str "invalid-" (csk/->kebab-case fnstr)))]
+        ]
     `(defn ~fnsym                      ;; (defn IntegerUnaryMinus
        [arg# ttype# val?#]             ;; ([arg ttype val?
-       (let [cnd#
-             {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ~fnqkw      ;; {::ex... ::IntegerUnaryMinus
-               ~teqkw       arg#       ;;  ::integer-expr   arg
-               ~ttqkw       ttype#     ;;  ::Integer        ttype
-               ~tvqkw       val?#}}]   ;;  ::integer-value? val?}}]
-         ;; (if (s/valid? ::IntegerUnaryMinus cnd)
-         (if (s/valid? ~fnqkw cnd#) cnd#
-             ~nvukw)))))               ;; :invalid-integer-unary-minus
+       {::term ::expr,
+        ::asr-expr-head
+        {::expr-head ~fnqkw      ;; {::ex... ::IntegerUnaryMinus
+         ~teqkw       arg#       ;;  ::integer-expr   arg
+         ~ttqkw       ttype#     ;;  ::Integer        ttype
+         ~tvqkw       val?#}}   ;;  ::integer-value? val?}}]
+       )))
 ;; #+end_src
 
 ;; ### Using the Macro
@@ -3408,15 +3391,12 @@
 ;; #+begin_src clojure
 
 (defn NamedExpr [target value ttype]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head ::NamedExpr
-              ::target target
-              ::value  value
-              ::ttype  ttype}}]
-    (if (s/valid? ::NamedExpr cnd)
-      cnd
-      :invalid-named-expr)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head ::NamedExpr
+    ::target target
+    ::value  value
+    ::ttype  ttype}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3459,19 +3439,16 @@
 
 (defn FunctionCall-- [fn-symref orig-symref call-args
                       return-type value? dt?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head    ::FunctionCall
-              ::symbol-ref   fn-symref
-              ::orig-symref  orig-symref
-              ::call-args    call-args
-              ::return-type  return-type
-              ::value?       value?
-              ::dt?          dt? ;; TODO check arithmetic
-              }}]
-    (if (s/valid? ::FunctionCall cnd)
-      cnd
-      :invalid-function-call)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head    ::FunctionCall
+    ::symbol-ref   fn-symref
+    ::orig-symref  orig-symref
+    ::call-args    call-args
+    ::return-type  return-type
+    ::value?       value?
+    ::dt?          dt? ;; TODO check arithmetic
+    }})
 ;; #+end_src
 
 ;;
@@ -3544,18 +3521,15 @@
 (defn IntrinsicFunction--
   [intrinsic-ident    expr*    overload-id
    return-type        value?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head           ::IntrinsicFunction
-              ::intrinsic-ident     intrinsic-ident
-              ::expr*               expr*
-              ::overload-id         overload-id
-              ::return-type         return-type
-              ::value?              value?
-              }}]
-    (if (s/valid? ::IntrinsicFunction cnd)
-      cnd
-      :invalid-intrinsic-function)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head           ::IntrinsicFunction
+    ::intrinsic-ident     intrinsic-ident
+    ::expr*               expr*
+    ::overload-id         overload-id
+    ::return-type         return-type
+    ::value?              value?
+    }})
 ;; #+end_src
 
 ;;
@@ -3586,22 +3560,6 @@
 ;; takes two Real inputs. Write those by hand.
 ;;
 
-;; #+begin_src clojure
-
-#_
-(defn LogicalConstant
-    ([a-bool, a-ttype] "binary"
-     (let [cnd {::term ::expr,
-                ::asr-expr-head
-                {::expr-head ::LogicalConstant
-                 ::bool      a-bool
-                 ::Logical   a-ttype}}]
-       (if (s/valid? ::LogicalConstant cnd) cnd
-           :invalid-logical-constant)))
-    ([a-bool] "unary"
-     (LogicalConstant a-bool (Logical))))
-;; #+end_src
-
 ;;
 ;; ### Typed Constant Macro
 ;;
@@ -3617,8 +3575,6 @@
         ttsym (symbol ttstr)          ;; 'Logical
         ttqkw (keyword ns ttstr)      ;; ::Logical
         spqkw (keyword ns (str spec)) ;; ::bool
-        nvukw (keyword                ;; :invalid-logical-constant
-               (str "invalid-" (csk/->kebab-case fnstr)))
         vpsym                         ;; 'a-bool
         (symbol (case spec
                   'int (str "an-" spec)
@@ -3628,15 +3584,12 @@
     `(defn ~fnsym                     ;; (defn LogicalConstant
        ([~vpsym ~tpsym]               ;; ([a-bool, a-ttype]
         "binary"
-        (let [cnd#
-              {::term ::expr,
-               ::asr-expr-head
-               {::expr-head ~fnqkw    ;; {::expr-head ::LogicalConstant
-                ~spqkw      ~vpsym    ;; ::bool       a-bool
-                ~ttqkw      ~tpsym}}] ;; ::Logical    a-ttype}}]
-          ;; (if (s/valid? ::LogicalConstant cnd)
-          (if (s/valid? ~fnqkw cnd#) cnd#
-              ~nvukw)))               ;; :invalid-logical-constant)))
+        {::term ::expr,
+         ::asr-expr-head
+         {::expr-head ~fnqkw    ;; {::expr-head ::LogicalConstant
+          ~spqkw      ~vpsym    ;; ::bool       a-bool
+          ~ttqkw      ~tpsym}} ;; ::Logical    a-ttype}}]
+        )
        ([~vpsym]                      ;; ([a-bool]
         "unary"
         ;; (LogicalConstant a-bool (Logical))))
@@ -3682,14 +3635,11 @@
 (defn StringConstant
   ([string, char-ttype]
    "binary"
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::StringConstant
-               ::string    string
-               ::Character char-ttype}}]
-     (if (s/valid? ::StringConstant cnd)
-       cnd
-       :invalid-string-constant)))
+   {::term ::expr,
+    ::asr-expr-head
+    {::expr-head ::StringConstant
+     ::string    string
+     ::Character char-ttype}})
   ([string]
    "unary"
    (StringConstant string (Character))))
@@ -3708,16 +3658,13 @@
 (defn StringRepeat
   ([string-expr, integer-expr, char-ttype, compiler-computed?]
    "quaternary"
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::StringRepeat
-               ::string-expr    string-expr
-               ::integer-expr   integer-expr
-               ::Character      char-ttype
-               ::string-expr?   compiler-computed?}}]
-     (if (s/valid? ::StringRepeat cnd)
-       cnd
-       :invalid-string-repeated)))
+   {::term ::expr,
+    ::asr-expr-head
+    {::expr-head ::StringRepeat
+     ::string-expr    string-expr
+     ::integer-expr   integer-expr
+     ::Character      char-ttype
+     ::string-expr?   compiler-computed?}})
   ([string-expr integer-expr]
    "binary"
    (StringRepeat string-expr (Character) ())))
@@ -3753,15 +3700,12 @@
 (defn ComplexConstant
   ;; trinary
   ([re-float, im-float c-ttype]
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::ComplexConstant
-               ::real-part      re-float
-               ::imaginary-part im-float
-               ::Complex        c-ttype}}]
-     (if (s/valid? ::ComplexConstant cnd)
-       cnd
-       :invalid-complex-constant)))
+   {::term ::expr,
+    ::asr-expr-head
+    {::expr-head ::ComplexConstant
+     ::real-part      re-float
+     ::imaginary-part im-float
+     ::Complex        c-ttype}})
   ;; binary
   ([re-float, im-float]
    (ComplexConstant re-float, im-float, (Complex))))
@@ -3797,15 +3741,12 @@
 ;; #+begin_src clojure
 
 (defn Var-- [stid, ident]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head  ::Var
-              ::symtab-id  stid
-              ::varnym     ident
-              }}]
-    (if (s/valid? ::Var cnd)
-      cnd
-      :invalid-var)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head  ::Var
+    ::symtab-id  stid
+    ::varnym     ident
+    }})
 ;; #+end_src
 
 ;;
@@ -3828,16 +3769,13 @@
 ;; #+begin_src clojure
 
 (defn ArrayConstant [args, ttype, arraystorage]
-  (let [cnd {::term ::expr
-             ::asr-expr-head
-             {::expr-head ::ArrayConstant
-              ::expr*           args
-              ::ttype           ttype
-              ::array-storage   arraystorage
-              }}]
-    (if (s/valid? ::ArrayConstant cnd)
-      cnd
-      :invalid-array-constant)))
+  {::term ::expr
+   ::asr-expr-head
+   {::expr-head ::ArrayConstant
+    ::expr*           args
+    ::ttype           ttype
+    ::array-storage   arraystorage
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3876,18 +3814,15 @@
                  ttype
                  array-storage
                  expr?]
-  (let [cnd {::term ::expr
-             ::asr-expr-head
-             {::expr-head ::ArrayItem
-              ::array-expr      array-expr
-              ::array-index*    (map array-index array-index*)
-              ::ttype           ttype
-              ::array-storage   array-storage
-              ::expr?           expr?
-              }}]
-    (if (s/valid? ::ArrayItem cnd)
-      cnd
-      :invalid-array-item)))
+  {::term ::expr
+   ::asr-expr-head
+   {::expr-head ::ArrayItem
+    ::array-expr      array-expr
+    ::array-index*    (map array-index array-index*)
+    ::ttype           ttype
+    ::array-storage   array-storage
+    ::expr?           expr?
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3918,17 +3853,14 @@
    array-shape
    ttype
    array-value?]
-  (let [cnd {::term ::expr
-             ::asr-expr-head
-             {::expr-head ::ArrayReshape
-              ::array-expr   array-expr
-              ::array-shape  array-shape
-              ::ttype        ttype
-              ::array-value? array-value?
-              }}]
-    (if (s/valid? ::ArrayReshape cnd)
-      cnd
-      :invalid-array-reshape)))
+  {::term ::expr
+   ::asr-expr-head
+   {::expr-head ::ArrayReshape
+    ::array-expr   array-expr
+    ::array-shape  array-shape
+    ::ttype        ttype
+    ::array-value? array-value?
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3945,15 +3877,12 @@
   ([str-expr, char-ttype, string-val?]
    "trinary ... Return ascii value of the indicated
    character in the string."
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::StringChr
-               ::string-expr       str-expr
-               ::Character         char-ttype
-               ::string-value?     string-val?}}]
-     (if (s/valid? ::StringChr cnd)
-       cnd
-       :invalid-string-chr)))
+   {::term ::expr,
+    ::asr-expr-head
+    {::expr-head ::StringChr
+     ::string-expr       str-expr
+     ::Character         char-ttype
+     ::string-value?     string-val?}})
   ([str-expr, string-val?]
    (StringChr str-expr, (Character) string-val?)))
 ;; #+end_src
@@ -3972,15 +3901,12 @@
   ([str-expr, int-ttype, int-val?]
    "trinary ... Return ascii value of the indicated
    character in the string."
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::StringLen
-               ::string-expr       str-expr
-               ::Integer           int-ttype
-               ::integer-value?    int-val?}}]
-     (if (s/valid? ::StringLen cnd)
-       cnd
-       :invalid-string-len)))
+   {::term ::expr,
+    ::asr-expr-head
+    {::expr-head ::StringLen
+     ::string-expr       str-expr
+     ::Integer           int-ttype
+     ::integer-value?    int-val?}})
   ([str-expr, int-val?]
    (StringLen str-expr, (Integer) int-val?)))
 ;; #+end_src
@@ -4000,17 +3926,14 @@
    index?
    Integer
    integer-value?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head         ::StringItem
-              ::string-expr       string-expr
-              ::index?            index?
-              ::Integer           Integer
-              ::integer-value?    integer-value?
-              }}]
-    (if (s/valid? ::StringItem cnd)
-      cnd
-      :invalid-string-item)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head         ::StringItem
+    ::string-expr       string-expr
+    ::index?            index?
+    ::Integer           Integer
+    ::integer-value?    integer-value?
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4030,19 +3953,16 @@
    index-step?
    Character
    string-value?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head        ::StringSection
-              ::string-expr      string-expr
-              ::index-start?     index-start?
-              ::index-end?       index-end?
-              ::index-step?      index-step?
-              ::Character        Character
-              ::string-value?    string-value?
-              }}]
-    (if (s/valid? ::StringSection cnd)
-      cnd
-      :invalid-string-section)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head        ::StringSection
+    ::string-expr      string-expr
+    ::index-start?     index-start?
+    ::index-end?       index-end?
+    ::index-step?      index-step?
+    ::Character        Character
+    ::string-value?    string-value?
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4082,15 +4002,12 @@
   ([str-expr, int-ttype, int-val?]
    "trinary ... Return ascii value of the indicated
    character in the string."
-   (let [cnd {::term ::expr,
-              ::asr-expr-head
-              {::expr-head ::StringOrd
-               ::string-expr       str-expr
-               ::Integer           int-ttype
-               ::integer-value?    int-val?}}]
-     (if (s/valid? ::StringOrd cnd)
-       cnd
-       :invalid-string-ord)))
+   {::term ::expr,
+    ::asr-expr-head
+    {::expr-head ::StringOrd
+     ::string-expr       str-expr
+     ::Integer           int-ttype
+     ::integer-value?    int-val?}})
   ([str-expr, int-val?]
    (StringOrd str-expr, (Integer) int-val?)))
 ;; #+end_src
@@ -4137,18 +4054,15 @@
 ;; #+begin_src clojure
 
 (defn IntegerBinOp [left- bo- right- itt- ival?-]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::IntegerBinOp
-              ::integer-left   left-
-              ::integer-binop  bo-
-              ::integer-right  right-
-              ::Integer        itt-
-              ::integer-value? ival?-  ;; TODO: Check arithmetic!
-              }}]
-    (if (s/valid? ::IntegerBinOp cnd)
-      cnd
-      :invalid-integer-bin-op)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::IntegerBinOp
+    ::integer-left   left-
+    ::integer-binop  bo-
+    ::integer-right  right-
+    ::Integer        itt-
+    ::integer-value? ival?-  ;; TODO: Check arithmetic!
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4194,18 +4108,15 @@
 
 (defn RealBinOp-- [left- bo- right- rtt- rval?-]
   "Must use RAdd, RMul, etc."
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head   ::RealBinOp
-              ::real-left   left-
-              ::real-binop  bo-
-              ::real-right  right-
-              ::Real        rtt-
-              ::real-value? rval?- ;; TODO: Check arithmetic!
-              }}]
-    (if (s/valid? ::RealBinOp cnd)
-      cnd
-      :invalid-real-bin-op)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head   ::RealBinOp
+    ::real-left   left-
+    ::real-binop  bo-
+    ::real-right  right-
+    ::Real        rtt-
+    ::real-value? rval?- ;; TODO: Check arithmetic!
+    }})
 ;; #+end_src
 
 ;;
@@ -4243,18 +4154,15 @@
 
 (defn ComplexBinOp-- [left- bo- right- ctt- cval?-]
   "Must use CAdd, CMul, etc."
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::ComplexBinOp
-              ::complex-left   left-
-              ::complex-binop  bo-
-              ::complex-right  right-
-              ::Complex        ctt-
-              ::complex-value? cval?- ;; TODO: Check arithmetic!
-              }}]
-    (if (s/valid? ::ComplexBinOp cnd)
-      cnd
-      :invalid-complex-bin-op)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::ComplexBinOp
+    ::complex-left   left-
+    ::complex-binop  bo-
+    ::complex-right  right-
+    ::Complex        ctt-
+    ::complex-value? cval?- ;; TODO: Check arithmetic!
+    }})
 ;; #+end_src
 
 ;;
@@ -4306,18 +4214,15 @@
 ;; #+begin_src clojure
 
 (defn LogicalBinOp [left- lbo- right- tt- val?-]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::LogicalBinOp
-              ::logical-left   left-
-              ::logicalbinop   lbo-
-              ::logical-right  right-
-              ::Logical        tt-
-              ::logical-value? val?-  ;; TODO: Check arithmetic!
-              }}]
-    (if (s/valid? ::LogicalBinOp cnd)
-      cnd
-      :invalid-logical-bin-op)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::LogicalBinOp
+    ::logical-left   left-
+    ::logicalbinop   lbo-
+    ::logical-right  right-
+    ::Logical        tt-
+    ::logical-value? val?-  ;; TODO: Check arithmetic!
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4331,16 +4236,13 @@
 ;; #+begin_src clojure
 
 (defn ListConstant [expr* ttype]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::ListConstant
-              ::expr*          expr*
-              ;; TODO: check that all exprs have the ttype
-              ::ttype          ttype
-              }}]
-    (if (s/valid? ::ListConstant cnd)
-      cnd
-      :invalid-list-constant)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::ListConstant
+    ::expr*          expr*
+    ;; TODO: check that all exprs have the ttype
+    ::ttype          ttype
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4354,16 +4256,13 @@
 ;; #+begin_src clojure
 
 (defn ListLen [list-expr int-ttype int-val?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::ListLen
-              ::list-expr      list-expr
-              ::Integer        int-ttype
-              ::integer-value? int-val?
-              }}]
-    (if (s/valid? ::ListLen cnd)
-      cnd
-      :invalid-list-len)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::ListLen
+    ::list-expr      list-expr
+    ::Integer        int-ttype
+    ::integer-value? int-val?
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4377,15 +4276,12 @@
 ;; #+begin_src clojure
 
 (defn TupleConstant [elements ttype]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::TupleConstant
-              ::elements       elements
-              ::ttype          ttype
-              }}]
-    (if (s/valid? ::TupleConstant cnd)
-      cnd
-      :invalid-tuple-constant)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::TupleConstant
+    ::elements       elements
+    ::ttype          ttype
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4399,16 +4295,13 @@
 ;; #+begin_src clojure
 
 (defn TupleLen [tuple-expr int-ttype int-val?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::TupleLen
-              ::tuple-expr     tuple-expr
-              ::Integer        int-ttype
-              ::integer-value? int-val?
-              }}]
-    (if (s/valid? ::TupleLen cnd)
-      cnd
-      :invalid-tuple-len)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::TupleLen
+    ::tuple-expr     tuple-expr
+    ::Integer        int-ttype
+    ::integer-value? int-val?
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4423,18 +4316,15 @@
 
 (defn TupleCompare [tuple-left any-cmpop tuple-right
                     logical-ttype logical-value?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::TupleCompare
-              ::tuple-left     tuple-left
-              ::any-cmpop      any-cmpop
-              ::tuple-right    tuple-right
-              ::Logical        logical-ttype
-              ::logical-value? logical-value?
-              }}]
-    (if (s/valid? ::TupleCompare cnd)
-      cnd
-      :invalid-tuple-compare)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::TupleCompare
+    ::tuple-left     tuple-left
+    ::any-cmpop      any-cmpop
+    ::tuple-right    tuple-right
+    ::Logical        logical-ttype
+    ::logical-value? logical-value?
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4443,16 +4333,13 @@
 ;; #+begin_src clojure
 
 (defn ComplexRe [cexpr, rtt, rv?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::ComplexRe
-              ::complex-expr   cexpr
-              ::Real           rtt
-              ::real-value?    rv? ;; TODO: Check arithmetic!
-              }}]
-    (if (s/valid? ::ComplexRe cnd)
-      cnd
-      :invalid-complex-re)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::ComplexRe
+    ::complex-expr   cexpr
+    ::Real           rtt
+    ::real-value?    rv? ;; TODO: Check arithmetic!
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4461,16 +4348,13 @@
 ;; #+begin_src clojure
 
 (defn ComplexIm [cexpr, rtt, rv?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::ComplexIm
-              ::complex-expr   cexpr
-              ::Real           rtt
-              ::real-value?    rv? ;; TODO: Check arithmetic!
-              }}]
-    (if (s/valid? ::ComplexIm cnd)
-      cnd
-      :invalid-complex-im)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::ComplexIm
+    ::complex-expr   cexpr
+    ::Real           rtt
+    ::real-value?    rv? ;; TODO: Check arithmetic!
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4509,17 +4393,14 @@
 ;; #+begin_src clojure
 
 (defn IntegerCompare [l- cmp- r- tt- val?-]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::IntegerCompare
-              ::integer-left   l-
-              ::integer-cmpop  cmp-
-              ::integer-right  r-
-              ::Logical        tt-
-              ::logical-value? val?-}}]
-    (if (s/valid? ::IntegerCompare cnd)
-      cnd
-      :invalid-integer-compare)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::IntegerCompare
+    ::integer-left   l-
+    ::integer-cmpop  cmp-
+    ::integer-right  r-
+    ::Logical        tt-
+    ::logical-value? val?-}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4533,17 +4414,14 @@
 ;; #+begin_src clojure
 
 (defn RealCompare-- [l- cmp- r- tt- val?-]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head   ::RealCompare
-              ::real-left   l-
-              ::real-cmpop  cmp-
-              ::real-right  r-
-              ::Logical     tt-
-              ::logical-value? val?-}}]
-    (if (s/valid? ::RealCompare cnd)
-      cnd
-      :invalid-real-compare)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head   ::RealCompare
+    ::real-left   l-
+    ::real-cmpop  cmp-
+    ::real-right  r-
+    ::Logical     tt-
+    ::logical-value? val?-}})
 ;; #+end_src
 
 ;;
@@ -4568,17 +4446,14 @@
 ;; #+begin_src clojure
 
 (defn ComplexCompare-- [l- cmp- r- tt- val?-]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head   ::ComplexCompare
-              ::complex-left   l-
-              ::complex-cmpop  cmp-
-              ::complex-right  r-
-              ::Logical        tt-
-              ::logical-value? val?-}}]
-    (if (s/valid? ::ComplexCompare cnd)
-      cnd
-      :invalid-complex-compare)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head   ::ComplexCompare
+    ::complex-left   l-
+    ::complex-cmpop  cmp-
+    ::complex-right  r-
+    ::Logical        tt-
+    ::logical-value? val?-}})
 ;; #+end_src
 
 ;;
@@ -4603,17 +4478,14 @@
 ;; #+begin_src clojure
 
 (defn StringCompare-- [l- cmp- r- tt- val?-]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head   ::StringCompare
-              ::string-left    l-
-              ::string-cmpop   cmp-
-              ::string-right   r-
-              ::Logical        tt-
-              ::logical-value? val?-}}]
-    (if (s/valid? ::StringCompare cnd)
-      cnd
-      :invalid-string-compare)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head   ::StringCompare
+    ::string-left    l-
+    ::string-cmpop   cmp-
+    ::string-right   r-
+    ::Logical        tt-
+    ::logical-value? val?-}})
 ;; #+end_src
 
 ;;
@@ -4663,17 +4535,14 @@
 
 (defn LogicalCompare-- [l- cmp- r- tt- val?-]
   "Must use LEq, LNotEq."
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head      ::LogicalCompare
-              ::logical-left   l-
-              ::logical-cmpop  cmp-
-              ::logical-right  r-
-              ::Logical        tt-
-              ::logical-value? val?-}}]
-    (if (s/valid? ::LogicalCompare cnd)
-      cnd
-      :invalid-logical-compare)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head      ::LogicalCompare
+    ::logical-left   l-
+    ::logical-cmpop  cmp-
+    ::logical-right  r-
+    ::Logical        tt-
+    ::logical-value? val?-}})
 ;; #+end_src
 
 ;;
@@ -4707,15 +4576,12 @@
 
 (defn LogicalNot
   [larg, lttype, lvalue?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head ::LogicalNot
-              ::logical-expr   larg
-              ::Logical        lttype
-              ::logical-value? lvalue?}}]
-    (if (s/valid? ::LogicalNot cnd)
-      cnd
-      :invalid-logical-not)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head ::LogicalNot
+    ::logical-expr   larg
+    ::Logical        lttype
+    ::logical-value? lvalue?}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4758,16 +4624,13 @@
 
 (defn Cast
   [arg, cast-kind, ttype, value?]
-  (let [cnd {::term ::expr,
-             ::asr-expr-head
-             {::expr-head ::Cast
-              ::arg       arg
-              ::cast-kind cast-kind
-              ::ttype     ttype
-              ::value?    value?}}]
-    (if (s/valid? ::Cast cnd)
-      cnd
-      :invalid-cast)))
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head ::Cast
+    ::arg       arg
+    ::cast-kind cast-kind
+    ::ttype     ttype
+    ::value?    value?}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4777,17 +4640,14 @@
 ;; #+begin_src clojure
 
 (defn ListItem [list-expr index ttype value?]
-  (let [cnd {::term ::expr
-             ::asr-expr-head
-             {::expr-head       ::ListItem
-              ::list-expr       list-expr
-              ::index           index
-              ::ttype           ttype
-              ::value?          value?
-              }}]
-    (if (s/valid? ::ListItem cnd)
-      cnd
-      :invalid-list-item)))
+  {::term ::expr
+   ::asr-expr-head
+   {::expr-head       ::ListItem
+    ::list-expr       list-expr
+    ::index           index
+    ::ttype           ttype
+    ::value?          value?
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4797,17 +4657,14 @@
 ;; #+begin_src clojure
 
 (defn TupleItem [tuple-expr index ttype value?]
-  (let [cnd {::term ::expr
-             ::asr-expr-head
-             {::expr-head       ::TupleItem
-              ::tuple-expr      tuple-expr
-              ::index           index
-              ::ttype           ttype
-              ::value?          value?
-              }}]
-    (if (s/valid? ::TupleItem cnd)
-      cnd
-      :invalid-tuple-item)))
+  {::term ::expr
+   ::asr-expr-head
+   {::expr-head       ::TupleItem
+    ::tuple-expr      tuple-expr
+    ::index           index
+    ::ttype           ttype
+    ::value?          value?
+    }})
 ;; #+end_src
 
 
@@ -4914,15 +4771,12 @@
 ;; #+begin_src clojure
 
 (defn ListAppend [list-expr list-element]
-  (let [cnd {::term ::stmt,
-             ::asr-stmt-head
-             {::stmt-head      ::ListAppend
-              ::list-expr      list-expr
-              ::list-element   list-element
-              }}]
-    (if (s/valid? ::ListAppend cnd)
-      cnd
-      :invalid-list-element)))
+  {::term ::stmt,
+   ::asr-stmt-head
+   {::stmt-head      ::ListAppend
+    ::list-expr      list-expr
+    ::list-element   list-element
+    }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4943,13 +4797,10 @@
 ;; #+begin_src clojure
 
 (defn ExplicitDeallocate [vars]
-  (let [cnd {::term ::stmt
-             ::asr-stmt-head
-             {::stmt-head ::ExplicitDeallocate
-              ::vars vars}}]
-    (if (s/valid? ::ExplicitDeallocate cnd)
-      cnd
-      :invalid-explicit-deallocate)))
+  {::term ::stmt
+   ::asr-stmt-head
+   {::stmt-head ::ExplicitDeallocate
+    ::vars vars}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4970,14 +4821,11 @@
 ;; #+begin_src clojure
 
 (defn Assert [test-expr message?]
-  (let [cnd {::term ::stmt
-             ::asr-stmt-head
-             {::stmt-head ::Assert
-              ::test-expr test-expr
-              ::message?  message?}}]
-    (if (s/valid? ::Assert cnd)
-      cnd
-      :invalid-if)))
+  {::term ::stmt
+   ::asr-stmt-head
+   {::stmt-head ::Assert
+    ::test-expr test-expr
+    ::message?  message?}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4991,14 +4839,11 @@
 ;; #+begin_src clojure
 
 (defn GoTo-- [goto-target identifier]
-  (let [cnd {::term ::stmt
-             ::asr-stmt-head
-             {::stmt-head ::GoTo
-              ::goto-target goto-target
-              ::identifier  identifier}}]
-    (if (s/valid? ::GoTo cnd)
-      cnd
-      :invalid-goto)))
+  {::term ::stmt
+   ::asr-stmt-head
+   {::stmt-head ::GoTo
+    ::goto-target goto-target
+    ::identifier  identifier}})
 ;; #+end_src
 
 ;;
@@ -5051,15 +4896,12 @@
 ;; #+begin_src clojure
 
 (defn If [test-expr body orelse]
-  (let [cnd {::term ::stmt
-             ::asr-stmt-head
-             {::stmt-head ::If
-              ::test-expr test-expr
-              ::body      body
-              ::orelse    orelse}}]
-    (if (s/valid? ::If cnd)
-      cnd
-      :invalid-if)))
+  {::term ::stmt
+   ::asr-stmt-head
+   {::stmt-head ::If
+    ::test-expr test-expr
+    ::body      body
+    ::orelse    orelse}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5089,15 +4931,12 @@
 ;; #+begin_src clojure
 
 (defn Assignment [lhs, rhs, unk]
-  (let [cnd {::term ::stmt,
-             ::asr-stmt-head
-             {::stmt-head   ::Assignment
-              ::lvalue      lhs
-              ::rvalue      rhs
-              ::overloaded  unk}}]
-    (if (s/valid? ::Assignment cnd)
-      cnd
-      :invalid-assignment)))
+  {::term ::stmt,
+   ::asr-stmt-head
+   {::stmt-head   ::Assignment
+    ::lvalue      lhs
+    ::rvalue      rhs
+    ::overloaded  unk}})
 ;; #+end_src
 
 
@@ -5151,19 +4990,16 @@
 (defn DoLoop [escape-target
               [var start end incr]
               body]
-  (let [cnd {::term ::stmt,
-             ::asr-stmt-head
-             {::stmt-head ::DoLoop
-              ::escape-target   escape-target
-              ::do-loop-head
-              {::loop-v         var
-               ::loop-start     start
-               ::loop-end       end
-               ::loop-increment incr}
-              ::body            body}}]
-    (if (s/valid? ::DoLoop cnd)
-      cnd
-      :invalid-do-loop)))
+  {::term ::stmt,
+   ::asr-stmt-head
+   {::stmt-head ::DoLoop
+    ::escape-target   escape-target
+    ::do-loop-head
+    {::loop-v         var
+     ::loop-start     start
+     ::loop-end       end
+     ::loop-increment incr}
+    ::body            body}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5206,15 +5042,12 @@
 
 (defn WhileLoop
   [escape-target, test-expr, body]
-  (let [cnd {::term ::stmt
-             ::asr-stmt-head
-             {::stmt-head ::WhileLoop
-              ::escape-target escape-target
-              ::test-expr        test-expr
-              ::body             body}}]
-    (if (s/valid? ::WhileLoop cnd)
-      cnd
-      :invalid-while-loop)))
+  {::term ::stmt
+   ::asr-stmt-head
+   {::stmt-head ::WhileLoop
+    ::escape-target escape-target
+    ::test-expr        test-expr
+    ::body             body}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5237,17 +5070,14 @@
 ;; #+begin_src clojure
 
 (defn Print [fmt, value*, separator, end]
-  (let [cnd {::term ::stmt,
-             ::asr-stmt-head
-             {::stmt-head ::Print
-              ::format?    fmt
-              ::value*     value*
-              ::separator? separator
-              ::end?       end}
-             }]
-    (if (s/valid? ::Print cnd)
-      cnd
-      :invalid-print)))
+  {::term ::stmt,
+   ::asr-stmt-head
+   {::stmt-head ::Print
+    ::format?    fmt
+    ::value*     value*
+    ::separator? separator
+    ::end?       end}
+   })
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5258,12 +5088,9 @@
 ;; #+begin_src clojure
 
 (defn Return []
-  (let [cnd {::term ::stmt,
-             ::asr-stmt-head
-             {::stmt-head ::Return}}]
-    (if (s/valid? ::Return cnd)
-      cnd
-      :invalid-return)))
+  {::term ::stmt,
+   ::asr-stmt-head
+   {::stmt-head ::Return}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5317,17 +5144,14 @@
 
 (defn SubroutineCall--
   [subr-symref, orig-symref, args, dt?]
-  (let [cnd {::term ::stmt,
-             ::asr-stmt-head
-             {::stmt-head    ::SubroutineCall
-              ::symbol-ref   subr-symref
-              ::orig-symref  orig-symref ;; TODO
-              ::call-args    args
-              ::dt?          dt?
-              }}]
-    (if (s/valid? ::SubroutineCall cnd)
-      cnd
-      :invalid-subroutine-call)))
+  {::term ::stmt,
+   ::asr-stmt-head
+   {::stmt-head    ::SubroutineCall
+    ::symbol-ref   subr-symref
+    ::orig-symref  orig-symref ;; TODO
+    ::call-args    args
+    ::dt?          dt?
+    }})
 ;; #+end_src
 
 ;;
@@ -5372,15 +5196,12 @@
 
 (defn BlockCall--
   [label, symref]
-  (let [cnd {::term ::stmt,
-             ::asr-stmt-head
-             {::stmt-head    ::BlockCall
-              ::label        label
-              ::symbol-ref   symref
-              }}]
-    (if (s/valid? ::BlockCall cnd)
-      cnd
-      :invalid-block-call)))
+  {::term ::stmt,
+   ::asr-stmt-head
+   {::stmt-head    ::BlockCall
+    ::label        label
+    ::symbol-ref   symref
+    }})
 ;; #+end_src
 
 ;;
@@ -5448,16 +5269,13 @@
 ;; #+begin_src clojure
 
 (defn Program-- [stab, nym, deps, body-]
-  (let [cnd {::term ::symbol,
-             ::asr-symbol-head
-             {::symbol-head  ::Program
-              ::SymbolTable  stab
-              ::prognym      nym
-              ::dependencies deps
-              ::body         body-}}]
-    (if (s/valid? ::Program cnd)
-      cnd
-      ::invalid-program)))
+  {::term ::symbol,
+   ::asr-symbol-head
+   {::symbol-head  ::Program
+    ::SymbolTable  stab
+    ::prognym      nym
+    ::dependencies deps
+    ::body         body-}})
 ;; #+end_src
 
 ;;
@@ -5498,17 +5316,14 @@
 ;; #+begin_src clojure
 
 (defn Module-- [symtab, modnym, deps, loaded, intrinsic-]
-  (let [cnd {::term ::symbol
-             ::asr-symbol-head
-             {::symbol-head     ::Module
-              ::SymbolTable     symtab
-              ::modulenym       modnym
-              ::dependencies    deps
-              ::loaded-from-mod loaded
-              ::intrinsic       intrinsic-}}]
-    (if (s/valid? ::Module cnd)
-      cnd
-      :invalid-module)))
+  {::term ::symbol
+   ::asr-symbol-head
+   {::symbol-head     ::Module
+    ::SymbolTable     symtab
+    ::modulenym       modnym
+    ::dependencies    deps
+    ::loaded-from-mod loaded
+    ::intrinsic       intrinsic-}})
 ;; #+end_src
 
 ;;
@@ -5560,27 +5375,24 @@
                   fnnym,   fnsig,  deps,
                   param*-, body-,  retvar?,
                   access-, determ, sefree]
-  (let [cnd {::term ::symbol
-             ::asr-symbol-head
-             {::symbol-head         ::Function
+  {::term ::symbol
+   ::asr-symbol-head
+   {::symbol-head         ::Function
 
-              ::SymbolTable         symtab
+    ::SymbolTable         symtab
 
-              ::function-name       fnnym
-              ::function-signature  fnsig
-              ::dependencies        deps
+    ::function-name       fnnym
+    ::function-signature  fnsig
+    ::dependencies        deps
 
-              ::param*              param*-
-              ::body                body-
-              ::return-var?         retvar?
+    ::param*              param*-
+    ::body                body-
+    ::return-var?         retvar?
 
-              ::access              access-
-              ::deterministic       determ
-              ::side-effect-free    sefree
-              }}]
-    (if (s/valid? ::Function cnd)
-      cnd
-      :invalid-function)))
+    ::access              access-
+    ::deterministic       determ
+    ::side-effect-free    sefree
+    }})
 ;; #+end_src
 
 ;;
@@ -5602,8 +5414,7 @@
    access   determ   sefree]
   (let [vfunction-head `'~function-head
         vsymtab  symtab
-        vfnnym   fnnym #_(if (s/valid? ::function-name fnnym)
-                             `'~fnnym ::invalid-function-name)
+        vfnnym   fnnym
         vfnsig   fnsig
         vdeps    deps
         vparam*  (if (s/valid? ::param* param*)
@@ -5617,45 +5428,33 @@
         vsefree  (if (s/valid? ::side-effect-free sefree)
                    sefree ::invalid-side-effect-free)
         ]
-    (let [cnd
-          {::term ::symbol
-           ::asr-symbol-head
-           {::symbol-head         ::Function
+    {::term ::symbol
+     ::asr-symbol-head
+     {::symbol-head         ::Function
 
-            ::SymbolTable         vsymtab
+      ::SymbolTable         vsymtab
 
-            ::function-name       vfnnym
-            ::function-signature  vfnsig
-            ::dependencies        vdeps
+      ::function-name       vfnnym
+      ::function-signature  vfnsig
+      ::dependencies        vdeps
 
-            ::param*              vparam*
-            ::body                vbody
-            ::return-var?         vretvar?
+      ::param*              vparam*
+      ::body                vbody
+      ::return-var?         vretvar?
 
-            ::access              vaccess
-            ::deterministic       vdeterm
-            ::side-effect-free    vsefree
-            }}]
-      cnd #_
-      (if (s/valid? ::Function cnd)
-        cnd
-        ::invalid-function))
-    ))
+      ::access              vaccess
+      ::deterministic       vdeterm
+      ::side-effect-free    vsefree
+      }}))
 
 
 (defmacro Function
-  "Quote the fnnym and the deps."
+  "Quote the fnnym, deps. Eval individual body stmts to
+  defeat Java method-code-size limit."
   [symtab,
    fnnym,   fnsig,  deps,
    param*-, body-,  retvar?,
    access-, determ, sefree]
-  #_`(Function--
-    ~symtab,
-    '~fnnym,  ~fnsig,  (for [d# '~deps] d#),
-    ~param*-,
-    ~body-, ;; <~~~ iterate over the statements inside
-    ~retvar?,
-    ~access-, ~determ, ~sefree)
   `(function-piecewise
     'Function
 
@@ -5710,17 +5509,14 @@
 
 (defn GenericProcedure--
   [stid, fnym, symrefs, access]
-  (let [cnd {::term ::symbol,
-             ::asr-symbol-head
-             {::symbol-head   ::GenericProcedure
-              ::symtab-id     stid
-              ::function-name fnym
-              ::symbol-ref*   symrefs
-              ::access        access}
-             }]
-    (if (s/valid? ::GenericProcedure cnd)
-      cnd
-      ::invalid-generic-procedure)))
+  {::term ::symbol,
+   ::asr-symbol-head
+   {::symbol-head   ::GenericProcedure
+    ::symtab-id     stid
+    ::function-name fnym
+    ::symbol-ref*   symrefs
+    ::access        access}
+   })
 ;; #+end_src
 
 ;;
@@ -5784,23 +5580,20 @@
   [stid,    nym-,        extern-symref-
    modnym-, scope-nyms-, orig-nym-,
    access- ]
-  (let [cnd {::term           ::symbol,
-             ::asr-symbol-head
-             {::symbol-head   ::ExternalSymbol,
+  {::term           ::symbol,
+   ::asr-symbol-head
+   {::symbol-head   ::ExternalSymbol,
 
-              ::symtab-id     stid
-              ::nym           nym-
-              ::extern-symref extern-symref-
+    ::symtab-id     stid
+    ::nym           nym-
+    ::extern-symref extern-symref-
 
-              ::modulenym     modnym-
-              ::scope-nyms    scope-nyms-,
-              ::orig-nym      orig-nym-,
+    ::modulenym     modnym-
+    ::scope-nyms    scope-nyms-,
+    ::orig-nym      orig-nym-,
 
-              ::access        access-}
-             }]
-    (if (s/valid? ::ExternalSymbol cnd)
-      cnd
-      ::invalid-external-symbol)))
+    ::access        access-}
+   })
 ;; #+end_src
 
 ;;
@@ -5910,31 +5703,28 @@
            access           Public
            presence         Required
            value-attr       false}}]
-  (let [cnd {::term              ::symbol,
-             ::asr-symbol-head
-             {::symbol-head      ::Variable,
+  {::term              ::symbol,
+   ::asr-symbol-head
+   {::symbol-head      ::Variable,
 
-              ::symtab-id        symtab-id,
-              ::varnym           varnym,
-              ::ttype            ttype,
+    ::symtab-id        symtab-id,
+    ::varnym           varnym,
+    ::ttype            ttype,
 
-              ::type-declaration type-declaration,
-              ::dependencies     dependencies,
-              ::intent           intent,
+    ::type-declaration type-declaration,
+    ::dependencies     dependencies,
+    ::intent           intent,
 
-              ::symbolic-value   symbolic-value,
-              ::value?           value?,
-              ::storage-type     storage-type,
+    ::symbolic-value   symbolic-value,
+    ::value?           value?,
+    ::storage-type     storage-type,
 
-              ::abi              abi,
-              ::access           access,
-              ::presence         presence,
+    ::abi              abi,
+    ::access           access,
+    ::presence         presence,
 
-              ::value-attr       value-attr,
-              }}]
-    (if (s/valid? ::Variable cnd)
-      cnd
-      ::invalid-variable)))
+    ::value-attr       value-attr,
+    }})
 ;; #+end_src
 
 ;;
@@ -5950,42 +5740,39 @@
    symbolic-value-,    value?-,        storage-type-,
    abi-,               access-,        presence-,
    value-attr-]
-  (let [cnd {::term              ::symbol,
-             ::asr-symbol-head
-             {::symbol-head      ::Variable,
+  {::term              ::symbol,
+   ::asr-symbol-head
+   {::symbol-head      ::Variable,
 
-              ::symtab-id        symtab-id-,
-              ::varnym           varnym-,
-              ::ttype            ttype-, ;; already wrapped!
+    ::symtab-id        symtab-id-,
+    ::varnym           varnym-,
+    ::ttype            ttype-, ;; already wrapped!
 
-              ;; https://github.com/rebcabin/masr/issues/28
-              ::type-declaration typedecl-
-              ::dependencies     dependencies-,
-              ::intent           (if (symbol? intent-)
-                                   (intent  intent-)
-                                   intent-),
+    ;; https://github.com/rebcabin/masr/issues/28
+    ::type-declaration typedecl-
+    ::dependencies     dependencies-,
+    ::intent           (if (symbol? intent-)
+                         (intent  intent-)
+                         intent-),
 
-              ::symbolic-value   symbolic-value-,
-              ::value?           value?-,
-              ::storage-type     (if (symbol? storage-type-)
-                                   (storage-type storage-type-)
-                                   storage-type-),
+    ::symbolic-value   symbolic-value-,
+    ::value?           value?-,
+    ::storage-type     (if (symbol? storage-type-)
+                         (storage-type storage-type-)
+                         storage-type-),
 
-              ::abi              (if (symbol? abi-)
-                                   (abi abi-)
-                                   abi-),
-              ::access           (if (symbol? access-)
-                                   (access access-)
-                                   access-),
-              ::presence         (if (symbol? presence-)
-                                   (presence presence-)
-                                   presence-),
+    ::abi              (if (symbol? abi-)
+                         (abi abi-)
+                         abi-),
+    ::access           (if (symbol? access-)
+                         (access access-)
+                         access-),
+    ::presence         (if (symbol? presence-)
+                         (presence presence-)
+                         presence-),
 
-              ::value-attr       value-attr-,
-              }}]
-    (if (s/valid? ::Variable cnd)
-      cnd
-      ::invalid-variable)))
+    ::value-attr       value-attr-,
+    }})
 ;; #+end_src
 
 ;;
@@ -6042,16 +5829,13 @@
 (defn Block-- [SymbolTable
                blocknym
                body]
-  (let [cnd {::term ::symbol
-             ::asr-symbol-head
-             {::symbol-head     ::Block
-              ::SymbolTable     SymbolTable
-              ::blocknym        blocknym
-              ::body            body
-              }}]
-    (if (s/valid? ::Block cnd)
-      cnd
-      ::invalid-block)))
+  {::term ::symbol
+   ::asr-symbol-head
+   {::symbol-head     ::Block
+    ::SymbolTable     SymbolTable
+    ::blocknym        blocknym
+    ::body            body
+    }})
 ;; #+end_src
 
 ;;
@@ -6082,13 +5866,10 @@
 ;; #+begin_src clojure
 
 (defn IntrinsicModule-- [modnym]
-  (let [cnd {::term ::symbol
-             ::asr-symbol-head
-             {::symbol-head     ::IntrinsicModule
-              ::modulenym       modnym}}]
-    (if (s/valid? ::IntrinsicModule cnd)
-      cnd
-      ::invalid-intrinsic-module)))
+  {::term ::symbol
+   ::asr-symbol-head
+   {::symbol-head     ::IntrinsicModule
+    ::modulenym       modnym}})
 ;; #+end_src
 
 ;;
@@ -6116,10 +5897,7 @@
                     :stmt   ::stmt
                     :symbol ::symbol))
 
-(defn node [candidate]
-  (if (s/valid? ::node candidate)
-    candidate
-    ::invalid-node))
+(defn node [candidate] candidate)
 ;; #+end_src
 
 ;;
@@ -6145,14 +5923,10 @@
 ;; #+begin_src clojure
 
 (defn TranslationUnit [stab, node-preimages]
-  (let [node-cnd (map node node-preimages)
-        cnd
-        {::term          ::unit
-         ::asr-unit-head
-         {::unit-head    ::TranslationUnit
-          ::SymbolTable  stab
-          ::nodes        node-cnd}}]
-    (if (s/valid? ::TranslationUnit cnd)
-      cnd
-      ::invalid-translation-unit)))
+  (let [node-cnd (map node node-preimages)]
+    {::term          ::unit
+     ::asr-unit-head
+     {::unit-head    ::TranslationUnit
+      ::SymbolTable  stab
+      ::nodes        node-cnd}}))
 ;; #+end_src
