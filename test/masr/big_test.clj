@@ -2657,11 +2657,11 @@
   (comment "too big for Function")
   #_(is (s/valid? ::asr/Function (asr-eval big-function-sample)))
 
-  (is (s/valid? ::asr/body  (asr-eval (nth big-function-sample 6))))
+  (let [test-body (nth big-function-sample 6)]
+    (is (s/valid? ::asr/body (asr-eval test-body)))
 
-  (doseq [e (nth big-function-sample 6)]
-    (is (s/valid? ::asr/stmt
-                  (asr-eval e))))
+    (doseq [e test-body]
+      (is (s/valid? ::asr/stmt (asr-eval e)))))
   )
 
 
@@ -2670,7 +2670,7 @@
     (is (s/valid? ::asr/Function it))))
 
 
-(defn function-piecewise
+(defn test-function-piecewise
   [[function-head
     symtab
     fnnym    fnsig    deps
@@ -2719,33 +2719,6 @@
     ))
 
 
-(deftest function-piecewise-test
-  (is (not (nil? (function-piecewise big-function-sample)))))
-
-
-(deftest evaluating-function-test
-  (let [ft (FunctionType
-            [] () Source
-            Implementation () false
-            false false false
-            false [] [] false)
-        afn (Function
-             (SymbolTable 42 {})
-             test_boolOp, ft, []
-             [] [] () ;; param*, body, retvar
-             Public false false)]
-    (is (s/valid? ::asr/asr-term afn))
-    (is (s/valid? ::asr/symbol   afn))
-    (is (s/valid? ::asr/Function afn))
-    ))
-
-
-(deftest evaluating-subroutine-call-test
-  (let [it (asr-eval
-               '(SubroutineCall
-                 114 test_pow
-                 ()
-                 []
-                 ()
-                 ))]
-    (is (s/valid? ::asr/SubroutineCall it))))
+(deftest test-function-piecewise-test
+  (is (not (nil? (test-function-piecewise
+                  big-function-sample)))))

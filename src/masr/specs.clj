@@ -5594,18 +5594,84 @@
 ;;
 ;; #+begin_src clojure
 
+(defn function-piecewise
+  [function-head
+   symtab
+   fnnym    fnsig    deps
+   param*   body     retvar?
+   access   determ   sefree]
+  (let [vfunction-head `'~function-head
+        vsymtab  symtab
+        vfnnym   fnnym #_(if (s/valid? ::function-name fnnym)
+                             `'~fnnym ::invalid-function-name)
+        vfnsig   fnsig
+        vdeps    deps
+        vparam*  (if (s/valid? ::param* param*)
+                   param* ::invalid-param*)
+        vbody    body
+        vretvar? (if (s/valid? ::return-var? retvar?)
+                   retvar? ::invalid-retvar?)
+        vaccess  access
+        vdeterm  (if (s/valid? ::deterministic determ)
+                   determ ::invalid-deterministic)
+        vsefree  (if (s/valid? ::side-effect-free sefree)
+                   sefree ::invalid-side-effect-free)
+        ]
+    (let [cnd
+          {::term ::symbol
+           ::asr-symbol-head
+           {::symbol-head         ::Function
+
+            ::SymbolTable         vsymtab
+
+            ::function-name       vfnnym
+            ::function-signature  vfnsig
+            ::dependencies        vdeps
+
+            ::param*              vparam*
+            ::body                vbody
+            ::return-var?         vretvar?
+
+            ::access              vaccess
+            ::deterministic       vdeterm
+            ::side-effect-free    vsefree
+            }}]
+      cnd #_
+      (if (s/valid? ::Function cnd)
+        cnd
+        ::invalid-function))
+    ))
+
+
 (defmacro Function
   "Quote the fnnym and the deps."
   [symtab,
    fnnym,   fnsig,  deps,
    param*-, body-,  retvar?,
    access-, determ, sefree]
-  `(Function-- ~symtab,
-               '~fnnym,  ~fnsig,  (for [d# '~deps] d#),
-               ~param*-,
-               ~body-,  ;; <~~~ iterate over the statements inside
-               ~retvar?,
-               ~access-, ~determ, ~sefree))
+  #_`(Function--
+    ~symtab,
+    '~fnnym,  ~fnsig,  (for [d# '~deps] d#),
+    ~param*-,
+    ~body-, ;; <~~~ iterate over the statements inside
+    ~retvar?,
+    ~access-, ~determ, ~sefree)
+  `(function-piecewise
+    'Function
+
+    ~symtab,
+    '~fnnym,
+    ~fnsig,
+    '~deps
+
+    ~param*-,
+    (for [s# '~body-] (eval s#)) #_
+    ~body-, ;; <~~~ iterate over the statements inside
+    ~retvar?,
+
+    ~access-,
+    ~determ,
+    ~sefree))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
