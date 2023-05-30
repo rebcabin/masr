@@ -4785,7 +4785,7 @@
     ))
 
 
-(def big-unit-literal-sample
+(def big-translation-unit-literal-sample
   '(TranslationUnit
     (SymbolTable
      1
@@ -4795,1452 +4795,565 @@
        (SymbolTable
         9
         {
-         :_lpython_main_program
-         (Function
-          (SymbolTable
-           8
-           {
+         #_:_lpython_main_program
+         #_(Function
+            (SymbolTable
+             8
+             {
 
-            })
-          _lpython_main_program
-          (FunctionType
-           []
-           ()
-           Source
-           Implementation
-           ()
-           false
-           false
-           false
-           false
-           false
-           []
-           []
-           false
-           )
-          [check]
-          []
-          [(SubroutineCall
-            9 check
-            ()
+              })
+            _lpython_main_program
+            (FunctionType
+             []
+             ()
+             Source
+             Implementation
+             ()
+             false
+             false
+             false
+             false
+             false
+             []
+             []
+             false
+             )
+            [check]
             []
+            [(SubroutineCall
+              9 check
+              ()
+              []
+              ()
+              )]
             ()
-            )]
-          ()
-          Public
-          false
-          false
-          ),
-         :check
-         (Function
-          (SymbolTable
-           6
-           {
+            Public
+            false
+            false
+            ),
+         #_:check
+         #_(Function
+            (SymbolTable
+             6
+             {
 
-            })
-          check
-          (FunctionType
-           []
-           ()
-           Source
-           Implementation
-           ()
-           false
-           false
-           false
-           false
-           false
-           []
-           []
-           false
-           )
-          [f
-           test_nested_lists
-           test_nested_lists2
-           test_print_list_tuple]
-          []
-          [(SubroutineCall
-            9 f
-            ()
+              })
+            check
+            (FunctionType
+             []
+             ()
+             Source
+             Implementation
+             ()
+             false
+             false
+             false
+             false
+             false
+             []
+             []
+             false
+             )
+            [f
+             test_nested_lists
+             test_nested_lists2
+             test_print_list_tuple]
             []
-            ()
-            )
-           (SubroutineCall
-            9 test_nested_lists
-            ()
-            []
-            ()
-            )
-           (SubroutineCall
-            9 test_nested_lists2
-            ()
-            []
-            ()
-            )
-           (SubroutineCall
-            9 test_print_list_tuple
-            ()
-            []
-            ()
-            )]
-          ()
-          Public
-          false
-          false
-          ),
-         :f
-         (Function
-          (SymbolTable
-           2
-           {
-            :__list_iterator
-            (Variable
-             2
-             __list_iterator
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator1
-            (Variable
-             2
-             __list_iterator1
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator10
-            (Variable
-             2
-             __list_iterator10
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator11
-            (Variable
-             2
-             __list_iterator11
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator12
-            (Variable
-             2
-             __list_iterator12
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator13
-            (Variable
-             2
-             __list_iterator13
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator14
-            (Variable
-             2
-             __list_iterator14
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator15
-            (Variable
-             2
-             __list_iterator15
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator16
-            (Variable
-             2
-             __list_iterator16
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator17
-            (Variable
-             2
-             __list_iterator17
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator18
-            (Variable
-             2
-             __list_iterator18
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator2
-            (Variable
-             2
-             __list_iterator2
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator3
-            (Variable
-             2
-             __list_iterator3
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator4
-            (Variable
-             2
-             __list_iterator4
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator5
-            (Variable
-             2
-             __list_iterator5
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator6
-            (Variable
-             2
-             __list_iterator6
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator7
-            (Variable
-             2
-             __list_iterator7
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator8
-            (Variable
-             2
-             __list_iterator8
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator9
-            (Variable
-             2
-             __list_iterator9
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :a
-            (Variable
-             2
-             a
-             []
-             Local
-             ()
-             ()
-             Default
-             (List
-              (Character 1 -2 () [])
+            [(SubroutineCall
+              9 f
+              ()
+              []
+              ()
               )
-             Source
-             Public
-             Required
-             false
-             ),
-            :b
-            (Variable
-             2
-             b
-             []
-             Local
-             ()
-             ()
-             Default
-             (List
-              (Integer 4 [])
+             (SubroutineCall
+              9 test_nested_lists
+              ()
+              []
+              ()
               )
-             Source
-             Public
-             Required
-             false
-             ),
-            :c
-            (Variable
-             2
-             c
-             []
-             Local
-             ()
-             ()
-             Default
-             (List
-              (Real 8 [])
+             (SubroutineCall
+              9 test_nested_lists2
+              ()
+              []
+              ()
               )
-             Source
-             Public
-             Required
-             false
-             ),
-            :d
-            (Variable
-             2
-             d
-             []
-             Local
-             ()
-             ()
-             Default
-             (List
-              (Integer 4 [])
-              )
-             Source
-             Public
-             Required
-             false
-             )
-            })
-          f
-          (FunctionType
-           []
-           ()
-           Source
-           Implementation
-           ()
-           false
-           false
-           false
-           false
-           false
-           []
-           []
-           false
-           )
-          []
-          []
-          [(=
-            (Var 2 a)
-            (ListConstant
-             [(StringConstant
-               "ab"
-               (Character 1 2 () [])
-               )
-              (StringConstant
-               "abc"
-               (Character 1 3 () [])
-               )
-              (StringConstant
-               "abcd"
-               (Character 1 4 () [])
-               )]
-             (List
-              (Character 1 2 () [])
-              )
-             )
-            ()
-            )
-           (=
-            (Var 2 b)
-            (ListConstant
-             [(IntegerConstant 1 (Integer 4 []))
-              (IntegerConstant 2 (Integer 4 []))
-              (IntegerConstant 3 (Integer 4 []))
-              (IntegerConstant 4 (Integer 4 []))]
-             (List
-              (Integer 4 [])
-              )
-             )
-            ()
-            )
-           (=
-            (Var 2 c)
-            (ListConstant
-             [(RealConstant
-               1.230000
-               (Real 8 [])
-               )
-              (RealConstant
-               324.300000
-               (Real 8 [])
-               )
-              (RealConstant
-               56.431000
-               (Real 8 [])
-               )
-              (RealConstant
-               90.500000
-               (Real 8 [])
-               )
-              (RealConstant
-               34.100000
-               (Real 8 [])
-               )]
-             (List
-              (Real 8 [])
-              )
-             )
-            ()
-            )
-           (=
-            (Var 2 d)
-            (ListConstant
-             []
-             (List
-              (Integer 4 [])
-              )
-             )
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
+             (SubroutineCall
+              9 test_print_list_tuple
+              ()
+              []
+              ()
               )]
             ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 a)
-               (Integer 4 [])
+            Public
+            false
+            false
+            ),
+         #_:f
+         #_(Function
+            (SymbolTable
+             2
+             {
+              :__list_iterator
+              (Variable
+               2
+               __list_iterator
+               []
+               Local
                ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(StringConstant
-                "'"
-                (Character 1 1 () [])
-                )
-               (ListItem
-                (Var 2 a)
-                (Var 2 __list_iterator)
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator1
+              (Variable
+               2
+               __list_iterator1
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator10
+              (Variable
+               2
+               __list_iterator10
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator11
+              (Variable
+               2
+               __list_iterator11
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator12
+              (Variable
+               2
+               __list_iterator12
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator13
+              (Variable
+               2
+               __list_iterator13
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator14
+              (Variable
+               2
+               __list_iterator14
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator15
+              (Variable
+               2
+               __list_iterator15
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator16
+              (Variable
+               2
+               __list_iterator16
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator17
+              (Variable
+               2
+               __list_iterator17
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator18
+              (Variable
+               2
+               __list_iterator18
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator2
+              (Variable
+               2
+               __list_iterator2
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator3
+              (Variable
+               2
+               __list_iterator3
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator4
+              (Variable
+               2
+               __list_iterator4
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator5
+              (Variable
+               2
+               __list_iterator5
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator6
+              (Variable
+               2
+               __list_iterator6
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator7
+              (Variable
+               2
+               __list_iterator7
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator8
+              (Variable
+               2
+               __list_iterator8
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator9
+              (Variable
+               2
+               __list_iterator9
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :a
+              (Variable
+               2
+               a
+               []
+               Local
+               ()
+               ()
+               Default
+               (List
                 (Character 1 -2 () [])
-                ()
                 )
-               (StringConstant
-                "'"
-                (Character 1 1 () [])
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 a)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
+               Source
+               Public
+               Required
+               false
+               ),
+              :b
+              (Variable
+               2
+               b
+               []
+               Local
+               ()
+               ()
+               Default
+               (List
                 (Integer 4 [])
-                ()
                 )
-               (Logical 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :c
+              (Variable
+               2
+               c
+               []
+               Local
                ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator1)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 b)
-               (Integer 4 [])
                ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (Var 2 b)
-                (Var 2 __list_iterator1)
-                (Integer 4 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator1)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 b)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator2)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 c)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (Var 2 c)
-                (Var 2 __list_iterator2)
+               Default
+               (List
                 (Real 8 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator2)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 c)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
+                )
+               Source
+               Public
+               Required
+               false
+               ),
+              :d
+              (Variable
+               2
+               d
+               []
+               Local
+               ()
+               ()
+               Default
+               (List
                 (Integer 4 [])
-                ()
                 )
-               (Logical 4 [])
-               ()
+               Source
+               Public
+               Required
+               false
                )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
+              })
+            f
+            (FunctionType
+             []
+             ()
+             Source
+             Implementation
+             ()
+             false
+             false
+             false
+             false
+             false
+             []
+             []
+             false
              )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator3)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 d)
-               (Integer 4 [])
-               ()
+            []
+            []
+            [(=
+              (Var 2 a)
+              (ListConstant
+               [(StringConstant
+                 "ab"
+                 (Character 1 2 () [])
+                 )
+                (StringConstant
+                 "abc"
+                 (Character 1 3 () [])
+                 )
+                (StringConstant
+                 "abcd"
+                 (Character 1 4 () [])
+                 )]
+               (List
+                (Character 1 2 () [])
+                )
                )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
               ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (Var 2 d)
-                (Var 2 __list_iterator3)
+             (=
+              (Var 2 b)
+              (ListConstant
+               [(IntegerConstant 1 (Integer 4 []))
+                (IntegerConstant 2 (Integer 4 []))
+                (IntegerConstant 3 (Integer 4 []))
+                (IntegerConstant 4 (Integer 4 []))]
+               (List
                 (Integer 4 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator3)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 d)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
                 )
-               (Logical 4 [])
-               ()
                )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator4)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 a)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
               ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(StringConstant
-                "'"
-                (Character 1 1 () [])
-                )
-               (ListItem
-                (Var 2 a)
-                (Var 2 __list_iterator4)
-                (Character 1 -2 () [])
-                ()
-                )
-               (StringConstant
-                "'"
-                (Character 1 1 () [])
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator4)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 a)
-                 (Integer 4 [])
-                 ()
+             (=
+              (Var 2 c)
+              (ListConstant
+               [(RealConstant
+                 1.230000
+                 (Real 8 [])
                  )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
+                (RealConstant
+                 324.300000
+                 (Real 8 [])
                  )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
+                (RealConstant
+                 56.431000
+                 (Real 8 [])
                  )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator5)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 a)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(StringConstant
-                "'"
-                (Character 1 1 () [])
-                )
-               (ListItem
-                (Var 2 a)
-                (Var 2 __list_iterator5)
-                (Character 1 -2 () [])
-                ()
-                )
-               (StringConstant
-                "'"
-                (Character 1 1 () [])
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator5)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 a)
-                 (Integer 4 [])
-                 ()
+                (RealConstant
+                 90.500000
+                 (Real 8 [])
                  )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator6)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 b)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (Var 2 b)
-                (Var 2 __list_iterator6)
-                (Integer 4 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator6)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 b)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator7)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 c)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (Var 2 c)
-                (Var 2 __list_iterator7)
+                (RealConstant
+                 34.100000
+                 (Real 8 [])
+                 )]
+               (List
                 (Real 8 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator7)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 c)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
                 )
-               (Logical 4 [])
-               ()
                )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator8)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 d)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
               ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (Var 2 d)
-                (Var 2 __list_iterator8)
+             (=
+              (Var 2 d)
+              (ListConstant
+               []
+               (List
                 (Integer 4 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator8)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 d)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
                 )
-               (Logical 4 [])
-               ()
                )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator9)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 a)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
               ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
+             (Print
               ()
               [(StringConstant
-                "'"
-                (Character 1 1 () [])
-                )
-               (ListItem
-                (Var 2 a)
-                (Var 2 __list_iterator9)
-                (Character 1 -2 () [])
-                ()
-                )
-               (StringConstant
-                "'"
+                "["
                 (Character 1 1 () [])
                 )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
+              ()
               (StringConstant
                ""
                (Character 1 0 () [])
                )
               )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator9)
-               Lt
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator)
+               (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
                  (Var 2 a)
@@ -6252,510 +5365,1340 @@
                 (Integer 4 [])
                 ()
                 )
-               (Logical 4 [])
-               ()
-               )
+               (IntegerConstant 1 (Integer 4 [])))
               [(Print
                 ()
                 [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator10)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 a)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(StringConstant
-                "'"
-                (Character 1 1 () [])
-                )
-               (ListItem
-                (Var 2 a)
-                (Var 2 __list_iterator10)
-                (Character 1 -2 () [])
-                ()
-                )
-               (StringConstant
-                "'"
-                (Character 1 1 () [])
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator10)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 a)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(IntegerConstant 1 (Integer 4 []))]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator11)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 b)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (Var 2 b)
-                (Var 2 __list_iterator11)
-                (Integer 4 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator11)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 b)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator12)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 c)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (Var 2 c)
-                (Var 2 __list_iterator12)
-                (Real 8 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator12)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 c)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(RealConstant
-              1.100000
-              (Real 8 [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator13)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 d)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (Var 2 d)
-                (Var 2 __list_iterator13)
-                (Integer 4 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator13)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 d)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator14)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (ListConstant
-                [(IntegerUnaryMinus
-                  (IntegerConstant 3 (Integer 4 []))
-                  (Integer 4 [])
-                  (IntegerConstant -3 (Integer 4 []))
+                  "'"
+                  (Character 1 1 () [])
                   )
-                 (IntegerConstant 2 (Integer 4 []))
-                 (IntegerConstant 1 (Integer 4 []))
-                 (IntegerConstant 0 (Integer 4 []))]
-                (List
-                 (Integer 4 [])
+                 (ListItem
+                  (Var 2 a)
+                  (Var 2 __list_iterator)
+                  (Character 1 -2 () [])
+                  ()
+                  )
+                 (StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
                  )
                 )
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (ListConstant
-                 [(IntegerUnaryMinus
-                   (IntegerConstant 3 (Integer 4 []))
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 a)
                    (Integer 4 [])
-                   (IntegerConstant -3 (Integer 4 []))
+                   ()
                    )
-                  (IntegerConstant 2 (Integer 4 []))
+                  Sub
                   (IntegerConstant 1 (Integer 4 []))
-                  (IntegerConstant 0 (Integer 4 []))]
-                 (List
                   (Integer 4 [])
+                  ()
                   )
+                 (Logical 4 [])
+                 ()
                  )
-                (Var 2 __list_iterator14)
-                (Integer 4 [])
-                ()
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
                 )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
               (StringConstant
                ""
                (Character 1 0 () [])
                )
               )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator14)
-               Lt
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator1)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 b)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (Var 2 b)
+                  (Var 2 __list_iterator1)
+                  (Integer 4 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator1)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 b)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator2)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 c)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (Var 2 c)
+                  (Var 2 __list_iterator2)
+                  (Real 8 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator2)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 c)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator3)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 d)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (Var 2 d)
+                  (Var 2 __list_iterator3)
+                  (Integer 4 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator3)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 d)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator4)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 a)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )
+                 (ListItem
+                  (Var 2 a)
+                  (Var 2 __list_iterator4)
+                  (Character 1 -2 () [])
+                  ()
+                  )
+                 (StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator4)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 a)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator5)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 a)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )
+                 (ListItem
+                  (Var 2 a)
+                  (Var 2 __list_iterator5)
+                  (Character 1 -2 () [])
+                  ()
+                  )
+                 (StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator5)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 a)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator6)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 b)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (Var 2 b)
+                  (Var 2 __list_iterator6)
+                  (Integer 4 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator6)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 b)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator7)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 c)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (Var 2 c)
+                  (Var 2 __list_iterator7)
+                  (Real 8 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator7)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 c)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator8)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 d)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (Var 2 d)
+                  (Var 2 __list_iterator8)
+                  (Integer 4 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator8)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 d)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator9)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 a)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )
+                 (ListItem
+                  (Var 2 a)
+                  (Var 2 __list_iterator9)
+                  (Character 1 -2 () [])
+                  ()
+                  )
+                 (StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator9)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 a)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator10)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 a)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )
+                 (ListItem
+                  (Var 2 a)
+                  (Var 2 __list_iterator10)
+                  (Character 1 -2 () [])
+                  ()
+                  )
+                 (StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator10)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 a)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(IntegerConstant 1 (Integer 4 []))]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator11)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 b)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (Var 2 b)
+                  (Var 2 __list_iterator11)
+                  (Integer 4 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator11)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 b)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator12)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 c)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (Var 2 c)
+                  (Var 2 __list_iterator12)
+                  (Real 8 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator12)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 c)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(RealConstant
+                1.100000
+                (Real 8 [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator13)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 d)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (Var 2 d)
+                  (Var 2 __list_iterator13)
+                  (Integer 4 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator13)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 d)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator14)
+               (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
                  (ListConstant
@@ -6779,14 +6722,26 @@
                 (Integer 4 [])
                 ()
                 )
-               (Logical 4 [])
-               ()
-               )
+               (IntegerConstant 1 (Integer 4 [])))
               [(Print
                 ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
+                [(ListItem
+                  (ListConstant
+                   [(IntegerUnaryMinus
+                     (IntegerConstant 3 (Integer 4 []))
+                     (Integer 4 [])
+                     (IntegerConstant -3 (Integer 4 []))
+                     )
+                    (IntegerConstant 2 (Integer 4 []))
+                    (IntegerConstant 1 (Integer 4 []))
+                    (IntegerConstant 0 (Integer 4 []))]
+                   (List
+                    (Integer 4 [])
+                    )
+                   )
+                  (Var 2 __list_iterator14)
+                  (Integer 4 [])
+                  ()
                   )]
                 (StringConstant
                  ""
@@ -6795,133 +6750,81 @@
                 (StringConstant
                  ""
                  (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator15)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (ListConstant
-                [(StringConstant
-                  "a"
-                  (Character 1 1 () [])
-                  )
-                 (StringConstant
-                  "b"
-                  (Character 1 1 () [])
-                  )
-                 (StringConstant
-                  "c"
-                  (Character 1 1 () [])
-                  )
-                 (StringConstant
-                  "d"
-                  (Character 1 1 () [])
-                  )
-                 (StringConstant
-                  "e"
-                  (Character 1 1 () [])
-                  )
-                 (StringConstant
-                  "f"
-                  (Character 1 1 () [])
-                  )]
-                (List
-                 (Character 1 1 () [])
                  )
                 )
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator14)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (ListConstant
+                    [(IntegerUnaryMinus
+                      (IntegerConstant 3 (Integer 4 []))
+                      (Integer 4 [])
+                      (IntegerConstant -3 (Integer 4 []))
+                      )
+                     (IntegerConstant 2 (Integer 4 []))
+                     (IntegerConstant 1 (Integer 4 []))
+                     (IntegerConstant 0 (Integer 4 []))]
+                    (List
+                     (Integer 4 [])
+                     )
+                    )
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
+             (Print
               ()
               [(StringConstant
-                "'"
-                (Character 1 1 () [])
-                )
-               (ListItem
-                (ListConstant
-                 [(StringConstant
-                   "a"
-                   (Character 1 1 () [])
-                   )
-                  (StringConstant
-                   "b"
-                   (Character 1 1 () [])
-                   )
-                  (StringConstant
-                   "c"
-                   (Character 1 1 () [])
-                   )
-                  (StringConstant
-                   "d"
-                   (Character 1 1 () [])
-                   )
-                  (StringConstant
-                   "e"
-                   (Character 1 1 () [])
-                   )
-                  (StringConstant
-                   "f"
-                   (Character 1 1 () [])
-                   )]
-                 (List
-                  (Character 1 1 () [])
-                  )
-                 )
-                (Var 2 __list_iterator15)
-                (Character 1 1 () [])
-                ()
-                )
-               (StringConstant
-                "'"
+                "]"
                 (Character 1 1 () [])
                 )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
+              ()
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
               (StringConstant
                ""
                (Character 1 0 () [])
                )
               )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator15)
-               Lt
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator15)
+               (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
                  (ListConstant
@@ -6961,14 +6864,50 @@
                 (Integer 4 [])
                 ()
                 )
-               (Logical 4 [])
-               ()
-               )
+               (IntegerConstant 1 (Integer 4 [])))
               [(Print
                 ()
                 [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
+                  "'"
+                  (Character 1 1 () [])
+                  )
+                 (ListItem
+                  (ListConstant
+                   [(StringConstant
+                     "a"
+                     (Character 1 1 () [])
+                     )
+                    (StringConstant
+                     "b"
+                     (Character 1 1 () [])
+                     )
+                    (StringConstant
+                     "c"
+                     (Character 1 1 () [])
+                     )
+                    (StringConstant
+                     "d"
+                     (Character 1 1 () [])
+                     )
+                    (StringConstant
+                     "e"
+                     (Character 1 1 () [])
+                     )
+                    (StringConstant
+                     "f"
+                     (Character 1 1 () [])
+                     )]
+                   (List
+                    (Character 1 1 () [])
+                    )
+                   )
+                  (Var 2 __list_iterator15)
+                  (Character 1 1 () [])
+                  ()
+                  )
+                 (StringConstant
+                  "'"
+                  (Character 1 1 () [])
                   )]
                 (StringConstant
                  ""
@@ -6978,84 +6917,96 @@
                  ""
                  (Character 1 0 () [])
                  )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator16)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (ListConstant
-                [(IntegerConstant 1 (Integer 4 []))
-                 (IntegerConstant 2 (Integer 4 []))
-                 (IntegerConstant 3 (Integer 4 []))
-                 (IntegerConstant 4 (Integer 4 []))]
-                (List
-                 (Integer 4 [])
-                 )
                 )
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (ListConstant
-                 [(IntegerConstant 1 (Integer 4 []))
-                  (IntegerConstant 2 (Integer 4 []))
-                  (IntegerConstant 3 (Integer 4 []))
-                  (IntegerConstant 4 (Integer 4 []))]
-                 (List
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator15)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (ListConstant
+                    [(StringConstant
+                      "a"
+                      (Character 1 1 () [])
+                      )
+                     (StringConstant
+                      "b"
+                      (Character 1 1 () [])
+                      )
+                     (StringConstant
+                      "c"
+                      (Character 1 1 () [])
+                      )
+                     (StringConstant
+                      "d"
+                      (Character 1 1 () [])
+                      )
+                     (StringConstant
+                      "e"
+                      (Character 1 1 () [])
+                      )
+                     (StringConstant
+                      "f"
+                      (Character 1 1 () [])
+                      )]
+                    (List
+                     (Character 1 1 () [])
+                     )
+                    )
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
                   (Integer 4 [])
+                  ()
                   )
+                 (Logical 4 [])
+                 ()
                  )
-                (Var 2 __list_iterator16)
-                (Integer 4 [])
-                ()
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
                 )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
               (StringConstant
                ""
                (Character 1 0 () [])
                )
               )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator16)
-               Lt
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator16)
+               (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
                  (ListConstant
@@ -7075,14 +7026,22 @@
                 (Integer 4 [])
                 ()
                 )
-               (Logical 4 [])
-               ()
-               )
+               (IntegerConstant 1 (Integer 4 [])))
               [(Print
                 ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
+                [(ListItem
+                  (ListConstant
+                   [(IntegerConstant 1 (Integer 4 []))
+                    (IntegerConstant 2 (Integer 4 []))
+                    (IntegerConstant 3 (Integer 4 []))
+                    (IntegerConstant 4 (Integer 4 []))]
+                   (List
+                    (Integer 4 [])
+                    )
+                   )
+                  (Var 2 __list_iterator16)
+                  (Integer 4 [])
+                  ()
                   )]
                 (StringConstant
                  ""
@@ -7092,820 +7051,64 @@
                  ""
                  (Character 1 0 () [])
                  )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator16)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (ListConstant
+                    [(IntegerConstant 1 (Integer 4 []))
+                     (IntegerConstant 2 (Integer 4 []))
+                     (IntegerConstant 3 (Integer 4 []))
+                     (IntegerConstant 4 (Integer 4 []))]
+                    (List
+                     (Integer 4 [])
+                     )
+                    )
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
                 )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator17)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 a)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
+             (Print
               ()
               [(StringConstant
-                "'"
-                (Character 1 1 () [])
-                )
-               (ListItem
-                (Var 2 a)
-                (Var 2 __list_iterator17)
-                (Character 1 -2 () [])
-                ()
-                )
-               (StringConstant
-                "'"
+                "]"
                 (Character 1 1 () [])
                 )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator17)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 a)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 2 __list_iterator18)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 2 c)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
               ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (Var 2 c)
-                (Var 2 __list_iterator18)
-                (Real 8 [])
-                ()
-                )]
               (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
+               " "
+               (Character 1 1 () [])
                )
               )
-             (If
-              (IntegerCompare
-               (Var 2 __list_iterator18)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 2 c)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )]
-          ()
-          Public
-          false
-          false
-          ),
-         :test_nested_lists
-         (Function
-          (SymbolTable
-           3
-           {
-            :__list_iterator
-            (Variable
-             3
-             __list_iterator
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator1
-            (Variable
-             3
-             __list_iterator1
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator10
-            (Variable
-             3
-             __list_iterator10
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator11
-            (Variable
-             3
-             __list_iterator11
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator2
-            (Variable
-             3
-             __list_iterator2
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator3
-            (Variable
-             3
-             __list_iterator3
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator4
-            (Variable
-             3
-             __list_iterator4
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator5
-            (Variable
-             3
-             __list_iterator5
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator6
-            (Variable
-             3
-             __list_iterator6
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator7
-            (Variable
-             3
-             __list_iterator7
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator8
-            (Variable
-             3
-             __list_iterator8
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :__list_iterator9
-            (Variable
-             3
-             __list_iterator9
-             []
-             Local
-             ()
-             ()
-             Default
-             (Integer 4 [])
-             Source
-             Public
-             Required
-             false
-             ),
-            :w
-            (Variable
-             3
-             w
-             []
-             Local
-             ()
-             ()
-             Default
-             (List
-              (List
-               (List
-                (List
-                 (List
-                  (Real 8 [])
-                  )
-                 )
-                )
-               )
-              )
-             Source
-             Public
-             Required
-             false
-             ),
-            :x
-            (Variable
-             3
-             x
-             []
-             Local
-             ()
-             ()
-             Default
-             (List
-              (List
-               (List
-                (Integer 4 [])
-                )
-               )
-              )
-             Source
-             Public
-             Required
-             false
-             ),
-            :y
-            (Variable
-             3
-             y
-             []
-             Local
-             ()
-             ()
-             Default
-             (List
-              (List
-               (Real 8 [])
-               )
-              )
-             Source
-             Public
-             Required
-             false
-             ),
-            :z
-            (Variable
-             3
-             z
-             []
-             Local
-             ()
-             ()
-             Default
-             (List
-              (List
-               (Character 1 -2 () [])
-               )
-              )
-             Source
-             Public
-             Required
-             false
-             )
-            })
-          test_nested_lists
-          (FunctionType
-           []
-           ()
-           Source
-           Implementation
-           ()
-           false
-           false
-           false
-           false
-           false
-           []
-           []
-           false
-           )
-          []
-          []
-          [(=
-            (Var 3 w)
-            (ListConstant
-             [(ListConstant
-               [(ListConstant
-                 [(ListConstant
-                   [(ListConstant
-                     [(RealConstant
-                       2.130000
-                       (Real 8 [])
-                       )
-                      (RealUnaryMinus
-                       (RealConstant
-                        98.170000
-                        (Real 8 [])
-                        )
-                       (Real 8 [])
-                       (RealConstant
-                        -98.170000
-                        (Real 8 [])
-                        )
-                       )]
-                     (List
-                      (Real 8 [])
-                      )
-                     )]
-                   (List
-                    (List
-                     (Real 8 [])
-                     )
-                    )
-                   )]
-                 (List
-                  (List
-                   (List
-                    (Real 8 [])
-                    )
-                   )
-                  )
-                 )
-                (ListConstant
-                 [(ListConstant
-                   [(ListConstant
-                     [(RealConstant
-                       1.110000
-                       (Real 8 [])
-                       )]
-                     (List
-                      (Real 8 [])
-                      )
-                     )]
-                   (List
-                    (List
-                     (Real 8 [])
-                     )
-                    )
-                   )]
-                 (List
-                  (List
-                   (List
-                    (Real 8 [])
-                    )
-                   )
-                  )
-                 )]
-               (List
-                (List
-                 (List
-                  (List
-                   (Real 8 [])
-                   )
-                  )
-                 )
-                )
-               )]
-             (List
-              (List
-               (List
-                (List
-                 (List
-                  (Real 8 [])
-                  )
-                 )
-                )
-               )
-              )
-             )
-            ()
-            )
-           (=
-            (Var 3 x)
-            (ListConstant
-             [(ListConstant
-               [(ListConstant
-                 [(IntegerConstant 3 (Integer 4 []))
-                  (IntegerUnaryMinus
-                   (IntegerConstant 1 (Integer 4 []))
-                   (Integer 4 [])
-                   (IntegerConstant -1 (Integer 4 []))
-                   )]
-                 (List
-                  (Integer 4 [])
-                  )
-                 )
-                (ListConstant
-                 [(IntegerUnaryMinus
-                   (IntegerConstant 2 (Integer 4 []))
-                   (Integer 4 [])
-                   (IntegerConstant -2 (Integer 4 []))
-                   )
-                  (IntegerConstant 5 (Integer 4 []))]
-                 (List
-                  (Integer 4 [])
-                  )
-                 )
-                (ListConstant
-                 [(IntegerConstant 5 (Integer 4 []))]
-                 (List
-                  (Integer 4 [])
-                  )
-                 )]
-               (List
-                (List
-                 (Integer 4 [])
-                 )
-                )
-               )
-              (ListConstant
-               [(ListConstant
-                 [(IntegerUnaryMinus
-                   (IntegerConstant 3 (Integer 4 []))
-                   (Integer 4 [])
-                   (IntegerConstant -3 (Integer 4 []))
-                   )
-                  (IntegerConstant 1 (Integer 4 []))]
-                 (List
-                  (Integer 4 [])
-                  )
-                 )
-                (ListConstant
-                 [(IntegerConstant 2 (Integer 4 []))
-                  (IntegerUnaryMinus
-                   (IntegerConstant 5 (Integer 4 []))
-                   (Integer 4 [])
-                   (IntegerConstant -5 (Integer 4 []))
-                   )]
-                 (List
-                  (Integer 4 [])
-                  )
-                 )
-                (ListConstant
-                 [(IntegerUnaryMinus
-                   (IntegerConstant 5 (Integer 4 []))
-                   (Integer 4 [])
-                   (IntegerConstant -5 (Integer 4 []))
-                   )]
-                 (List
-                  (Integer 4 [])
-                  )
-                 )]
-               (List
-                (List
-                 (Integer 4 [])
-                 )
-                )
-               )]
-             (List
-              (List
-               (List
-                (Integer 4 [])
-                )
-               )
-              )
-             )
-            ()
-            )
-           (=
-            (Var 3 y)
-            (ListConstant
-             [(ListConstant
-               [(RealConstant
-                 3.140000
-                 (Real 8 [])
-                 )
-                (RealUnaryMinus
-                 (RealConstant
-                  1.001200
-                  (Real 8 [])
-                  )
-                 (Real 8 [])
-                 (RealConstant
-                  -1.001200
-                  (Real 8 [])
-                  )
-                 )]
-               (List
-                (Real 8 [])
-                )
-               )
-              (ListConstant
-               [(RealUnaryMinus
-                 (RealConstant
-                  2.380000
-                  (Real 8 [])
-                  )
-                 (Real 8 [])
-                 (RealConstant
-                  -2.380000
-                  (Real 8 [])
-                  )
-                 )
-                (RealConstant
-                 5.510000
-                 (Real 8 [])
-                 )]
-               (List
-                (Real 8 [])
-                )
-               )]
-             (List
-              (List
-               (Real 8 [])
-               )
-              )
-             )
-            ()
-            )
-           (=
-            (Var 3 z)
-            (ListConstant
-             [(ListConstant
-               [(StringConstant
-                 "bat"
-                 (Character 1 3 () [])
-                 )
-                (StringConstant
-                 "ball"
-                 (Character 1 4 () [])
-                 )]
-               (List
-                (Character 1 3 () [])
-                )
-               )
-              (ListConstant
-               [(StringConstant
-                 "cat"
-                 (Character 1 3 () [])
-                 )
-                (StringConstant
-                 "dog"
-                 (Character 1 3 () [])
-                 )]
-               (List
-                (Character 1 3 () [])
-                )
-               )
-              (ListConstant
-               [(StringConstant
-                 "c"
-                 (Character 1 1 () [])
-                 )
-                (StringConstant
-                 "c++"
-                 (Character 1 3 () [])
-                 )
-                (StringConstant
-                 "java"
-                 (Character 1 4 () [])
-                 )
-                (StringConstant
-                 "python"
-                 (Character 1 6 () [])
-                 )]
-               (List
-                (Character 1 1 () [])
-                )
-               )]
-             (List
-              (List
-               (Character 1 3 () [])
-               )
-              )
-             )
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 3 __list_iterator)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 3 w)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
+             (Print
               ()
               [(StringConstant
                 "["
@@ -7919,14 +7122,508 @@
               )
              (DoLoop
               ()
-              ((Var 3 __list_iterator1)
+              ((Var 2 __list_iterator17)
                (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
+                 (Var 2 a)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )
                  (ListItem
-                  (Var 3 w)
-                  (Var 3 __list_iterator)
+                  (Var 2 a)
+                  (Var 2 __list_iterator17)
+                  (Character 1 -2 () [])
+                  ()
+                  )
+                 (StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator17)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 a)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 2 __list_iterator18)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 2 c)
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (Var 2 c)
+                  (Var 2 __list_iterator18)
+                  (Real 8 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 2 __list_iterator18)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 2 c)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              ()
+              )]
+            ()
+            Public
+            false
+            false
+            ),
+         #_:test_nested_lists
+         #_(Function
+            (SymbolTable
+             3
+             {
+              :__list_iterator
+              (Variable
+               3
+               __list_iterator
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator1
+              (Variable
+               3
+               __list_iterator1
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator10
+              (Variable
+               3
+               __list_iterator10
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator11
+              (Variable
+               3
+               __list_iterator11
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator2
+              (Variable
+               3
+               __list_iterator2
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator3
+              (Variable
+               3
+               __list_iterator3
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator4
+              (Variable
+               3
+               __list_iterator4
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator5
+              (Variable
+               3
+               __list_iterator5
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator6
+              (Variable
+               3
+               __list_iterator6
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator7
+              (Variable
+               3
+               __list_iterator7
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator8
+              (Variable
+               3
+               __list_iterator8
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :__list_iterator9
+              (Variable
+               3
+               __list_iterator9
+               []
+               Local
+               ()
+               ()
+               Default
+               (Integer 4 [])
+               Source
+               Public
+               Required
+               false
+               ),
+              :w
+              (Variable
+               3
+               w
+               []
+               Local
+               ()
+               ()
+               Default
+               (List
+                (List
+                 (List
                   (List
+                   (List
+                    (Real 8 [])
+                    )
+                   )
+                  )
+                 )
+                )
+               Source
+               Public
+               Required
+               false
+               ),
+              :x
+              (Variable
+               3
+               x
+               []
+               Local
+               ()
+               ()
+               Default
+               (List
+                (List
+                 (List
+                  (Integer 4 [])
+                  )
+                 )
+                )
+               Source
+               Public
+               Required
+               false
+               ),
+              :y
+              (Variable
+               3
+               y
+               []
+               Local
+               ()
+               ()
+               Default
+               (List
+                (List
+                 (Real 8 [])
+                 )
+                )
+               Source
+               Public
+               Required
+               false
+               ),
+              :z
+              (Variable
+               3
+               z
+               []
+               Local
+               ()
+               ()
+               Default
+               (List
+                (List
+                 (Character 1 -2 () [])
+                 )
+                )
+               Source
+               Public
+               Required
+               false
+               )
+              })
+            test_nested_lists
+            (FunctionType
+             []
+             ()
+             Source
+             Implementation
+             ()
+             false
+             false
+             false
+             false
+             false
+             []
+             []
+             false
+             )
+            []
+            []
+            [(=
+              (Var 3 w)
+              (ListConstant
+               [(ListConstant
+                 [(ListConstant
+                   [(ListConstant
+                     [(ListConstant
+                       [(RealConstant
+                         2.130000
+                         (Real 8 [])
+                         )
+                        (RealUnaryMinus
+                         (RealConstant
+                          98.170000
+                          (Real 8 [])
+                          )
+                         (Real 8 [])
+                         (RealConstant
+                          -98.170000
+                          (Real 8 [])
+                          )
+                         )]
+                       (List
+                        (Real 8 [])
+                        )
+                       )]
+                     (List
+                      (List
+                       (Real 8 [])
+                       )
+                      )
+                     )]
                    (List
                     (List
                      (List
@@ -7935,8 +7632,270 @@
                      )
                     )
                    )
-                  ()
+                  (ListConstant
+                   [(ListConstant
+                     [(ListConstant
+                       [(RealConstant
+                         1.110000
+                         (Real 8 [])
+                         )]
+                       (List
+                        (Real 8 [])
+                        )
+                       )]
+                     (List
+                      (List
+                       (Real 8 [])
+                       )
+                      )
+                     )]
+                   (List
+                    (List
+                     (List
+                      (Real 8 [])
+                      )
+                     )
+                    )
+                   )]
+                 (List
+                  (List
+                   (List
+                    (List
+                     (Real 8 [])
+                     )
+                    )
+                   )
                   )
+                 )]
+               (List
+                (List
+                 (List
+                  (List
+                   (List
+                    (Real 8 [])
+                    )
+                   )
+                  )
+                 )
+                )
+               )
+              ()
+              )
+             (=
+              (Var 3 x)
+              (ListConstant
+               [(ListConstant
+                 [(ListConstant
+                   [(IntegerConstant 3 (Integer 4 []))
+                    (IntegerUnaryMinus
+                     (IntegerConstant 1 (Integer 4 []))
+                     (Integer 4 [])
+                     (IntegerConstant -1 (Integer 4 []))
+                     )]
+                   (List
+                    (Integer 4 [])
+                    )
+                   )
+                  (ListConstant
+                   [(IntegerUnaryMinus
+                     (IntegerConstant 2 (Integer 4 []))
+                     (Integer 4 [])
+                     (IntegerConstant -2 (Integer 4 []))
+                     )
+                    (IntegerConstant 5 (Integer 4 []))]
+                   (List
+                    (Integer 4 [])
+                    )
+                   )
+                  (ListConstant
+                   [(IntegerConstant 5 (Integer 4 []))]
+                   (List
+                    (Integer 4 [])
+                    )
+                   )]
+                 (List
+                  (List
+                   (Integer 4 [])
+                   )
+                  )
+                 )
+                (ListConstant
+                 [(ListConstant
+                   [(IntegerUnaryMinus
+                     (IntegerConstant 3 (Integer 4 []))
+                     (Integer 4 [])
+                     (IntegerConstant -3 (Integer 4 []))
+                     )
+                    (IntegerConstant 1 (Integer 4 []))]
+                   (List
+                    (Integer 4 [])
+                    )
+                   )
+                  (ListConstant
+                   [(IntegerConstant 2 (Integer 4 []))
+                    (IntegerUnaryMinus
+                     (IntegerConstant 5 (Integer 4 []))
+                     (Integer 4 [])
+                     (IntegerConstant -5 (Integer 4 []))
+                     )]
+                   (List
+                    (Integer 4 [])
+                    )
+                   )
+                  (ListConstant
+                   [(IntegerUnaryMinus
+                     (IntegerConstant 5 (Integer 4 []))
+                     (Integer 4 [])
+                     (IntegerConstant -5 (Integer 4 []))
+                     )]
+                   (List
+                    (Integer 4 [])
+                    )
+                   )]
+                 (List
+                  (List
+                   (Integer 4 [])
+                   )
+                  )
+                 )]
+               (List
+                (List
+                 (List
+                  (Integer 4 [])
+                  )
+                 )
+                )
+               )
+              ()
+              )
+             (=
+              (Var 3 y)
+              (ListConstant
+               [(ListConstant
+                 [(RealConstant
+                   3.140000
+                   (Real 8 [])
+                   )
+                  (RealUnaryMinus
+                   (RealConstant
+                    1.001200
+                    (Real 8 [])
+                    )
+                   (Real 8 [])
+                   (RealConstant
+                    -1.001200
+                    (Real 8 [])
+                    )
+                   )]
+                 (List
+                  (Real 8 [])
+                  )
+                 )
+                (ListConstant
+                 [(RealUnaryMinus
+                   (RealConstant
+                    2.380000
+                    (Real 8 [])
+                    )
+                   (Real 8 [])
+                   (RealConstant
+                    -2.380000
+                    (Real 8 [])
+                    )
+                   )
+                  (RealConstant
+                   5.510000
+                   (Real 8 [])
+                   )]
+                 (List
+                  (Real 8 [])
+                  )
+                 )]
+               (List
+                (List
+                 (Real 8 [])
+                 )
+                )
+               )
+              ()
+              )
+             (=
+              (Var 3 z)
+              (ListConstant
+               [(ListConstant
+                 [(StringConstant
+                   "bat"
+                   (Character 1 3 () [])
+                   )
+                  (StringConstant
+                   "ball"
+                   (Character 1 4 () [])
+                   )]
+                 (List
+                  (Character 1 3 () [])
+                  )
+                 )
+                (ListConstant
+                 [(StringConstant
+                   "cat"
+                   (Character 1 3 () [])
+                   )
+                  (StringConstant
+                   "dog"
+                   (Character 1 3 () [])
+                   )]
+                 (List
+                  (Character 1 3 () [])
+                  )
+                 )
+                (ListConstant
+                 [(StringConstant
+                   "c"
+                   (Character 1 1 () [])
+                   )
+                  (StringConstant
+                   "c++"
+                   (Character 1 3 () [])
+                   )
+                  (StringConstant
+                   "java"
+                   (Character 1 4 () [])
+                   )
+                  (StringConstant
+                   "python"
+                   (Character 1 6 () [])
+                   )]
+                 (List
+                  (Character 1 1 () [])
+                  )
+                 )]
+               (List
+                (List
+                 (Character 1 3 () [])
+                 )
+                )
+               )
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 3 __list_iterator)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (Var 3 w)
                  (Integer 4 [])
                  ()
                  )
@@ -7960,30 +7919,19 @@
                 )
                (DoLoop
                 ()
-                ((Var 3 __list_iterator2)
+                ((Var 3 __list_iterator1)
                  (IntegerConstant 0 (Integer 4 []))
                  (IntegerBinOp
                   (ListLen
                    (ListItem
-                    (ListItem
-                     (Var 3 w)
-                     (Var 3 __list_iterator)
-                     (List
-                      (List
-                       (List
-                        (List
-                         (Real 8 [])
-                         )
-                        )
-                       )
-                      )
-                     ()
-                     )
-                    (Var 3 __list_iterator1)
+                    (Var 3 w)
+                    (Var 3 __list_iterator)
                     (List
                      (List
                       (List
-                       (Real 8 [])
+                       (List
+                        (Real 8 [])
+                        )
                        )
                       )
                      )
@@ -8012,40 +7960,31 @@
                   )
                  (DoLoop
                   ()
-                  ((Var 3 __list_iterator3)
+                  ((Var 3 __list_iterator2)
                    (IntegerConstant 0 (Integer 4 []))
                    (IntegerBinOp
                     (ListLen
                      (ListItem
                       (ListItem
-                       (ListItem
-                        (Var 3 w)
-                        (Var 3 __list_iterator)
-                        (List
-                         (List
-                          (List
-                           (List
-                            (Real 8 [])
-                            )
-                           )
-                          )
-                         )
-                        ()
-                        )
-                       (Var 3 __list_iterator1)
+                       (Var 3 w)
+                       (Var 3 __list_iterator)
                        (List
                         (List
                          (List
-                          (Real 8 [])
+                          (List
+                           (Real 8 [])
+                           )
                           )
                          )
                         )
                        ()
                        )
-                      (Var 3 __list_iterator2)
+                      (Var 3 __list_iterator1)
                       (List
                        (List
-                        (Real 8 [])
+                        (List
+                         (Real 8 [])
+                         )
                         )
                        )
                       ()
@@ -8073,48 +8012,41 @@
                     )
                    (DoLoop
                     ()
-                    ((Var 3 __list_iterator4)
+                    ((Var 3 __list_iterator3)
                      (IntegerConstant 0 (Integer 4 []))
                      (IntegerBinOp
                       (ListLen
                        (ListItem
                         (ListItem
                          (ListItem
-                          (ListItem
-                           (Var 3 w)
-                           (Var 3 __list_iterator)
-                           (List
-                            (List
-                             (List
-                              (List
-                               (Real 8 [])
-                               )
-                              )
-                             )
-                            )
-                           ()
-                           )
-                          (Var 3 __list_iterator1)
+                          (Var 3 w)
+                          (Var 3 __list_iterator)
                           (List
                            (List
                             (List
-                             (Real 8 [])
+                             (List
+                              (Real 8 [])
+                              )
                              )
                             )
                            )
                           ()
                           )
-                         (Var 3 __list_iterator2)
+                         (Var 3 __list_iterator1)
                          (List
                           (List
-                           (Real 8 [])
+                           (List
+                            (Real 8 [])
+                            )
                            )
                           )
                          ()
                          )
-                        (Var 3 __list_iterator3)
+                        (Var 3 __list_iterator2)
                         (List
-                         (Real 8 [])
+                         (List
+                          (Real 8 [])
+                          )
                          )
                         ()
                         )
@@ -8129,65 +8061,20 @@
                      (IntegerConstant 1 (Integer 4 [])))
                     [(Print
                       ()
-                      [(ListItem
-                        (ListItem
-                         (ListItem
-                          (ListItem
-                           (ListItem
-                            (Var 3 w)
-                            (Var 3 __list_iterator)
-                            (List
-                             (List
-                              (List
-                               (List
-                                (Real 8 [])
-                                )
-                               )
-                              )
-                             )
-                            ()
-                            )
-                           (Var 3 __list_iterator1)
-                           (List
-                            (List
-                             (List
-                              (Real 8 [])
-                              )
-                             )
-                            )
-                           ()
-                           )
-                          (Var 3 __list_iterator2)
-                          (List
-                           (List
-                            (Real 8 [])
-                            )
-                           )
-                          ()
-                          )
-                         (Var 3 __list_iterator3)
-                         (List
-                          (Real 8 [])
-                          )
-                         ()
-                         )
-                        (Var 3 __list_iterator4)
-                        (Real 8 [])
-                        ()
+                      [(StringConstant
+                        "["
+                        (Character 1 1 () [])
                         )]
-                      (StringConstant
-                       ""
-                       (Character 1 0 () [])
-                       )
+                      ()
                       (StringConstant
                        ""
                        (Character 1 0 () [])
                        )
                       )
-                     (If
-                      (IntegerCompare
-                       (Var 3 __list_iterator4)
-                       Lt
+                     (DoLoop
+                      ()
+                      ((Var 3 __list_iterator4)
+                       (IntegerConstant 0 (Integer 4 []))
                        (IntegerBinOp
                         (ListLen
                          (ListItem
@@ -8239,6 +8126,200 @@
                         (Integer 4 [])
                         ()
                         )
+                       (IntegerConstant 1 (Integer 4 [])))
+                      [(Print
+                        ()
+                        [(ListItem
+                          (ListItem
+                           (ListItem
+                            (ListItem
+                             (ListItem
+                              (Var 3 w)
+                              (Var 3 __list_iterator)
+                              (List
+                               (List
+                                (List
+                                 (List
+                                  (Real 8 [])
+                                  )
+                                 )
+                                )
+                               )
+                              ()
+                              )
+                             (Var 3 __list_iterator1)
+                             (List
+                              (List
+                               (List
+                                (Real 8 [])
+                                )
+                               )
+                              )
+                             ()
+                             )
+                            (Var 3 __list_iterator2)
+                            (List
+                             (List
+                              (Real 8 [])
+                              )
+                             )
+                            ()
+                            )
+                           (Var 3 __list_iterator3)
+                           (List
+                            (Real 8 [])
+                            )
+                           ()
+                           )
+                          (Var 3 __list_iterator4)
+                          (Real 8 [])
+                          ()
+                          )]
+                        (StringConstant
+                         ""
+                         (Character 1 0 () [])
+                         )
+                        (StringConstant
+                         ""
+                         (Character 1 0 () [])
+                         )
+                        )
+                       (If
+                        (IntegerCompare
+                         (Var 3 __list_iterator4)
+                         Lt
+                         (IntegerBinOp
+                          (ListLen
+                           (ListItem
+                            (ListItem
+                             (ListItem
+                              (ListItem
+                               (Var 3 w)
+                               (Var 3 __list_iterator)
+                               (List
+                                (List
+                                 (List
+                                  (List
+                                   (Real 8 [])
+                                   )
+                                  )
+                                 )
+                                )
+                               ()
+                               )
+                              (Var 3 __list_iterator1)
+                              (List
+                               (List
+                                (List
+                                 (Real 8 [])
+                                 )
+                                )
+                               )
+                              ()
+                              )
+                             (Var 3 __list_iterator2)
+                             (List
+                              (List
+                               (Real 8 [])
+                               )
+                              )
+                             ()
+                             )
+                            (Var 3 __list_iterator3)
+                            (List
+                             (Real 8 [])
+                             )
+                            ()
+                            )
+                           (Integer 4 [])
+                           ()
+                           )
+                          Sub
+                          (IntegerConstant 1 (Integer 4 []))
+                          (Integer 4 [])
+                          ()
+                          )
+                         (Logical 4 [])
+                         ()
+                         )
+                        [(Print
+                          ()
+                          [(StringConstant
+                            ", "
+                            (Character 1 2 () [])
+                            )]
+                          (StringConstant
+                           ""
+                           (Character 1 0 () [])
+                           )
+                          (StringConstant
+                           ""
+                           (Character 1 0 () [])
+                           )
+                          )]
+                        []
+                        )]
+                      )
+                     (Print
+                      ()
+                      [(StringConstant
+                        "]"
+                        (Character 1 1 () [])
+                        )]
+                      ()
+                      (StringConstant
+                       ""
+                       (Character 1 0 () [])
+                       )
+                      )
+                     (If
+                      (IntegerCompare
+                       (Var 3 __list_iterator3)
+                       Lt
+                       (IntegerBinOp
+                        (ListLen
+                         (ListItem
+                          (ListItem
+                           (ListItem
+                            (Var 3 w)
+                            (Var 3 __list_iterator)
+                            (List
+                             (List
+                              (List
+                               (List
+                                (Real 8 [])
+                                )
+                               )
+                              )
+                             )
+                            ()
+                            )
+                           (Var 3 __list_iterator1)
+                           (List
+                            (List
+                             (List
+                              (Real 8 [])
+                              )
+                             )
+                            )
+                           ()
+                           )
+                          (Var 3 __list_iterator2)
+                          (List
+                           (List
+                            (Real 8 [])
+                            )
+                           )
+                          ()
+                          )
+                         (Integer 4 [])
+                         ()
+                         )
+                        Sub
+                        (IntegerConstant 1 (Integer 4 []))
+                        (Integer 4 [])
+                        ()
+                        )
                        (Logical 4 [])
                        ()
                        )
@@ -8274,40 +8355,31 @@
                     )
                    (If
                     (IntegerCompare
-                     (Var 3 __list_iterator3)
+                     (Var 3 __list_iterator2)
                      Lt
                      (IntegerBinOp
                       (ListLen
                        (ListItem
                         (ListItem
-                         (ListItem
-                          (Var 3 w)
-                          (Var 3 __list_iterator)
-                          (List
-                           (List
-                            (List
-                             (List
-                              (Real 8 [])
-                              )
-                             )
-                            )
-                           )
-                          ()
-                          )
-                         (Var 3 __list_iterator1)
+                         (Var 3 w)
+                         (Var 3 __list_iterator)
                          (List
                           (List
                            (List
-                            (Real 8 [])
+                            (List
+                             (Real 8 [])
+                             )
                             )
                            )
                           )
                          ()
                          )
-                        (Var 3 __list_iterator2)
+                        (Var 3 __list_iterator1)
                         (List
                          (List
-                          (Real 8 [])
+                          (List
+                           (Real 8 [])
+                           )
                           )
                          )
                         ()
@@ -8355,30 +8427,19 @@
                   )
                  (If
                   (IntegerCompare
-                   (Var 3 __list_iterator2)
+                   (Var 3 __list_iterator1)
                    Lt
                    (IntegerBinOp
                     (ListLen
                      (ListItem
-                      (ListItem
-                       (Var 3 w)
-                       (Var 3 __list_iterator)
-                       (List
-                        (List
-                         (List
-                          (List
-                           (Real 8 [])
-                           )
-                          )
-                         )
-                        )
-                       ()
-                       )
-                      (Var 3 __list_iterator1)
+                      (Var 3 w)
+                      (Var 3 __list_iterator)
                       (List
                        (List
                         (List
-                         (Real 8 [])
+                         (List
+                          (Real 8 [])
+                          )
                          )
                         )
                        )
@@ -8427,24 +8488,11 @@
                 )
                (If
                 (IntegerCompare
-                 (Var 3 __list_iterator1)
+                 (Var 3 __list_iterator)
                  Lt
                  (IntegerBinOp
                   (ListLen
-                   (ListItem
-                    (Var 3 w)
-                    (Var 3 __list_iterator)
-                    (List
-                     (List
-                      (List
-                       (List
-                        (Real 8 [])
-                        )
-                       )
-                      )
-                     )
-                    ()
-                    )
+                   (Var 3 w)
                    (Integer 4 [])
                    ()
                    )
@@ -8481,85 +8529,9 @@
                 (Character 1 1 () [])
                 )]
               ()
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 3 __list_iterator)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 3 w)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 3 __list_iterator5)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 3 x)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
               ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
+             (Print
               ()
               [(StringConstant
                 "["
@@ -8573,20 +8545,11 @@
               )
              (DoLoop
               ()
-              ((Var 3 __list_iterator6)
+              ((Var 3 __list_iterator5)
                (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
-                 (ListItem
-                  (Var 3 x)
-                  (Var 3 __list_iterator5)
-                  (List
-                   (List
-                    (Integer 4 [])
-                    )
-                   )
-                  ()
-                  )
+                 (Var 3 x)
                  (Integer 4 [])
                  ()
                  )
@@ -8610,24 +8573,17 @@
                 )
                (DoLoop
                 ()
-                ((Var 3 __list_iterator7)
+                ((Var 3 __list_iterator6)
                  (IntegerConstant 0 (Integer 4 []))
                  (IntegerBinOp
                   (ListLen
                    (ListItem
-                    (ListItem
-                     (Var 3 x)
-                     (Var 3 __list_iterator5)
-                     (List
-                      (List
-                       (Integer 4 [])
-                       )
-                      )
-                     ()
-                     )
-                    (Var 3 __list_iterator6)
+                    (Var 3 x)
+                    (Var 3 __list_iterator5)
                     (List
-                     (Integer 4 [])
+                     (List
+                      (Integer 4 [])
+                      )
                      )
                     ()
                     )
@@ -8642,41 +8598,20 @@
                  (IntegerConstant 1 (Integer 4 [])))
                 [(Print
                   ()
-                  [(ListItem
-                    (ListItem
-                     (ListItem
-                      (Var 3 x)
-                      (Var 3 __list_iterator5)
-                      (List
-                       (List
-                        (Integer 4 [])
-                        )
-                       )
-                      ()
-                      )
-                     (Var 3 __list_iterator6)
-                     (List
-                      (Integer 4 [])
-                      )
-                     ()
-                     )
-                    (Var 3 __list_iterator7)
-                    (Integer 4 [])
-                    ()
+                  [(StringConstant
+                    "["
+                    (Character 1 1 () [])
                     )]
-                  (StringConstant
-                   ""
-                   (Character 1 0 () [])
-                   )
+                  ()
                   (StringConstant
                    ""
                    (Character 1 0 () [])
                    )
                   )
-                 (If
-                  (IntegerCompare
-                   (Var 3 __list_iterator7)
-                   Lt
+                 (DoLoop
+                  ()
+                  ((Var 3 __list_iterator7)
+                   (IntegerConstant 0 (Integer 4 []))
                    (IntegerBinOp
                     (ListLen
                      (ListItem
@@ -8704,6 +8639,128 @@
                     (Integer 4 [])
                     ()
                     )
+                   (IntegerConstant 1 (Integer 4 [])))
+                  [(Print
+                    ()
+                    [(ListItem
+                      (ListItem
+                       (ListItem
+                        (Var 3 x)
+                        (Var 3 __list_iterator5)
+                        (List
+                         (List
+                          (Integer 4 [])
+                          )
+                         )
+                        ()
+                        )
+                       (Var 3 __list_iterator6)
+                       (List
+                        (Integer 4 [])
+                        )
+                       ()
+                       )
+                      (Var 3 __list_iterator7)
+                      (Integer 4 [])
+                      ()
+                      )]
+                    (StringConstant
+                     ""
+                     (Character 1 0 () [])
+                     )
+                    (StringConstant
+                     ""
+                     (Character 1 0 () [])
+                     )
+                    )
+                   (If
+                    (IntegerCompare
+                     (Var 3 __list_iterator7)
+                     Lt
+                     (IntegerBinOp
+                      (ListLen
+                       (ListItem
+                        (ListItem
+                         (Var 3 x)
+                         (Var 3 __list_iterator5)
+                         (List
+                          (List
+                           (Integer 4 [])
+                           )
+                          )
+                         ()
+                         )
+                        (Var 3 __list_iterator6)
+                        (List
+                         (Integer 4 [])
+                         )
+                        ()
+                        )
+                       (Integer 4 [])
+                       ()
+                       )
+                      Sub
+                      (IntegerConstant 1 (Integer 4 []))
+                      (Integer 4 [])
+                      ()
+                      )
+                     (Logical 4 [])
+                     ()
+                     )
+                    [(Print
+                      ()
+                      [(StringConstant
+                        ", "
+                        (Character 1 2 () [])
+                        )]
+                      (StringConstant
+                       ""
+                       (Character 1 0 () [])
+                       )
+                      (StringConstant
+                       ""
+                       (Character 1 0 () [])
+                       )
+                      )]
+                    []
+                    )]
+                  )
+                 (Print
+                  ()
+                  [(StringConstant
+                    "]"
+                    (Character 1 1 () [])
+                    )]
+                  ()
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )
+                 (If
+                  (IntegerCompare
+                   (Var 3 __list_iterator6)
+                   Lt
+                   (IntegerBinOp
+                    (ListLen
+                     (ListItem
+                      (Var 3 x)
+                      (Var 3 __list_iterator5)
+                      (List
+                       (List
+                        (Integer 4 [])
+                        )
+                       )
+                      ()
+                      )
+                     (Integer 4 [])
+                     ()
+                     )
+                    Sub
+                    (IntegerConstant 1 (Integer 4 []))
+                    (Integer 4 [])
+                    ()
+                    )
                    (Logical 4 [])
                    ()
                    )
@@ -8739,20 +8796,11 @@
                 )
                (If
                 (IntegerCompare
-                 (Var 3 __list_iterator6)
+                 (Var 3 __list_iterator5)
                  Lt
                  (IntegerBinOp
                   (ListLen
-                   (ListItem
-                    (Var 3 x)
-                    (Var 3 __list_iterator5)
-                    (List
-                     (List
-                      (Integer 4 [])
-                      )
-                     )
-                    ()
-                    )
+                   (Var 3 x)
                    (Integer 4 [])
                    ()
                    )
@@ -8789,85 +8837,9 @@
                 (Character 1 1 () [])
                 )]
               ()
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 3 __list_iterator5)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 3 x)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 3 __list_iterator8)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 3 y)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
               ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
+             (Print
               ()
               [(StringConstant
                 "["
@@ -8881,18 +8853,11 @@
               )
              (DoLoop
               ()
-              ((Var 3 __list_iterator9)
+              ((Var 3 __list_iterator8)
                (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
-                 (ListItem
-                  (Var 3 y)
-                  (Var 3 __list_iterator8)
-                  (List
-                   (Real 8 [])
-                   )
-                  ()
-                  )
+                 (Var 3 y)
                  (Integer 4 [])
                  ()
                  )
@@ -8904,32 +8869,20 @@
                (IntegerConstant 1 (Integer 4 [])))
               [(Print
                 ()
-                [(ListItem
-                  (ListItem
-                   (Var 3 y)
-                   (Var 3 __list_iterator8)
-                   (List
-                    (Real 8 [])
-                    )
-                   ()
-                   )
-                  (Var 3 __list_iterator9)
-                  (Real 8 [])
-                  ()
+                [(StringConstant
+                  "["
+                  (Character 1 1 () [])
                   )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
+                ()
                 (StringConstant
                  ""
                  (Character 1 0 () [])
                  )
                 )
-               (If
-                (IntegerCompare
-                 (Var 3 __list_iterator9)
-                 Lt
+               (DoLoop
+                ()
+                ((Var 3 __list_iterator9)
+                 (IntegerConstant 0 (Integer 4 []))
                  (IntegerBinOp
                   (ListLen
                    (ListItem
@@ -8948,14 +8901,21 @@
                   (Integer 4 [])
                   ()
                   )
-                 (Logical 4 [])
-                 ()
-                 )
+                 (IntegerConstant 1 (Integer 4 [])))
                 [(Print
                   ()
-                  [(StringConstant
-                    ", "
-                    (Character 1 2 () [])
+                  [(ListItem
+                    (ListItem
+                     (Var 3 y)
+                     (Var 3 __list_iterator8)
+                     (List
+                      (Real 8 [])
+                      )
+                     ()
+                     )
+                    (Var 3 __list_iterator9)
+                    (Real 8 [])
+                    ()
                     )]
                   (StringConstant
                    ""
@@ -8965,157 +8925,57 @@
                    ""
                    (Character 1 0 () [])
                    )
-                  )]
-                []
-                )]
-              )
-             (Print
-              ()
-              [(StringConstant
-                "]"
-                (Character 1 1 () [])
-                )]
-              ()
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 3 __list_iterator8)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 3 y)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 3 __list_iterator10)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 3 z)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(StringConstant
-                "["
-                (Character 1 1 () [])
-                )]
-              ()
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (DoLoop
-              ()
-              ((Var 3 __list_iterator11)
-               (IntegerConstant 0 (Integer 4 []))
-               (IntegerBinOp
-                (ListLen
-                 (ListItem
-                  (Var 3 z)
-                  (Var 3 __list_iterator10)
-                  (List
-                   (Character 1 -2 () [])
-                   )
-                  ()
                   )
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (IntegerConstant 1 (Integer 4 [])))
-              [(Print
-                ()
-                [(StringConstant
-                  "'"
-                  (Character 1 1 () [])
-                  )
-                 (ListItem
-                  (ListItem
-                   (Var 3 z)
-                   (Var 3 __list_iterator10)
-                   (List
-                    (Character 1 -2 () [])
+                 (If
+                  (IntegerCompare
+                   (Var 3 __list_iterator9)
+                   Lt
+                   (IntegerBinOp
+                    (ListLen
+                     (ListItem
+                      (Var 3 y)
+                      (Var 3 __list_iterator8)
+                      (List
+                       (Real 8 [])
+                       )
+                      ()
+                      )
+                     (Integer 4 [])
+                     ()
+                     )
+                    Sub
+                    (IntegerConstant 1 (Integer 4 []))
+                    (Integer 4 [])
+                    ()
                     )
+                   (Logical 4 [])
                    ()
                    )
-                  (Var 3 __list_iterator11)
-                  (Character 1 -2 () [])
-                  ()
-                  )
-                 (StringConstant
-                  "'"
+                  [(Print
+                    ()
+                    [(StringConstant
+                      ", "
+                      (Character 1 2 () [])
+                      )]
+                    (StringConstant
+                     ""
+                     (Character 1 0 () [])
+                     )
+                    (StringConstant
+                     ""
+                     (Character 1 0 () [])
+                     )
+                    )]
+                  []
+                  )]
+                )
+               (Print
+                ()
+                [(StringConstant
+                  "]"
                   (Character 1 1 () [])
                   )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
+                ()
                 (StringConstant
                  ""
                  (Character 1 0 () [])
@@ -9123,18 +8983,11 @@
                 )
                (If
                 (IntegerCompare
-                 (Var 3 __list_iterator11)
+                 (Var 3 __list_iterator8)
                  Lt
                  (IntegerBinOp
                   (ListLen
-                   (ListItem
-                    (Var 3 z)
-                    (Var 3 __list_iterator10)
-                    (List
-                     (Character 1 -2 () [])
-                     )
-                    ()
-                    )
+                   (Var 3 y)
                    (Integer 4 [])
                    ()
                    )
@@ -9171,15 +9024,24 @@
                 (Character 1 1 () [])
                 )]
               ()
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
               (StringConstant
                ""
                (Character 1 0 () [])
                )
               )
-             (If
-              (IntegerCompare
-               (Var 3 __list_iterator10)
-               Lt
+             (DoLoop
+              ()
+              ((Var 3 __list_iterator10)
+               (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
                  (Var 3 z)
@@ -9191,41 +9053,179 @@
                 (Integer 4 [])
                 ()
                 )
-               (Logical 4 [])
-               ()
-               )
+               (IntegerConstant 1 (Integer 4 [])))
               [(Print
                 ()
                 [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
+                  "["
+                  (Character 1 1 () [])
                   )]
+                ()
                 (StringConstant
                  ""
                  (Character 1 0 () [])
                  )
+                )
+               (DoLoop
+                ()
+                ((Var 3 __list_iterator11)
+                 (IntegerConstant 0 (Integer 4 []))
+                 (IntegerBinOp
+                  (ListLen
+                   (ListItem
+                    (Var 3 z)
+                    (Var 3 __list_iterator10)
+                    (List
+                     (Character 1 -2 () [])
+                     )
+                    ()
+                    )
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (IntegerConstant 1 (Integer 4 [])))
+                [(Print
+                  ()
+                  [(StringConstant
+                    "'"
+                    (Character 1 1 () [])
+                    )
+                   (ListItem
+                    (ListItem
+                     (Var 3 z)
+                     (Var 3 __list_iterator10)
+                     (List
+                      (Character 1 -2 () [])
+                      )
+                     ()
+                     )
+                    (Var 3 __list_iterator11)
+                    (Character 1 -2 () [])
+                    ()
+                    )
+                   (StringConstant
+                    "'"
+                    (Character 1 1 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )
+                 (If
+                  (IntegerCompare
+                   (Var 3 __list_iterator11)
+                   Lt
+                   (IntegerBinOp
+                    (ListLen
+                     (ListItem
+                      (Var 3 z)
+                      (Var 3 __list_iterator10)
+                      (List
+                       (Character 1 -2 () [])
+                       )
+                      ()
+                      )
+                     (Integer 4 [])
+                     ()
+                     )
+                    Sub
+                    (IntegerConstant 1 (Integer 4 []))
+                    (Integer 4 [])
+                    ()
+                    )
+                   (Logical 4 [])
+                   ()
+                   )
+                  [(Print
+                    ()
+                    [(StringConstant
+                      ", "
+                      (Character 1 2 () [])
+                      )]
+                    (StringConstant
+                     ""
+                     (Character 1 0 () [])
+                     )
+                    (StringConstant
+                     ""
+                     (Character 1 0 () [])
+                     )
+                    )]
+                  []
+                  )]
+                )
+               (Print
+                ()
+                [(StringConstant
+                  "]"
+                  (Character 1 1 () [])
+                  )]
+                ()
                 (StringConstant
                  ""
                  (Character 1 0 () [])
                  )
+                )
+               (If
+                (IntegerCompare
+                 (Var 3 __list_iterator10)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 3 z)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
                 )]
-              []
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              ()
               )]
-            )
-           (Print
             ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )]
-          ()
-          Public
-          false
-          false
-          ),
+            Public
+            false
+            false
+            ),
          :test_nested_lists2
          (Function
           (SymbolTable
@@ -12302,677 +12302,181 @@
            )
           []
           []
+          [] #_
           [(=
-            (Var 4 a)
-            (ListConstant
-             [(TupleConstant
-               [(IntegerConstant 1 (Integer 4 []))
-                (IntegerConstant 2 (Integer 4 []))]
-               (Tuple
-                [(Integer 4 [])
-                 (Integer 4 [])]
-                )
-               )
-              (TupleConstant
-               [(IntegerConstant 3 (Integer 4 []))
-                (IntegerConstant 4 (Integer 4 []))]
-               (Tuple
-                [(Integer 4 [])
-                 (Integer 4 [])]
-                )
-               )
-              (TupleConstant
-               [(IntegerConstant 5 (Integer 4 []))
-                (IntegerConstant 6 (Integer 4 []))]
-               (Tuple
-                [(Integer 4 [])
-                 (Integer 4 [])]
-                )
-               )]
-             (List
-              (Tuple
-               [(Integer 4 [])
-                (Integer 4 [])]
-               )
-              )
-             )
-            ()
-            )
-           (=
-            (Var 4 c)
-            (ListConstant
-             [(ListConstant
-               [(TupleConstant
-                 [(IntegerConstant 1 (Integer 4 []))
-                  (StringConstant
-                   "a"
-                   (Character 1 1 () [])
-                   )]
-                 (Tuple
-                  [(Integer 4 [])
-                   (Character 1 1 () [])]
-                  )
-                 )
-                (TupleConstant
-                 [(IntegerConstant 2 (Integer 4 []))
-                  (StringConstant
-                   "b"
-                   (Character 1 1 () [])
-                   )]
-                 (Tuple
-                  [(Integer 4 [])
-                   (Character 1 1 () [])]
-                  )
-                 )]
-               (List
-                (Tuple
-                 [(Integer 4 [])
-                  (Character 1 1 () [])]
-                 )
-                )
-               )
+              (Var 4 a)
               (ListConstant
                [(TupleConstant
-                 [(IntegerConstant 3 (Integer 4 []))
-                  (StringConstant
-                   "c"
-                   (Character 1 1 () [])
-                   )]
+                 [(IntegerConstant 1 (Integer 4 []))
+                  (IntegerConstant 2 (Integer 4 []))]
                  (Tuple
                   [(Integer 4 [])
-                   (Character 1 1 () [])]
+                   (Integer 4 [])]
                   )
                  )
                 (TupleConstant
-                 [(IntegerConstant 4 (Integer 4 []))
-                  (StringConstant
-                   "d"
-                   (Character 1 1 () [])
-                   )]
+                 [(IntegerConstant 3 (Integer 4 []))
+                  (IntegerConstant 4 (Integer 4 []))]
                  (Tuple
                   [(Integer 4 [])
-                   (Character 1 1 () [])]
+                   (Integer 4 [])]
+                  )
+                 )
+                (TupleConstant
+                 [(IntegerConstant 5 (Integer 4 []))
+                  (IntegerConstant 6 (Integer 4 []))]
+                 (Tuple
+                  [(Integer 4 [])
+                   (Integer 4 [])]
                   )
                  )]
                (List
                 (Tuple
                  [(Integer 4 [])
-                  (Character 1 1 () [])]
+                  (Integer 4 [])]
                  )
                 )
-               )]
-             (List
-              (List
-               (Tuple
-                [(Integer 4 [])
-                 (Character 1 1 () [])]
+               )
+              ()
+              )
+             (=
+              (Var 4 c)
+              (ListConstant
+               [(ListConstant
+                 [(TupleConstant
+                   [(IntegerConstant 1 (Integer 4 []))
+                    (StringConstant
+                     "a"
+                     (Character 1 1 () [])
+                     )]
+                   (Tuple
+                    [(Integer 4 [])
+                     (Character 1 1 () [])]
+                    )
+                   )
+                  (TupleConstant
+                   [(IntegerConstant 2 (Integer 4 []))
+                    (StringConstant
+                     "b"
+                     (Character 1 1 () [])
+                     )]
+                   (Tuple
+                    [(Integer 4 [])
+                     (Character 1 1 () [])]
+                    )
+                   )]
+                 (List
+                  (Tuple
+                   [(Integer 4 [])
+                    (Character 1 1 () [])]
+                   )
+                  )
+                 )
+                (ListConstant
+                 [(TupleConstant
+                   [(IntegerConstant 3 (Integer 4 []))
+                    (StringConstant
+                     "c"
+                     (Character 1 1 () [])
+                     )]
+                   (Tuple
+                    [(Integer 4 [])
+                     (Character 1 1 () [])]
+                    )
+                   )
+                  (TupleConstant
+                   [(IntegerConstant 4 (Integer 4 []))
+                    (StringConstant
+                     "d"
+                     (Character 1 1 () [])
+                     )]
+                   (Tuple
+                    [(Integer 4 [])
+                     (Character 1 1 () [])]
+                    )
+                   )]
+                 (List
+                  (Tuple
+                   [(Integer 4 [])
+                    (Character 1 1 () [])]
+                   )
+                  )
+                 )]
+               (List
+                (List
+                 (Tuple
+                  [(Integer 4 [])
+                   (Character 1 1 () [])]
+                  )
+                 )
                 )
                )
+              ()
               )
-             )
-            ()
-            )
-           (=
-            (Var 4 b1)
-            (ListConstant
-             [(StringConstant
-               "a"
-               (Character 1 1 () [])
+             (=
+              (Var 4 b1)
+              (ListConstant
+               [(StringConstant
+                 "a"
+                 (Character 1 1 () [])
+                 )
+                (StringConstant
+                 "bb"
+                 (Character 1 2 () [])
+                 )
+                (StringConstant
+                 "ccc"
+                 (Character 1 3 () [])
+                 )
+                (StringConstant
+                 "dddd"
+                 (Character 1 4 () [])
+                 )
+                (StringConstant
+                 "eeeee"
+                 (Character 1 5 () [])
+                 )]
+               (List
+                (Character 1 1 () [])
+                )
                )
-              (StringConstant
-               "bb"
-               (Character 1 2 () [])
-               )
-              (StringConstant
-               "ccc"
-               (Character 1 3 () [])
-               )
-              (StringConstant
-               "dddd"
-               (Character 1 4 () [])
-               )
-              (StringConstant
-               "eeeee"
-               (Character 1 5 () [])
-               )]
-             (List
-              (Character 1 1 () [])
+              ()
               )
-             )
-            ()
-            )
-           (=
-            (Var 4 b2)
-            (ListConstant
-             [(IntegerConstant 10 (Integer 4 []))
-              (IntegerConstant 20 (Integer 4 []))
-              (IntegerConstant 30 (Integer 4 []))
-              (IntegerConstant 40 (Integer 4 []))]
-             (List
-              (Integer 4 [])
-              )
-             )
-            ()
-            )
-           (=
-            (Var 4 b)
-            (TupleConstant
-             [(Var 4 b1)
+             (=
               (Var 4 b2)
-              (RealConstant
-               6.030500
-               (Real 8 [])
-               )]
-             (Tuple
-              [(List
-                (Character 1 -2 () [])
-                )
+              (ListConstant
+               [(IntegerConstant 10 (Integer 4 []))
+                (IntegerConstant 20 (Integer 4 []))
+                (IntegerConstant 30 (Integer 4 []))
+                (IntegerConstant 40 (Integer 4 []))]
                (List
                 (Integer 4 [])
                 )
-               (Real 8 [])]
-              )
-             )
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 4 __list_iterator)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 4 a)
-               (Integer 4 [])
-               ()
                )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
               ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(StringConstant
-                "("
-                (Character 1 1 () [])
-                )]
-              ()
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (Print
-              ()
-              [(TupleItem
-                (ListItem
-                 (Var 4 a)
-                 (Var 4 __list_iterator)
-                 (Tuple
-                  [(Integer 4 [])
-                   (Integer 4 [])]
-                  )
-                 ()
-                 )
-                (IntegerConstant 0 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (Print
-              ()
-              [(StringConstant
-                ", "
-                (Character 1 2 () [])
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (Print
-              ()
-              [(TupleItem
-                (ListItem
-                 (Var 4 a)
-                 (Var 4 __list_iterator)
-                 (Tuple
-                  [(Integer 4 [])
-                   (Integer 4 [])]
-                  )
-                 ()
-                 )
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (Print
-              ()
-              [(StringConstant
-                ")"
-                (Character 1 1 () [])
-                )]
-              ()
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 4 __list_iterator)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (Var 4 a)
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "("
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 4 __list_iterator1)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (TupleItem
-                (Var 4 b)
-                (IntegerConstant 0 (Integer 4 []))
-                (List
-                 (Character 1 -2 () [])
-                 )
-                ()
-                )
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(StringConstant
-                "'"
-                (Character 1 1 () [])
-                )
-               (ListItem
-                (TupleItem
-                 (Var 4 b)
-                 (IntegerConstant 0 (Integer 4 []))
-                 (List
+             (=
+              (Var 4 b)
+              (TupleConstant
+               [(Var 4 b1)
+                (Var 4 b2)
+                (RealConstant
+                 6.030500
+                 (Real 8 [])
+                 )]
+               (Tuple
+                [(List
                   (Character 1 -2 () [])
                   )
-                 ()
-                 )
-                (Var 4 __list_iterator1)
-                (Character 1 -2 () [])
-                ()
-                )
-               (StringConstant
-                "'"
-                (Character 1 1 () [])
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 4 __list_iterator1)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (TupleItem
-                  (Var 4 b)
-                  (IntegerConstant 0 (Integer 4 []))
-                  (List
-                   (Character 1 -2 () [])
-                   )
-                  ()
-                  )
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
-                )
-               (Logical 4 [])
-               ()
-               )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              ", "
-              (Character 1 2 () [])
-              )]
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 4 __list_iterator2)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (TupleItem
-                (Var 4 b)
-                (IntegerConstant 1 (Integer 4 []))
-                (List
-                 (Integer 4 [])
-                 )
-                ()
-                )
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
-              )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
-              ()
-              [(ListItem
-                (TupleItem
-                 (Var 4 b)
-                 (IntegerConstant 1 (Integer 4 []))
                  (List
                   (Integer 4 [])
                   )
-                 ()
-                 )
-                (Var 4 __list_iterator2)
-                (Integer 4 [])
-                ()
-                )]
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
-              )
-             (If
-              (IntegerCompare
-               (Var 4 __list_iterator2)
-               Lt
-               (IntegerBinOp
-                (ListLen
-                 (TupleItem
-                  (Var 4 b)
-                  (IntegerConstant 1 (Integer 4 []))
-                  (List
-                   (Integer 4 [])
-                   )
-                  ()
-                  )
-                 (Integer 4 [])
-                 ()
-                 )
-                Sub
-                (IntegerConstant 1 (Integer 4 []))
-                (Integer 4 [])
-                ()
+                 (Real 8 [])]
                 )
-               (Logical 4 [])
-               ()
                )
-              [(Print
-                ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
-                  )]
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                (StringConstant
-                 ""
-                 (Character 1 0 () [])
-                 )
-                )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              ", "
-              (Character 1 2 () [])
-              )]
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (Print
-            ()
-            [(TupleItem
-              (Var 4 b)
-              (IntegerConstant 2 (Integer 4 []))
-              (Real 8 [])
-              ()
-              )]
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              ")"
-              (Character 1 1 () [])
-              )]
-            ()
-            ()
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 4 __list_iterator3)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 4 c)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
               ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
+             (Print
               ()
               [(StringConstant
                 "["
@@ -12986,21 +12490,11 @@
               )
              (DoLoop
               ()
-              ((Var 4 __list_iterator4)
+              ((Var 4 __list_iterator)
                (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
-                 (ListItem
-                  (Var 4 c)
-                  (Var 4 __list_iterator3)
-                  (List
-                   (Tuple
-                    [(Integer 4 [])
-                     (Character 1 -2 () [])]
-                    )
-                   )
-                  ()
-                  )
+                 (Var 4 a)
                  (Integer 4 [])
                  ()
                  )
@@ -13026,21 +12520,11 @@
                 ()
                 [(TupleItem
                   (ListItem
-                   (ListItem
-                    (Var 4 c)
-                    (Var 4 __list_iterator3)
-                    (List
-                     (Tuple
-                      [(Integer 4 [])
-                       (Character 1 -2 () [])]
-                      )
-                     )
-                    ()
-                    )
-                   (Var 4 __list_iterator4)
+                   (Var 4 a)
+                   (Var 4 __list_iterator)
                    (Tuple
                     [(Integer 4 [])
-                     (Character 1 -2 () [])]
+                     (Integer 4 [])]
                     )
                    ()
                    )
@@ -13074,37 +12558,19 @@
                 )
                (Print
                 ()
-                [(StringConstant
-                  "'"
-                  (Character 1 1 () [])
-                  )
-                 (TupleItem
+                [(TupleItem
                   (ListItem
-                   (ListItem
-                    (Var 4 c)
-                    (Var 4 __list_iterator3)
-                    (List
-                     (Tuple
-                      [(Integer 4 [])
-                       (Character 1 -2 () [])]
-                      )
-                     )
-                    ()
-                    )
-                   (Var 4 __list_iterator4)
+                   (Var 4 a)
+                   (Var 4 __list_iterator)
                    (Tuple
                     [(Integer 4 [])
-                     (Character 1 -2 () [])]
+                     (Integer 4 [])]
                     )
                    ()
                    )
                   (IntegerConstant 1 (Integer 4 []))
-                  (Character 1 -2 () [])
+                  (Integer 4 [])
                   ()
-                  )
-                 (StringConstant
-                  "'"
-                  (Character 1 1 () [])
                   )]
                 (StringConstant
                  ""
@@ -13129,18 +12595,142 @@
                 )
                (If
                 (IntegerCompare
-                 (Var 4 __list_iterator4)
+                 (Var 4 __list_iterator)
                  Lt
                  (IntegerBinOp
                   (ListLen
-                   (ListItem
-                    (Var 4 c)
-                    (Var 4 __list_iterator3)
+                   (Var 4 a)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "("
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 4 __list_iterator1)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (TupleItem
+                  (Var 4 b)
+                  (IntegerConstant 0 (Integer 4 []))
+                  (List
+                   (Character 1 -2 () [])
+                   )
+                  ()
+                  )
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )
+                 (ListItem
+                  (TupleItem
+                   (Var 4 b)
+                   (IntegerConstant 0 (Integer 4 []))
+                   (List
+                    (Character 1 -2 () [])
+                    )
+                   ()
+                   )
+                  (Var 4 __list_iterator1)
+                  (Character 1 -2 () [])
+                  ()
+                  )
+                 (StringConstant
+                  "'"
+                  (Character 1 1 () [])
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 4 __list_iterator1)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (TupleItem
+                    (Var 4 b)
+                    (IntegerConstant 0 (Integer 4 []))
                     (List
-                     (Tuple
-                      [(Integer 4 [])
-                       (Character 1 -2 () [])]
-                      )
+                     (Character 1 -2 () [])
                      )
                     ()
                     )
@@ -13185,10 +12775,192 @@
                (Character 1 0 () [])
                )
               )
-             (If
-              (IntegerCompare
-               (Var 4 __list_iterator3)
-               Lt
+             (Print
+              ()
+              [(StringConstant
+                ", "
+                (Character 1 2 () [])
+                )]
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 4 __list_iterator2)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (ListLen
+                 (TupleItem
+                  (Var 4 b)
+                  (IntegerConstant 1 (Integer 4 []))
+                  (List
+                   (Integer 4 [])
+                   )
+                  ()
+                  )
+                 (Integer 4 [])
+                 ()
+                 )
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                ()
+                )
+               (IntegerConstant 1 (Integer 4 [])))
+              [(Print
+                ()
+                [(ListItem
+                  (TupleItem
+                   (Var 4 b)
+                   (IntegerConstant 1 (Integer 4 []))
+                   (List
+                    (Integer 4 [])
+                    )
+                   ()
+                   )
+                  (Var 4 __list_iterator2)
+                  (Integer 4 [])
+                  ()
+                  )]
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                (StringConstant
+                 ""
+                 (Character 1 0 () [])
+                 )
+                )
+               (If
+                (IntegerCompare
+                 (Var 4 __list_iterator2)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (TupleItem
+                    (Var 4 b)
+                    (IntegerConstant 1 (Integer 4 []))
+                    (List
+                     (Integer 4 [])
+                     )
+                    ()
+                    )
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
+                )]
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                ", "
+                (Character 1 2 () [])
+                )]
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (Print
+              ()
+              [(TupleItem
+                (Var 4 b)
+                (IntegerConstant 2 (Integer 4 []))
+                (Real 8 [])
+                ()
+                )]
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                ")"
+                (Character 1 1 () [])
+                )]
+              ()
+              ()
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               ""
+               (Character 1 0 () [])
+               )
+              )
+             (DoLoop
+              ()
+              ((Var 4 __list_iterator3)
+               (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
                  (Var 4 c)
@@ -13200,96 +12972,284 @@
                 (Integer 4 [])
                 ()
                 )
-               (Logical 4 [])
-               ()
-               )
+               (IntegerConstant 1 (Integer 4 [])))
               [(Print
                 ()
                 [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
+                  "["
+                  (Character 1 1 () [])
                   )]
+                ()
                 (StringConstant
                  ""
                  (Character 1 0 () [])
                  )
+                )
+               (DoLoop
+                ()
+                ((Var 4 __list_iterator4)
+                 (IntegerConstant 0 (Integer 4 []))
+                 (IntegerBinOp
+                  (ListLen
+                   (ListItem
+                    (Var 4 c)
+                    (Var 4 __list_iterator3)
+                    (List
+                     (Tuple
+                      [(Integer 4 [])
+                       (Character 1 -2 () [])]
+                      )
+                     )
+                    ()
+                    )
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (IntegerConstant 1 (Integer 4 [])))
+                [(Print
+                  ()
+                  [(StringConstant
+                    "("
+                    (Character 1 1 () [])
+                    )]
+                  ()
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )
+                 (Print
+                  ()
+                  [(TupleItem
+                    (ListItem
+                     (ListItem
+                      (Var 4 c)
+                      (Var 4 __list_iterator3)
+                      (List
+                       (Tuple
+                        [(Integer 4 [])
+                         (Character 1 -2 () [])]
+                        )
+                       )
+                      ()
+                      )
+                     (Var 4 __list_iterator4)
+                     (Tuple
+                      [(Integer 4 [])
+                       (Character 1 -2 () [])]
+                      )
+                     ()
+                     )
+                    (IntegerConstant 0 (Integer 4 []))
+                    (Integer 4 [])
+                    ()
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )
+                 (Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )
+                 (Print
+                  ()
+                  [(StringConstant
+                    "'"
+                    (Character 1 1 () [])
+                    )
+                   (TupleItem
+                    (ListItem
+                     (ListItem
+                      (Var 4 c)
+                      (Var 4 __list_iterator3)
+                      (List
+                       (Tuple
+                        [(Integer 4 [])
+                         (Character 1 -2 () [])]
+                        )
+                       )
+                      ()
+                      )
+                     (Var 4 __list_iterator4)
+                     (Tuple
+                      [(Integer 4 [])
+                       (Character 1 -2 () [])]
+                      )
+                     ()
+                     )
+                    (IntegerConstant 1 (Integer 4 []))
+                    (Character 1 -2 () [])
+                    ()
+                    )
+                   (StringConstant
+                    "'"
+                    (Character 1 1 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )
+                 (Print
+                  ()
+                  [(StringConstant
+                    ")"
+                    (Character 1 1 () [])
+                    )]
+                  ()
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )
+                 (If
+                  (IntegerCompare
+                   (Var 4 __list_iterator4)
+                   Lt
+                   (IntegerBinOp
+                    (ListLen
+                     (ListItem
+                      (Var 4 c)
+                      (Var 4 __list_iterator3)
+                      (List
+                       (Tuple
+                        [(Integer 4 [])
+                         (Character 1 -2 () [])]
+                        )
+                       )
+                      ()
+                      )
+                     (Integer 4 [])
+                     ()
+                     )
+                    Sub
+                    (IntegerConstant 1 (Integer 4 []))
+                    (Integer 4 [])
+                    ()
+                    )
+                   (Logical 4 [])
+                   ()
+                   )
+                  [(Print
+                    ()
+                    [(StringConstant
+                      ", "
+                      (Character 1 2 () [])
+                      )]
+                    (StringConstant
+                     ""
+                     (Character 1 0 () [])
+                     )
+                    (StringConstant
+                     ""
+                     (Character 1 0 () [])
+                     )
+                    )]
+                  []
+                  )]
+                )
+               (Print
+                ()
+                [(StringConstant
+                  "]"
+                  (Character 1 1 () [])
+                  )]
+                ()
                 (StringConstant
                  ""
                  (Character 1 0 () [])
                  )
+                )
+               (If
+                (IntegerCompare
+                 (Var 4 __list_iterator3)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 4 c)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
                 )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 4 __list_iterator5)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 4 b1)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
+             (Print
               ()
               [(StringConstant
-                "'"
-                (Character 1 1 () [])
-                )
-               (ListItem
-                (Var 4 b1)
-                (Var 4 __list_iterator5)
-                (Character 1 -2 () [])
-                ()
-                )
-               (StringConstant
-                "'"
+                "]"
                 (Character 1 1 () [])
                 )]
+              ()
               (StringConstant
-               ""
-               (Character 1 0 () [])
+               " "
+               (Character 1 1 () [])
                )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
               (StringConstant
                ""
                (Character 1 0 () [])
                )
               )
-             (If
-              (IntegerCompare
-               (Var 4 __list_iterator5)
-               Lt
+             (DoLoop
+              ()
+              ((Var 4 __list_iterator5)
+               (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
                  (Var 4 b1)
@@ -13301,14 +13261,22 @@
                 (Integer 4 [])
                 ()
                 )
-               (Logical 4 [])
-               ()
-               )
+               (IntegerConstant 1 (Integer 4 [])))
               [(Print
                 ()
                 [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
+                  "'"
+                  (Character 1 1 () [])
+                  )
+                 (ListItem
+                  (Var 4 b1)
+                  (Var 4 __list_iterator5)
+                  (Character 1 -2 () [])
+                  ()
+                  )
+                 (StringConstant
+                  "'"
+                  (Character 1 1 () [])
                   )]
                 (StringConstant
                  ""
@@ -13318,71 +13286,71 @@
                  ""
                  (Character 1 0 () [])
                  )
+                )
+               (If
+                (IntegerCompare
+                 (Var 4 __list_iterator5)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 4 b1)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
                 )]
-              []
-              )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(StringConstant
-              "["
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             ""
-             (Character 1 0 () [])
-             )
-            )
-           (DoLoop
-            ()
-            ((Var 4 __list_iterator6)
-             (IntegerConstant 0 (Integer 4 []))
-             (IntegerBinOp
-              (ListLen
-               (Var 4 b2)
-               (Integer 4 [])
-               ()
-               )
-              Sub
-              (IntegerConstant 1 (Integer 4 []))
-              (Integer 4 [])
-              ()
               )
-             (IntegerConstant 1 (Integer 4 [])))
-            [(Print
+             (Print
               ()
-              [(ListItem
-                (Var 4 b2)
-                (Var 4 __list_iterator6)
-                (Integer 4 [])
-                ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
                 )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(StringConstant
+                "["
+                (Character 1 1 () [])
+                )]
+              ()
               (StringConstant
                ""
                (Character 1 0 () [])
                )
-              (StringConstant
-               ""
-               (Character 1 0 () [])
-               )
               )
-             (If
-              (IntegerCompare
-               (Var 4 __list_iterator6)
-               Lt
+             (DoLoop
+              ()
+              ((Var 4 __list_iterator6)
+               (IntegerConstant 0 (Integer 4 []))
                (IntegerBinOp
                 (ListLen
                  (Var 4 b2)
@@ -13394,14 +13362,14 @@
                 (Integer 4 [])
                 ()
                 )
-               (Logical 4 [])
-               ()
-               )
+               (IntegerConstant 1 (Integer 4 [])))
               [(Print
                 ()
-                [(StringConstant
-                  ", "
-                  (Character 1 2 () [])
+                [(ListItem
+                  (Var 4 b2)
+                  (Var 4 __list_iterator6)
+                  (Integer 4 [])
+                  ()
                   )]
                 (StringConstant
                  ""
@@ -13411,40 +13379,73 @@
                  ""
                  (Character 1 0 () [])
                  )
+                )
+               (If
+                (IntegerCompare
+                 (Var 4 __list_iterator6)
+                 Lt
+                 (IntegerBinOp
+                  (ListLen
+                   (Var 4 b2)
+                   (Integer 4 [])
+                   ()
+                   )
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  ()
+                  )
+                 (Logical 4 [])
+                 ()
+                 )
+                [(Print
+                  ()
+                  [(StringConstant
+                    ", "
+                    (Character 1 2 () [])
+                    )]
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  (StringConstant
+                   ""
+                   (Character 1 0 () [])
+                   )
+                  )]
+                []
                 )]
-              []
+              )
+             (Print
+              ()
+              [(StringConstant
+                "]"
+                (Character 1 1 () [])
+                )]
+              ()
+              (StringConstant
+               " "
+               (Character 1 1 () [])
+               )
+              )
+             (Print
+              ()
+              [(RealConstant
+                3.420000
+                (Real 8 [])
+                )
+               (StringConstant
+                "okay"
+                (Character 1 4 () [])
+                )
+               (LogicalConstant
+                true
+                (Logical 4 [])
+                )
+               (IntegerConstant 14483 (Integer 4 []))]
+              ()
+              ()
               )]
-            )
-           (Print
-            ()
-            [(StringConstant
-              "]"
-              (Character 1 1 () [])
-              )]
-            ()
-            (StringConstant
-             " "
-             (Character 1 1 () [])
-             )
-            )
-           (Print
-            ()
-            [(RealConstant
-              3.420000
-              (Real 8 [])
-              )
-             (StringConstant
-              "okay"
-              (Character 1 4 () [])
-              )
-             (LogicalConstant
-              true
-              (Logical 4 [])
-              )
-             (IntegerConstant 14483 (Integer 4 []))]
-            ()
-            ()
-            )]
           ()
           Public
           false
@@ -13486,10 +13487,10 @@
     ))
 
 
-(deftest big-unit-test
+(deftest big-translation-unit-literal-test
   (testing "bisecting Java method-code-too-large error"
     (is (s/valid? ::asr/TranslationUnit
-                  (asr-eval big-unit-literal-sample)))))
+                  (asr-eval big-translation-unit-literal-sample)))))
 
 
 (deftest big-function-test
