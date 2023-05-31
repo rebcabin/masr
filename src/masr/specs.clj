@@ -2119,7 +2119,7 @@
 
 ;;
 ;;
-;; # SYMBOL-TABLE
+;; # SYMBOL TABLE
 ;;
 ;;
 

@@ -2363,21 +2363,65 @@
 ;; |_| \_,_|_||_\__|\__|_\___/_||_|
 
 
-(deftest Function-test
-  (let [ft (FunctionType
+(defn asr-eval
+  [sexp]
+  (do (in-ns 'masr.specs)
+      (eval (rewrite-for-legacy sexp))))
+
+
+(deftest function-test
+  (let [ ;; --------------------------------
+        ft (FunctionType
             [] () Source
             Implementation () false
             false false false
             false [] [] false)
-        afn (Function
-             (SymbolTable 42 {})
-             test_boolOp, ft, []
-             [] [] () ;; param*, body, retvar
-             Public false false)]
+        ;; --------------------------------
+        rft (read-string "(FunctionType
+            [] () Source
+            Implementation () false
+            false false false
+            false [] [] false)")
+        reft (asr-eval rft)
+        ;; --------------------------------
+        rfn (read-string "(Function
+               (SymbolTable 42 {})
+               test_boolOp,
+               (FunctionType
+                [] () Source
+                Implementation () false
+                false false false
+                false [] [] false)
+               []
+               [] [] ()
+               Public false false)")
+        refn (asr-eval rfn)
+        ;; --------------------------------
+        afn (asr-eval
+             '(Function
+               (SymbolTable 42 {})
+               test_boolOp,
+               #_~ft, ;; puts "test_boolOp in masr.core-test namespace
+               (FunctionType
+                [] () Source
+                Implementation () false
+                false false false
+                false [] [] false)
+               []       ;; deps
+               [] [] () ;; param*, body, retvar
+               ;; access deterministic side-effect-free
+               Public false false))]
+    ;; --------------------------------
+    (is (s/valid? ::asr/FunctionType reft))
+    #_(is (nil? (s/explain ::asr/FunctionType reft)))
+    (is (s/valid? ::asr/Function refn))
+    #_(is (nil? (s/explain ::asr/Function refn)))
+    (is (s/valid? ::asr/Function afn))
+    #_(is (nil? (s/explain ::asr/Function afn)))
     (is (s/valid? ::asr/asr-term afn))
     (is (s/valid? ::asr/symbol   afn))
-    (is (s/valid? ::asr/Function afn))
-    )
+    (is (s/valid? ::asr/Function afn)))
+
   (let [afn
         (legacy
          (Function
@@ -2452,8 +2496,8 @@
           () Public false false))]
     (is (s/valid? ::asr/asr-term afn))
     (is (s/valid? ::asr/symbol   afn))
-    (is (s/valid? ::asr/Function afn))
-    ))
+    (is (s/valid? ::asr/Function afn)))
+  )
 
 
 ;;  __  __         _      _
