@@ -110,7 +110,8 @@
             [clojure.string                :as      str          ]
             [clojure.pprint                :refer   [pprint     ]]
             [clojure.walk                  :refer   [prewalk    ]]
-            #_[clojure.zip                 :as      z           ])
+            #_[clojure.zip                 :as      z           ]
+            [masr.specs :as asr])
 
   (:require [hyperfiddle.rcf               :refer   [tests tap %]]
             [blaster.clj-fstring           :refer   [f-str      ]]
@@ -1797,16 +1798,11 @@
 
 ;;
 ;;
-;; # LEGACY MACRO
+;; # REWRITING FOR LEGACY
 ;;
 ;;
 
 
-;;
-;; The `legacy` macro currently just converts `=`
-;; into `Assignment` in a whole tree. Apply "legacy"
-;; to a whole sugar expression.
-;;
 ;;
 ;; TODO: ASDL output from `--show-asr` currently
 ;; requires moving colons from the backs of keywords to
@@ -1829,19 +1825,14 @@
 ;; ```
 ;;
 ;;
-;; TODO: We might rework heavy sugar through the whole
-;; code-base because we must apply `legacy` anyway. For
-;; now, user-level code must call `legacy` when
-;; appropriate.
+;; The function `rewrite-for-legacy` converts `=`
+;; into `Assignment` in a whole tree and converts
+;; nested call syntax into vectors. `eval`, in the
+;; namespace `masr.specs`, applies all the sugar
+;; functions to an expression. Call `asr-eval` to do
+;; that. The `legacy` macro simply quotes a whole
+;; sugared expression.
 ;;
-;;
-
-;; #+begin_src clojure
-
-
-;; #+end_src
-
-
 ;; #+begin_src clojure
 
 (defn rewrite-for-legacy
@@ -1863,11 +1854,18 @@
 
 ;; #+begin_src clojure
 
+(defn asr-eval
+  [sexp]
+  (do (in-ns 'masr.specs)
+      (eval (rewrite-for-legacy sexp))))
+;; #+end_src
+
+;; #+begin_src clojure
+
 (defmacro legacy
   "DANGER: Call 'eval'."
   [it]
-  `(do (in-ns 'masr.specs)
-       (eval (rewrite-for-legacy '~it))))
+  `(asr-eval '~it))
 ;; #+end_src
 
 

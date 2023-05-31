@@ -2363,12 +2363,6 @@
 ;; |_| \_,_|_||_\__|\__|_\___/_||_|
 
 
-(defn asr-eval
-  [sexp]
-  (do (in-ns 'masr.specs)
-      (eval (rewrite-for-legacy sexp))))
-
-
 (deftest function-test
   (let [ ;; --------------------------------
         ft (FunctionType
@@ -5125,6 +5119,16 @@
     #_
     (test-unit _pass_print_list_tuple-print_02-1bcc4ec)
     ))
+
+
+#_(def slurped-1bcc4ec
+  (->> "_pass_print_list_tuple-print_02-1bcc4ec"
+       slurp-asr))
+
+
+#_(deftest slurped-1bcc4ec-test
+  (is (s/valid? ::asr/TranslationUnit
+                (asr-eval slurped-1bcc4ec))))
 
 
 (deftest bisecting-6cf8821
