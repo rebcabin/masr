@@ -9,19 +9,22 @@
 ;; This file is semi-literate programming. Blocks of
 ;; code in this Markdown file, `specs.md`, are
 ;; extracted from the live source code in
-;; `specs.clj`. This document cannot get out-of-date
-;; from the code.
+;; `specs.clj`. This document, if built properly
+;; prior to check-in, cannot get out-of-date from
+;; the code.
 ;;
 ;;
 ;; To contribute, write code in the source files,
-;; mostly in `specs.clj`. Format comments in
+;; mostly in `specs.clj` and format comments in
 ;; Markdown. Precede a block of code with a
-;; double-semicolon-space comment line that says
-;; `#+begin_src` by itself, beginning in column 1,
-;; then add a blank line. Terminate src blocks with
-;; `#+end_src` in a double-semicolon-space comment
-;; beginning in column 1. You'll see many examples
-;; below.
+;; double-semicolon-space comment beginning in
+;; column 1 that says `#+begin_src clojure` by
+;; itself, then add a blank line. Terminate such src
+;; blocks with `#+end_src` in a
+;; double-semicolon-space comment beginning in
+;; column 1. You'll see many examples below. AWK
+;; picks up these lines, so be sure to format them
+;; exactly as the examples show.
 ;;
 ;;
 ;; When reading this Markdown file, `specs.md`,
