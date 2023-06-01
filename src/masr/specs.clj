@@ -5863,7 +5863,7 @@
 
 ;;
 ;;
-;; ANALYZERS
+;; # ANALYZERS
 ;;
 ;;
 
@@ -5907,29 +5907,41 @@
        (empty? (->> item
                     (filter coll?)
                     (filter #(not (empty? %)))))))
+;; #+end_src
 
+;; #+begin_src clojure
 
 (defn dependencies-vector? [item]
   (and (vector? item)
        (every? symbol? item)))
+;; #+end_src
 
+;; #+begin_src clojure
 
 (defn symbol-ref? [item]
   (and (::identifier item)
        (::symtab-id  item)))
+;; #+end_src
 
+;; #+begin_src clojure
 
 (defn Character? [item]
   (= ::Character (::ttype-head item)))
+;; #+end_src
 
+;; #+begin_src clojure
 
 (defn Var? [item]
   (= ::Var (::expr-head item)))
+;; #+end_src
 
+;; #+begin_src clojure
 
 (defn ExternalSymbol? [item]
   (= ::ExternalSymbol (::symbol-head item)))
+;; #+end_src
 
+;; #+begin_src clojure
 
 (defn sugar? [head]
   #(and (list? %)
