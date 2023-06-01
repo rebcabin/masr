@@ -301,10 +301,10 @@
 ;; instance inhabits a certain specified set.
 ;;
 ;;
-;; Therefore, a type system like like MASR's can act
-;; like a _set theory_ with respect to instances.
-;; See this Stack-Exchange question for the fine
-;; points of set theory versus type theory:
+;; Therefore, a type system like MASR's can act like
+;; a _set theory_ with respect to instances. See
+;; this Stack-Exchange question for the fine points
+;; of set theory versus type theory:
 ;;
 
 ;;
@@ -843,7 +843,7 @@
   [term]
   (let [ns "masr.specs"
         tkw (keyword ns (str term))]
-    `(s/def ~tkw    ;; like ::dimension or ::symbol
+    `(s/def ~tkw    ;; e.g. ::dimension or ::symbol
        (term-selector-spec ~tkw))))
 ;; #+end_src
 
@@ -902,18 +902,18 @@
         (s/multi-spec expr-head ::expr-head"
   [term]
   (let [ns "masr.specs"
-        ttrm (keyword ns "term") ;; like ::term
-        tcst (symbol "term")     ;; like term (no ns!?!)
+        ttrm (keyword ns "term") ;; e.g. ::term
+        tcst (symbol "term")     ;; e.g. term (no ns!?!)
 
-        tstr (str term)          ;; like "expr"
-        tkwd (keyword ns tstr)   ;; like ::expr
-        tsym (symbol (name (symbol tstr))) ;; like expr -- caution
+        tstr (str term)          ;; e.g. "expr"
+        tkwd (keyword ns tstr)   ;; e.g. ::expr
+        tsym (symbol (name (symbol tstr))) ;; e.g. expr -- caution
 
-        estr (str term "-head")  ;; like "expr-head"
-        ekwd (keyword ns estr)   ;; like ::expr-head
-        esym (symbol (name (symbol estr))) ;; like expr-head
+        estr (str term "-head")  ;; e.g. "expr-head"
+        ekwd (keyword ns estr)   ;; e.g. ::expr-head
+        esym (symbol (name (symbol estr))) ;; e.g. expr-head
 
-        ;; like ::asr-expr-head
+        ;; e.g. ::asr-expr-head
         akwd (keyword ns (str "asr-" (name term) "-head"))
         ]
     `(do (defmethod ~tcst ~tkwd [_#]
@@ -975,16 +975,16 @@
           #(= ::Assignment            ;; nested tag
               (-> % ::asr-stmt-head   ;; nested multi-spec
                     ::stmt-head       ;; tag fetcher"
-  [term, ;; like symbol
-   head  ;; like Variable
+  [term, ;; e.g. symbol
+   head  ;; e.g. Variable
    ]
   (let [ns "masr.specs"
-        trm (keyword ns "term")     ;; like ::term
-        art (keyword ns "asr-term") ;; like ::asr-term
-        hkw (keyword ns (str head)) ;; like ::Variable
-        tmh (keyword ns (str term "-head")) ;; like ::symbol-head
+        trm (keyword ns "term")     ;; e.g. ::term
+        art (keyword ns "asr-term") ;; e.g. ::asr-term
+        hkw (keyword ns (str head)) ;; e.g. ::Variable
+        tmh (keyword ns (str term "-head")) ;; e.g. ::symbol-head
         amh (keyword ns ;; for the multi-spec
-                     ;; like ::asr-symbol-head
+                     ;; e.g. ::asr-symbol-head
                      (str "asr-" term "-head"))]
     `(s/def ~hkw
        (s/and ~art #(= ~hkw (-> % ~amh ~tmh))))))
@@ -1046,7 +1046,7 @@
   ;; term is a string like "symbol" or "stmt" in quotes
   [term sqkeysyms]
   (let [ns "masr.specs"
-        ;; like symbol-head or stmt-head
+        ;; e.g. symbol-head or stmt-head
         str-head (str    term "-head")
         trm-head (symbol str-head)
         seq-keys (map    #(keyword ns (str %)) sqkeysyms)]
@@ -1084,40 +1084,48 @@
                       ::dependencies ;; <~~~ repetitive
                       ::body]        ;; <~~~ repetitive
                 ))"
+  ;; e.g.
+  ;; Program symbol (SymbolTable prognym dependencies body)
   [head, term, keyseq]
   (let [ns "masr.specs"
-        ;; like "Program":
+        ;; e.g. "Program"
         head-str  (str head)
-        ;; like ::Program:
+        ;; e.g. ::Program
         head-key  (keyword ns head-str)
-        ;; ::keys:
+        ;; exactly ::keys
         keys-key  (keyword ns "keys")
-        ;; like Program:
+        ;; e.g. Program
         head-sym  (symbol head-str)
-        ;; like symbol:
+        ;; e.g. symbol
         term-sym  (symbol (str term))
-        ;; like symbol-head:
+        ;; e.g. symbol-head
         term-head (symbol (str term "-head"))
-        ;; like symbol->asdl-type:
+        ;; e.g. symbol->asdl-type
         mthd-nym  (symbol (str term "->asdl-type"))
-        ;; like (symbol-head, SymbolTable, ..., body):
+        ;; e.g. (symbol-head, SymbolTable, ..., body)
         sym-list  (conj keyseq term-head)
-        ;; like [symbol-head, SymbolTable, ..., body]
+        ;; e.g. [symbol-head, SymbolTable, ..., body]
         ;; for destructuring:
         parm-vec  (vec sym-list)
-        ;; like (::symbol-head, ::SymbolTable, ..., ::body)
-        ;; for entity specs via s/keys:
+        ;; e.g. (::symbol-head, ::SymbolTable, ..., ::body)
+        ;; for entity specs via s/keys
         key-list  (map #(keyword ns (str %)) sym-list)
-        ;; like [::symbol-head, ::SymbolTable, ..., ::body]
-        ;; for entity specs via s/keys:
+        ;; e.g. [::symbol-head, ::SymbolTable, ..., ::body]
+        ;; for entity specs via s/keys
         key-vec   (vec key-list)]
-    `(do (defmethod ~mthd-nym ~head-key
-           [{~keys-key ~parm-vec}]
-           (asdl-type-string ~term ~keyseq))
-         (defmethod ~term-head ~head-key [_#]
-           (s/keys :req ~key-vec))
-         (def-term-head--entity-key ~term-sym ~head-sym)
-         )))
+    `(do ;; defmethod symbol->asdl-type ::Program
+       (defmethod ~mthd-nym ~head-key
+         ;; [{::keys [symbol-head, SymbolTable, ..., body]}]
+         [{~keys-key ~parm-vec}]
+         ;;              symbol (SymbolTable, ..., body)
+         (asdl-type-string ~term ~keyseq))
+       ;; defmethod symbol ::program [_]
+       (defmethod ~term-head ~head-key [_#]
+         ;; [::symbol-head, ::SymbolTable, ..., ::body]
+         (s/keys :req ~key-vec))
+       ;; e.g.                     symbol    Program
+       (def-term-head--entity-key ~term-sym ~head-sym)
+       )))
 ;; #+end_src
 
 
@@ -1150,14 +1158,14 @@
   types from MASR entities: types from examples."
   [term]
   (let [ns "masr.specs"
-        ;; like ::keys
+        ;; e.g. ::keys
         keys-key (keyword ns "keys")
-        ;; like ::symbol or ::stmt, value of term
+        ;; e.g. ::symbol or ::stmt, value of term
         mthd-key (keyword ns (str term))
-        ;; like asr-symbol-head or asr-stmt-head, a key-symbol
+        ;; e.g. asr-symbol-head or asr-stmt-head, a key-symbol
         ;; for destructuring
         nest-ksm (symbol (str "asr-" term "-head"))
-        ;; like symbol->asdl-type or stmt->asdl-type
+        ;; e.g. symbol->asdl-type or stmt->asdl-type
         call-sym (symbol (str term "->asdl-type"))
         ;; don't put the namespace on "term";
         ;; nons-term is a const destructuring key,
@@ -2191,8 +2199,8 @@
   for each constant, such as Local for (intent 'Local).
   This works only because all heads are unique -- no
   collisions in ASR."
-  [term,       ;; like intent
-   a-set-syms] ;; like #{Local, In, Out, ,,,}
+  [term,       ;; e.g. intent
+   a-set-syms] ;; e.g. #{Local, In, Out, ,,,}
   (let [a-set (eval a-set-syms)
         cmds  (for [e a-set] (list 'def e `(~term '~e)))]
     `(list ~@cmds)))
@@ -2222,9 +2230,9 @@
        (defmethod term ~tkw [_#]
          (s/keys :req [~trm ~tke]))
        ;; the entity-key spec
-       (s/def ~tkw ;; like ::intent
-         (s/and ~art ;; like ::asr-term, i.e., the multi-spec
-                ;; like the predicate #(= ::intent (::term %))
+       (s/def ~tkw ;; e.g. ::intent
+         (s/and ~art ;; e.g. ::asr-term, i.e., the multi-spec
+                ;; e.g. the predicate #(= ::intent (::term %))
                 (term-selector-spec ~tkw)))
        (defn ~term [it#] ;; the sugar
          {~trm ~tkw
@@ -2606,15 +2614,15 @@
       (Integer)   ;; default 4-byte scalar ttype"
   [it]
   (let [ns  "masr.specs"
-        cap (str/capitalize (str it)) ;; like "Integer"
-        scp (symbol cap)              ;; Like Integer  (heavy sugar)
-        lcp (symbol (str cap "-"))    ;; like Integer- (light sugar)
-        tth (keyword ns cap)          ;; like ::Integer
+        cap (str/capitalize (str it)) ;; e.g. "Integer"
+        scp (symbol cap)              ;; E.G. Integer  (heavy sugar)
+        lcp (symbol (str cap "-"))    ;; e.g. Integer- (light sugar)
+        tth (keyword ns cap)          ;; e.g. ::Integer
         kdh (keyword ns (str/lower-case (str it "-kind")))
-        ;; ... like ::integer-kind
+        ;; ... e.g. ::integer-kind
         ivh (keyword ns (str/lower-case
                          (str "invalid-" it "-ttype")))
-        ;; ... like ::invalid-integer-ttype
+        ;; ... e.g. ::invalid-integer-ttype
         dfk 4  ;; default kind
         dfd [] ;; default dimension*
         _   (case scp
@@ -2629,10 +2637,10 @@
        ;; Real-, Complex- Logical-, that require a
        ;; full map of arguments, like
        ;; (Integer- {:kind 4 :dimension* []}
-       (defn ~lcp ;; like Integer-
+       (defn ~lcp ;; e.g. Integer-
          [{kind# :kind, dims# :dimension*}]
-         (let [cnd# {::ttype-head ~tth,  ;; like ::Integer
-                     ~kdh         kind#, ;; like ::integer-kind
+         (let [cnd# {::ttype-head ~tth,  ;; e.g. ::Integer
+                     ~kdh         kind#, ;; e.g. ::integer-kind
                      ::dimension* (dimension* dims#)}]
            (if (s/valid? ::asr-ttype-head cnd#)
              (ttype cnd#), ~ivh)))
@@ -2640,7 +2648,7 @@
        ;; Complex Logical, Character that take
        ;; positional arguments, like
        ;; (Integer 4 []), (Integer 4), (Integer)
-       (defn ~scp ;; like Integer
+       (defn ~scp ;; e.g. Integer
          ;; binary
          ([kindx# dimsx#]
           (~lcp {:kind kindx# :dimension* dimsx#}))
