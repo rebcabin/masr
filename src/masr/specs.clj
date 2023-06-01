@@ -1837,9 +1837,9 @@
 ;; into `Assignment` in a whole tree and converts
 ;; nested call syntax into vectors. `eval`, in the
 ;; namespace `masr.specs`, applies all the sugar
-;; functions to an expression. Call `asr-eval` to do
-;; that. The `legacy` macro simply quotes a whole
-;; sugared expression.
+;; functions to an expression. Call `to-full-form`
+;; to do that. The `legacy` macro simply quotes a
+;; whole sugared expression.
 ;;
 ;; #+begin_src clojure
 
@@ -1862,7 +1862,7 @@
 
 ;; #+begin_src clojure
 
-(defn asr-eval
+(defn to-full-form
   [sexp]
   (do (in-ns 'masr.specs)
       (eval (rewrite-for-legacy sexp))))
@@ -1873,7 +1873,7 @@
 (defmacro legacy
   "DANGER: Call 'eval'."
   [it]
-  `(asr-eval '~it))
+  `(to-full-form '~it))
 ;; #+end_src
 
 
@@ -5858,4 +5858,129 @@
      {::unit-head    ::TranslationUnit
       ::SymbolTable  stab
       ::nodes        node-cnd}}))
+;; #+end_src
+
+
+;;
+;;
+;; ANALYZERS
+;;
+;;
+
+
+;;
+;; Some ASR S-expressions are too large to compile,
+;; meaning too large for a Java method code
+;; block (64KB). We must analyze such by breaking
+;; them up. Experiment: Evaluation of some
+;; components with `prewalk` visitors.
+;;
+
+;;
+;; ## Visitor Pattern
+;;
+;; #+begin_src clojure
+
+(defmacro transform-when- [pred xfn item]
+  `(if (~pred ~item)
+     (~xfn ~item)
+     ~item))
+
+
+(defn transform-when [pred xfn item]
+  (transform-when- pred xfn item))
+
+
+(defn visitor [pred xform tree]
+  (prewalk
+   (partial transform-when pred xform)
+   tree))
+;; #+end_src
+
+;;
+;; ## Detector Predicates
+;;
+;; #+begin_src clojure
+
+(defn leaf-list? [item]
+  (and (list? item)
+       (empty? (->> item
+                    (filter coll?)
+                    (filter #(not (empty? %)))))))
+
+
+(defn dependencies-vector? [item]
+  (and (vector? item)
+       (every? symbol? item)))
+
+
+(defn symbol-ref? [item]
+  (and (::identifier item)
+       (::symtab-id  item)))
+
+
+(defn Character? [item]
+  (= ::Character (::ttype-head item)))
+
+
+(defn Var? [item]
+  (= ::Var (::expr-head item)))
+
+
+(defn ExternalSymbol? [item]
+  (= ::ExternalSymbol (::symbol-head item)))
+
+
+(defn sugar? [head]
+  #(and (list? %)
+        (= (first %) head)))
+;; #+end_src
+
+;;
+;; ## Evaluating Leaf Lists
+;;
+;; #+begin_src clojure
+
+(defn quote-value-of-key [key]
+  #(assoc-in % [key] `'~(key %)))
+
+
+(def quote-elements
+  #(vec (for [s %] `'~s)))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defn bottom-up-full-form [tree]
+  (plnecho
+   (->> tree
+        (visitor leaf-list?
+                 to-full-form)
+
+        (visitor dependencies-vector?
+                 quote-elements)
+
+        (visitor symbol-ref?
+                 (quote-value-of-key ::identifier))
+
+        (visitor Character?
+                 (quote-value-of-key ::disposition))
+
+        (visitor Var?
+                 (quote-value-of-key ::varnym))
+
+        (visitor ExternalSymbol?
+                 (quote-value-of-key ::nym))
+
+        (visitor ExternalSymbol?
+                 (quote-value-of-key ::modulenym))
+
+        (visitor ExternalSymbol?
+                 (quote-value-of-key ::orig-nym))
+
+        (visitor (sugar? 'Function)
+                 to-full-form)
+
+        #_to-full-form
+        )))
 ;; #+end_src

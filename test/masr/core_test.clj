@@ -7,7 +7,9 @@
             [clojure.spec.alpha     :as    s       ]
             [clojure.spec.gen.alpha :as    gen     ]
             [clojure.pprint         :refer [pprint]]
-            [clojure.set            :as    set     ])
+            [clojure.set            :as    set     ]
+            [clojure.walk           :refer [prewalk]]
+)
 
   (:require [blaster.clj-fstring    :refer [f-str ]]
             [camel-snake-kebab.core :as    csk     ])
@@ -874,14 +876,17 @@
 
 
 (deftest symbol-table-test
-  (is (= (s/valid? ::asr/asr-term
-                   (SymbolTable 42   {:main 'main}))  true))
-  (is (= (s/valid? ::asr/SymbolTable
-                   (SymbolTable 42   {:main 'main}))  true))
-  (is (= (s/valid? ::asr/SymbolTable
-                   (SymbolTable 'foo {:main 'main}))  false))
-  (is (= (s/valid? ::asr/SymbolTable
-                   (SymbolTable 42   {:main 'main}))  true)))
+  (is (s/valid? ::asr/asr-term
+                (SymbolTable 42   {:main 'main})))
+
+  (is (s/valid? ::asr/SymbolTable
+                (SymbolTable 42   {:main 'main})))
+
+  (is (s/valid? ::asr/SymbolTable
+                (SymbolTable 42   {:main 'main})))
+
+  (is (not (s/valid? ::asr/SymbolTable
+                   (SymbolTable 'foo {:main 'main})))))
 
 
 ;;  ___             _   _        _____
@@ -897,9 +902,17 @@
             Implementation () false
             false false false
             false [] [] false)]
-    (is (= (s/valid?  ::asr/asr-term      ft)  true))
-    (is (= (s/valid?  ::asr/ttype         ft)  true))
-    (is (= (s/valid?  ::asr/FunctionType  ft)  true))))
+    (is (s/valid?  ::asr/asr-term      ft))
+    (is (s/valid?  ::asr/ttype         ft))
+    (is (s/valid?  ::asr/FunctionType  ft)))
+  (let [ft (FunctionType
+            [] "crap" Source
+            Implementation () false
+            false false false
+            false [] [] false)]
+    (is (not (s/valid?  ::asr/asr-term      ft)))
+    (is (not (s/valid?  ::asr/ttype         ft)))
+    (is (not (s/valid?  ::asr/FunctionType  ft)))))
 
 
 ;; ================================================================
@@ -935,6 +948,20 @@
                   (Integer 4 [])
                   (IntegerConstant 4 (Integer 4 []))))]
     (is (s/valid? ::asr/Cast example)))
+
+  (let [example (legacy ;; fixes round brackets.
+                 (Cast
+                  (FunctionCall
+                   2 pow__AT____lpython_overloaded_0__pow
+                   2 "CRAP"
+                   [((IntegerConstant 2 (Integer 4 [])))
+                    ((IntegerConstant 2 (Integer 4 [])))]
+                   (Real 8 [])
+                   (RealConstant 4.000000 (Real 8 [])) ())
+                  RealToInteger
+                  (Integer 4 [])
+                  (IntegerConstant 4 (Integer 4 []))))]
+    (is (not (s/valid? ::asr/Cast example))))
 
   (let [example (Cast
                  (FunctionCall
@@ -985,9 +1012,9 @@
                 ::asr/bool      true
                 ::asr/Logical   (Logical)}}]
       ;; telescoping specs
-      (is (= (s/valid? ::asr/asr-term        alv) true))
-      (is (= (s/valid? ::asr/expr            alv) true))
-      (is (= (s/valid? ::asr/LogicalConstant alv) true))
+      (is (s/valid? ::asr/asr-term        alv))
+      (is (s/valid? ::asr/expr            alv))
+      (is (s/valid? ::asr/LogicalConstant alv))
 
       (is (= alv (LogicalConstant true)))
       (is (= alv (LogicalConstant true (Logical 4 []))))
@@ -995,17 +1022,16 @@
       (is (= alv (LogicalConstant true (Logical))))
       ))
 
-  ;; invalid
   (testing "invalid"
     (let [alv {::asr/term ::asr/expr,
                ::asr/asr-expr-head
                {::asr/expr-head ::asr/LogicalConstant
                 ::asr/bool      true
                 ::asr/Logical   (Integer)}}]
-      (is (= (s/valid? ::asr/asr-term        alv) false))
-      (is (= (s/valid? ::asr/expr            alv) false))
-      (is (= (s/valid? ::asr/ttype           alv) false))
-      (is (= (s/valid? ::asr/LogicalConstant alv) false))
+      (is (not (s/valid? ::asr/asr-term        alv)))
+      (is (not (s/valid? ::asr/expr            alv)))
+      (is (not (s/valid? ::asr/ttype           alv)))
+      (is (not (s/valid? ::asr/LogicalConstant alv)))
       )))
 
 
@@ -1024,9 +1050,9 @@
                 ::asr/int       42
                 ::asr/Integer   (Integer)}}]
       ;; telescoping specs
-      (is (= (s/valid? ::asr/asr-term        aiv) true))
-      (is (= (s/valid? ::asr/expr            aiv) true))
-      (is (= (s/valid? ::asr/IntegerConstant aiv) true))
+      (is (s/valid? ::asr/asr-term        aiv))
+      (is (s/valid? ::asr/expr            aiv))
+      (is (s/valid? ::asr/IntegerConstant aiv))
 
       (is (= aiv (IntegerConstant 42)))
       (is (= aiv (IntegerConstant 42 (Integer 4 []))))
@@ -1034,17 +1060,16 @@
       (is (= aiv (IntegerConstant 42 (Integer))))
       ))
 
-  ;; invalid
   (testing "invalid"
     (let [aiv {::asr/term ::asr/expr,
                ::asr/asr-expr-head
                {::asr/expr-head ::asr/IntegerConstant
                 ::asr/int       42
                 ::asr/Integer   (Logical)}}]
-      (is (= (s/valid? ::asr/asr-term        aiv) false))
-      (is (= (s/valid? ::asr/expr            aiv) false))
-      (is (= (s/valid? ::asr/ttype           aiv) false))
-      (is (= (s/valid? ::asr/IntegerConstant aiv) false))
+      (is (not (s/valid? ::asr/asr-term        aiv)))
+      (is (not (s/valid? ::asr/expr            aiv)))
+      (is (not (s/valid? ::asr/ttype           aiv)))
+      (is (not (s/valid? ::asr/IntegerConstant aiv)))
       )))
 
 
@@ -2376,7 +2401,7 @@
             Implementation () false
             false false false
             false [] [] false)")
-        reft (asr-eval rft)
+        reft (to-full-form rft)
         ;; --------------------------------
         rfn (read-string "(Function
                (SymbolTable 42 {})
@@ -2389,9 +2414,9 @@
                []
                [] [] ()
                Public false false)")
-        refn (asr-eval rfn)
+        refn (to-full-form rfn)
         ;; --------------------------------
-        afn (asr-eval
+        afn (to-full-form
              '(Function
                (SymbolTable 42 {})
                test_boolOp,
@@ -5121,14 +5146,19 @@
     ))
 
 
-#_(def slurped-1bcc4ec
-  (->> "_pass_print_list_tuple-print_02-1bcc4ec"
-       slurp-asr))
+;; See tests named "big....clj" for analysis of
+;; these difficult cases. Also see ANALYZERS
+;; section in the code and Markdown file.
 
 
-#_(deftest slurped-1bcc4ec-test
+(def too-big-slurped-1bcc4ec
+    (->> "_pass_print_list_tuple-print_02-1bcc4ec"
+         slurp-asr))
+
+
+#_(deftest too-big-slurped-1bcc4ec-test
   (is (s/valid? ::asr/TranslationUnit
-                (asr-eval slurped-1bcc4ec))))
+                (to-full-form too-big-slurped-1bcc4ec))))
 
 
 (deftest bisecting-6cf8821
@@ -5773,6 +5803,63 @@
          (->asdl-type (Logical 4 [[6 60] []]))))
   (is (= "SubroutineCall(symbol name, symbol? original_name, call_arg* args, expr? dt)"
          (->asdl-type (SubroutineCall 7 test_fn1 () [] ())))))
+
+
+;; ================================================================
+;;     _    _   _    _    _  __   ____________ ____  ____
+;;    / \  | \ | |  / \  | | \ \ / /__  / ____|  _ \/ ___|
+;;   / _ \ |  \| | / _ \ | |  \ V /  / /|  _| | |_) \___ \
+;;  / ___ \| |\  |/ ___ \| |___| |  / /_| |___|  _ < ___) |
+;; /_/   \_\_| \_/_/   \_\_____|_| /____|_____|_| \_\____/
+
+
+(deftest leaf-list-test
+  (let [sample '(Real 4 [])]
+    (is (list? sample))
+    (is (leaf-list? sample)))
+  (let [fsample '(Function
+                  (SymbolTable 113 {})
+                  _lpython_main_program
+                  (FunctionType
+                   []                ()    Source
+                   Implementation    ()    false
+                   false             false false
+                   false             []    []
+                   false)
+                  [main0]
+                  []
+                  [(SubroutineCall 114 main0
+                    ()    []    ())]
+                  ()    Public    false
+                  false)
+        sample
+        `(TranslationUnit
+          (SymbolTable    1
+           {:_global_symbols
+            (Module
+             (SymbolTable    114
+              {:_lpython_main_program
+               ~fsample})
+             _global_symbols
+             [lpython_builtin]
+             false
+             false)})
+          [])]
+    (is (s/valid? ::asr/Function (to-full-form fsample)))
+    (is (s/valid? ::asr/TranslationUnit (to-full-form sample)))
+
+    #_(is (nil? (s/explain ::asr/Function (bottom-up-full-form fsample))))
+    #_(is (nil? (pprint (bottom-up-full-form sample))))
+    #_(is (s/valid? ::asr/TranslationUnit
+                  (bottom-up-full-form
+                   sample))))
+  #_(is (nil? (pprint
+               (bottom-up-full-form
+                too-big-slurped-1bcc4ec))))
+  #_(is (s/valid? ::asr/TranslationUnit
+                  (bottom-up-full-form
+                   too-big-slurped-1bcc4ec))))
+
 
 
 ;; ================================================================
