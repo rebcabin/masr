@@ -2615,7 +2615,7 @@
   [it]
   (let [ns  "masr.specs"
         cap (str/capitalize (str it)) ;; e.g. "Integer"
-        scp (symbol cap)              ;; E.G. Integer  (heavy sugar)
+        scp (symbol cap)              ;; e.g. Integer  (heavy sugar)
         lcp (symbol (str cap "-"))    ;; e.g. Integer- (light sugar)
         tth (keyword ns cap)          ;; e.g. ::Integer
         kdh (keyword ns (str/lower-case (str it "-kind")))
