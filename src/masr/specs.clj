@@ -31,7 +31,9 @@
 ;; backtrack to definitions when you encounter code
 ;; that needs the definitions. If you read a lot of
 ;; code, you will be accustomed to such interruption
-;; to natural narrative order.
+;; to natural narrative order. Alternatively, read
+;; the entire documentation _backwards_: such will
+;; give you an approximation of narrative order.
 ;;
 ;;
 ;; When the narrative really MUST talk about code
@@ -79,11 +81,14 @@
 ;; _not_ adequate for reading this file. It jumps
 ;; around too much and sometimes gets stuck. We
 ;; recommend the Markdown viewer in PyCharm or CLion
-;; or other products from JetBrains.
+;; or other products from JetBrains. There are
+;; numerous paid alternatives for Markdown on the
+;; Mac, but we have not tried them.
 ;;
 ;;
 ;; In case of emergency _only_, you might rebuild
-;; `specs.clj` from `specs.md`:
+;; `specs.clj` from `specs.md` with the following
+;; **UNTESTED** command:
 ;;
 ;;
 ;; ```bash
@@ -192,13 +197,18 @@
 ;;   `symbol_table`, `symbol-ref` in MASR.
 ;;
 ;; * MASR exposes secret semantics that ASDL cannot
-;; * express. TODO: example.
+;;   express. TODO: example.
 ;;
 ;;
 ;; Until MASR is integrated, it will have a legacy
 ;; back-channel. The legacy back-channel writes
 ;; types in ASDL format from MASR instances.
 ;;
+
+;; ----------------------------------------------------------------
+;; ## SNAPSHOT SUMMARY
+;;
+
 ;;
 ;; We begin with a summary of a snapshot of the full
 ;; ASDL specification:
@@ -206,7 +216,7 @@
 ;;
 
 ;;
-;; ## Terms (Nodes) in the ASDL Grammar
+;; ### Terms (Nodes) in the ASDL Grammar
 ;;
 ;;
 ;; Terms are items to the left of equals signs:
@@ -288,10 +298,10 @@
 ;; boats."
 ;;
 ;;
-;; The main use-case for specifications is for
-;; checking instances against specs: "does this
-;; instance hash-map meet the general specification
-;; for hash-maps of this type?" For
+;; The main use-case for specifications is checking
+;; instances against specs: "does this instance
+;; hash-map meet the general specification for
+;; hash-maps of this type?" For
 ;; example, "does `(Integer 4 [])`, syntax sugar for
 ;; a hash-map instance, meet the general
 ;; specification of an ASR `ttype`, which describes
@@ -315,20 +325,19 @@
 ;;
 
 ;;
-;; The important point is that a type theory is a
-;; self-contained logic, and set theory is just one
-;; such logic. Clojure specs are arbitrary predicate
-;; functions. Because we may build any custom logic
-;; that predicate logic can support, Clojure specs
-;; can be more general than set theory, and suffice
-;; for advanced types like dependency types and
-;; concurrency types. Such advanced types are
-;; work-in-progress for MASR.
+;; The gist is that a type theory is a
+;; self-contained logic, and set theory is one such
+;; logic. Clojure specs are arbitrary predicate
+;; functions. We can build any type-theory that
+;; needs only first-order predicate calculus.
+;; Therefore, Clojure specs can be more general than
+;; set theory, and suffice for advanced types like
+;; dependency types and concurrency types. Such
+;; advanced types are work-in-progress for MASR.
 ;;
 
 ;; ----------------------------------------------------------------
 ;; ## CHECKING INSTANCES
-;;
 ;;
 
 ;;
@@ -386,6 +395,7 @@
 ;; keywords_ in the namespace `masr.specs`, often
 ;; denoted with double-colons.
 ;;
+;;
 ;; This file, `specs.clj` creates, defines, and is
 ;; _in_ namespace `masr.specs`. In any file in that
 ;; namespace, we denote qualified keywords with
@@ -420,7 +430,7 @@
 
 ;;
 ;; * Clojure-standard shorter form, always
-;; * acceptable:
+;;   acceptable:
 ;;
 ;;
 ;; #+begin_src clojure
@@ -453,10 +463,87 @@
 
 ;;
 ;; *PITFALL WARNING* -- If you do not register a
-;; spec for a qualified keyword, `k`, Clojure will
-;; _always pass_ an item in a hash-map with key `k`.
-;; Unregistered qualified keywords can lead to
-;; _false positive checks_.
+;;  spec for a qualified keyword, `k`, Clojure will
+;;  _always pass_ an item in a hash-map with key
+;;  `k`. Unregistered qualified keywords can lead to
+;;  _false positive checks_.
+;;
+
+
+;;
+;;
+;; # IDEMPOTENCY
+;;
+;;
+
+
+;;
+;; We've identified a design issue with large ASR
+;; expressions. Such expressions overflow the Java
+;; method-size limit of 64KB when evaluated
+;; recursively. Bottom-up evaluation requires
+;; idempotency: evaluating a full-form produces the
+;; same full-form. This is easy only if we replace
+;; symbols with strings because the mechanics of
+;; quoting symbols idempotently in context is too
+;; difficult and subtle.
+;;
+;;
+;; For an example, consider the following hash-map,
+;; and notice the external quote, preventing
+;; evaluation. Without this quote, Clojure would
+;; error when evaluating this expression at
+;; load-time.
+;;
+;; #+begin_src clojure
+
+'#:masr.specs{:stmt-head  ;; <~~~ external quote
+             :masr.specs/SubroutineCall,
+             :symbol-ref
+             #:masr.specs{:identifier
+                          main0,
+                          :symtab-id
+                          114},
+             :orig-symref (),
+             :call-args (),
+             :dt? ()}
+;; #+end_src
+
+;;
+;; The above is the spec produced by evaluating the
+;; non-idempotent heavy-sugar function,
+;; `SubroutineCall`. The naked symbol `main0` is
+;; unbound and won't survive another round of
+;; evaluation. The sugar function must be modified
+;; to the following:
+;;
+;; #+begin_src clojure
+
+#:masr.specs{:stmt-head  ;; <~~~ difference
+             :masr.specs/SubroutineCall,
+             :symbol-ref
+             #:masr.specs{:identifier
+                          "main0",  ;; <~~~ difference
+                          :symtab-id
+                          114},
+             :orig-symref (),
+             :call-args (),
+             :dt? ()}
+;; #+end_src
+
+;;
+;; Every element of that hash-map is
+;; self-evaluating: keywords, numbers, strings, ().
+;; Turns out that vectors with self-evaluating
+;; elements are also self-evaluating. We're in
+;; business if we replace all unbound symbols with
+;; strings.
+;;
+
+;;
+;; The issue arose because of legacy sugar (see
+;; below), which artificially quotes symbols in ASR
+;; output from lpython and lfortran.
 ;;
 
 
@@ -472,17 +559,26 @@
 ;;
 ;; 1. easier for humans to read and write
 ;;
-;; 2. compatible with ASDL output from `--show-asr` in
+;; 2. compatible with output from `--show-asr` in
 ;;    lpython and lfortran.
+;;
+;;
+;; Sugared forms are function-calls at
+;; bottom (examples below). Some employ macros to
+;; replace symbols with strings and to perform other
+;; utilitarian transformations on the way to
+;; bottoming out at a function call.
 ;;
 ;;
 ;; Sugar comes in three flavors: _light_, _heavy_,
 ;; and _legacy_.
 ;;
+;;
 ;; 1. Light sugar employs functions with
-;;    non-qualified-keyword, single-colon arguments
-;;    with default values. Light sugar is
-;;    unambiguous but more verbose than heavy sugar.
+;;    single-colon keyword arguments with default
+;;    values. Light sugar is unambiguous but more
+;;    verbose than heavy sugar.
+;;
 ;;
 ;; 2. Heavy sugar employs functions with positional
 ;;    arguments, with possible default values for
@@ -493,6 +589,7 @@
 ;;    sugar, especially for long argument lists as
 ;;    with, say, `Variable` and `FunctionType`.
 ;;
+;;
 ;; 3. Legacy sugar is just like heavy sugar, just,
 ;;    say, requiring fewer tick marks on symbols.
 ;;    Legacy sugar is the most compatible with ASDL
@@ -500,8 +597,7 @@
 ;;
 
 ;; ----------------------------------------------------------------
-;; ## SUGAR NAMING CONVENTION
-;;
+;; ## NAMING CONVENTION FOR SUGAR
 ;;
 
 ;;
@@ -512,11 +608,13 @@
 ;; `Integer-`, have a single trailing hyphen. The
 ;; keyword arguments of light-sugar functions are
 ;; partitioned into _required_ and
-;; _optional-with-defaults_. The keyword argument
+;; _optional-with-defaults_. The keyword-argument
 ;; lists of light-sugar functions do not depend on
 ;; order. The following two examples of light sugar
 ;; both conform to specs registered for `::asr-term`
-;; and to `::ttype`:
+;; and to `::ttype` (this is an example of escaped
+;; code that can't run yet because of narrative
+;; order):
 ;;
 ;;
 ;; #+begin_src clojure
@@ -547,13 +645,14 @@
 ;; #+begin_src clojure
 
 #_
-(Variable-- 2 'x (Integer 4)
+(Variable-- 2 'x (Integer 4) ;; <~~~ quote mark
             nil [] Local
             [] []  Default
             Source Public Required
             false)
 ;; #+end_src
 
+;;
 ;; Heavy sugar and legacy sugar employ positional
 ;; arguments that depend on order. Heavy-sugar
 ;; functions may have final arguments with defaults.
@@ -575,9 +674,10 @@
 ;;
 ;; The purpose of legacy sugar is to auto-quote
 ;; symbols and to accommodate certain defects in the
-;; original design ASDL, such as a symbol-ref's
-;; sometimes being a list and sometimes being a
-;; naked par.
+;; original design of ASDL, such as nested lists'
+;; denoting function calls and ambiguity in
+;; symbol-ref, sometimes a list and sometimes a
+;; naked pair.
 ;;
 ;;
 ;; Here is a legacy version of the Variable above:
@@ -586,7 +686,7 @@
 ;; #+begin_src clojure
 
 #_
-(Variable 2 x []
+(Variable 2 x [] ;; <~~~ no quote mark on x
           Local () ()
           Default (Integer 4 []) Source
           Public Required false)
@@ -599,9 +699,10 @@
 ;; sugar for `Variable`.
 ;;
 ;;
-;; For specs like `Integer` where heavy sugar and
+;; For specs like `Integer`, where heavy sugar and
 ;; legacy are identical, there is no function with
 ;; two trailing hyphens in its name.
+;;
 
 
 ;;
@@ -638,7 +739,7 @@
 
 ;;
 ;;
-;; # QUALIFIED KEYWORDS ARE FUNCTIONS
+;; # QUALIFIED KEYWORDS ARE FUNCTIONS & SPEC-NAMES
 ;;
 ;;
 
@@ -652,13 +753,14 @@
 ;;
 ;; `(::term {::term ::intent ...})`
 ;;
-;; produces `::intent`.
+;; calls the function `::term` with argument
+;; `{::term ::intent ...}` and produces `::intent`.
 ;;
 ;;
-;; As a qualified keyword, `::term` can name a
-;; Clojure spec registered to it via `s/def`. The
-;; following spec will check whether `::intent` is a
-;; `::term`:
+;; As a qualified keyword, `::term`, in addition to
+;; being a tag-fetching function, can name a Clojure
+;; spec registered to it via `s/def`. The following
+;; spec will check whether `::intent` is a `::term`:
 ;;
 ;;
 ;; #+begin_src clojure
@@ -686,21 +788,18 @@
 
 
 ;;
-;; `defmulti` defines a name, say `term` (no
-;; colons), for a collection of `defmethods` also
-;; named `term`. `defmulti` links the name `term` to
-;; a dispatcher function, here exactly the
-;; tag-fetcher `::term` (with colons). Each
-;; `defmethod` of `term` is tagged by the value
-;; fetched from an entity via `::term`.
-;; `defmulti/defmethod` is a Clojure idiom for
+;; `defmulti/defmethod` is one Clojure idiom for
 ;; _polymorphism_:, a single `defmulti` interface
-;; with many implementations. The interface is the
-;; same for all implementations -- any
-;; implementation just accepts a `::term` entity.
-;; The implementations differ from one entity to the
-;; other, say `::symbol` from `::expr`.
+;; with many `defmethod` implementations.
 ;;
+;;
+;; `(defmulti term ::term)` links the name
+;; `term` (no colons) to the tag-fetcher
+;; `::term` (with colons). Each `defmethod` of
+;; `term` is tagged by the value fetched from an
+;; entity via `::term`. For example, there is one
+;; `defmethod` for `::symbol` and another for
+;; `::expr`.;;
 ;;
 ;; #+begin_src clojure
 
@@ -708,18 +807,19 @@
 ;; #+end_src
 
 ;;
-;; MASR handles _alternatives_, or _heads_ as we
-;; call them -- to the right-hand sides of equals
-;; signs in the grammar -- via _multi-specs_.
-;; Multi-specs are to specs as `defmethods` are to
-;; functions -- one spec interface to many
-;; implementations.
+;; MASR handles _alternatives_ or _heads_ -- to the
+;; right-hand sides of equals signs in ASDL -- via
+;; _multi-specs_. Multi-specs are to specs as
+;; `defmethods` are to functions -- one spec
+;; interface to many implementations. Multi-specs
+;; are thus another Clojure idiom for polymorphism.
 ;;
 ;;
 ;; The name of the one multi-spec for all terms is
-;; `::asr-term`, a qualified keyword. Multi-specs
-;; act like tagged unions in C -- MASR's polymorphic
-;; entities are like polymorphic structs in C.
+;; `::asr-term`, a qualified keyword, as are all
+;; names of specs. Multi-specs act like tagged
+;; unions in C -- MASR's polymorphic entities are
+;; like polymorphic structs in C.
 ;;
 
 
@@ -734,10 +834,10 @@
 ;; At the top level, `::term` multi-specs dispatch
 ;; on values of the `::term` key in entities, values
 ;; like `::intent`, `::symbol`, `::unit`, etc.
-;; `Defmethods` for those values specify the
+;; `defmethods` for those values specify the
 ;; remaining required keys for the particular
-;; entities conforming to the particular
-;; `defmethod`.
+;; entities conforming to the particular spec named
+;; by `::intent`, `::symbol`, `::unit`, etc.
 ;;
 ;;
 ;; Some `defmethods` like `::intent` are simple,
@@ -758,9 +858,10 @@
 
 
 ;;
-;; All multi-spec names in MASR, nested or not, begin
-;; with `::asr-...`, as in `::asr-term` (not nested)
-;; and `::asr-ttype-head` (nested in ttypes).
+;; The names of all multi-specs in MASR, nested or
+;; not, begin with `::asr-...`, as in
+;; `::asr-term` (not nested) and
+;; `::asr-ttype-head` (nested in `ttypes`).
 ;;
 ;;
 ;; #+begin_src clojure
@@ -821,7 +922,7 @@
 ;;
 ;; Each term, like symbol, needs its own spec, named
 ;; by a qualified keyword like `::symbol`. MASR
-;; recursively checks specs when entity keys like
+;; recursively check specs when entity keys like
 ;; `::symbol` have their own specs or multi-specs.
 ;; Said another way, recursive conformance means
 ;; that `::symbol` fields in other entities are
@@ -840,9 +941,9 @@
 
 
 (defmacro def-term-entity-key
-  "Define spec for entity key like ::symbol or
+  "Define a spec for an entity key like ::symbol or
   ::expr, which is an ::asr-term, a top-level
-  production in the grammar."
+  production in the ASDL grammar."
   [term]
   (let [ns "masr.specs"
         tkw (keyword ns (str term))]
@@ -871,28 +972,21 @@
 ;; implementation of `defmasrnested` unless you are
 ;; maintaining it. The macro is tricky to understand
 ;; due mostly to Clojure's implicit insertion and
-;; deletion of namespaces . Implicit namespacing is
-;; a good design, overall, but we must step around
-;; it when necessary via Clojure's built-in `name`
-;; function.
+;; deletion of namespaces in macros. Implicit
+;; namespacing is a good design, overall, but we
+;; must step around it when necessary via Clojure's
+;; built-in `name` function.
 ;;
 ;;
 ;; #+begin_src clojure
 
 (defmacro defmasrnested
-  "Define specs for terms with nested multi-specs,
-  like ::expr, ::symbol, ::ttype, ::stmt. Also define
-  the defmulti's for the nested multi-specs themselves.
-
-  Automate constructions like the following, which
+  "Automate constructions like the following, which
   pertain to certain ::term specs that have nested
   multi-specs like ::expr, ::symbol, ::stmt, etc.
-  There is a lot of duplicated wordage like expr,
-  term, and head, in the constructions. The macro
-  eliminates this duplication. Right after the
-  definition of the macro are several examples of
-  its usage, one for each term in the grammar that
-  has a nested multi-spec.
+  The only pertinent token is `expr`, `symbol`, etc.,
+  and this macro mitigates the repetition of that
+  token.
 
       (defmethod term ::expr [_]
         (s/keys :req [::term
@@ -906,11 +1000,11 @@
   [term]
   (let [ns "masr.specs"
         ttrm (keyword ns "term") ;; e.g. ::term
-        tcst (symbol "term")     ;; e.g. term (no ns!?!)
+        tcst (symbol "term")     ;; e.g. term (no ns)
 
         tstr (str term)          ;; e.g. "expr"
         tkwd (keyword ns tstr)   ;; e.g. ::expr
-        tsym (symbol (name (symbol tstr))) ;; e.g. expr -- caution
+        tsym (symbol (name (symbol tstr))) ;; e.g. expr
 
         estr (str term "-head")  ;; e.g. "expr-head"
         ekwd (keyword ns estr)   ;; e.g. ::expr-head
@@ -919,12 +1013,18 @@
         ;; e.g. ::asr-expr-head
         akwd (keyword ns (str "asr-" (name term) "-head"))
         ]
-    `(do (defmethod ~tcst ~tkwd [_#]
+    ;; e.g.          term  ::expr  [_]
+    `(do (defmethod ~tcst ~tkwd    [_#]
+           ;; e.g.      ::term ::asr-expr-head
            (s/keys :req [~ttrm ~akwd]))
+         ;; e.g.               expr
          (def-term-entity-key ~tsym) ;; caution
-         (defmulti ~esym ~ekwd)
+         ;; e.g.    expr-head ::expr-head
+         (defmulti ~esym       ~ekwd)
+         ;; e.g. ::asr-expr-head
          (s/def ~akwd
-           (s/multi-spec ~esym ~ekwd))
+           ;; e.g.        expr-head ::expr-head
+           (s/multi-spec ~esym       ~ekwd))
          )))
 ;; #+end_src
 
@@ -961,8 +1061,8 @@
   ::asr-symbol-head nested multi-spec, again
   eliminating duplicated wordage.
 
-  From a term, e.g., symbol, and head, e.g., Variable,
-  generate a spec s/def like
+  From a term, e.g., `symbol`, and head, e.g., `Variable`,
+  generate a spec `s/def` like
 
       (s/def ::Variable               ;; head entity key
         (s/and ::asr-term             ;; top multi-spec
@@ -970,8 +1070,8 @@
               (-> % ::asr-symbol-head ;; nested multi-spec
                     ::symbol-head)))) ;; tag fetcher
 
-  From term \"stmt\", and head \"Assignment\", generate
-  a spec s/def like
+  From term `stmt`, and head `Assignment`, generate
+  a spec `s/def` like
 
       (s/def ::Assignment             ;; head entity key
         (s/and ::asr-term             ;; top multi-spec
@@ -979,8 +1079,7 @@
               (-> % ::asr-stmt-head   ;; nested multi-spec
                     ::stmt-head       ;; tag fetcher"
   [term, ;; e.g. symbol
-   head  ;; e.g. Variable
-   ]
+   head] ;; e.g. Variable
   (let [ns "masr.specs"
         trm (keyword ns "term")     ;; e.g. ::term
         art (keyword ns "asr-term") ;; e.g. ::asr-term
@@ -989,8 +1088,12 @@
         amh (keyword ns ;; for the multi-spec
                      ;; e.g. ::asr-symbol-head
                      (str "asr-" term "-head"))]
+    ;; e.g.  ::Variable
     `(s/def ~hkw
-       (s/and ~art #(= ~hkw (-> % ~amh ~tmh))))))
+       ;; e.g. ::asr-term
+       (s/and ~art
+              ;;   ::Variable ::asr-symbol-head ::symbol-head
+              #(= ~hkw (-> % ~amh ~tmh))))))
 ;; #+end_src
 
 
@@ -1011,7 +1114,9 @@
 ;; `defmasrtype` creates both (1) the specs for
 ;; particular heads like `Variable` and `Assignment`,
 ;; and (2) a function, `->asdl-type`, that extracts
-;; the ASDL type from any instance hash-map.
+;; the ASDL type from any instance hash-map. We
+;; present the extraction code first ("define" before
+;; "use"):
 ;;
 
 ;; ----------------------------------------------------------------
@@ -1065,7 +1170,7 @@
 ;; #+begin_src clojure
 
 (defmacro defmasrtype
-  "Get rid of repetition in an expression like
+  "Get rid of repetition in expressions like
 
       (defmethod stmt->asdl-type ::Assignment
           [{::keys [stmt-head     ;; symbol-binding list
@@ -1140,9 +1245,13 @@
 
 
 ;;
+;; Undone Work-in-Progress
+;;
+
+;;
 ;; The function `->asdl-type` relies on multimethods
 ;; for nested multi-specs. The multimethods dispatch
-;; on the _head_ keys of each multi-spec, like
+;; on the _head_ keys of each multi-spec, keys like
 ;; `::symbol-head` and `::expr-head`.
 ;;
 ;;
@@ -1187,6 +1296,10 @@
 ;;
 ;; # ADD NEW DEFINITIONS HERE
 ;;
+;;
+
+;;
+;; Fill out implementations later.
 ;;
 
 ;; ----------------------------------------------------------------
@@ -1816,12 +1929,13 @@
 
 ;;
 ;; TODO: ASDL output from `--show-asr` currently
-;; requires moving colons from the backs of keywords to
-;; the front. That is necessary because colons at the
-;; back fail the Clojure reader. We have a `sed` script
-;; for that: `fix-show-asr.sed`. The script also
-;; converts ASDL's `.false.` to `false` and `.true.` to
-;; `true`, but that could be done at the Clojure level.
+;; requires moving colons from the backs of keywords
+;; to the front. That is necessary because colons at
+;; the back fail the Clojure reader. We have a `sed`
+;; script for moving colons: `fix-show-asr.sed`. The
+;; script also replaces illegal characters like `@`
+;; and `~` and converts ASDL's `.false.` to `false`
+;; and `.true.` to `true`.
 ;;
 ;;
 ;; Here is `fix-show-asr.sed`:
@@ -1838,11 +1952,17 @@
 ;;
 ;; The function `rewrite-for-legacy` converts `=`
 ;; into `Assignment` in a whole tree and converts
-;; nested call syntax into vectors. `eval`, in the
-;; namespace `masr.specs`, applies all the sugar
-;; functions to an expression. Call `to-full-form`
-;; to do that. The `legacy` macro simply quotes a
-;; whole sugared expression.
+;; unwanted nested call syntax into vectors. `eval`,
+;; in the namespace `masr.specs`, applies all the
+;; sugar functions to an expression. Call
+;; `to-full-form` to do both. The `legacy` macro
+;; simply quotes a whole sugared expression before
+;; feeding it to `to-full-form`.
+;;
+;; NOTE: This recursive, top-down evaluation
+;; strategy fails a Java code-size limitation for
+;; large sugar expressions. The mitigation requires
+;; an idempotent, bottom-up evaluation strategy.
 ;;
 ;; #+begin_src clojure
 
@@ -1889,7 +2009,8 @@
 
 ;;
 ;; The remaining sections of this document describe
-;; detailed implementations.
+;; detailed implementations of the sugar functions
+;; for the `defmasrtype`s.
 ;;
 
 
@@ -1905,7 +2026,8 @@
 ;; https://github.com/rebcabin/masr/issues/32
 ;; `call-arg` intentionally introduces a level of
 ;; nesting to a list of actual arguments to a
-;; function call or subroutine call.
+;; function call or subroutine call. We spec the
+;; extra nesting as a collection of length one.
 ;;
 ;;
 ;; ## Original ASDL
@@ -1934,8 +2056,9 @@
 ;;
 ;;
 ;; Examples can't be executed until `expr?` is
-;; defined. See discussion in `SubroutineCall.`
-
+;; defined. See the first example in in
+;; `SubroutineCall.`
+;;
 
 ;;
 ;;
@@ -1958,10 +2081,10 @@
 ;; ```
 ;;
 ;;
-;; The ASDL is imprecise. The real spec, realized only
-;; in secret C++ code, is that we have either both
-;; `start` and `length` or we just have nothing. MASR
-;; makes exposes this secret explicitly.
+;; The ASDL is imprecise. The real spec, realized
+;; only in secret C++ code, is that we have either
+;; both `start` and `length` or we have nothing.
+;; MASR makes exposes this secret explicitly.
 ;;
 
 ;;
@@ -1972,7 +2095,7 @@
 ;;
 ;; The next spec says that a `::dimension-content` is
 ;; a collection of `::nat` with either two or zero
-;; elements. TODO Consider a regex-spec.
+;; elements.
 ;;
 ;;
 ;; #+begin_src clojure
@@ -1985,7 +2108,7 @@
    (s/coll-of ::nat
               :min-count MIN-DIMENSION-COUNT,
               :max-count MAX-DIMENSION-COUNT,
-              :into ())
+              :into [])
    (fn [it] (not (= 1 (count it))))))
 ;; #+end_src
 
@@ -2018,7 +2141,8 @@
 ;; #+end_src
 
 ;;
-;; This spec can generate samples.
+;; This spec can generate samples. TODO: Samples are
+;; not fleshed out in general.
 ;;
 ;;
 ;; #+begin_src clojure
@@ -2042,7 +2166,8 @@
     ::invalid-dimension ;; return this,
     ;; else
     {::term ::dimension,
-     ::dimension-content candidate-contents}
+     ;; `vec` for idempotency
+     ::dimension-content (vec candidate-contents)}
     ))
 ;; #+end_src
 
@@ -2053,7 +2178,9 @@
 ;;
 ;;
 
-
+;;
+;; Convert lists to vectors on-the-fly.
+;;
 ;; #+begin_src clojure
 
 (s/def ::dimension*
@@ -2089,7 +2216,8 @@
         (let [dims-cont (map
                          ::dimension-content
                          dims-coll)]
-          (map dimension dims-cont))
+          ;; `vec` for idempotency
+          (vec (map dimension dims-cont)))
         ::invalid-dimension*))))
 ;; #+end_src
 
@@ -2103,12 +2231,13 @@
 
 ;;
 ;; In ASDL, `symbol_table` sometimes means a
-;; `SymbolTable` and sometimes means an integer id of a
-;; `SymbolTable` that is specified elsewhere. MASR does
-;; better. MASR `->asdl-type` projects both of these
-;; types, `SymbolTable` and `symtab-id`, back into ASDL
-;; `symbol_table`, with its secret proviso. MASR
-;; exposes the secret. ASDL embraces the secret.
+;; `SymbolTable` and sometimes means an integer id
+;; of a `SymbolTable` that is specified elsewhere.
+;; MASR does better. MASR `->asdl-type` projects
+;; both of these types, `SymbolTable` and
+;; `symtab-id`, back into ASDL `symbol_table`, with
+;; its secret proviso. MASR exposes the secret,
+;; whilst ASDL embraces the secret.
 ;;
 ;;
 ;; #+begin_src clojure
@@ -2172,12 +2301,12 @@
 
 
 ;;
-;; Many ASDL types are like enums: they are just a
-;; set of alternative symbols, without parentheses
-;; and without parameters _qua_ arguments. Example:
-;; ASDL `access` has two possibilities: `Public`
-;; and `Private`. MASR automates all of enum-likes
-;; via one macro, `enum-like`.
+;; Many ASDL types are like enums: a set of
+;; alternative symbols, without parentheses and
+;; without parameters _qua_ arguments. Example: ASDL
+;; `access` has two possibilities: `Public` and
+;; `Private`. MASR automates all enum-likes via
+;; one macro, `enum-like`.
 ;;
 
 ;;
@@ -2186,26 +2315,18 @@
 ;;
 ;; #+begin_src clojure
 
-(defmacro symbolate
-  "ASDL Back-Channel: create unquoted constants such as
-  Local for 'Local."
-  [a-set-syms]
-  (let [a-set (eval a-set-syms)
-        cmds (for [e a-set] (list 'def e `'~e))]
-    `(list ~@cmds)))
-;; #+end_src
-
-;; #+begin_src clojure
-
 (defmacro legacicate
   "ASDL Back-Channel: create legacy function-calls
   for each constant, such as Local for (intent 'Local).
   This works only because all heads are unique -- no
   collisions in ASR."
   [term,       ;; e.g. intent
-   a-set-syms] ;; e.g. #{Local, In, Out, ,,,}
+   a-set-syms] ;; e.g. #{"Local", "In", "Out", ,,,}
+               ;; or a variable referring to a set,
+               ;; ... so must evaluate it
   (let [a-set (eval a-set-syms)
-        cmds  (for [e a-set] (list 'def e `(~term '~e)))]
+        cmds  (for [e a-set]
+                (list 'def (symbol e) `(~term ~e)))]
     `(list ~@cmds)))
 ;; #+end_src
 
@@ -2221,26 +2342,28 @@
   ::asr-term. Add an entity-key spec like ::intent,
   and a heavy sugar function like intent."
   [term, heads]
-  (let [ns "masr.specs"                         ;; -- Examples --
-        trm (keyword ns "term")                 ;; ::term
-        art (keyword ns "asr-term")             ;; ::asr-term
-        tkw (keyword ns (str term))             ;; ::intent
-        tke (keyword ns (str term "-enum"))     ;; ::intent-enum
-        ]
+  (let [ns "masr.specs"                      ;; -- Examples --
+        trm (keyword ns "term")              ;; ::term
+        art (keyword ns "asr-term")          ;; ::asr-term
+        tkw (keyword ns (str term))          ;; ::intent
+        tke (keyword ns (str term "-enum"))] ;; ::intent-enum
     `(do
-       (s/def ~tke ~heads)
-       ;; for the multi-spec
-       (defmethod term ~tkw [_#]
+       ;; e.g. ::intent-enum #{'Local, 'In, ...}
+       (s/def ~tke           ~heads)
+       ;; e.g.    intent ::intent [_]
+       (defmethod term   ~tkw     [_#]
          (s/keys :req [~trm ~tke]))
-       ;; the entity-key spec
-       (s/def ~tkw ;; e.g. ::intent
+       (s/def ~tkw ;; e.g. ::intent, the entity-key spec
          (s/and ~art ;; e.g. ::asr-term, i.e., the multi-spec
                 ;; e.g. the predicate #(= ::intent (::term %))
                 (term-selector-spec ~tkw)))
-       (defn ~term [it#] ;; the sugar
+       ;; e.g. defn intent [it], the sugar function
+       (defn ~term [it#]
+         ;; e.g. ::term ::intent
          {~trm ~tkw
+          ;; e.g. ::intent-enum it
           ~tke it#})
-       #_(symbolicate ~heads)
+       ;; e.g. (def Local {::term ::intent "Local") ...
        (legacicate ~term ~heads)
        )))
 ;; #+end_src
@@ -2252,23 +2375,23 @@
 
 ;; #+begin_src clojure
 
-(def logical-binops #{'And  'Or  'Xor  'NEqv  'Eqv})
-(def real-binops    #{'RAdd 'RSub 'RMul 'RDiv 'RPow})
-(def complex-binops #{'CAdd 'CSub 'CMul 'CDiv 'CPow})
-(def integer-binops #{'Add 'Sub 'Mul 'Div 'Pow
-                      'BitAnd 'BitOr 'BitXor
-                      'BitLShift 'BitRShift})
+(def logical-binops #{"And"  "Or"  "Xor"  "NEqv"  "Eqv"})
+(def real-binops    #{"RAdd" "RSub" "RMul" "RDiv" "RPow"})
+(def complex-binops #{"CAdd" "CSub" "CMul" "CDiv" "CPow"})
+(def integer-binops #{"Add" "Sub" "Mul" "Div" "Pow"
+                      "BitAnd" "BitOr" "BitXor"
+                      "BitLShift" "BitRShift"})
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(def logical-cmpops #{'LEq 'LNotEq
+(def logical-cmpops #{"LEq" "LNotEq"
                       ;; some weird ones: see Issue #38
-                      'LLt 'LLtE 'LGt 'LGtE})
-(def real-cmpops    #{'REq 'RNotEq 'RLt 'RLtE 'RGt 'RGtE})
-(def complex-cmpops #{'CEq 'CNotEq})
-(def integer-cmpops #{'Eq 'NotEq 'Lt 'LtE 'Gt 'GtE})
-(def string-cmpops  #{'SEq 'SNotEq 'SLt 'SLtE 'SGt 'SGtE})
+                      "LLt" "LLtE" "LGt" "LGtE"})
+(def real-cmpops    #{"REq" "RNotEq" "RLt" "RLtE" "RGt" "RGtE"})
+(def complex-cmpops #{"CEq" "CNotEq"})
+(def integer-cmpops #{"Eq" "NotEq" "Lt" "LtE" "Gt" "GtE"})
+(def string-cmpops  #{"SEq" "SNotEq" "SLt" "SLtE" "SGt" "SGtE"})
 (def all-cmpops     (set/union logical-cmpops
                                real-cmpops
                                complex-cmpops
@@ -2316,24 +2439,24 @@
 
 ;; #+begin_src clojure
 
-(enum-like intent        #{'Local 'In 'Out 'InOut 'ReturnVar
-                           'Unspecified})
-(enum-like storage-type  #{'Default, 'Save, 'Parameter, 'Allocatable})
-(enum-like access        #{'Public 'Private})
-(enum-like presence      #{'Required 'Optional})
-(enum-like deftype       #{'Implementation, 'Interface})
-(enum-like arraybound    #{'LBound 'UBound})
-(enum-like arraystorage  #{'RowMajor 'ColMajor})
-(enum-like cast-kind     #{'RealToInteger       'IntegerToReal
-                           'LogicalToReal       'RealToReal
-                           'IntegerToInteger    'RealToComplex
-                           'IntegerToComplex    'IntegerToLogical
-                           'RealToLogical       'CharacterToLogical
-                           'CharacterToInteger  'CharacterToList
-                           'ComplexToLogical    'ComplexToComplex
-                           'ComplexToReal       'ComplexToInteger
-                           'LogicalToInteger    'RealToCharacter
-                           'IntegerToCharacter  'LogicalToCharacter})
+(enum-like intent        #{"Local" "In" "Out" "InOut" "ReturnVar"
+                           "Unspecified"})
+(enum-like storage-type  #{"Default", "Save", "Parameter", "Allocatable"})
+(enum-like access        #{"Public" "Private"})
+(enum-like presence      #{"Required" "Optional"})
+(enum-like deftype       #{"Implementation", "Interface"})
+(enum-like arraybound    #{"LBound" "UBound"})
+(enum-like arraystorage  #{"RowMajor" "ColMajor"})
+(enum-like cast-kind     #{"RealToInteger"       "IntegerToReal"
+                           "LogicalToReal"       "RealToReal"
+                           "IntegerToInteger"    "RealToComplex"
+                           "IntegerToComplex"    "IntegerToLogical"
+                           "RealToLogical"       "CharacterToLogical"
+                           "CharacterToInteger"  "CharacterToList"
+                           "ComplexToLogical"    "ComplexToComplex"
+                           "ComplexToReal"       "ComplexToInteger"
+                           "LogicalToInteger"    "RealToCharacter"
+                           "IntegerToCharacter"  "LogicalToCharacter"})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -2347,10 +2470,10 @@
 ;; #+begin_src clojure
 
 (def external-abis
-  #{'LFortranModule, 'GFortranModule,
-    'BindC, 'Interactive, 'Intrinsic})
+  #{"LFortranModule", "GFortranModule",
+    "BindC", "Interactive", "Intrinsic"})
 
-(def internal-abis #{'Source})
+(def internal-abis #{"Source"})
 
 (s/def ::abi-enum (set/union external-abis internal-abis))
 
@@ -2366,7 +2489,7 @@
 (defmethod term ::abi [_]
   (s/with-gen
     (s/and
-     #(iff (= 'Source (::abi-enum %)) (not (::abi-external %)))
+     #(iff (= "Source" (::abi-enum %)) (not (::abi-external %)))
      (s/keys :req [::term ::abi-enum ::abi-external]))
     (fn []
       (tgen/one-of
@@ -2392,7 +2515,7 @@
   ;; unary --- default "external"
   ([the-enum]
    (abi the-enum
-        :external (not (= the-enum 'Source))))
+        :external (not (= the-enum "Source"))))
   ;; binary --- invalid
   ([the-enum, crap]
    ::invalid-abi)
@@ -2412,12 +2535,12 @@
 ;;
 ;; #+begin_src clojure
 
-(def LFortranModule (abi 'LFortranModule :external true))
-(def GFortranModule (abi 'GFortranModule :external true))
-(def BindC          (abi 'BindC          :external true))
-(def Interactive    (abi 'Interactive    :external true))
-(def Intrinsic      (abi 'Intrinsic      :external true))
-(def Source         (abi 'Source         :external false))
+(def LFortranModule (abi "LFortranModule" :external true))
+(def GFortranModule (abi "GFortranModule" :external true))
+(def BindC          (abi "BindC"          :external true))
+(def Interactive    (abi "Interactive"    :external true))
+(def Intrinsic      (abi "Intrinsic"      :external true))
+(def Source         (abi "Source"         :external false))
 ;; #+end_src
 
 
@@ -2518,12 +2641,12 @@
 
 ;; #+begin_src clojure
 
-(s/def ::len                  ::int)   ;; Issues #36
-(s/def ::disposition          #{'compile-time-length   ;; >= 0
-                       'inferred-at-run-time  ;; = -1
-                       'allocatable           ;; = -2
-                       'run-time-expression}) ;; = -3
-(s/def ::len-expr?            ::expr?) ;; TODO: check that it's >= 0
+(s/def ::len         ::int)   ;; Issues #36
+(s/def ::disposition #{"compile-time-length"   ;; >= 0
+                       "inferred-at-run-time"  ;; = -1
+                       "allocatable"           ;; = -2
+                       "run-time-expression"}) ;; = -3
+(s/def ::len-expr?   ::expr?) ;; TODO: check that it's >= 0
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -2719,10 +2842,10 @@
      ::character-kind kind
      ::len            len
      ::disposition
-     (cond (>= len  0) 'compile-time-length
-           (=  len -1) 'inferred-at-run-time
-           (=  len -2) 'allocatable
-           (=  len -3) 'run-time-expression)
+     (cond (>= len  0) "compile-time-length"
+           (=  len -1) "inferred-at-run-time"
+           (=  len -2) "allocatable"
+           (=  len -3) "run-time-expression")
      ::len-expr?      len-expr?
      ::dimension*     (dimension* dims)
      }})
@@ -3445,21 +3568,24 @@
   ;; heptenary
   ([stid, ident, orig-symref,
     args, rettype, value?, dt?]
-   `(FunctionCall-- (symbol-ref '~ident ~stid)
-                    ~orig-symref
-                    ~args
-                    ~rettype
-                    ~value?
-                    ~dt?))
+   (let [i_ident (str ident)]
+    `(FunctionCall-- (symbol-ref ~i_ident ~stid)
+                     ~orig-symref
+                     ~args
+                     ~rettype
+                     ~value?
+                     ~dt?)))
   ;; octenary
-  ([stid, ident, ostid, oident,
+  ([stid, ident, ostid, odent,
     args, rettype, value?, dt?]
-   `(FunctionCall-- (symbol-ref '~ident, ~stid)
-                    (symbol-ref '~oident, ~ostid)
-                    ~args
-                    ~rettype
-                    ~value?
-                    ~dt?)))
+   (let [i_ident (str ident)
+         i_odent (str odent)]
+    `(FunctionCall-- (symbol-ref '~i_ident, ~stid)
+                     (symbol-ref '~i_odent, ~ostid)
+                     ~args
+                     ~rettype
+                     ~value?
+                     ~dt?))))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3509,7 +3635,7 @@
   {::term ::expr,
    ::asr-expr-head
    {::expr-head           ::IntrinsicFunction
-    ::intrinsic-ident     intrinsic-ident
+    ::intrinsic-ident     (str intrinsic-ident)
     ::expr*               expr*
     ::overload-id         overload-id
     ::return-type         return-type
@@ -3526,9 +3652,10 @@
   "Quote the intrinsic identifier."
   [intrinsic-ident    expr*    overload-id
    return-type        value?]
-  `(IntrinsicFunction--
-    '~intrinsic-ident, ~expr*, ~overload-id,
-    ~return-type,      ~value?))
+  (let [i_ident (str intrinsic-ident)]
+    `(IntrinsicFunction--
+      ~i_ident,     ~expr*, ~overload-id,
+      ~return-type, ~value?)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3730,7 +3857,7 @@
    ::asr-expr-head
    {::expr-head  ::Var
     ::symtab-id  stid
-    ::varnym     ident
+    ::varnym     (str ident)
     }})
 ;; #+end_src
 
@@ -3740,7 +3867,8 @@
 ;; #+begin_src clojure
 
 (defmacro Var [stid, unquoted-ident]
-  `(Var-- ~stid '~unquoted-ident))
+  (let [i_ident (str unquoted-ident)]
+   `(Var-- ~stid ~i_ident)))
 ;; #+end_src
 
 ;;
@@ -3803,7 +3931,8 @@
    ::asr-expr-head
    {::expr-head ::ArrayItem
     ::array-expr      array-expr
-    ::array-index*    (map array-index array-index*)
+    ;; `vec` for idempotency
+    ::array-index*    (vec (map array-index array-index*))
     ::ttype           ttype
     ::array-storage   array-storage
     ::expr?           expr?
@@ -4837,7 +4966,8 @@
 ;; #+begin_src clojure
 
 (defmacro GoTo [goto-target identifier]
-  `(GoTo-- ~goto-target '~identifier))
+  (let [i_ident (str identifier)]
+   `(GoTo-- ~goto-target ~i_ident)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5108,18 +5238,10 @@
 ;; #+begin_src clojure
 
 #_
-(SubroutineCall
-   7 test_fn1
-   ()
-   []
-   ())
+(SubroutineCall  7 test_fn1  ()  []  ())
 
 #_
-(SubroutineCall
-   7 test_fn1
-   ()
-   ((Var 42 i))
-   ())
+(SubroutineCall  7 test_fn1  ()  ((Var 42 i))  ())
 ;; #+end_src
 
 ;;
@@ -5146,12 +5268,15 @@
 
 (defmacro SubroutineCall
   [stid, ident, orig-symref, args, dt?]
-  `(SubroutineCall-- (symbol-ref '~ident ~stid)
-                     ~orig-symref
-                     ;; Took a while to find this ...
-                     ;; (map vec ~args) does not work!
-                     (map (fn [a#] [a#]) ~args)
-                     ~dt?));; #+end_src
+  (let [i_ident (str ident)]
+    `(SubroutineCall--
+      (symbol-ref ~i_ident ~stid)
+      ~orig-symref
+      ;; Took a while to find this ...
+      ;; `(map vec ~args)` does not work!
+      ;; outer `vec` for idempotency
+      (vec (map (fn [a#] [a#]) ~args))
+      ~dt?))) ;; #+end_src
 
 ;; ----------------------------------------------------------------
 ;; ## BLOCK CALL
@@ -5197,9 +5322,10 @@
 (defmacro BlockCall
   [label,
    stid ident]
-  `(BlockCall--
-    ~label
-    (symbol-ref '~ident ~stid)))
+  (let [i_ident (str ident)]
+   `(BlockCall--
+     ~label
+     (symbol-ref ~i_ident ~stid))))
 ;; #+end_src
 
 
@@ -5271,11 +5397,9 @@
 (defmacro Program
   "Quote the nym and the dependencies."
   [stab, nym, deps, body-]
-  `(Program--
-    ~stab,
-    '~nym,
-    (for [e# '~deps] e#),
-    ~body-))
+  (let [i_nym (str nym)
+        i_deps (vec (map str deps))]
+   `(Program--  ~stab,  ~i_nym,  ~i_deps,  ~body-)))
 ;; #+end_src
 
 
@@ -5319,13 +5443,11 @@
 (defmacro Module
   "Quote the mondnym and the deps."
   [symtab, modnym, deps, loaded, intrinsic-]
-  (let [quotes (vec (for [d deps] `'~d))]
+  (let [i_modnym (str modnym)
+        i_strss (vec (map str deps))]
     `(Module--
-      ~symtab
-      '~modnym
-      ~quotes
-      ~loaded
-      ~intrinsic-)))
+      ~symtab  ~i_modnym  ~i_strss
+      ~loaded  ~intrinsic-)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5392,17 +5514,19 @@
 ;; #+begin_src clojure
 
 (defmacro Function
-  "Quote the fnnym and the deps."
+  "Stringuluate the fnnym and the deps."
   [symtab,
    fnnym,   fnsig,  deps,
    param*-, body-,  retvar?,
    access-, determ, sefree]
-  `(Function-- ~symtab,
-               '~fnnym,  ~fnsig,  (for [d# '~deps] d#),
-               ~param*-,
-               ~body-,  ;; <~~~ iterate over the statements inside
-               ~retvar?,
-               ~access-, ~determ, ~sefree))
+  (let [i_fnnym (str fnnym)
+        i_deps  (vec (map str deps))]
+   `(Function-- ~symtab,
+                ~i_fnnym,  ~fnsig,  ~i_deps
+                ~param*-,
+                ~body-, ;; <~~~ iterate over the statements inside
+                ~retvar?,
+                ~access-, ~determ, ~sefree)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5459,12 +5583,13 @@
 (defmacro GenericProcedure
   [stid, fnym, naked-pairs, access]
   (let [pairs (partition 2 naked-pairs)
-        fpairs (for [[fid fnym] pairs]
-                 (symbol-ref fnym fid) )]
+        fpairs (vec (for [[fid fnym] pairs]
+                      (symbol-ref (str fnym) fid)))
+        i_fnym (str fnym)]
     `(GenericProcedure--
       ~stid
-      '~fnym
-      '~fpairs
+      ~i_fnym
+      ~fpairs
       ~access)))
 ;; #+end_src
 
@@ -5493,14 +5618,10 @@
 
 #_
 (ExternalSymbol
- 5
- _lpython_main_program
+ 5 _lpython_main_program
  7 _lpython_main_program   ;; either () or a naked pair
- _global_symbols
- []
- _lpython_main_program
- Public
- )
+ _global_symbols    []
+ _lpython_main_program    Public)
 ;; #+end_src
 
 ;;
@@ -5538,28 +5659,27 @@
 (defmacro ExternalSymbol
   ([stid, nym,
     orig-symref-stid, orig-symref-ident,
-    modnym, scope-nyms, orig-nym,
-    access]
+    modnym, scope-nyms, orig-nym, access]
    "octenary"
-   `(ExternalSymbol--
-     ~stid, '~nym,
-     (symbol-ref '~orig-symref-ident, ~orig-symref-stid),
-     '~modnym,
-     ~scope-nyms, ;; TODO: distribute quote?
-     '~orig-nym
-     ~access))
-  ([stid, nym,
-    empty-symref,
-    modnym, scope-nyms, orig-nym,
-    access]
+   (let [i_nym    (str nym)
+         i_oid    (str orig-symref-ident)
+         i_modnym (str modnym)
+         i_onym   (str orig-nym)
+         i_snyms  (vec (map str scope-nyms))]
+    `(ExternalSymbol--
+      ~stid, ~i_nym,
+      (symbol-ref ~i_oid, ~orig-symref-stid),
+      ~i_modnym,  ~i_snyms,  ~i_onym,  ~access)))
+  ([stid, nym, empty-symref,
+    modnym, scope-nyms, orig-nym, access]
    "heptenary"
-   `(ExternalSymbol--
-     ~stid, '~nym,
-     ~empty-symref,
-     '~modnym,
-     ~scope-nyms, ;; TODO: distribute quote?
-     '~orig-nym
-     ~access)))
+   (let [i_nym (str nym)
+         i_modnym (str modnym)
+         i_onym   (str orig-nym)
+         i_snyms  (vec (map str scope-nyms))]
+     `(ExternalSymbol--
+            ~stid, ~i_nym, ~empty-symref,
+            ~i_modnym,  ~i_snyms,  ~i_onym,  ~access))))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5625,11 +5745,11 @@
              ]
       :or {type-declaration nil
            dependencies     #{}
-           intent           (intent 'Local)
+           intent           (intent "Local")
 
            symbolic-value   ()
            value?           ()
-           storage-type     (storage-type 'Default)
+           storage-type     (storage-type "Default")
 
            abi              Source
            access           Public
@@ -5672,39 +5792,40 @@
    symbolic-value-,    value?-,        storage-type-,
    abi-,               access-,        presence-,
    value-attr-]
-  {::term              ::symbol,
-   ::asr-symbol-head
-   {::symbol-head      ::Variable,
+  (let [i_varnym (str varnym-)]
+   {::term              ::symbol,
+    ::asr-symbol-head
+    {::symbol-head      ::Variable,
 
-    ::symtab-id        symtab-id-,
-    ::varnym           varnym-,
-    ::ttype            ttype-, ;; already wrapped!
+     ::symtab-id        symtab-id-,
+     ::varnym           i_varnym,
+     ::ttype            ttype-, ;; already wrapped!
 
-    ;; https://github.com/rebcabin/masr/issues/28
-    ::type-declaration typedecl-
-    ::dependencies     dependencies-,
-    ::intent           (if (symbol? intent-)
-                         (intent  intent-)
-                         intent-),
+     ;; https://github.com/rebcabin/masr/issues/28
+     ::type-declaration typedecl-
+     ::dependencies     dependencies-,
+     ::intent           (if (symbol? intent-)
+                          (intent  intent-)
+                          intent-),
 
-    ::symbolic-value   symbolic-value-,
-    ::value?           value?-,
-    ::storage-type     (if (symbol? storage-type-)
-                         (storage-type storage-type-)
-                         storage-type-),
+     ::symbolic-value   symbolic-value-,
+     ::value?           value?-,
+     ::storage-type     (if (symbol? storage-type-)
+                          (storage-type storage-type-)
+                          storage-type-),
 
-    ::abi              (if (symbol? abi-)
-                         (abi abi-)
-                         abi-),
-    ::access           (if (symbol? access-)
-                         (access access-)
-                         access-),
-    ::presence         (if (symbol? presence-)
-                         (presence presence-)
-                         presence-),
+     ::abi              (if (symbol? abi-)
+                          (abi abi-)
+                          abi-),
+     ::access           (if (symbol? access-)
+                          (access access-)
+                          access-),
+     ::presence         (if (symbol? presence-)
+                          (presence presence-)
+                          presence-),
 
-    ::value-attr       value-attr-,
-    }})
+     ::value-attr       value-attr-,
+     }}))
 ;; #+end_src
 
 ;;
@@ -5810,7 +5931,8 @@
 ;; #+begin_src clojure
 
 (defmacro IntrinsicModule [modnym]
-  `(IntrinsicModule-- '~modnym))
+  (let [i_modnym (str modnym)]
+   `(IntrinsicModule-- ~i_modnym)))
 ;; #+end_src
 
 ;;
@@ -5855,147 +5977,11 @@
 ;; #+begin_src clojure
 
 (defn TranslationUnit [stab, node-preimages]
-  (let [node-cnd (map node node-preimages)]
+  ;; `vec` for idempotency
+  (let [node-cnd (vec (map node node-preimages))]
     {::term          ::unit
      ::asr-unit-head
      {::unit-head    ::TranslationUnit
       ::SymbolTable  stab
       ::nodes        node-cnd}}))
-;; #+end_src
-
-
-;;
-;;
-;; # ANALYZERS
-;;
-;;
-
-
-;;
-;; Some ASR S-expressions are too large to compile,
-;; meaning too large for a Java method code
-;; block (64KB). We must analyze such by breaking
-;; them up. Experiment: Evaluation of some
-;; components with `prewalk` visitors.
-;;
-
-;;
-;; ## Visitor Pattern
-;;
-;; #+begin_src clojure
-
-(defmacro transform-when- [pred xfn item]
-  `(if (~pred ~item)
-     (~xfn ~item)
-     ~item))
-
-
-(defn transform-when [pred xfn item]
-  (transform-when- pred xfn item))
-
-
-(defn visitor [pred xform tree]
-  (prewalk
-   (partial transform-when pred xform)
-   tree))
-;; #+end_src
-
-;;
-;; ## Detector Predicates
-;;
-;; #+begin_src clojure
-
-(defn leaf-list? [item]
-  (and (list? item)
-       (empty? (->> item
-                    (filter coll?)
-                    (filter #(not (empty? %)))))))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defn dependencies-vector? [item]
-  (and (vector? item)
-       (every? symbol? item)))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defn symbol-ref? [item]
-  (and (::identifier item)
-       (::symtab-id  item)))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defn Character? [item]
-  (= ::Character (::ttype-head item)))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defn Var? [item]
-  (= ::Var (::expr-head item)))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defn ExternalSymbol? [item]
-  (= ::ExternalSymbol (::symbol-head item)))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defn sugar? [head]
-  #(and (list? %)
-        (= (first %) head)))
-;; #+end_src
-
-;;
-;; ## Evaluating Leaf Lists
-;;
-;; #+begin_src clojure
-
-(defn quote-value-of-key [key]
-  #(assoc-in % [key] `'~(key %)))
-
-
-(def quote-elements
-  #(vec (for [s %] `'~s)))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defn bottom-up-full-form [tree]
-  (plnecho
-   (->> tree
-        (visitor leaf-list?
-                 to-full-form)
-
-        (visitor dependencies-vector?
-                 quote-elements)
-
-        (visitor symbol-ref?
-                 (quote-value-of-key ::identifier))
-
-        (visitor Character?
-                 (quote-value-of-key ::disposition))
-
-        (visitor Var?
-                 (quote-value-of-key ::varnym))
-
-        (visitor ExternalSymbol?
-                 (quote-value-of-key ::nym))
-
-        (visitor ExternalSymbol?
-                 (quote-value-of-key ::modulenym))
-
-        (visitor ExternalSymbol?
-                 (quote-value-of-key ::orig-nym))
-
-        (visitor (sugar? 'Function)
-                 to-full-form)
-
-        #_to-full-form
-        )))
 ;; #+end_src

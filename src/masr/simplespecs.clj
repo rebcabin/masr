@@ -225,16 +225,16 @@
   (def alphameric?
     #(re-matches alphameric-re %))
 
-  (defn identifier? [sy]
-    (and (symbol? sy)  ;; exclude strings, numbers, quoted numbers
-         (let [s (str sy)]
-           (and (alpha? (subs s 0 1))
-                (alphameric? (subs s 1))))))
+  (defn identifier? [s]
+    (and (string? s)  ;; exclude symbols, numbers, quoted numbers
+         (not (zero? (count s)))
+         (alpha? (subs s 0 1))
+         (alphameric? (subs s 1))))
 
   (def identifier-generator
     (tgen/let [c (gen/char-alpha)
                s (gen/string-alphanumeric)]
-      (symbol (str c s))))
+      (str c s)))
 
   (s/def :masr.specs/identifier
     (s/with-gen
@@ -243,9 +243,10 @@
 
 
 (tests
- (s/valid? :masr.specs/identifier 'foobar)  := true
- (s/valid? :masr.specs/identifier '_f__547) := true
- (s/valid? :masr.specs/identifier '1234)    := false)
+ (s/valid? :masr.specs/identifier "")        := false
+ (s/valid? :masr.specs/identifier "foobar")  := true
+ (s/valid? :masr.specs/identifier "_f__547") := true
+ (s/valid? :masr.specs/identifier "1234")    := false)
 
 #_
 (gen/sample (s/gen :masr.specs/identifier))
@@ -258,15 +259,15 @@
 ;; -+-+-+-+-+-
 
 
-(defn identifier [sym]
-  (let [csym (s/conform :masr.specs/identifier sym)]
-    (if (s/invalid? csym)
+(defn identifier [str-]
+  (let [cstr- (s/conform :masr.specs/identifier str-)]
+    (if (s/invalid? cstr-)
       :masr.specs/invalid-identifier
-      csym)))
+      cstr-)))
 
 
 (tests
- (identifier 'foo) := 'foo
+ (identifier "foo") := "foo"
  (identifier 123)  := :masr.specs/invalid-identifier)
 
 
@@ -326,8 +327,8 @@
 
 
 (tests
- (s/valid? :masr.specs/identifier-set #{'a 'b}) := true
- (let [x (identifier-set ['a 'a])]
+ (s/valid? :masr.specs/identifier-set #{"a" "b"}) := true
+ (let [x (identifier-set ["a" "a"])]
    (s/valid? :masr.specs/identifier-set x)      := true
    (set?  x)                                    := true
    (count x)                                    := 1)
@@ -335,7 +336,7 @@
    (s/valid? :masr.specs/identifier-set x)      := true
    (set?  x)                                    := true
    (count x)                                    := 0)
- (let [x (identifier-set ['a '1])]
+ (let [x (identifier-set ["a" "1"])]
    (s/valid? :masr.specs/identifier-set x)      := false
    x := :masr.specs/invalid-identifier-set))
 
@@ -379,8 +380,8 @@
 
 
 (tests
- (s/valid? :masr.specs/identifier-list ['a 'a 'b]) := true
- (let [x (identifier-list ['a 'a])]
+ (s/valid? :masr.specs/identifier-list ["a" "a" "b"]) := true
+ (let [x (identifier-list ["a" "a"])]
    (s/valid? :masr.specs/identifier-list x)        := true
    (vector? x)                                     := true
    (count   x)                                     := 2)
@@ -388,7 +389,7 @@
    (s/valid? :masr.specs/identifier-list x)        := true
    (vector? x)                                     := true
    (count   x)                                     := 0)
- (let [x (identifier-list ['a '1])]
+ (let [x (identifier-list ["a" "1"])]
    (s/valid? :masr.specs/identifier-list x)        := false
    x := :masr.specs/invalid-identifier-list))
 
@@ -430,10 +431,10 @@
 
 
 (tests
- (let [x (identifier-suit ['a 'a])]
+ (let [x (identifier-suit ["a" "a"])]
    (s/valid? :masr.specs/identifier-suit x) := false
    (vector? x)                              := false)
- (let [x (identifier-suit ['a 'b])]
+ (let [x (identifier-suit ["a" "b"])]
    (s/valid? :masr.specs/identifier-suit x) := true
    (vector? x)                              := true
    (count   x)                              := 2)
@@ -441,6 +442,6 @@
    (s/valid? :masr.specs/identifier-suit x) := true
    (vector? x)                              := true
    (count   x)                              := 0)
- (let [x (identifier-suit ['a '1])]
+ (let [x (identifier-suit ["a" "1"])]
    (s/valid? :masr.specs/identifier-suit x) := false
    x  := :masr.specs/invalid-identifier-suit))
