@@ -9,7 +9,7 @@
             [clojure.pprint         :refer [pprint]]
             [clojure.set            :as    set     ]
             [clojure.walk           :refer [prewalk]]
-)
+            )
 
   (:require [blaster.clj-fstring    :refer [f-str ]]
             [camel-snake-kebab.core :as    csk     ])
@@ -31,6 +31,13 @@
 (warnings-banner)
 
 
+(defmacro idempotency-check [expr]
+  (let [ee expr] ;; eval'ed once
+   `(testing "idempotency"
+      (do (in-ns 'masr.specs)
+          (is (= ~ee (eval ~ee) (eval (eval ~ee))))))))
+
+
 ;;                 _
 ;;  _ _ _  _ _ __ | |__  ___ _ _ ___
 ;; | ' \ || | '  \| '_ \/ -_) '_(_-<
@@ -43,6 +50,7 @@
       toobig   0x8000000000000000
       biggishN 4200000000000N]
   (deftest nat-test
+    (idempotency-check (nat 42))
     (testing "raw nats"
       (is (s/valid? ::asr/bignat huge))
       (is (s/valid? ::asr/nat 42))
@@ -92,12 +100,6 @@
                      (nat)))))
 ))
 
-#_
-(gen/sample (s/gen ::asr/nat) 15)
-;; => (1 0 58 0 12
-;;     0 3751 13 185743679156 4
-;n;     9 758 2475515847708 30 474561204531338)
-
 
 ;;     _ _                   _
 ;;  __| (_)_ __  ___ _ _  __(_)___ _ _
@@ -106,6 +108,10 @@
 
 
 (deftest dimension-test
+  (idempotency-check (dimension '(1 60)))
+  (idempotency-check (dimension [1 60]))
+  (idempotency-check (dimension ()))
+  (idempotency-check (dimension []))
   (testing "better syntax"
     (is (s/valid? ::asr/asr-term (dimension '(1 60))))
     (is (s/valid? ::asr/asr-term (dimension [1 60])))
@@ -188,24 +194,6 @@
              (s/conform ::asr/dimension fullform))))
     ))
 
-#_
-(dimension '(1 60))
-;; => #:masr.specs{:term :masr.specs/dimension, :dimension-content (1 60)}
-
-#_
-(let [gen (s/gen (term-selector-spec ::asr/dimension))]
-  (gen/sample gen 10))
-;; => (#::asr{:term ::asr/dimension, :dimension-content (1 2)}
-;;     #::asr{:term ::asr/dimension, :dimension-content ()}
-;;     #::asr{:term ::asr/dimension, :dimension-content (0)}
-;;     #::asr{:term ::asr/dimension, :dimension-content (11)}
-;;     #::asr{:term ::asr/dimension, :dimension-content ()}
-;;     #::asr{:term ::asr/dimension, :dimension-content (716)}
-;;     #::asr{:term ::asr/dimension, :dimension-content (92974 80)}
-;;     #::asr{:term ::asr/dimension, :dimension-content (2 2217367)}
-;;     #::asr{:term ::asr/dimension, :dimension-content (45 2)}
-;;     #::asr{:term ::asr/dimension, :dimension-content (26679 96)})
-
 
 ;;     _ _                   _
 ;;  __| (_)_ __  ___ _ _  __(_)___ _ _  ___
@@ -228,6 +216,11 @@
 
 
 (deftest dimensions-test
+  (idempotency-check (dimension* [[1 60] []]))
+  (idempotency-check (dimension* '([1 60] [])))
+  (idempotency-check (dimension* []))
+  (idempotency-check (dimension* ()))
+
   (is (s/valid?
        ::asr/dimension*
        [#:masr.specs{:term :masr.specs/dimension,
@@ -259,9 +252,6 @@
   (is (not (vds? (dimension* '("f")))))
   (is (not (vds? (dimension* '[("f")])))))
 
-#_
-(gen/sample (s/gen ::asr/dimension*) 5)
-
 
 ;;               _        _        _    _
 ;;  ____  _ _ __| |_ __ _| |__ ___(_)__| |
@@ -271,6 +261,7 @@
 
 
 (deftest symtab-id-test
+  (idempotency-check (symtab-id 42))
   (is (not (s/valid? ::asr/symtab-id (symtab-id -42))))
   (is (not (s/valid? ::asr/symtab-id (symtab-id 'foo))))
   (is (= (symtab-id  42)                            42))
@@ -289,16 +280,16 @@
 
 
 (deftest identifier-test
+  (idempotency-check (identifier "foobar"))
   (testing "better syntax"
-    (is      (s/valid? ::asr/identifier (identifier 'foobar)))
-    (is      (s/valid? ::asr/identifier (identifier '_foobar)))
-    (is      (s/valid? ::asr/identifier (identifier '__f_oobar)))
-    (is      (s/valid? ::asr/identifier (identifier '_1234)))
-    (is      (s/valid? ::asr/identifier (identifier '_1__234)))
-    (is (not (s/valid? ::asr/identifier (identifier '1234))))
-    ;; '1a won't even compile, throwing java.lang.NumberFormatException
+    (is      (s/valid? ::asr/identifier (identifier "foobar")))
+    (is      (s/valid? ::asr/identifier (identifier "_foobar")))
+    (is      (s/valid? ::asr/identifier (identifier "__f_oobar")))
+    (is      (s/valid? ::asr/identifier (identifier "_1234")))
+    (is      (s/valid? ::asr/identifier (identifier "_1__234")))
+    (is (not (s/valid? ::asr/identifier (identifier "1234"))))
+    (is (not (s/valid? ::asr/identifier (identifier "1a"))))
     (is (not (s/valid? ::asr/identifier (identifier ""))))
-    (is (not (s/valid? ::asr/identifier (identifier "asdf"))))
     (is (not (s/valid? ::asr/identifier (identifier :asdf))))
 
     (is (not (s/valid? ::asr/identifier (identifier ()))))
@@ -311,14 +302,13 @@
     (is (not (s/valid? ::asr/identifier (identifier #{'foo}))))
     (is (not (s/valid? ::asr/identifier (identifier '1234))))
     (is (not (s/valid? ::asr/identifier (identifier ""))))
-    (is (not (s/valid? ::asr/identifier (identifier "asdf"))))
     (is (not (s/valid? ::asr/identifier (identifier :asdf)))))
 
-  (is (s/valid? ::asr/identifier      'foobar))
-  (is (s/valid? ::asr/identifier      '_foobar))
-  (is (s/valid? ::asr/identifier      '__f_oobar))
-  (is (s/valid? ::asr/identifier      '_1234))
-  (is (s/valid? ::asr/identifier      '_1__234))
+  (is (s/valid? ::asr/identifier      "foobar"))
+  (is (s/valid? ::asr/identifier      "_foobar"))
+  (is (s/valid? ::asr/identifier      "__f_oobar"))
+  (is (s/valid? ::asr/identifier      "_1234"))
+  (is (s/valid? ::asr/identifier      "_1__234"))
 
   (is (not (s/valid? ::asr/identifier ())))
   (is (not (s/valid? ::asr/identifier [])))
@@ -331,20 +321,7 @@
   (is (not (s/valid? ::asr/identifier '1234)))
   ;; '1abcd won't even compile, throwing java.lang.NumberFormatException
   (is (not (s/valid? ::asr/identifier "")))
-  (is (not (s/valid? ::asr/identifier "asdf")))
   (is (not (s/valid? ::asr/identifier :asdf))))
-
-
-;; A Clojure symbol is NOT an ASR identifier, but an
-;; ASR identifier is a constrained symbol:
-
-#_
-(gen/sample (s/gen symbol?) 5)
-;; => (-/! l7/!7 K/!! Z/*H nN?/C)
-
-#_
-(gen/sample (s/gen ::asr/identifier))
-;; => (c Xr hm J GYGMt bTEY4 zJTt56 fz7Dan5C zw pT17Sa)
 
 
 ;;  _    _         _   _  __ _
@@ -358,22 +335,26 @@
   (is      (s/valid? ::asr/identifier-set (identifier-set ())))
   (is      (s/valid? ::asr/identifier-set (identifier-set #{})))
   (is (not (s/valid? ::asr/identifier-set (identifier-set {}))))
-  (is      (s/valid? ::asr/identifier-set (identifier-set ['foo])))
-  (is      (s/valid? ::asr/identifier-set (identifier-set '(foo))))
-  (is      (s/valid? ::asr/identifier-set (identifier-set #{'foo})))
+  (is      (s/valid? ::asr/identifier-set (identifier-set ["foo"])))
+  (is      (s/valid? ::asr/identifier-set (identifier-set '("foo"))))
+  (is      (s/valid? ::asr/identifier-set (identifier-set #{"foo"})))
   (is (not (s/valid? ::asr/identifier-set
-                     (identifier-set {'foo 'bar}))))
-  (is      (s/valid? ::asr/identifier-set (identifier-set ['foo 'bar])))
-  (is      (s/valid? ::asr/identifier-set (identifier-set '(foo bar))))
-  (is      (s/valid? ::asr/identifier-set
-                     (identifier-set #{'foo 'bar})))
-  (is      (s/valid? ::asr/identifier-set
-                     (identifier-set ['foo 'foo])))
+                     (identifier-set {"foo" "bar"}))))
+  (is      (s/valid? ::asr/identifier-set (identifier-set
+                                           ["foo" "bar"])))
+  (is      (s/valid? ::asr/identifier-set (identifier-set
+                                           '("foo" "bar"))))
+  (is      (s/valid? ::asr/identifier-set (identifier-set
+                                           #{"foo" "bar"})))
+  (is      (s/valid? ::asr/identifier-set (identifier-set
+                                           ["foo" "foo"])))
   ;; check set-ness
-  (is (= 1 (count (identifier-set ['foo 'foo]))))
-  (is      (s/valid? ::asr/identifier-set (identifier-set '(foo foo))))
+  (is (= 1 (count (identifier-set ["foo" "foo"]))))
+  (is      (s/valid? ::asr/identifier-set (identifier-set
+                                           '("foo" "foo"))))
   ;; #{'foo 'foo} won't compile!
-  (is (not (s/valid? ::asr/identifier-set (identifier-set ['foo 123]))))
+  (is (not (s/valid? ::asr/identifier-set (identifier-set
+                                           ['foo 123]))))
   (is (not (s/valid? ::asr/identifier-set
                      (identifier-set ['foo "foo"]))))
   (is (not (s/valid? ::asr/identifier-set
@@ -385,23 +366,23 @@
   (is      (s/valid? ::asr/identifier-list (identifier-list ())))
   (is      (s/valid? ::asr/identifier-list (identifier-list #{})))
   (is (not (s/valid? ::asr/identifier-list (identifier-list {}))))
-  (is      (s/valid? ::asr/identifier-list (identifier-list ['foo])))
-  (is      (s/valid? ::asr/identifier-list (identifier-list '(foo))))
-  (is      (s/valid? ::asr/identifier-list (identifier-list #{'foo})))
+  (is      (s/valid? ::asr/identifier-list (identifier-list ["foo"])))
+  (is      (s/valid? ::asr/identifier-list (identifier-list '("foo"))))
+  (is      (s/valid? ::asr/identifier-list (identifier-list #{"foo"})))
   (is (not (s/valid? ::asr/identifier-list
-                     (identifier-list {'foo 'bar}))))
+                     (identifier-list {"foo" "bar"}))))
   (is      (s/valid? ::asr/identifier-list
-                     (identifier-list ['foo 'bar])))
+                     (identifier-list ["foo" "bar"])))
   (is      (s/valid? ::asr/identifier-list
-                     (identifier-list '(foo bar))))
+                     (identifier-list '("foo" "bar"))))
   (is      (s/valid? ::asr/identifier-list
-                     (identifier-list #{'foo 'bar})))
+                     (identifier-list #{"foo" "bar"})))
   (is      (s/valid? ::asr/identifier-list
-                     (identifier-list ['foo 'foo])))
+                     (identifier-list ["foo" "foo"])))
   ;; check that duplicates are allowed
-  (is (= 2 (count (identifier-list ['foo 'foo]))))
+  (is (= 2 (count (identifier-list ["foo" "foo"]))))
   (is      (s/valid? ::asr/identifier-list
-                     (identifier-list '(foo foo))))
+                     (identifier-list '("foo" "foo"))))
   ;; #{'foo 'foo} won't compile!
   (is (not (s/valid? ::asr/identifier-list
                      (identifier-list ['foo 123]))))
@@ -416,21 +397,23 @@
   (is      (s/valid? ::asr/identifier-suit (identifier-suit ())))
   (is      (s/valid? ::asr/identifier-suit (identifier-suit #{})))
   (is (not (s/valid? ::asr/identifier-suit (identifier-suit {}))))
-  (is      (s/valid? ::asr/identifier-suit (identifier-suit ['foo])))
-  (is      (s/valid? ::asr/identifier-suit (identifier-suit '(foo))))
-  (is      (s/valid? ::asr/identifier-suit (identifier-suit #{'foo})))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit ["foo"])))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit '("foo"))))
+  (is      (s/valid? ::asr/identifier-suit (identifier-suit #{"foo"})))
   (is (not (s/valid? ::asr/identifier-suit
-                     (identifier-suit {'foo 'bar}))))
+                     (identifier-suit {"foo" "bar"}))))
   (is      (s/valid? ::asr/identifier-suit
-                     (identifier-suit ['foo 'bar])))
+                     (identifier-suit ["foo" "bar"])))
   (is      (s/valid? ::asr/identifier-suit
-                     (identifier-suit '(foo bar))))
+                     (identifier-suit '("foo" "bar"))))
+  (is      (not (= (identifier-suit '("foo" "bar"))
+                   (identifier-suit '("bar" "foo")))))
   (is      (s/valid? ::asr/identifier-suit
-                     (identifier-suit #{'foo 'bar})))
+                     (identifier-suit #{"foo" "bar"})))
   (is (not (s/valid? ::asr/identifier-suit
-                     (identifier-suit ['foo 'foo]))))
+                     (identifier-suit ["foo" "foo"]))))
   (is (not (s/valid? ::asr/identifier-suit
-                     (identifier-suit '(foo foo)))))
+                     (identifier-suit '("foo" "foo")))))
   ;; #{'foo 'foo} won't compile!
   (is (not (s/valid? ::asr/identifier-suit
                      (identifier-suit ['foo 123]))))
@@ -445,25 +428,15 @@
 ;; | | ' \  _/ -_) ' \  _|
 ;; |_|_||_\__\___|_||_\__|
 
-#_
-(gen/sample (s/gen (s/and
-                    ::asr/asr-term
-                    #(= ::asr/intent (::asr/term %))))
-            5)
-;; => (#::asr{:term ::asr/intent, :intent-enum ReturnVar}
-;;     #::asr{:term ::asr/intent, :intent-enum In}
-;;     #::asr{:term ::asr/intent, :intent-enum Unspecified}
-;;     #::asr{:term ::asr/intent, :intent-enum Unspecified}
-;;     #::asr{:term ::asr/intent, :intent-enum InOut})
 
 
 (deftest intent-test
   (testing "better syntax"
     (is      (s/valid? ::asr/asr-term Local))
     (is      (s/valid? ::asr/asr-term Unspecified))
-    (is      (s/valid? ::asr/asr-term (intent 'Local)))
-    (is      (s/valid? ::asr/asr-term (intent 'Unspecified)))
-    (is (not (s/valid? ::asr/asr-term (intent 'foobar))))
+    (is      (s/valid? ::asr/asr-term (intent "Local")))
+    (is      (s/valid? ::asr/asr-term (intent "Unspecified")))
+    (is (not (s/valid? ::asr/asr-term (intent "foobar"))))
     (is (not (s/valid? ::asr/asr-term (intent []))))
     (is (not (s/valid? ::asr/asr-term (intent ()))))
     (is (not (s/valid? ::asr/asr-term (intent {}))))
@@ -473,9 +446,11 @@
     (is (not (s/valid? ::asr/asr-term (intent 42))))
     (is (thrown? clojure.lang.ArityException (intent))))
   (testing "term entity-key"
-    (is      (s/valid? ::asr/intent (intent 'Local)))
-    (is      (s/valid? ::asr/intent (intent 'Unspecified)))
-    (is (not (s/valid? ::asr/intent (intent 'foobar))))
+    (is      (s/valid? ::asr/intent Local))
+    (is      (s/valid? ::asr/intent Unspecified))
+    (is      (s/valid? ::asr/intent (intent "Local")))
+    (is      (s/valid? ::asr/intent (intent "Unspecified")))
+    (is (not (s/valid? ::asr/intent (intent "foobar"))))
     (is (not (s/valid? ::asr/intent (intent []))))
     (is (not (s/valid? ::asr/intent (intent ()))))
     (is (not (s/valid? ::asr/intent (intent {}))))
@@ -484,19 +459,24 @@
     (is (not (s/valid? ::asr/intent (intent ""))))
     (is (not (s/valid? ::asr/intent (intent 42))))
     (is (thrown? clojure.lang.ArityException (intent))))
+  (idempotency-check {::asr/term        ::asr/intent,
+                      ::asr/intent-enum "Unspecified"})
+  (is (not (s/valid? ::asr/asr-term
+                     {::asr/term        ::asr/intent,
+                      ::asr/intent-enum Local}))) ;; unquoted
   (is (s/valid? ::asr/asr-term
                 {::asr/term        ::asr/intent,
-                 ::asr/intent-enum 'Local}))
+                 ::asr/intent-enum "Local"}))
   (is (s/valid? ::asr/asr-term
                 {::asr/term        ::asr/intent,
-                 ::asr/intent-enum 'Unspecified}))
+                 ::asr/intent-enum "Unspecified"}))
   (testing "missing key"
     (is (not (s/valid? ::asr/asr-term
-                       {::asr/intent-enum 'Unspecified}))))
+                       {::asr/intent-enum "Unspecified"}))))
   (testing "incorrect value"
     (is (not (s/valid? ::asr/asr-term
                        {::asr/term        ::asr/intent,
-                        ::asr/intent-enum 'foobar})))))
+                        ::asr/intent-enum "foobar"})))))
 
 
 ;;     _                             _
@@ -505,32 +485,23 @@
 ;; /__/\__\___/_| \__,_\__, \___|    \__|\_, | .__/\___|
 ;;                     |___/             |__/|_|
 
-#_
-(gen/sample (s/gen (s/and
-                    ::asr/asr-term
-                    #(= ::asr/storage-type (::asr/term %))))
-            5)
-;; => (#::asr{:term ::asr/storage-type, :storage-type-enum Save}
-;;     #::asr{:term ::asr/storage-type, :storage-type-enum Save}
-;;     #::asr{:term ::asr/storage-type, :storage-type-enum Parameter}
-;;     #::asr{:term ::asr/storage-type, :storage-type-enum Save}
-;;     #::asr{:term ::asr/storage-type, :storage-type-enum Parameter})
-
 
 (deftest storage-type-test
+  (idempotency-check Default)
+
   (is (s/valid? ::asr/storage-type Default))
   (is (s/valid? ::asr/asr-term     Default))
 
-  (is (s/valid? ::asr/storage-type (storage-type 'Default)))
-  (is (s/valid? ::asr/asr-term     (storage-type 'Default)))
+  (is (s/valid? ::asr/storage-type (storage-type "Default")))
+  (is (s/valid? ::asr/asr-term     (storage-type "Default")))
 
   (is (s/valid? ::asr/asr-term
                 {::asr/term ::asr/storage-type
-                 ::asr/storage-type-enum 'Default}))
+                 ::asr/storage-type-enum "Default"}))
   (testing "incorrect value"
     (is (not (s/valid? ::asr/asr-term
                        {::asr/term ::asr/storage-type,
-                        ::asr/storage-type-enum 'foobar})))))
+                        ::asr/storage-type-enum "foobar"})))))
 
 
 ;;       _    _
@@ -538,42 +509,33 @@
 ;; / _` | '_ \ |
 ;; \__,_|_.__/_|
 
-#_
-(gen/sample (s/gen (s/and
-                    ::asr/asr-term
-                    #(= ::asr/abi (::asr/term %))))
-            5)
-;; => (#::asr{:term ::asr/abi, :abi-enum Intrinsic, :abi-external true}
-;;     #::asr{:term ::asr/abi, :abi-enum Interactive, :abi-external true}
-;;     #::asr{:term ::asr/abi, :abi-enum Source, :abi-external false}
-;;     #::asr{:term ::asr/abi, :abi-enum Source, :abi-external false}
-;;     #::asr{:term ::asr/abi, :abi-enum Source, :abi-external false})
-
 
 (deftest abi-test
   (testing "valid examples"
     (is (s/valid? ::asr/asr-term
                   {::asr/term        ::asr/abi
-                   ::asr/abi-enum     'Source
+                   ::asr/abi-enum     "Source"
                    ::asr/abi-external  false}))
-    (is (s/valid? ::asr/asr-term (abi 'Source         :external false)))
-    (is (s/valid? ::asr/asr-term (abi 'LFortranModule :external true)))
-    (is (s/valid? ::asr/asr-term (abi 'GFortranModule :external true)))
-    (is (s/valid? ::asr/asr-term (abi 'BindC          :external true)))
-    (is (s/valid? ::asr/asr-term (abi 'Interactive    :external true)))
-    (is (s/valid? ::asr/asr-term (abi 'Intrinsic      :external true)))
+    (is (s/valid? ::asr/asr-term
+                  (abi "Source" :external false)))
+    (is (s/valid? ::asr/asr-term (abi "LFortranModule" :external true)))
+    (is (s/valid? ::asr/asr-term (abi "GFortranModule" :external true)))
+    (is (s/valid? ::asr/asr-term (abi "BindC"          :external true)))
+    (is (s/valid? ::asr/asr-term (abi "Interactive"    :external true)))
+    (is (s/valid? ::asr/asr-term (abi "Intrinsic"      :external true)))
     (is (s/valid? ::asr/asr-term Source         ))
     (is (s/valid? ::asr/asr-term LFortranModule ))
     (is (s/valid? ::asr/asr-term GFortranModule ))
     (is (s/valid? ::asr/asr-term BindC          ))
     (is (s/valid? ::asr/asr-term Interactive    ))
     (is (s/valid? ::asr/asr-term Intrinsic      ))
-    (is (s/valid? ::asr/abi      (abi 'Source         :external false)))
-    (is (s/valid? ::asr/abi      (abi 'LFortranModule :external true)))
-    (is (s/valid? ::asr/abi      (abi 'GFortranModule :external true)))
-    (is (s/valid? ::asr/abi      (abi 'BindC          :external true)))
-    (is (s/valid? ::asr/abi      (abi 'Interactive    :external true)))
-    (is (s/valid? ::asr/abi      (abi 'Intrinsic      :external true)))
+    (is (s/valid? ::asr/abi
+                  (abi "Source" :external false)))
+    (is (s/valid? ::asr/abi      (abi "LFortranModule" :external true)))
+    (is (s/valid? ::asr/abi      (abi "GFortranModule" :external true)))
+    (is (s/valid? ::asr/abi      (abi "BindC"          :external true)))
+    (is (s/valid? ::asr/abi      (abi "Interactive"    :external true)))
+    (is (s/valid? ::asr/abi      (abi "Intrinsic"      :external true)))
     (is (s/valid? ::asr/abi      Source         ))
     (is (s/valid? ::asr/abi      LFortranModule ))
     (is (s/valid? ::asr/abi      GFortranModule ))
@@ -585,113 +547,119 @@
     (testing "incorrect :external ::bool value"
       (is (not (s/valid? ::asr/asr-term
                          {::asr/term        ::asr/abi
-                          ::asr/abi-enum     'Source
+                          ::asr/abi-enum     "Source"
                           ::asr/abi-external  true})))
       (is (not (s/valid? ::asr/asr-term
-                         (abi 'Source         :external true))))
+                         (abi "Source"         :external true))))
       (is (not (s/valid? ::asr/asr-term
-                         (abi 'LFortranModule :external false))))
+                         (abi "LFortranModule" :external false))))
       (is (not (s/valid? ::asr/asr-term
-                         (abi 'GFortranModule :external false))))
+                         (abi "GFortranModule" :external false))))
       (is (not (s/valid? ::asr/asr-term
-                         (abi 'BindC          :external false))))
+                         (abi "BindC"          :external false))))
       (is (not (s/valid? ::asr/asr-term
-                         (abi 'Interactive    :external false))))
+                         (abi "Interactive"    :external false))))
       (is (not (s/valid? ::asr/asr-term
-                         (abi 'Intrinsic      :external false)))))
+                         (abi "Intrinsic"      :external false)))))
     (testing "incorrect :external type"
-      (is (not (s/valid? ::asr/asr-term (abi 'Source :external 42))))
-      (is (not (s/valid? ::asr/asr-term (abi 'Source :external "foo"))))
-      (is (not (s/valid? ::asr/asr-term (abi 'Source :external 'foo)))))
+      (is (not (s/valid? ::asr/asr-term (abi "Source" :external 42))))
+      (is (not (s/valid? ::asr/asr-term
+                         (abi "Source" :external "foo"))))
+      (is (not (s/valid? ::asr/asr-term
+                         (abi "Source" :external 'foo)))))
     (testing "missing keyword; :external defaults to nil"
-      (is (not (s/valid? ::asr/asr-term (abi 'Source false))))
-      (is (not (s/valid? ::asr/asr-term (abi 'Source true))))
-      (is (not (s/valid? ::asr/asr-term (abi 'Source 42))))
-      (is (not (s/valid? ::asr/asr-term (abi 'foo true))))
-      (is (not (s/valid? ::asr/asr-term (abi 'foo false)))))
+      (is (not (s/valid? ::asr/asr-term (abi "Source" false))))
+      (is (not (s/valid? ::asr/asr-term (abi "Source" true))))
+      (is (not (s/valid? ::asr/asr-term (abi "Source" 42))))
+      (is (not (s/valid? ::asr/asr-term (abi "foo" true))))
+      (is (not (s/valid? ::asr/asr-term (abi "foo" false)))))
 
     (testing "incorrect :external ::bool value"
       (is (not (s/valid? ::asr/abi
                          {::asr/term        ::asr/abi
-                          ::asr/abi-enum     'Source
+                          ::asr/abi-enum     "Source"
                           ::asr/abi-external  true})))
       (is (not (s/valid? ::asr/abi
-                         (abi 'Source         :external true))))
+                         (abi "Source"         :external true))))
       (is (not (s/valid? ::asr/abi
-                         (abi 'LFortranModule :external false))))
+                         (abi "LFortranModule" :external false))))
       (is (not (s/valid? ::asr/abi
-                         (abi 'GFortranModule :external false))))
+                         (abi "GFortranModule" :external false))))
       (is (not (s/valid? ::asr/abi
-                         (abi 'BindC          :external false))))
+                         (abi "BindC"          :external false))))
       (is (not (s/valid? ::asr/abi
-                         (abi 'Interactive    :external false))))
+                         (abi "Interactive"    :external false))))
       (is (not (s/valid? ::asr/abi
-                         (abi 'Intrinsic      :external false)))))
+                         (abi "Intrinsic"      :external false)))))
     (testing "incorrect :external type"
-      (is (not (s/valid? ::asr/abi (abi 'Source :external 42))))
-      (is (not (s/valid? ::asr/abi (abi 'Source :external "foo"))))
-      (is (not (s/valid? ::asr/abi (abi 'Source :external 'foo)))))
+      (is (not (s/valid? ::asr/abi (abi "Source" :external 42))))
+      (is (not (s/valid? ::asr/abi (abi "Source" :external "foo"))))
+      (is (not (s/valid? ::asr/abi (abi "Source" :external 'foo)))))
     (testing "missing keyword; :external defaults to nil"
-      (is (not (s/valid? ::asr/abi (abi 'Source false))))
-      (is (not (s/valid? ::asr/abi (abi 'Source true))))
-      (is (not (s/valid? ::asr/abi (abi 'Source 42))))
-      (is (not (s/valid? ::asr/abi (abi 'foo true))))
-      (is (not (s/valid? ::asr/abi (abi 'foo false)))))
+      (is (not (s/valid? ::asr/abi (abi "Source" false))))
+      (is (not (s/valid? ::asr/abi (abi "Source" true))))
+      (is (not (s/valid? ::asr/abi (abi "Source" 42))))
+      (is (not (s/valid? ::asr/abi (abi "foo" true))))
+      (is (not (s/valid? ::asr/abi (abi "foo" false)))))
 
-    (testing "connformance"
-     (is (= (s/valid? ::asr/asr-term
-                    {::asr/term ::asr/abi
-                     ::asr/abi-enum 'Source
-                     ::asr/abi-external false})   true))
-     (is (= (s/valid? ::asr/abi
-                    {::asr/term      ::asr/abi
-                     ::asr/abi-enum 'Source
-                     ::asr/abi-external false})   true))
+    (testing "conformance"
+      (is (= (s/valid? ::asr/asr-term
+                       {::asr/term ::asr/abi
+                        ::asr/abi-enum "Source"
+                        ::asr/abi-external false})   true))
+      (is (= (s/valid? ::asr/abi
+                       {::asr/term      ::asr/abi
+                        ::asr/abi-enum "Source"
+                        ::asr/abi-external false})   true))
 
-     (let [abe (abi 'Source :external false)]
-       (is (= (s/conform ::asr/abi      abe)      abe))
-       (is (= (s/conform ::asr/asr-term abe)      abe))
-       ;; defaults to correct value
-       (is (= (abi 'Source)                       abe))
-       (is (= Source                              abe))
-       ;; missing keyword
-       (is (not (s/valid? ::asr/abi (abi 'Source false))))
-       ;; wrong value
-       (is (not (s/valid? ::asr/abi (abi 'Source :external true))))
-       ;; misspellings
-       (is (not (s/valid? ::asr/abi (abi 'Soruce :external false))))
-       (is (not (s/valid? ::asr/abi (abi 'Source :extrenal false)))))
+      (let [abe (abi "Source" :external false)]
+        (is (= (s/conform ::asr/abi      abe)      abe))
+        (is (= (s/conform ::asr/asr-term abe)      abe))
+        ;; defaults to correct value
+        (is (= (abi "Source")                       abe))
+        (is (= Source                              abe))
+        ;; missing keyword
+        (is (not (s/valid? ::asr/abi (abi "Source" false))))
+        ;; wrong value
+        (is (not (s/valid? ::asr/abi (abi "Source" :external true))))
+        ;; misspellings
+        (is (not (s/valid? ::asr/abi (abi "Soruce" :external false))))
+        (is (not (s/valid? ::asr/abi (abi "Source" :extrenal false)))))
 
-     (let [abe (abi 'LFortranModule :external true)]
-       (is (= (s/conform ::asr/asr-term abe)      abe))
-       (is (= (s/conform ::asr/abi      abe)      abe))
-       ;; defaults to correct value
-       (is (= (abi 'LFortranModule)               abe))
-       (is (= LFortranModule                      abe))
-       ;; missing keyword
-       (is (not (s/valid? ::asr/abi
-                          (abi 'LFortranModule true))))
-       ;; wrong value
-       (is (not (s/valid? ::asr/abi
-                          (abi 'LFortranModule :external ))))
-       ))
+      (let [abe (abi "LFortranModule" :external true)]
+        (is (= (s/conform ::asr/asr-term abe)      abe))
+        (is (= (s/conform ::asr/abi      abe)      abe))
+        ;; defaults to correct value
+        (is (= (abi "LFortranModule")               abe))
+        (is (= LFortranModule                      abe))
+        ;; missing keyword
+        (is (not (s/valid? ::asr/abi
+                           (abi "LFortranModule" true))))
+        ;; wrong value
+        (is (not (s/valid? ::asr/abi
+                           (abi "LFortranModule" :external ))))
+        ))
 
     (testing "ASDL Back-Channel"
-     (let [ablf {::asr/term         ::asr/abi
-                 ::asr/abi-enum     'Source
-                 ::asr/abi-external false}]
-       (is (= (s/valid? ::asr/asr-term ablf)          true))
-       (is (= (s/valid? ::asr/abi ablf)               true)))
+      (let [ablf {::asr/term         ::asr/abi
+                  ::asr/abi-enum     "Source"
+                  ::asr/abi-external false}]
+        (is (= (s/valid? ::asr/asr-term ablf)          true))
+        (is (= (s/valid? ::asr/abi ablf)               true)))
 
-     (is (= (s/conform ::asr/abi      Source)         Source))
-     (is (= (s/conform ::asr/asr-term Source)         Source))
-     (is (not (s/valid? ::asr/abi (abi 'Source false))))
-     (is (not (s/valid? ::asr/abi (abi 'Source :external true))))
+      (is (= (s/conform ::asr/abi      Source)         Source))
+      (is (= (s/conform ::asr/asr-term Source)         Source))
+      (is (not (s/valid? ::asr/abi (abi "Source" false))))
+      (is (not (s/valid? ::asr/abi (abi "Source" :external true))))
 
-     (is (= (s/conform ::asr/asr-term LFortranModule) LFortranModule))
-     (is (= (s/conform ::asr/abi      LFortranModule) LFortranModule))
-     (is (not (s/valid? ::asr/abi (abi 'LFortranModule true))))
-     (is (not (s/valid? ::asr/abi (abi 'LFortranModule :external false)))))
+      (is (= (s/conform ::asr/asr-term
+                        LFortranModule) LFortranModule))
+      (is (= (s/conform ::asr/abi
+                        LFortranModule) LFortranModule))
+      (is (not (s/valid? ::asr/abi
+                         (abi "LFortranModule" true))))
+      (is (not (s/valid? ::asr/abi
+                         (abi "LFortranModule" :external false)))))
     ))
 
 
@@ -712,6 +680,7 @@
 
 
 (deftest ttype-test
+  (idempotency-check (Logical))
   (testing "top-level-types"
     (is (s/valid? ::asr/Logical   (Logical)))
     (is (s/valid? ::asr/Integer   (Integer)))
@@ -876,17 +845,17 @@
 
 
 (deftest symbol-table-test
+
+  (idempotency-check (SymbolTable 42 {:main "main"}))
+
   (is (s/valid? ::asr/asr-term
-                (SymbolTable 42   {:main 'main})))
+                (SymbolTable 42 {:main "main"})))
 
   (is (s/valid? ::asr/SymbolTable
-                (SymbolTable 42   {:main 'main})))
-
-  (is (s/valid? ::asr/SymbolTable
-                (SymbolTable 42   {:main 'main})))
+                (SymbolTable 42 {:main "main"})))
 
   (is (not (s/valid? ::asr/SymbolTable
-                   (SymbolTable 'foo {:main 'main})))))
+                   (SymbolTable "foo" {:main "main"})))))
 
 
 ;;  ___             _   _        _____
@@ -902,6 +871,8 @@
             Implementation () false
             false false false
             false [] [] false)]
+    (testing "idempotency"
+      (is (= ft (eval ft) (eval (eval ft)))))
     (is (s/valid?  ::asr/asr-term      ft))
     (is (s/valid?  ::asr/ttype         ft))
     (is (s/valid?  ::asr/FunctionType  ft)))
@@ -947,13 +918,15 @@
                   RealToInteger
                   (Integer 4 [])
                   (IntegerConstant 4 (Integer 4 []))))]
+    (testing "idempotency"
+      (is (= example (eval example) (eval (eval example)))))
     (is (s/valid? ::asr/Cast example)))
 
   (let [example (legacy ;; fixes round brackets.
                  (Cast
                   (FunctionCall
                    2 pow__AT____lpython_overloaded_0__pow
-                   2 "CRAP"
+                   2 0xBADBEEF
                    [((IntegerConstant 2 (Integer 4 [])))
                     ((IntegerConstant 2 (Integer 4 [])))]
                    (Real 8 [])
@@ -992,6 +965,8 @@
                  (IntegerConstant 0 (Integer 4 []))
                  (Integer 4 [])
                  )]
+    (testing "idempotency"
+      (is (= example (eval example) (eval (eval example)))))
     (is (s/valid? ::asr/asr-term  example))
     (is (s/valid? ::asr/expr      example))
     (is (s/valid? ::asr/NamedExpr example))))
@@ -1011,11 +986,12 @@
                {::asr/expr-head ::asr/LogicalConstant
                 ::asr/bool      true
                 ::asr/Logical   (Logical)}}]
-      ;; telescoping specs
-      (is (s/valid? ::asr/asr-term        alv))
-      (is (s/valid? ::asr/expr            alv))
-      (is (s/valid? ::asr/LogicalConstant alv))
-
+      (testing "idempotency"
+        (is (= alv (eval alv) (eval (eval alv)))))
+      (testing "telescoping specs"
+        (is (s/valid? ::asr/asr-term        alv))
+        (is (s/valid? ::asr/expr            alv))
+        (is (s/valid? ::asr/LogicalConstant alv)))
       (is (= alv (LogicalConstant true)))
       (is (= alv (LogicalConstant true (Logical 4 []))))
       (is (= alv (LogicalConstant true (Logical 4))))
@@ -1028,10 +1004,11 @@
                {::asr/expr-head ::asr/LogicalConstant
                 ::asr/bool      true
                 ::asr/Logical   (Integer)}}]
-      (is (not (s/valid? ::asr/asr-term        alv)))
-      (is (not (s/valid? ::asr/expr            alv)))
-      (is (not (s/valid? ::asr/ttype           alv)))
-      (is (not (s/valid? ::asr/LogicalConstant alv)))
+      (testing "telescoping specs"
+        (is (not (s/valid? ::asr/asr-term        alv)))
+        (is (not (s/valid? ::asr/expr            alv)))
+        (is (not (s/valid? ::asr/ttype           alv)))
+        (is (not (s/valid? ::asr/LogicalConstant alv))))
       )))
 
 
@@ -1049,10 +1026,12 @@
                {::asr/expr-head ::asr/IntegerConstant
                 ::asr/int       42
                 ::asr/Integer   (Integer)}}]
-      ;; telescoping specs
-      (is (s/valid? ::asr/asr-term        aiv))
-      (is (s/valid? ::asr/expr            aiv))
-      (is (s/valid? ::asr/IntegerConstant aiv))
+      (testing "idempotency"
+        (is (= aiv (eval aiv) (eval (eval aiv)))))
+      (testing "telescoping specs"
+        (is (s/valid? ::asr/asr-term        aiv))
+        (is (s/valid? ::asr/expr            aiv))
+        (is (s/valid? ::asr/IntegerConstant aiv)))
 
       (is (= aiv (IntegerConstant 42)))
       (is (= aiv (IntegerConstant 42 (Integer 4 []))))
@@ -1081,9 +1060,13 @@
 
 
 (deftest StringConstant-test
-  (is (s/valid? ::asr/StringConstant (StringConstant "boofar")))
-  (is (s/valid? ::asr/expr           (StringConstant "boofar")))
-  (is (s/valid? ::asr/asr-term       (StringConstant "boofar")))
+  (let [x (StringConstant "boofar")]
+    (testing "idempotency"
+      (is (= x (eval x) (eval (eval x)))))
+    (testing "telescoping specs"
+      (is (s/valid? ::asr/StringConstant x))
+      (is (s/valid? ::asr/expr           x))
+      (is (s/valid? ::asr/asr-term       x))))
 
   (is (not (s/valid? ::asr/StringConstant (StringConstant 42)))))
 
@@ -1096,11 +1079,13 @@
 
 
 (deftest StringOrd-test
-  (is (s/valid? ::asr/StringOrd
-                (StringOrd
-                 (StringConstant "boofar"),
-                 (Integer),
-                 (IntegerConstant 51 (Integer)))))
+  (let [x (StringOrd
+           (StringConstant "boofar"),
+           (Integer),
+           (IntegerConstant 51 (Integer)))]
+    (testing "idempotency"
+      (is (= x (eval x) (eval (eval x)))))
+    (is (s/valid? ::asr/StringOrd x)))
   (is (s/valid? ::asr/StringOrd
                 (StringOrd
                  (StringConstant "boofar"),
@@ -1133,8 +1118,10 @@
              ::asr/asr-expr-head
              {::asr/expr-head  ::asr/Var
               ::asr/symtab-id  2
-              ::asr/varnym     'x
+              ::asr/varnym     "x"
               }}]
+    (idempotency-check vlv)
+    (idempotency-check (Var-- 2 'x))
     (is (= (Var-- 2 'x) vlv))
     (is (= (Var   2  x) vlv))
     (is (= (Var-- 2 'x) (s/conform ::asr/Var   vlv)))
@@ -1180,18 +1167,20 @@
                       (Logical 4 []) ;; <~~~ booger
                       (IntegerConstant 5 (Integer 4 []))))))
 
-  (is (s/valid? ::asr/IntegerBinOp
-                (IntegerBinOp
-                 (IntegerBinOp
-                  (IntegerConstant 2 (Integer 4 []))
-                  Add
-                  (IntegerConstant 3 (Integer 4 []))
-                  (Integer 4 [])
-                  (IntegerConstant 5 (Integer 4 [])))
-                 Mul
-                 (IntegerConstant 5 (Integer 4 []))
-                 (Integer 4 [])
-                 (IntegerConstant 25 (Integer 4 [])))))
+  (let [x (IntegerBinOp
+           (IntegerBinOp
+            (IntegerConstant 2 (Integer 4 []))
+            Add
+            (IntegerConstant 3 (Integer 4 []))
+            (Integer 4 [])
+            (IntegerConstant 5 (Integer 4 [])))
+           Mul
+           (IntegerConstant 5 (Integer 4 []))
+           (Integer 4 [])
+           (IntegerConstant 25 (Integer 4 [])))]
+    (testing "idempotency"
+      (is (= x (eval x) (eval (eval x)))))
+    (is (s/valid? ::asr/IntegerBinOp x)))
 
   (is (not (s/valid? ::asr/IntegerBinOp
                      (IntegerBinOp
@@ -1274,18 +1263,20 @@
                       (RealConstant 5.0 (Real 4 []))
                       ))))
 
-  (is (s/valid? ::asr/RealBinOp
-                (RealBinOp
-                 (RealBinOp
-                  (RealConstant 2.0 (Real 4 []))
-                  Add ;; legacy sugar
-                  (RealConstant 3.0 (Real 4 []))
-                  (Real 4 [])
-                  (RealConstant 5.0 (Real 4 [])))
-                 Mul ;; legacy sugar
-                 (RealConstant 5.0 (Real 4 []))
-                 (Real 4 [])
-                 (RealConstant 25.0 (Real 4 [])))))
+  (let [x (RealBinOp
+           (RealBinOp
+            (RealConstant 2.0 (Real 4 []))
+            Add ;; legacy sugar
+            (RealConstant 3.0 (Real 4 []))
+            (Real 4 [])
+            (RealConstant 5.0 (Real 4 [])))
+           Mul ;; legacy sugar
+           (RealConstant 5.0 (Real 4 []))
+           (Real 4 [])
+           (RealConstant 25.0 (Real 4 [])))]
+    (testing "idempotency"
+      (is (= x (eval x) (eval (eval x)))))
+    (is (s/valid? ::asr/RealBinOp x)))
   )
 
 
@@ -1298,16 +1289,18 @@
 
 (deftest LogicalBinOp-test
 
-  (is (s/valid? ::asr/LogicalBinOp
-                (LogicalBinOp
-                 (Var 2 a)
-                 And
-                 (LogicalCompare
-                  (Var 2 b)
-                  Eq
-                  (Var 2 b)
-                  (Logical 4 []) ())
-                 (Logical 4 []) ())))
+  (let [x (LogicalBinOp
+           (Var 2 a)
+           And
+           (LogicalCompare
+            (Var 2 b)
+            Eq
+            (Var 2 b)
+            (Logical 4 []) ())
+           (Logical 4 []) ())]
+    (testing "idempotency"
+      (is (= x (eval x) (eval (eval x)))))
+    (is (s/valid? ::asr/LogicalBinOp x)))
 
   (is (not (s/valid? ::asr/LogicalBinOp
                      (LogicalBinOp
@@ -1337,12 +1330,14 @@
 
 
 (deftest LogicalCompare-test
-  (is (s/valid? ::asr/LogicalCompare
-                (LogicalCompare
-                 (Var 2 b)
-                 Eq
-                 (Var 2 b)
-                 (Logical 4 []) ())))
+  (let [x (LogicalCompare
+           (Var 2 b)
+           Eq
+           (Var 2 b)
+           (Logical 4 []) ())]
+    (testing "idempotency"
+      (is (= x (eval x) (eval (eval x)))))
+    (is (s/valid? ::asr/LogicalCompare x)))
   (is (not (s/valid? ::asr/LogicalCompare
                      (LogicalCompare
                       ;; wrong type
@@ -1375,6 +1370,9 @@
   (is (= '[(Var 42 x)]
          (rewrite-for-legacy
           '[(Var 42 x)])))
+  (let [x (legacy (Var 42 x))]
+    (testing "idempotency"
+      (is (= x (eval x) (eval (eval x))))))
   (is (s/valid? ::asr/expr? ()))
   (is (s/valid? ::asr/expr? []))
   (is (s/valid? ::asr/expr? (legacy (Var 42 x))))
@@ -1389,7 +1387,7 @@
 
 
 (deftest intrinsic-function-test
-  (is (s/valid? ::asr/intrinsic-ident 'Abs))
+  (is (s/valid? ::asr/intrinsic-ident "Abs"))
   (is (s/valid? ::asr/call-arg-or-args
                 [(RealBinOp
                   (Var 2 a3)
@@ -1421,18 +1419,20 @@
                   (Real 8 [])  ()  )
                  )))
   ;; TODO: signature check of each intrinsic
-  (is (s/valid? ::asr/IntrinsicFunction
-                (legacy
-                 (IntrinsicFunction
-                  Abs
-                  [(RealBinOp
-                    (Var 2 a3)
-                    Sub
-                    (RealConstant 9.000000 (Real 8 []))
-                    (Real 8 [])  ()  )]
-                  0
-                  (Real 8 [])  ()  )
-                 ))))
+  (let [x (legacy
+           (IntrinsicFunction
+            Abs
+            [(RealBinOp
+              (Var 2 a3)
+              Sub
+              (RealConstant 9.000000 (Real 8 []))
+              (Real 8 [])  ()  )]
+            0
+            (Real 8 [])  ()  )
+           )]
+    (testing "idempotency"
+      (is (= x (eval x) (eval (eval x)))))
+    (is (s/valid? ::asr/IntrinsicFunction x))))
 
 
 ;;   ___                _         ___ _      ___
@@ -1459,26 +1459,28 @@
                        (Complex 4 [])
                        (ComplexConstant 5.000000 6.000000
                                         (Complex 4 []) ) )))))
-  (is (s/valid? ::asr/ComplexBinOp
-                (legacy
-                 (ComplexBinOp
-                  (Cast
-                   (IntegerConstant 5 (Integer 4 []))
-                   IntegerToComplex
-                   (Complex 4 [])
-                   (ComplexConstant 5.000000 0.000000
-                                    (Complex 4 []) ) )
-                  Add
-                  (Cast
-                   (ComplexConstant 0.000000 6.000000
-                                    (Complex 8 []) )
-                   ComplexToComplex
-                   (Complex 4 [])
-                   (ComplexConstant 0.000000 6.000000
-                                    (Complex 4 []) ) )
-                  (Complex 4 [])
-                  (ComplexConstant 5.000000 6.000000
-                                   (Complex 4 []) ) )))))
+  (let [x (legacy
+           (ComplexBinOp
+            (Cast
+             (IntegerConstant 5 (Integer 4 []))
+             IntegerToComplex
+             (Complex 4 [])
+             (ComplexConstant 5.000000 0.000000
+                              (Complex 4 []) ) )
+            Add
+            (Cast
+             (ComplexConstant 0.000000 6.000000
+                              (Complex 8 []) )
+             ComplexToComplex
+             (Complex 4 [])
+             (ComplexConstant 0.000000 6.000000
+                              (Complex 4 []) ) )
+            (Complex 4 [])
+            (ComplexConstant 5.000000 6.000000
+                             (Complex 4 []) ) ))]
+    (testing "idempotency"
+      (is (= x (eval x) (eval (eval x)))))
+    (is (s/valid? ::asr/ComplexBinOp x))))
 
 
 ;; ================================================================
@@ -1496,24 +1498,24 @@
 
 
 (deftest if-test
-  (is (s/valid?
-       ::asr/If
-       (legacy
-        (If ;; TODO: weird: integer value in the pocket?
-         ;; Issue 40
-         (NamedExpr
-          (Var 2 a)
-          (StringOrd
-           (StringConstant "3" (Character 1 1 () []) )
-           (Integer 4 [])
-           (IntegerConstant 51 (Integer 4 [])) )
-          (Integer 4 []) )
-         [(=
-           (Var 2 x)
-           (IntegerConstant 1 (Integer 4 []))
-           () )]
-         []
-         ))))
+  (let [x (legacy
+           (If ;; TODO: weird: integer value in the pocket?
+            ;; Issue 40
+            (NamedExpr
+             (Var 2 a)
+             (StringOrd
+              (StringConstant "3" (Character 1 1 () []) )
+              (Integer 4 [])
+              (IntegerConstant 51 (Integer 4 [])) )
+             (Integer 4 []) )
+            [(=
+              (Var 2 x)
+              (IntegerConstant 1 (Integer 4 []))
+              () )]
+            []
+            ))]
+    (idempotency-check x)
+    (is (s/valid? ::asr/If x)))
   (is (s/valid?
        ::asr/If
        (legacy
@@ -1535,32 +1537,41 @@
 
 
 (deftest ArrayItem-test
-  (is (s/valid? ::asr/array-index-start?
-                ()))
-  (is (s/valid? ::asr/array-index-end?
-                (Var 186 k)))
-  (is (s/valid? ::asr/array-index-increment?
-                ()))
-  (is (s/valid? ::asr/array-index
-                (legacy
-                 (array-index (()
-                               (Var 186 k)
-                               ())))))
-  (is (s/valid? ::asr/array-index*
-                (legacy
-                 (map array-index [(()
-                                    (Var 186 k)
-                                    ())]))))
-  (is (s/valid? ::asr/ArrayItem
-                (legacy
-                 (ArrayItem
-                  (Var 186 b)
-                  [(()
-                    (Var 186 k)
-                    ())]
-                  (Real 8 [])
-                  RowMajor
-                  ())))))
+  (let [x ()]
+    (idempotency-check x)
+    (is (s/valid? ::asr/array-index-start? x)))
+
+  (let [x (Var 186 k)]
+    (idempotency-check x)
+    (is (s/valid? ::asr/array-index-end? x)))
+
+  (is (s/valid? ::asr/array-index-increment? ()))
+
+  (let [x (legacy
+           (array-index (()
+                         (Var 186 k)
+                         ())))]
+    (idempotency-check x)
+    (is (s/valid? ::asr/array-index x)))
+
+  (let [x (legacy
+           (vec (map array-index [(()
+                                   (Var 186 k)
+                                   ())])))]
+    (idempotency-check x)
+    (is (s/valid? ::asr/array-index* x)))
+
+  (let [x (legacy
+           (ArrayItem
+            (Var 186 b)
+            [(()
+              (Var 186 k)
+              ())]
+            (Real 8 [])
+            RowMajor
+            ()))]
+    (idempotency-check x)
+    (is (s/valid? ::asr/ArrayItem x))))
 
 
 ;;  ___      _
@@ -1599,25 +1610,25 @@
     (is (s/valid?
          ::asr/loop-increment
          (IntegerConstant 1 (Integer 4 []))))
-    (is (s/valid?
-         ::asr/do-loop-head
-         (legacy
-          (do-loop-head
-           ((Var 2 i)
-            (IntegerConstant 0 (Integer 4 []))
-            (IntegerBinOp
-             (IntegerConstant 50 (Integer 4 []))
-             Sub
-             (IntegerConstant 1 (Integer 4 []))
-             (Integer 4 [])
-             (IntegerConstant 49 (Integer 4 [])))
-            (IntegerConstant 1 (Integer 4 [])))))))
-    (is (s/valid?
-         ::asr/do-loop-head
-         {::asr/loop-v         (Var 2 i)
-          ::asr/loop-start     (IntegerConstant 0 (Integer 4 []))
-          ::asr/loop-end       (IntegerConstant 1 (Integer 4 []))
-          ::asr/loop-increment (IntegerConstant 1 (Integer 4 []))}))
+    (let [x (legacy
+             (do-loop-head
+              ((Var 2 i)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (IntegerConstant 50 (Integer 4 []))
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                (IntegerConstant 49 (Integer 4 [])))
+               (IntegerConstant 1 (Integer 4 [])))))]
+      (is (s/valid? ::asr/do-loop-head x))
+      (idempotency-check x))
+    (let [x {::asr/loop-v         (Var 2 i)
+             ::asr/loop-start     (IntegerConstant 0 (Integer 4 []))
+             ::asr/loop-end       (IntegerConstant 1 (Integer 4 []))
+             ::asr/loop-increment (IntegerConstant 1 (Integer 4 []))}]
+      (is (s/valid? ::asr/do-loop-head x))
+      (idempotency-check x))
     (is (s/valid?
          ::asr/ListAppend
          (ListAppend
@@ -1646,68 +1657,70 @@
            (Var 2 i)
            )])))
   (testing "DoLoop proper"
-    (is (s/valid?
-         ::asr/DoLoop
-         {::asr/term ::asr/stmt,
-          ::asr/asr-stmt-head
-          {::asr/stmt-head ::asr/DoLoop
-           ::asr/escape-target   ()
-           ::asr/do-loop-head
-           {::asr/loop-v         (Var 2 i)
-            ::asr/loop-start     (IntegerConstant 0 (Integer 4 []))
-            ::asr/loop-end       (IntegerConstant 1 (Integer 4 []))
-            ::asr/loop-increment (IntegerConstant 1 (Integer 4 []))}
-           ::asr/body [(ListAppend
-                        (Var 2 l3)
-                        (Var 2 i)
-                        )]}}))
-    (is (s/valid?
-         ::asr/DoLoop
-         (DoLoop
-          ()
-          [(Var 2 i)
-           (IntegerConstant 0 (Integer 4 []))
-           (IntegerConstant 0 (Integer 4 []))
-           (IntegerConstant 1 (Integer 4 []))]
-          [(ListAppend
-            (Var 2 l3)
-            (Var 2 i)
-            )] )))
-    (is (s/valid?
-         ::asr/DoLoop
-         (DoLoop
-          ()
-          [(Var 2 i)
-           (IntegerConstant 0 (Integer 4 []))
-           (IntegerBinOp
-            (IntegerConstant 50 (Integer 4 []))
-            Sub
-            (IntegerConstant 1 (Integer 4 []))
-            (Integer 4 [])
-            (IntegerConstant 49 (Integer 4 [])))
-           (IntegerConstant 1 (Integer 4 []))]
-          [(ListAppend
-            (Var 2 l3)
-            (Var 2 i)
-            )] )))
-    (is (s/valid?
-         ::asr/DoLoop
-         (legacy
-          (DoLoop
-           ()
-           ((Var 2 i)
-            (IntegerConstant 0 (Integer 4 []))
-            (IntegerBinOp
-             (IntegerConstant 50 (Integer 4 []))
-             Sub
-             (IntegerConstant 1 (Integer 4 []))
-             (Integer 4 [])
-             (IntegerConstant 49 (Integer 4 [])))
-            (IntegerConstant 1 (Integer 4 [])))
-           [(ListAppend
-             (Var 2 l3)
-             (Var 2 i)
-             )] ))))))
+    (let [x {::asr/term ::asr/stmt,
+             ::asr/asr-stmt-head
+             {::asr/stmt-head ::asr/DoLoop
+              ::asr/escape-target   ()
+              ::asr/do-loop-head
+              {::asr/loop-v         (Var 2 i)
+               ::asr/loop-start     (IntegerConstant 0 (Integer 4 []))
+               ::asr/loop-end       (IntegerConstant 1 (Integer 4 []))
+               ::asr/loop-increment (IntegerConstant 1 (Integer 4 []))}
+              ::asr/body [(ListAppend
+                           (Var 2 l3)
+                           (Var 2 i)
+                           )]}}]
+      (idempotency-check x)
+      (is (s/valid? ::asr/DoLoop x)))
+    (let [x (DoLoop
+             ()
+             [(Var 2 i)
+              (IntegerConstant 0 (Integer 4 []))
+              (IntegerConstant 0 (Integer 4 []))
+              (IntegerConstant 1 (Integer 4 []))]
+             [(ListAppend
+               (Var 2 l3)
+               (Var 2 i)
+               )] )]
+      (is (s/valid? ::asr/DoLoop x))
+      (testing "idempotency macro itself"
+        (is (= x (eval x) (eval (eval x))))
+        (idempotency-check x)))
+    (let [x (DoLoop
+             ()
+             [(Var 2 i)
+              (IntegerConstant 0 (Integer 4 []))
+              (IntegerBinOp
+               (IntegerConstant 50 (Integer 4 []))
+               Sub
+               (IntegerConstant 1 (Integer 4 []))
+               (Integer 4 [])
+               (IntegerConstant 49 (Integer 4 [])))
+              (IntegerConstant 1 (Integer 4 []))]
+             [(ListAppend
+               (Var 2 l3)
+               (Var 2 i)
+               )] )]
+      (idempotency-check x)
+      (is (s/valid? ::asr/DoLoop x)))
+    (let [x (legacy
+             (DoLoop
+              ()
+              ((Var 2 i)
+               (IntegerConstant 0 (Integer 4 []))
+               (IntegerBinOp
+                (IntegerConstant 50 (Integer 4 []))
+                Sub
+                (IntegerConstant 1 (Integer 4 []))
+                (Integer 4 [])
+                (IntegerConstant 49 (Integer 4 [])))
+               (IntegerConstant 1 (Integer 4 [])))
+              [(ListAppend
+                (Var 2 l3)
+                (Var 2 i)
+                )] ))]
+      (is (s/valid? ::asr/DoLoop x))
+      (idempotency-check x))))
 
 
 ;; __      ___    _ _     _
@@ -1718,22 +1731,22 @@
 
 
 (deftest while-loop-test
-  (is (s/valid?
-       ::asr/WhileLoop
-       (legacy
-        (WhileLoop
-         ()
-         ;; Issue 40: Integer value in the test-expr pocket:
-         (NamedExpr
-          (Var 2 a)
-          (IntegerConstant 1 (Integer 4 []))
-          (Integer 4 []))
-         [(=
-           (Var 2 y)
-           (IntegerConstant 1 (Integer 4 []))
-           ()
-           )]
-         )))))
+  (let [x (legacy
+           (WhileLoop
+            ()
+            ;; Issue 40: Integer value in the test-expr pocket:
+            (NamedExpr
+             (Var 2 a)
+             (IntegerConstant 1 (Integer 4 []))
+             (Integer 4 []))
+            [(=
+              (Var 2 y)
+              (IntegerConstant 1 (Integer 4 []))
+              ()
+              )]
+            ))]
+    (is (s/valid? ::asr/WhileLoop x))
+    (idempotency-check x)))
 
 
 ;;    _          _                         _
@@ -1744,66 +1757,49 @@
 
 
 (deftest Assignment-test
-  (is (s/valid? ::asr/Assignment
-                (Assignment
-                 (Var 2 a)
-                 (LogicalConstant false (Logical 4 []))
-                 ())))
   (is (not (s/valid? ::asr/Assignment
                      (Assignment
                       ;; wrong type of target
                       (LogicalConstant false (Logical 4 []))
                       (LogicalConstant false (Logical 4 []))
                       ()))))
-  (testing "legacy"
-    (is (= (Assignment
-            (Var 2 a)
-            (LogicalConstant false (Logical 4 []))
-            ())
-           (legacy
-            (= (Var 2 a)
-               (LogicalConstant false (Logical 4 []))
-               ()))
-           ))
-    (is (s/valid? ::asr/Assignment
-                  (legacy
-                   (= (Var 2 a)
-                      (LogicalConstant false (Logical 4 []))
-                      ()))))
-    (let [e (legacy
-             (= (Var 2 a)
-                (LogicalBinOp
-                 (Var 2 a)
-                 And
-                 (LogicalCompare
-                  (Var 2 b)
-                  Eq
-                  (Var 2 b)
-                  (Logical 4 []) ())
-                 (Logical 4 []) ()) ()))]
+  (let [x (Assignment
+           (Var 2 a)
+           (LogicalConstant false (Logical 4 []))
+           ())
+        y (legacy
+           (= (Var 2 a)
+              (LogicalConstant false (Logical 4 []))
+              ()))
+        e (legacy
+           (= (Var 2 a)
+              (LogicalBinOp
+               (Var 2 a)
+               And
+               (LogicalCompare
+                (Var 2 b)
+                Eq
+                (Var 2 b)
+                (Logical 4 []) ())
+               (Logical 4 []) ()) ()))]
+    (testing "legacy"
+      (is (= x y))
+      (idempotency-check y)
+      (idempotency-check e)
+      (is (s/valid? ::asr/Assignment x))
+      (is (s/valid? ::asr/Assignment y))
       (is (s/valid? ::asr/Assignment e))
       (is (s/valid? ::asr/stmt       e))
       (is (s/valid? ::asr/asr-term   e)))
-    (is (s/valid? ::asr/Assignment
-                  (legacy
-                   (= (Var 2 a)
-                      (LogicalBinOp
-                       (Var 2 a)
-                       And
-                       (LogicalCompare
-                        (Var 2 b)
-                        NotEq
-                        (Var 2 b)
-                        (Logical 4 []) ())
-                       (Logical 4 []) ()) ()))))
-    (is (s/valid? ::asr/Assignment
-                  (legacy
-                   (= (Var 2 a)
-                      (LogicalBinOp
-                       (Var 2 b)
-                       Or
-                       (Var 2 b)
-                       (Logical 4 []) ()) ()))))    ))
+    (let [e (legacy
+             (= (Var 2 a)
+                (LogicalBinOp
+                 (Var 2 b)
+                 Or
+                 (Var 2 b)
+                 (Logical 4 []) ()) ()))]
+      (idempotency-check e)
+      (is (s/valid? ::asr/Assignment e)))))
 
 
 ;;            ____
@@ -1837,6 +1833,7 @@
   (is (s/valid? ::asr/call-args (legacy [[(Var 42 x)] [(Var 43 j)]] )))
   ;; Bracket styles don't matter under `legacy`:
   (is (s/valid? ::asr/call-args (legacy (((Var 42 x)) ((Var 43 j))) )))
+  (idempotency-check (legacy (((Var 42 x)) ((Var 43 j))) ))
   ;; Key must be an integer: TODO: investigate
   #_
   (is (s/valid? ::asr/call-args (legacy ([(Var 42 x)] [(Var 43 j)]) )))
@@ -1853,32 +1850,32 @@
 (deftest SubroutineCall-test
 
   (testing "heavy sugar"
-    (is (not (s/valid? ::asr/identifier "test_fn1")))
     (is (s/valid? ::asr/symbol-ref
-                  (symbol-ref 'test_fn1 7)))
+                  (symbol-ref "test_fn1" 7)))
     (is (s/valid? ::asr/symbol-ref
-                  (apply symbol-ref ['test_fn1 7])))
-    (is (not (s/valid? ::asr/symbol-ref
-                       (symbol-ref "test_fn1" 7))))
-    (is (not (s/valid? ::asr/symbol-ref
-                       (apply symbol-ref ["test_fn1" 7]))))
-    (is (s/valid? ::asr/SubroutineCall
-                  (SubroutineCall--
-                   (symbol-ref 'test_fn1 7)
-                   ()    []    ())))
+                  (apply symbol-ref ["test_fn1" 7])))
+    (is (s/valid? ::asr/symbol-ref
+                  (symbol-ref "test_fn1" 7)))
+    (is (s/valid? ::asr/symbol-ref
+                  (apply symbol-ref ["test_fn1" 7])))
+    (let [x (SubroutineCall--
+             (symbol-ref "test_fn1" 7)
+             ()  []  ())]
+      (is (s/valid? ::asr/SubroutineCall x))
+      (idempotency-check x))
     (is (s/valid? ::asr/orig-symref ())))
   (testing "legacy sugar"
 
-    (is (not (s/valid? ::asr/symbol-ref
-                       (apply symbol-ref ["test_fn1" 7]))))
+    (is (s/valid? ::asr/symbol-ref
+                  (apply symbol-ref ["test_fn1" 7])))
     (is (not (s/valid? ::asr/SubroutineCall
                        (SubroutineCall
                         'garbage 'booger
                         ()    []    ()))))
-    (is (not (s/valid? ::asr/SubroutineCall
-                       (SubroutineCall
-                        7 "test_fn1"
-                        ()    []    ()))))
+    (is (s/valid? ::asr/SubroutineCall
+                  (SubroutineCall
+                   7 "test_fn1"
+                   ()    []    ())))
     (is (s/valid? ::asr/SubroutineCall
                   (SubroutineCall
                    7 test_fn1
@@ -1888,20 +1885,22 @@
                    (SubroutineCall
                     7 test_fn1
                     ()    []    ()))))
-    (is (s/valid? ::asr/SubroutineCall
-                  (legacy
-                   (SubroutineCall
-                    7 test_fn1
-                    ()
-                    ((Var 42 i))
-                    ()))))
-    (is (s/valid? ::asr/SubroutineCall
-                  (legacy
-                   (SubroutineCall
-                    7 test_fn1
-                    ()
-                    ((Var 42 i) (Var 43 j))
-                    ()))))
+    (let [x (legacy
+             (SubroutineCall
+              7 test_fn1
+              ()
+              ((Var 42 i))
+              ()))]
+      (is (s/valid? ::asr/SubroutineCall x))
+      (idempotency-check x))
+    (let [x (legacy
+             (SubroutineCall
+              7 test_fn1
+              ()
+              ((Var 42 i) (Var 43 j))
+              ()))]
+      (is (s/valid? ::asr/SubroutineCall x))
+      (idempotency-check x))
 
     (is (s/valid? ::asr/call-arg  '(())))
     (is (s/valid? ::asr/call-arg  [()]))
@@ -1911,30 +1910,34 @@
     (is (s/valid? ::asr/call-args [[(Var 42 i)]]))
     (is (s/valid? ::asr/call-args (legacy [[(Var 42 i)]])))
     (is (s/valid? ::asr/call-args (legacy [((Var 42 i))])))
+    (idempotency-check (legacy [((Var 42 i))]))
     ;; Not allowed TODO: investigate
     #_
     (is (s/valid? ::asr/call-args (legacy ([(Var 42 i)]))))
 
-    (is (s/valid? ::asr/SubroutineCall
-                  (SubroutineCall--
-                   (symbol-ref 'test_fn1 7)
-                   ()
-                   [[(Var 42 i)]]
-                   ())))
+    (let [x (SubroutineCall--
+             (symbol-ref "test_fn1" 7)
+             ()
+             [[(Var 42 i)]]
+             ())]
+      (is (s/valid? ::asr/SubroutineCall x))
+      (idempotency-check x))
+    (let [x (legacy ;; replace call brackets with vector
+             (SubroutineCall--
+              (symbol-ref "test_fn1" 7)
+              ()
+              (((Var 42 i))) ;; call brackets
+              ()))]
+      (is (s/valid? ::asr/SubroutineCall x))
+      (idempotency-check x))
     (is (s/valid? ::asr/SubroutineCall
                   (legacy ;; replace call brackets with vector
                    (SubroutineCall--
-                    (symbol-ref 'test_fn1 7)
+                    (symbol-ref "test_fn1" 7)
                     ()
                     (((Var 42 i)) ((Var 43 j))) ;; call brackets
                     ()))))
-    (is (s/valid? ::asr/SubroutineCall
-                  (legacy ;; replace call brackets with vector
-                   (SubroutineCall--
-                    (symbol-ref 'test_fn1 7)
-                    ()
-                    (((Var 42 i))) ;; call brackets
-                    ()))))))
+    ))
 
 
 ;;                   __        __            ___
@@ -1945,20 +1948,17 @@
 
 
 (deftest symbol-ref-test
-  (is (s/valid? ::asr/symbol-ref {::asr/identifier 'foobar
+  (is (s/valid? ::asr/symbol-ref {::asr/identifier "foobar"
                                   ::asr/symtab-id  42}))
 
-  (is (s/valid? ::asr/symbol-ref {::asr/identifier 'foobar
+  (is (s/valid? ::asr/symbol-ref {::asr/identifier "foobar"
                                   ::asr/symtab-id  42
                                   ::asr/extra-noise "obi-wan"}))
 
-  (is (not (s/valid? ::asr/symbol-ref {::asr/identifier "baadbeef"
-                                       ::asr/symtab-id 42})))
-
-  (is (not (s/valid? ::asr/symbol-ref {::asr/identifier 'foobar})))
+  (is (not (s/valid? ::asr/symbol-ref {::asr/identifier "foobar"})))
 
   (is (not (s/valid? ::asr/symbol-ref {::asr/symtab-id  42})))
-  (let [vsr {::asr/identifier 'foobar
+  (let [vsr {::asr/identifier "foobar"
              ::asr/symtab-id  42}]
     (is (s/valid? ::asr/symbol-ref? vsr))
     (is (s/valid? ::asr/symbol-ref? []))
@@ -1971,8 +1971,8 @@
     (is (s/valid? ::asr/extern-symref vsr))
     (is (s/valid? ::asr/extern-symref []))
     (is (s/valid? ::asr/extern-symref ()))
-    (is (not (s/valid? ::asr/extern-symref [vsr, vsr]))))
-    )
+    (is (not (s/valid? ::asr/extern-symref [vsr, vsr])))
+    (idempotency-check vsr)))
 
 
 ;;  ___     _                     _ ___            _         _
@@ -1984,65 +1984,49 @@
 
 (deftest ExternalSymbol-test
 
-  (is (s/valid? ::asr/ExternalSymbol
-                {::asr/term       ::asr/symbol,
-                 ::asr/asr-symbol-head
-                 {::asr/symbol-head   ::asr/ExternalSymbol
-                  ::asr/symtab-id     5
-                  ::asr/nym           '_lpython_main_program
-                  ::asr/extern-symref
-                  (symbol-ref '_lpython_main_program 7)
-                  ::asr/modulenym     '_global_symbols
-                  ::asr/scope-nyms    [],
-                  ::asr/orig-nym      '_lpython_main_program
-                  ::asr/access        Public}}))
+  (let [x {::asr/term       ::asr/symbol,
+           ::asr/asr-symbol-head
+           {::asr/symbol-head   ::asr/ExternalSymbol
+            ::asr/symtab-id     5
+            ::asr/nym           "_lpython_main_program"
+            ::asr/extern-symref
+            (symbol-ref "_lpython_main_program" 7)
+            ::asr/modulenym     "_global_symbols"
+            ::asr/scope-nyms    [],
+            ::asr/orig-nym      "_lpython_main_program"
+            ::asr/access        Public}}]
+    (is (s/valid? ::asr/ExternalSymbol x))
+    (idempotency-check x))
 
-  (is (s/valid? ::asr/ExternalSymbol
-                (ExternalSymbol--
-                 5 '_lpython_main_program
-                 (symbol-ref '_lpython_main_program 7)
-                 '_global_symbols
-                 []
-                 '_lpython_main_program
-                 Public
-                 )))
+  (let [x (ExternalSymbol--
+           5 "_lpython_main_program"
+           (symbol-ref "_lpython_main_program" 7)
+           "_global_symbols"
+           []
+           "_lpython_main_program"
+           Public)]
+    (is (s/valid? ::asr/ExternalSymbol x))
+    (idempotency-check x))
 
-  (is (not (s/valid? ::asr/ExternalSymbol
-                     (ExternalSymbol--
-                      5 "_lpython_main_program"
-                      (symbol-ref '_lpython_main_program 7)
-                      '_global_symbols
-                      []
-                      '_lpython_main_program
-                      Public
-                      ))))
+  (let [x (ExternalSymbol
+           5, _lpython_main_program
+           7, _lpython_main_program,
+           _global_symbols
+           []
+           _lpython_main_program
+           Public)]
+    (is (s/valid? ::asr/ExternalSymbol x))
+    (idempotency-check x))
 
-  (is (s/valid? ::asr/ExternalSymbol
-                (ExternalSymbol
-                 5, _lpython_main_program
-                 7, _lpython_main_program,
-                 _global_symbols
-                 []
-                 _lpython_main_program
-                 Public)))
-
-  (is (not (s/valid? ::asr/ExternalSymbol
-                     (ExternalSymbol
-                      5, _lpython_main_program
-                      7, "_lpython_main_program",
-                      _global_symbols
-                      []
-                      _lpython_main_program
-                      Public))))
-
-  (is (s/valid? ::asr/ExternalSymbol
-                (ExternalSymbol
-                 5, _lpython_main_program
-                 ()
-                 _global_symbols
-                 []
-                 _lpython_main_program
-                 Public)))
+  (let [x (ExternalSymbol
+           5, _lpython_main_program
+           ()
+           _global_symbols
+           []
+           _lpython_main_program
+           Public)]
+    (is (s/valid? ::asr/ExternalSymbol x))
+    (idempotency-check x))
 
   (is (not (s/valid? ::asr/ExternalSymbol
                      (ExternalSymbol
@@ -2053,15 +2037,16 @@
                       _lpython_main_program
                       Public))))
 
-  (is (s/valid? ::asr/ExternalSymbol
-                (ExternalSymbol
-                 3 pow__AT____lpython_overloaded_0__pow
-                 6 __lpython_overloaded_0__pow
-                 lpython_builtin
-                 []
-                 __lpython_overloaded_0__pow
-                 Public
-                 )))
+  (let [x (ExternalSymbol
+           3 pow__AT____lpython_overloaded_0__pow
+           6 __lpython_overloaded_0__pow
+           lpython_builtin
+           []
+           __lpython_overloaded_0__pow
+           Public
+           )]
+    (is (s/valid? ::asr/ExternalSymbol x))
+    (idempotency-check x))
   )
 
 
@@ -2077,7 +2062,7 @@
           {::asr/symbol-head      ::asr/Variable
 
            ::asr/symtab-id        2
-           ::asr/varnym           'x
+           ::asr/varnym           "x"
            ::asr/ttype            (Integer 4 [])
 
            ::asr/type-declaration nil
@@ -2095,16 +2080,17 @@
           ;; nested
           a-var {::asr/term ::asr/symbol
                  ::asr/asr-symbol-head a-var-head}
-          a-var-light (Variable- :varnym     'x
+          a-var-light (Variable- :varnym     "x"
                                  :symtab-id  2
                                  :ttype      (Integer 4))
-          avl-2  (Variable- :varnym     'x
+          avl-2  (Variable- :varnym     "x"
                             :symtab-id  2
                             :ttype      (Integer 42))]
 
       (is (= (s/valid? ::asr/asr-symbol-head a-var-head) true))
 
       (is (= (s/valid? ::asr/asr-term a-var)             true))
+      (idempotency-check a-var)
       (is (= (s/valid? ::asr/asr-term a-var-light)       true))
       (is (= (s/valid? ::asr/asr-term avl-2)             false))
 
@@ -2120,7 +2106,7 @@
     ;; fully spec'ced, order does not matter
     (let [a-valid
           (Variable- :symtab-id        2
-                     :varnym           'x
+                     :varnym           "x"
                      :intent           Local ;; ASDL back-channel
 
                      :ttype            (Integer)
@@ -2135,76 +2121,72 @@
                      :value?           []
                      :storage-type     Default
 
-                     :dependencies     ['y 'z]
+                     :dependencies     ["y" "z"]
                      )]
       (is (s/valid? ::asr/asr-term a-valid))
-      (is (s/valid? ::asr/Variable a-valid)))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid))
     (let [a-valid
           (Variable- :symtab-id 2,
                      :varnym    "x",
-                     :intent    (intent 'Local) ;; explicit
-                     :ttype     (Integer 4 [[1 42]]))]
-      (is (not (s/valid? ::asr/asr-term a-valid)))
-      (is (not (s/valid? ::asr/symbol   a-valid)))
-      (is (not (s/valid? ::asr/Variable a-valid))))
-    (let [a-valid
-          (Variable- :symtab-id 2,
-                     :varnym    'x,
-                     :intent    (intent 'Local) ;; explicit
+                     :intent    (intent "Local") ;; explicit
                      :ttype     (Integer 4 [[1 42]]))]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
-      (is (s/valid? ::asr/Variable a-valid)))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid))
     (let [a-valid
           (Variable- :symtab-id 2,
-                     :varnym    'x,
+                     :varnym    "x",
                      :intent    Local ;; ASDL back-channel
                      :ttype     (Integer 4 [[1 42]]))]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
-      (is (s/valid? ::asr/Variable a-valid)))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid))
     (let [a-valid ;; default intent
           (Variable- :symtab-id 2,
-                     :varnym    'x,
+                     :varnym    "x",
+                     :ttype     (Integer 4 [[1 42]]))]
+      (is (s/valid? ::asr/asr-term a-valid))
+      (is (s/valid? ::asr/symbol   a-valid))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid))
+    (let [a-valid
+          (Variable- :symtab-id (symtab-id 2), ;; HERE
+                     :varnym    "x",
                      :ttype     (Integer 4 [[1 42]]))]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
       (is (s/valid? ::asr/Variable a-valid)))
     (let [a-valid
-          (Variable- :symtab-id (symtab-id 2),
-                     :varnym    'x,
+          (Variable- :symtab-id 2, ;; HERE
+                     :varnym    "x",
                      :ttype     (Integer 4 [[1 42]]))]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
       (is (s/valid? ::asr/Variable a-valid)))
     (let [a-valid
           (Variable- :symtab-id 2,
-                     :varnym    'x,
-                     :ttype     (Integer 4 [[1 42]]))]
-      (is (s/valid? ::asr/asr-term a-valid))
-      (is (s/valid? ::asr/symbol   a-valid))
-      (is (s/valid? ::asr/Variable a-valid)))
-    (let [a-valid
-          (Variable- :symtab-id 2,
-                     :varnym    'x,
+                     :varnym    "x",
                      :ttype     (Integer 4 [[1 42]])
                      ;; explicit abi
-                     :abi       (abi 'Source :external false))]
+                     :abi       (abi "Source" :external false))]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
       (is (s/valid? ::asr/Variable a-valid)))
     (let [a-valid
           (Variable- :symtab-id 2,
-                     :varnym    'x,
+                     :varnym    "x",
                      :ttype     (Integer 4 [[1 42]])
                      ;; explicit defaulted abi
-                     :abi       (abi 'Source))]
+                     :abi       (abi "Source"))]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
       (is (s/valid? ::asr/Variable a-valid))) ;; invalid examples
     (let [a-valid
           (Variable- :symtab-id 2,
-                     :varnym    'x,
+                     :varnym    "x",
                      :ttype     (Integer 4 [[1 42]])
                      ;; explicit ASDL back-channel abi
                      :abi       Source)]
@@ -2213,26 +2195,27 @@
       (is (s/valid? ::asr/Variable a-valid)))
     (let [a-valid
           (Variable- :symtab-id 2,
-                     :varnym    'x,
-                     :ttype     (Integer)
+                     :varnym    "x",
+                     :ttype     (Integer) ;; DEFAULTED
                      :abi       Source)]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
-      (is (s/valid? ::asr/Variable a-valid)))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid))
     (let [a-inval
           (Variable- :symtab-id 2,
-                     :varnym    'x,
+                     :varnym    "x",
                      :ttype     (Integer 4 [[1 42]])
                      ;; wrong abi
-                     :abi       (abi 'Source :external true))]
+                     :abi       (abi "Source" :external true))]
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/symbol   a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval)))))
   (testing "back tests"
-    (let [v (Variable-- 2 'a (Logical 4)
-                        nil [] 'Local
-                        [] [] 'Default
-                        'Source 'Public 'Required
+    (let [v (Variable-- 2 "a" (Logical 4)
+                        nil [] "Local"
+                        [] [] "Default"
+                        "Source" "Public" "Required"
                         false)]
       (is (not (s/valid? ::asr/LogicalBinOp    v)))
       (is (not (s/valid? ::asr/LogicalConstant v)))
@@ -2241,14 +2224,16 @@
       (is (not (s/valid? ::asr/Assignment      v)))
       ))
   (testing "heavy sugar valid examples"
-    (let [a-valid (Variable-- 2 'x (Integer 4)
-                              nil [] 'Local
-                              [] []  'Default
-                              'Source 'Public 'Required
+    (let [a-valid (Variable-- 2 "x" (Integer 4)
+                              nil [] (intent "Local")
+                              [] []  (storage-type "Default")
+                              (abi "Source")
+                              (access "Public")
+                              (presence "Required")
                               false)]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/Variable a-valid)))
-    (let [a-valid (Variable-- 2 'x (Integer 4)
+    (let [a-valid (Variable-- 2 "x" (Integer 4)
                               nil [] Local
                               [] []  Default
                               Source Public Required
@@ -2257,81 +2242,81 @@
       (is (s/valid? ::asr/symbol   a-valid))
       (is (s/valid? ::asr/Variable a-valid))))
   (testing "heavy sugar invalid examples"
-    (let [a-inval (Variable-- "foo" 'x (Integer 4) ;; bad symtab-id
-                              nil [] 'Local
-                              [] []  'Default
-                              'Source 'Public 'Required
+    (let [a-inval (Variable-- "foo" "x" (Integer 4) ;; bad symtab-id
+                              nil [] Local
+                              [] []  Default
+                              Source Public Required
                               false)]
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 "foo" (Integer 4) ;; bad varnym
-                              nil [] 'Local
-                              [] []  'Default
-                              'Source 'Public 'Required
+    (let [a-inval (Variable-- 2 "x" (Integer 42424242) ;; bad ttupe
+                              nil [] Local
+                              [] []  Default
+                              Source Public Required
                               false)]
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 'x (Integer 42424242) ;; bad ttupe
-                              nil [] 'Local
-                              [] []  'Default
-                              'Source 'Public 'Required
+    (let [a-inval (Variable-- 2 "x" (Integer 42424242)
+                              "FOOBAR" [] Local ;; bad dependencies
+                              [] []  Default
+                              Source Public Required
                               false)]
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 'x (Integer 42424242)
-                              'FOOBAR [] 'Local ;; bad dependencies
-                              [] []  'Default
-                              'Source 'Public 'Required
+    (let [a-inval (Variable-- 2 "x" (Integer 4)
+                              nil [] (intent "FOOBAR") ;; bad intent
+                              [] []  Default
+                              Source Public Required
                               false)]
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 'x (Integer 4)
-                              nil [] 'FOOBAR ;; bad intent
-                              [] []  'Default
-                              'Source 'Public 'Required
+    (let [a-inval (Variable-- 2 "x" (Integer 4)
+                              nil ["x" "y" 'foo] ;; bad dependencies
+                              Local
+                              [] []  Default
+                              Source Public Required
                               false)]
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 'x (Integer 4)
-                              nil ['x 'y "foo"] 'Local ;; bad dependencies
-                              [] []  'Default
-                              'Source 'Public 'Required
+    (let [a-inval (Variable-- 2 "x" (Integer 4)
+                              nil [] Local
+                              [] []
+                              ;; bad storage-type
+                              (storage-type "FOOBAR")
+                              Source Public Required
                               false)]
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 'x (Integer 4)
-                              nil [] 'Local
-                              [] []  'FOOBAR ;; bad storage-type
-                              'Source 'Public 'Required
+    (let [a-inval (Variable-- 2 "x" (Integer 4)
+                              nil [] Local
+                              [] []  Default
+                              (abi "FOOBAR")
+                              Public Required ;; bad abi
                               false)]
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 'x (Integer 4)
-                              nil [] 'Local
-                              [] []  'Default
-                              'FOOBAR 'Public 'Required ;; bad abi
+    (let [a-inval (Variable-- 2 "x" (Integer 4)
+                              nil [] Local
+                              [] []  Default
+                              Source
+                              (access "FOOBAR") ;; bad access
+                              Required
                               false)]
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 'x (Integer 4)
-                              nil [] 'Local
-                              [] []  'Default
-                              'Source 'FOOBAR 'Required ;; bad access
+    (let [a-inval (Variable-- 2 "x" (Integer 4)
+                              nil [] Local
+                              [] []  Default
+                              Source Public
+                              (presence "FOOBAR") ;; bad presence
                               false)]
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 'x (Integer 4)
-                              nil [] 'Local
-                              [] []  'Default
-                              'Source 'Public 'FOOBAR ;; bad presence
-                              false)]
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 'x (Integer 4)
-                              nil [] 'Local
-                              [] []  'Default
-                              'Source 'Public 'Required
-                              'FOOBAR)] ;; bad value-attr
+    (let [a-inval (Variable-- 2 "x" (Integer 4)
+                              nil [] Local
+                              [] []  Default
+                              Source Public Required
+                              "FOOBAR")] ;; bad value-attr
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval)))))
   (testing "legacy macro"
@@ -2340,30 +2325,18 @@
              Local () ()
              Default (Logical 4 []) Source
              Public Required false)]
+      (is (s/valid? ::asr/Variable v))
+      (idempotency-check v)
       ;; using "legacicated" symbols:
-      (is (= v (Variable-- 2 'a (Logical 4)
+      (is (= v (Variable-- 2 "a" (Logical 4)
                            nil [] Local
                            [] [] Default
                            Source Public Required
                            false)))
-      ;; using tick marks (quoted symbolic constants)
-      (is (= v (Variable-- 2 'a (Logical 4)
-                           nil [] 'Local
-                           [] [] 'Default
-                           'Source 'Public 'Required
-                           false)))
       ;; using telescoping specs
       (is (s/valid? ::asr/Variable v))
       (is (s/valid? ::asr/symbol   v))
-      (is (s/valid? ::asr/asr-term v)))
-    (let [v (Variable
-             2 'a []
-             Local () ()
-             Default (Logical 4 []) Source
-             Public Required false)]
-      (is (not (s/valid? ::asr/Variable v)))
-      (is (not (s/valid? ::asr/symbol   v)))
-      (is (not (s/valid? ::asr/asr-term v)))))
+      (is (s/valid? ::asr/asr-term v))))
   (testing "SymbolTable with Variable"
     (let [st (SymbolTable
               2 {:a
@@ -2376,6 +2349,7 @@
                   2 b [] Local
                   () () Default (Logical 4 [])
                   Source Public Required false)})]
+      (idempotency-check st)
       (is (not (s/valid? ::asr/symbol st)))
       (is (s/valid? ::asr/SymbolTable st))
       (is (s/valid? ::asr/asr-term    st))))
@@ -2432,11 +2406,11 @@
                Public false false))]
     ;; --------------------------------
     (is (s/valid? ::asr/FunctionType reft))
-    #_(is (nil? (s/explain ::asr/FunctionType reft)))
+    (idempotency-check reft)
     (is (s/valid? ::asr/Function refn))
-    #_(is (nil? (s/explain ::asr/Function refn)))
+    (idempotency-check refn)
     (is (s/valid? ::asr/Function afn))
-    #_(is (nil? (s/explain ::asr/Function afn)))
+    (idempotency-check afn)
     (is (s/valid? ::asr/asr-term afn))
     (is (s/valid? ::asr/symbol   afn))
     (is (s/valid? ::asr/Function afn)))
@@ -2513,6 +2487,7 @@
                (Var 2 b)
                (Logical 4 []) ()) ())]
           () Public false false))]
+    (idempotency-check afn)
     (is (s/valid? ::asr/asr-term afn))
     (is (s/valid? ::asr/symbol   afn))
     (is (s/valid? ::asr/Function afn)))
@@ -2558,6 +2533,7 @@
                   Public
                   false
                   false))]
+    (idempotency-check example)
     (is (s/valid? ::asr/Function example)))
 
   (let [example (legacy
@@ -2623,6 +2599,7 @@
                   false
                   false
                   ))]
+    (idempotency-check example)
     (is (s/valid? ::asr/Function example)))
 
   (let [example (legacy
@@ -2635,6 +2612,7 @@
                   pow
                   Private
                   ))]
+    (idempotency-check example)
     (is (s/valid? ::asr/ExternalSymbol example)))
 
   (let [example (legacy
@@ -2665,6 +2643,7 @@
                   []
                   false
                   ))]
+    (idempotency-check example)
     (is (s/valid? ::asr/FunctionType example)))
 
   (let [example (legacy
@@ -2674,10 +2653,12 @@
                   Default
                   (Integer 4 [])
                   Source  Public  Required false))]
+    (idempotency-check example)
     (is (s/valid? ::asr/Variable example)))
 
   (let [example (legacy [((IntegerConstant 2 (Integer 4 [])))
                          ((IntegerConstant 2 (Integer 4 [])))])]
+    (idempotency-check example)
     (is (s/valid? ::asr/call-args example)))
 
   (let [example (legacy
@@ -2688,6 +2669,7 @@
                    ((IntegerConstant 2 (Integer 4 [])))]
                   (Real 8 [])
                   (RealConstant 4.000000 (Real 8 [])) ()))]
+    (idempotency-check example)
     (is (s/valid? ::asr/FunctionCall example))
     (is (s/valid? ::asr/expr         example))
     (is (s/valid? ::asr/target       example)))
@@ -2734,6 +2716,7 @@
                     )
                    ()
                    )])]
+    (idempotency-check example)
     (is (s/valid? ::asr/body example)))
 
   (let [example (legacy
@@ -2783,6 +2766,7 @@
                   false
                   false
                   ))]
+    (idempotency-check example)
     (is (s/valid? ::asr/Function example)))
 
   (let [example (legacy
@@ -3010,6 +2994,7 @@
                     )
                    })
                  )]
+    (idempotency-check example)
     (is (s/valid? ::asr/SymbolTable example))))
 
 
@@ -3345,7 +3330,10 @@
           [lpython_builtin]
           false
           false))]
-    (is (s/valid? ::asr/Module example))))
+    (idempotency-check example)
+    (is (s/valid? ::asr/Module example))
+    (is (s/valid? ::asr/symbol example))
+    (is (s/valid? ::asr/asr-term example))))
 
 
 ;;  ___
@@ -3361,6 +3349,7 @@
            main_program
            []
            [])]
+    (idempotency-check p)
     (is (s/valid? ::asr/asr-term p))
     (is (s/valid? ::asr/symbol   p))
     (is (s/valid? ::asr/Program  p)))
@@ -3372,6 +3361,7 @@
             [(= (Var 2 a)
                 (LogicalConstant false (Logical 4 []))
                 ())]))]
+    (idempotency-check p)
     (is (s/valid? ::asr/asr-term p))
     (is (s/valid? ::asr/symbol   p))
     (is (s/valid? ::asr/Program  p))))
@@ -3402,28 +3392,31 @@
                 {::asr/unit-head ::asr/TranslationUnit
                  ::asr/SymbolTable (SymbolTable 42 {})
                  ::asr/nodes
-                 (map
-                  node
-                  [(Program
-                    (SymbolTable 3 {})
-                    main_program
-                    []
-                    [])])}}
+                 (vec (map
+                       node
+                       [(Program
+                         (SymbolTable 3 {})
+                         main_program
+                         []
+                         [])]))}}
         large {::asr/term ::asr/unit
                ::asr/asr-unit-head
                {::asr/unit-head ::asr/TranslationUnit
                 ::asr/SymbolTable (SymbolTable 42 {})
                 ::asr/nodes
-                (map
-                 node
-                 [(legacy
-                   (Program
-                    (SymbolTable 3 {})
-                    main_program
-                    []
-                    [(= (Var 2 a)
-                        (LogicalConstant false (Logical 4 []))
-                        ())]))])}}]
+                (vec (map
+                      node
+                      [(legacy
+                        (Program
+                         (SymbolTable 3 {})
+                         main_program
+                         []
+                         [(= (Var 2 a)
+                             (LogicalConstant false (Logical 4 []))
+                             ())]))]))}}]
+    (idempotency-check small)
+    (idempotency-check medium)
+    (idempotency-check large)
     (is (s/valid? ::asr/unit            small))
     (is (s/valid? ::asr/unit            medium))
     (is (s/valid? ::asr/unit            large))
@@ -3435,177 +3428,199 @@
     (is (s/valid? ::asr/TranslationUnit large)))
 
   (testing "smallest translation unit"
-    (is (s/valid?
-         ::asr/unit
-         (TranslationUnit
-          (SymbolTable 42 {})
-          []))))
+    (let [x (TranslationUnit
+             (SymbolTable 42 {})
+             [])]
+      (idempotency-check x)
+      (is (s/valid? ::asr/unit x))))
 
   (testing "translation unit with empty program"
-    (is (s/valid?
-         ::asr/unit
-         (TranslationUnit
-          (SymbolTable 42 {})
-          [(Program
-            (SymbolTable 3 {})
-            main_program
-            []
-            [])]))))
+    (let [x (TranslationUnit
+             (SymbolTable 42 {})
+             [(Program
+               (SymbolTable 3 {})
+               main_program
+               []
+               [])])]
+      (idempotency-check x)
+      (is (s/valid? ::asr/unit x))))
 
   (testing "translation unit with small program"
-    (is (s/valid?
-         ::asr/unit
-         (legacy
-          (TranslationUnit
-           (SymbolTable 42 {})
-           [(Program
-             (SymbolTable 3 {})
-             main_program
-             []
-             [(= (Var 2 a)
-                 (LogicalConstant false (Logical 4 []))
-                 ())])])))))
+    (let [x (legacy
+             (TranslationUnit
+              (SymbolTable 42 {})
+              [(Program
+                (SymbolTable 3 {})
+                main_program
+                []
+                [(= (Var 2 a)
+                    (LogicalConstant false (Logical 4 []))
+                    ())])]))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/unit x))))
 
   (testing "5311701 with Module-- heavy sugar"
-    (is (s/valid?
-         ::asr/unit
-         (legacy
-          (TranslationUnit
-           (SymbolTable
-            1 {:_global_symbols
-               (Module--
-                (SymbolTable
-                 4 {:test_boolOp
-                    (Function
-                     (SymbolTable
-                      2 {:a
-                         (Variable
-                          2 a [] Local
-                          () () Default (Logical 4 [])
-                          Source Public Required false),
-                         :b
-                         (Variable
-                          2 b [] Local
-                          () () Default (Logical 4 [])
-                          Source Public Required false)})
-                     test_boolOp
-                     (FunctionType
-                      [] () Source
-                      Implementation () false
-                      false false false
-                      false [] [] false)
-                     [] []
-                     [(= (Var 2 a) (LogicalConstant false (Logical 4 [])) ())
-                      (= (Var 2 b) (LogicalConstant true (Logical 4 []))  ())
-                      (= (Var 2 a)
-                         (LogicalBinOp (Var 2 a) And (Var 2 b)
-                                       (Logical 4 []) ()) ())
-                      (= (Var 2 b)
-                         (LogicalBinOp (Var 2 a)  Or
-                                       (LogicalConstant true (Logical 4 []))
-                                       (Logical 4 []) ()) ())
-                      (= (Var 2 a) (LogicalBinOp (Var 2 a) Or (Var 2 b)
-                                                 (Logical 4 []) ()) ())
-                      (= (Var 2 a) (LogicalBinOp (Var 2 a)
-                                                 And
-                                                 (LogicalCompare (Var 2 b) Eq (Var 2 b)
-                                                                 (Logical 4 []) ())
-                                                 (Logical 4 []) ()) ())
-                      (= (Var 2 a) (LogicalBinOp (Var 2 a) And
-                                                 (LogicalCompare (Var 2 b) NotEq (Var 2 b)
-                                                                 (Logical 4 []) ())
-                                                 (Logical 4 []) ()) ())
-                      (= (Var 2 a) (LogicalBinOp (Var 2 b) Or (Var 2 b)
-                                                 (Logical 4 []) ()) ())]
-                     () Public false false)})
-                '_global_symbols ;; NOTE TICK MARK
-                [] false false),
-               :main_program
-               (Program (SymbolTable 3 {}) main_program [] [])}) [])))))
+    (let [x (legacy
+             (TranslationUnit
+              (SymbolTable
+               1 {:_global_symbols
+                  (Module--
+                   (SymbolTable
+                    4 {:test_boolOp
+                       (Function
+                        (SymbolTable
+                         2 {:a
+                            (Variable
+                             2 a [] Local
+                             () () Default (Logical 4 [])
+                             Source Public Required false),
+                            :b
+                            (Variable
+                             2 b [] Local
+                             () () Default (Logical 4 [])
+                             Source Public Required false)})
+                        test_boolOp
+                        (FunctionType
+                         [] () Source
+                         Implementation () false
+                         false false false
+                         false [] [] false)
+                        [] []
+                        [(= (Var 2 a)
+                            (LogicalConstant false (Logical 4 [])) ())
+                         (= (Var 2 b)
+                            (LogicalConstant true (Logical 4 []))  ())
+                         (= (Var 2 a)
+                            (LogicalBinOp (Var 2 a) And (Var 2 b)
+                                          (Logical 4 []) ()) ())
+                         (= (Var 2 b)
+                            (LogicalBinOp
+                             (Var 2 a)  Or
+                             (LogicalConstant true (Logical 4 []))
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp (Var 2 a) Or (Var 2 b)
+                                          (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp
+                             (Var 2 a)
+                             And
+                             (LogicalCompare (Var 2 b) Eq (Var 2 b)
+                                             (Logical 4 []) ())
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp
+                             (Var 2 a) And
+                             (LogicalCompare (Var 2 b) NotEq (Var 2 b)
+                                             (Logical 4 []) ())
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp (Var 2 b) Or (Var 2 b)
+                                          (Logical 4 []) ()) ())]
+                        () Public false false)})
+                   ;; NOTE: quotes because of Module-- at top
+                   "_global_symbols"
+                   [] false false),
+                  :main_program
+                  (Program
+                   (SymbolTable 3 {}) main_program [] [])}) []))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/unit x))))
 
   (testing "5311701 with Module legacy sugar"
-    (is (s/valid?
-         ::asr/unit
-         (legacy
-          (TranslationUnit
-           (SymbolTable
-            1 {:_global_symbols
-               (Module
-                (SymbolTable
-                 4 {:test_boolOp
-                    (Function
-                     (SymbolTable
-                      2 {:a
-                         (Variable
-                          2 a [] Local
-                          () () Default (Logical 4 [])
-                          Source Public Required false),
-                         :b
-                         (Variable
-                          2 b [] Local
-                          () () Default (Logical 4 [])
-                          Source Public Required false)})
-                     test_boolOp
-                     (FunctionType
-                      [] () Source
-                      Implementation () false
-                      false false false
-                      false [] [] false)
-                     [] []
-                     [(= (Var 2 a) (LogicalConstant false (Logical 4 [])) ())
-                      (= (Var 2 b) (LogicalConstant true (Logical 4 []))  ())
-                      (= (Var 2 a)
-                         (LogicalBinOp (Var 2 a) And (Var 2 b)
-                                       (Logical 4 []) ()) ())
-                      (= (Var 2 b)
-                         (LogicalBinOp (Var 2 a)  Or
-                                       (LogicalConstant true (Logical 4 []))
-                                       (Logical 4 []) ()) ())
-                      (= (Var 2 a) (LogicalBinOp (Var 2 a) Or (Var 2 b)
-                                                 (Logical 4 []) ()) ())
-                      (= (Var 2 a) (LogicalBinOp (Var 2 a)
-                                                 And
-                                                 (LogicalCompare (Var 2 b) Eq (Var 2 b)
-                                                                 (Logical 4 []) ())
-                                                 (Logical 4 []) ()) ())
-                      (= (Var 2 a) (LogicalBinOp (Var 2 a) And
-                                                 (LogicalCompare (Var 2 b) NotEq (Var 2 b)
-                                                                 (Logical 4 []) ())
-                                                 (Logical 4 []) ()) ())
-                      (= (Var 2 a) (LogicalBinOp (Var 2 b) Or (Var 2 b)
-                                                 (Logical 4 []) ()) ())]
-                     () Public false false)})
-                _global_symbols
-                [] false false),
-               :main_program
-               (Program (SymbolTable 3 {}) main_program [] [])}) [])))))
+    (let [x (legacy
+             (TranslationUnit
+              (SymbolTable
+               1 {:_global_symbols
+                  (Module
+                   (SymbolTable
+                    4 {:test_boolOp
+                       (Function
+                        (SymbolTable
+                         2 {:a
+                            (Variable
+                             2 a [] Local
+                             () () Default (Logical 4 [])
+                             Source Public Required false),
+                            :b
+                            (Variable
+                             2 b [] Local
+                             () () Default (Logical 4 [])
+                             Source Public Required false)})
+                        test_boolOp
+                        (FunctionType
+                         [] () Source
+                         Implementation () false
+                         false false false
+                         false [] [] false)
+                        [] []
+                        [(= (Var 2 a)
+                            (LogicalConstant false (Logical 4 [])) ())
+                         (= (Var 2 b)
+                            (LogicalConstant true (Logical 4 []))  ())
+                         (= (Var 2 a)
+                            (LogicalBinOp (Var 2 a) And (Var 2 b)
+                                          (Logical 4 []) ()) ())
+                         (= (Var 2 b)
+                            (LogicalBinOp
+                             (Var 2 a)  Or
+                             (LogicalConstant true (Logical 4 []))
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp (Var 2 a) Or (Var 2 b)
+                                          (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp
+                             (Var 2 a)
+                             And
+                             (LogicalCompare (Var 2 b) Eq (Var 2 b)
+                                             (Logical 4 []) ())
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp
+                             (Var 2 a) And
+                             (LogicalCompare (Var 2 b) NotEq (Var 2 b)
+                                             (Logical 4 []) ())
+                             (Logical 4 []) ()) ())
+                         (= (Var 2 a)
+                            (LogicalBinOp (Var 2 b) Or (Var 2 b)
+                                          (Logical 4 []) ()) ())]
+                        () Public false false)})
+                   _global_symbols
+                   [] false false),
+                  :main_program
+                  (Program (SymbolTable 3 {})
+                           main_program [] [])}) []))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/unit x))))
 
   (testing "Program fragment with legacy sugar"
-    (is (s/valid? ::asr/Program
-                  (Program
-                   (SymbolTable
-                    5
-                    {
-                     :_lpython_main_program
-                     (ExternalSymbol
-                      5
-                      _lpython_main_program
-                      7 _lpython_main_program
-                      _global_symbols
-                      []
-                      _lpython_main_program
-                      Public
-                      )
-                     })
-                   main_program
-                   [_global_symbols]
-                   [(SubroutineCall
-                     5 _lpython_main_program
-                     ()
-                     []
-                     ()
-                     )]
-                   ))))
+    (let [x (Program
+             (SymbolTable
+              5
+              {
+               :_lpython_main_program
+               (ExternalSymbol
+                5
+                _lpython_main_program
+                7 _lpython_main_program
+                _global_symbols
+                []
+                _lpython_main_program
+                Public
+                )
+               })
+             main_program
+             [_global_symbols]
+             [(SubroutineCall
+               5 _lpython_main_program
+               ()
+               []
+               ()
+               )]
+             )]
+      (idempotency-check x)
+      (is (s/valid? ::asr/Program x))))
 
   (testing "smallest subroutine call"
     (is (s/valid? ::asr/SubroutineCall
@@ -3618,47 +3633,916 @@
                     )))))
 
   (testing "function"
-    (is (s/valid? ::asr/Function
-                  (legacy
-                   (Function
-                    (SymbolTable
-                     6
-                     {
+    (let [x (legacy
+             (Function
+              (SymbolTable
+               6
+               {
 
-                      })
-                    _lpython_main_program
-                    (FunctionType
-                     []
-                     ()
-                     Source
-                     Implementation
-                     ()
-                     false
-                     false
-                     false
-                     false
-                     false
-                     []
-                     []
-                     false
-                     )
-                    [test_fn1]
-                    []
-                    [(SubroutineCall
-                      7 test_fn1
-                      ()
-                      []
-                      ()
-                      )]
-                    ()
-                    Public
-                    false
-                    false
-                    )))))
+                })
+              _lpython_main_program
+              (FunctionType
+               []
+               ()
+               Source
+               Implementation
+               ()
+               false
+               false
+               false
+               false
+               false
+               []
+               []
+               false
+               )
+              [test_fn1]
+              []
+              [(SubroutineCall
+                7 test_fn1
+                ()
+                []
+                ()
+                )]
+              ()
+              Public
+              false
+              false
+              ))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/Function x))))
 
   (testing "symbol table"
-    (is (s/valid? ::asr/SymbolTable
-                  (legacy
+    (let [x (legacy
+             (SymbolTable
+              2
+              {
+               :_lpython_return_variable
+               (Variable
+                2
+                _lpython_return_variable
+                []
+                ReturnVar
+                ()
+                ()
+                Default
+                (Integer 4 [])
+                Source
+                Public
+                Required
+                false
+                )
+               }))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/SymbolTable x))))
+
+  (testing "function type"
+    (let [x (legacy
+             (FunctionType
+              []
+              (Integer 4 [])
+              Source
+              Implementation
+              ()
+              false
+              false
+              false
+              false
+              false
+              []
+              []
+              false
+              ))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/FunctionType x))))
+
+  (testing "assignment"
+    (let [x (legacy
+             (=
+              (Var 2 _lpython_return_variable)
+              (IntegerConstant 5 (Integer 4 []))
+              ()
+              ))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/Assignment x))))
+
+  (testing "return"
+    (let [x (legacy
+             (Return))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/Return x))))
+
+  (testing "function with function type"
+    (let [x (legacy
+             (Function
+              (SymbolTable
+               2
+               {
+                :_lpython_return_variable
+                (Variable
+                 2
+                 _lpython_return_variable
+                 []
+                 ReturnVar
+                 ()
+                 ()
+                 Default
+                 (Integer 4 [])
+                 Source
+                 Public
+                 Required
+                 false
+                 )
+                })
+              g
+              (FunctionType
+               []
+               (Integer 4 [])
+               Source
+               Implementation
+               ()
+               false
+               false
+               false
+               false
+               false
+               []
+               []
+               false
+               )
+              []
+              []
+              [(=
+                (Var 2 _lpython_return_variable)
+                (IntegerConstant 5 (Integer 4 []))
+                ()
+                )
+               (Return)]
+              (Var 2 _lpython_return_variable)
+              Public
+              false
+              false
+              ))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/Function x))))
+
+  (testing "another function"
+    (let [x (legacy
+             (Function
+              (SymbolTable
+               6
+               {
+
+                })
+              _lpython_main_program
+              (FunctionType
+               []
+               ()
+               Source
+               Implementation
+               ()
+               false
+               false
+               false
+               false
+               false
+               []
+               []
+               false
+               )
+              [test_fn1]
+              []
+              [(SubroutineCall
+                7 test_fn1
+                ()
+                []
+                ()
+                )]
+              ()
+              Public
+              false
+              false
+              )
+             )]
+      (idempotency-check x)
+      (is (s/valid? ::asr/Function x))))
+
+  (testing "bigger function"
+    (let [x (legacy
+             (Function
+              (SymbolTable
+               3
+               {
+                :x
+                (Variable
+                 3
+                 x
+                 []
+                 In
+                 ()
+                 ()
+                 Default
+                 (Integer 4 [])
+                 Source
+                 Public
+                 Required
+                 false
+                 )
+                })
+              gsubrout
+              (FunctionType
+               [(Integer 4 [])]
+               ()
+               Source
+               Implementation
+               ()
+               false
+               false
+               false
+               false
+               false
+               []
+               []
+               false
+               )
+              []
+              [(Var 3 x)]
+              [(Print
+                ()
+                [(Var 3 x)]
+                ()
+                ()
+                )]
+              ()
+              Public
+              false
+              false
+              ))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/Function x))))
+
+  (testing "even bigger function"
+    (let [x (legacy
+             (Function
+              (SymbolTable
+               4
+               {
+                :__lcompilers_dummy
+                (Variable
+                 4
+                 __lcompilers_dummy
+                 []
+                 Local
+                 ()
+                 ()
+                 Default
+                 (Integer 4 [])
+                 Source
+                 Public
+                 Required
+                 false
+                 ),
+                :i
+                (Variable
+                 4
+                 i
+                 []
+                 Local
+                 ()
+                 ()
+                 Default
+                 (Integer 4 [])
+                 Source
+                 Public
+                 Required
+                 false
+                 ),
+                :j
+                (Variable
+                 4
+                 j
+                 []
+                 Local
+                 ()
+                 ()
+                 Default
+                 (Integer 4 [])
+                 Source
+                 Public
+                 Required
+                 false
+                 )
+                })
+              test_fn1
+              (FunctionType
+               []
+               ()
+               Source
+               Implementation
+               ()
+               false
+               false
+               false
+               false
+               false
+               []
+               []
+               false
+               )
+              [g
+               gsubrout]
+              []
+              [(= (Var 4 i)
+                  (FunctionCall
+                   7 g
+                   ()
+                   []
+                   (Integer 4 [])
+                   ()
+                   ()) ())
+               (= (Var 4 j)
+                  (FunctionCall
+                   7 g
+                   ()
+                   []
+                   (Integer 4 [])
+                   ()
+                   ()) ())
+               (= (Var 4 __lcompilers_dummy)
+                  (FunctionCall
+                   7 g
+                   ()
+                   []
+                   (Integer 4 [])
+                   ()
+                   ()) ())
+               (SubroutineCall
+                7 gsubrout
+                ()
+                ((Var 4 i))
+                ())]
+              ()
+              Public
+              false
+              false
+              ))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/Function x))))
+
+  (testing "bigger symbol table"
+    (let [x (legacy
+             (SymbolTable
+              7
+              {
+               :_lpython_main_program
+               (Function
+                (SymbolTable
+                 6
+                 {
+
+                  })
+                _lpython_main_program
+                (FunctionType
+                 []
+                 ()
+                 Source
+                 Implementation
+                 ()
+                 false
+                 false
+                 false
+                 false
+                 false
+                 []
+                 []
+                 false
+                 )
+                [test_fn1]
+                []
+                [(SubroutineCall
+                  7 test_fn1
+                  ()
+                  []
+                  ()
+                  )]
+                ()
+                Public
+                false
+                false
+                ),
+               :g
+               (Function
+                (SymbolTable
+                 2
+                 {
+                  :_lpython_return_variable
+                  (Variable
+                   2
+                   _lpython_return_variable
+                   []
+                   ReturnVar
+                   ()
+                   ()
+                   Default
+                   (Integer 4 [])
+                   Source
+                   Public
+                   Required
+                   false
+                   )
+                  })
+                g
+                (FunctionType
+                 []
+                 (Integer 4 [])
+                 Source
+                 Implementation
+                 ()
+                 false
+                 false
+                 false
+                 false
+                 false
+                 []
+                 []
+                 false
+                 )
+                []
+                []
+                [(=
+                  (Var 2 _lpython_return_variable)
+                  (IntegerConstant 5 (Integer 4 []))
+                  ()
+                  )
+                 (Return)]
+                (Var 2 _lpython_return_variable)
+                Public
+                false
+                false
+                ),
+               :gsubrout
+               (Function
+                (SymbolTable
+                 3
+                 {
+                  :x
+                  (Variable
+                   3
+                   x
+                   []
+                   In
+                   ()
+                   ()
+                   Default
+                   (Integer 4 [])
+                   Source
+                   Public
+                   Required
+                   false
+                   )
+                  })
+                gsubrout
+                (FunctionType
+                 [(Integer 4 [])]
+                 ()
+                 Source
+                 Implementation
+                 ()
+                 false
+                 false
+                 false
+                 false
+                 false
+                 []
+                 []
+                 false
+                 )
+                []
+                [(Var 3 x)]
+                [(Print
+                  ()
+                  [(Var 3 x)]
+                  ()
+                  ()
+                  )]
+                ()
+                Public
+                false
+                false
+                ),
+               :test_fn1
+               (Function
+                (SymbolTable
+                 4
+                 {
+                  :__lcompilers_dummy
+                  (Variable
+                   4
+                   __lcompilers_dummy
+                   []
+                   Local
+                   ()
+                   ()
+                   Default
+                   (Integer 4 [])
+                   Source
+                   Public
+                   Required
+                   false
+                   ),
+                  :i
+                  (Variable
+                   4
+                   i
+                   []
+                   Local
+                   ()
+                   ()
+                   Default
+                   (Integer 4 [])
+                   Source
+                   Public
+                   Required
+                   false
+                   ),
+                  :j
+                  (Variable
+                   4
+                   j
+                   []
+                   Local
+                   ()
+                   ()
+                   Default
+                   (Integer 4 [])
+                   Source
+                   Public
+                   Required
+                   false
+                   )
+                  })
+                test_fn1
+                (FunctionType
+                 []
+                 ()
+                 Source
+                 Implementation
+                 ()
+                 false
+                 false
+                 false
+                 false
+                 false
+                 []
+                 []
+                 false
+                 )
+                [g
+                 gsubrout]
+                []
+                [(= (Var 4 i)
+                    (FunctionCall
+                     7 g
+                     ()
+                     []
+                     (Integer 4 [])
+                     ()
+                     ()) ())
+                 (= (Var 4 j)
+                    (FunctionCall
+                     7 g
+                     ()
+                     []
+                     (Integer 4 [])
+                     ()
+                     ()) ())
+                 (= (Var 4 __lcompilers_dummy)
+                    (FunctionCall
+                     7 g
+                     ()
+                     []
+                     (Integer 4 [])
+                     ()
+                     ()) ())
+                 (SubroutineCall
+                  7 gsubrout
+                  ()
+                  [((Var 4 i))]
+                  ()
+                  )]
+                ()
+                Public
+                false
+                false
+                )
+               }))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/SymbolTable x))))
+
+  (testing "module"
+    (let [x (legacy
+             (Module
+              (SymbolTable
+               7
+               {
+                :_lpython_main_program
+                (Function
+                 (SymbolTable
+                  6
+                  {
+
+                   })
+                 _lpython_main_program
+                 (FunctionType
+                  []
+                  ()
+                  Source
+                  Implementation
+                  ()
+                  false
+                  false
+                  false
+                  false
+                  false
+                  []
+                  []
+                  false
+                  )
+                 [test_fn1]
+                 []
+                 [(SubroutineCall
+                   7 test_fn1
+                   ()
+                   []
+                   ()
+                   )]
+                 ()
+                 Public
+                 false
+                 false
+                 ),
+                :g
+                (Function
+                 (SymbolTable
+                  2
+                  {
+                   :_lpython_return_variable
+                   (Variable
+                    2
+                    _lpython_return_variable
+                    []
+                    ReturnVar
+                    ()
+                    ()
+                    Default
+                    (Integer 4 [])
+                    Source
+                    Public
+                    Required
+                    false
+                    )
+                   })
+                 g
+                 (FunctionType
+                  []
+                  (Integer 4 [])
+                  Source
+                  Implementation
+                  ()
+                  false
+                  false
+                  false
+                  false
+                  false
+                  []
+                  []
+                  false
+                  )
+                 []
+                 []
+                 [(=
+                   (Var 2 _lpython_return_variable)
+                   (IntegerConstant 5 (Integer 4 []))
+                   ()
+                   )
+                  (Return)]
+                 (Var 2 _lpython_return_variable)
+                 Public
+                 false
+                 false
+                 ),
+                :gsubrout
+                (Function
+                 (SymbolTable
+                  3
+                  {
+                   :x
+                   (Variable
+                    3
+                    x
+                    []
+                    In
+                    ()
+                    ()
+                    Default
+                    (Integer 4 [])
+                    Source
+                    Public
+                    Required
+                    false
+                    )
+                   })
+                 gsubrout
+                 (FunctionType
+                  [(Integer 4 [])]
+                  ()
+                  Source
+                  Implementation
+                  ()
+                  false
+                  false
+                  false
+                  false
+                  false
+                  []
+                  []
+                  false
+                  )
+                 []
+                 [(Var 3 x)]
+                 [(Print
+                   ()
+                   [(Var 3 x)]
+                   ()
+                   ()
+                   )]
+                 ()
+                 Public
+                 false
+                 false
+                 ),
+                :test_fn1
+                (Function
+                 (SymbolTable
+                  4
+                  {
+                   :__lcompilers_dummy
+                   (Variable
+                    4
+                    __lcompilers_dummy
+                    []
+                    Local
+                    ()
+                    ()
+                    Default
+                    (Integer 4 [])
+                    Source
+                    Public
+                    Required
+                    false
+                    ),
+                   :i
+                   (Variable
+                    4
+                    i
+                    []
+                    Local
+                    ()
+                    ()
+                    Default
+                    (Integer 4 [])
+                    Source
+                    Public
+                    Required
+                    false
+                    ),
+                   :j
+                   (Variable
+                    4
+                    j
+                    []
+                    Local
+                    ()
+                    ()
+                    Default
+                    (Integer 4 [])
+                    Source
+                    Public
+                    Required
+                    false
+                    )
+                   })
+                 test_fn1
+                 (FunctionType
+                  []
+                  ()
+                  Source
+                  Implementation
+                  ()
+                  false
+                  false
+                  false
+                  false
+                  false
+                  []
+                  []
+                  false
+                  )
+                 [g
+                  gsubrout]
+                 []
+                 [(= (Var 4 i)
+                     (FunctionCall
+                      7 g
+                      ()
+                      []
+                      (Integer 4 [])
+                      ()
+                      ()) ())
+                  (= (Var 4 j)
+                     (FunctionCall
+                      7 g
+                      ()
+                      []
+                      (Integer 4 [])
+                      ()
+                      ()) ())
+                  (= (Var 4 __lcompilers_dummy)
+                     (FunctionCall
+                      7 g
+                      ()
+                      []
+                      (Integer 4 [])
+                      ()
+                      ()) ())
+                  (SubroutineCall
+                   7 gsubrout
+                   ()
+                   [((Var 4 i))]
+                   ()
+                   )]
+                 ()
+                 Public
+                 false
+                 false
+                 )
+                })
+              _global_symbols
+              []
+              false
+              false
+              ))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/Module x))))
+
+  (testing "even bigger symbol table"
+    (let [x (legacy
+             (SymbolTable
+              1
+              {
+               :_global_symbols
+               (Module
+                (SymbolTable
+                 7
+                 {
+                  :_lpython_main_program
+                  (Function
+                   (SymbolTable
+                    6
+                    {
+
+                     })
+                   _lpython_main_program
+                   (FunctionType
+                    []
+                    ()
+                    Source
+                    Implementation
+                    ()
+                    false
+                    false
+                    false
+                    false
+                    false
+                    []
+                    []
+                    false
+                    )
+                   [test_fn1]
+                   []
+                   [(SubroutineCall
+                     7 test_fn1
+                     ()
+                     []
+                     ()
+                     )]
+                   ()
+                   Public
+                   false
+                   false
+                   ),
+                  :g
+                  (Function
                    (SymbolTable
                     2
                     {
@@ -3677,11 +4561,8 @@
                       Required
                       false
                       )
-                     })))))
-
-  (testing "function type"
-    (is (s/valid? ::asr/FunctionType
-                  (legacy
+                     })
+                   g
                    (FunctionType
                     []
                     (Integer 4 [])
@@ -3696,1063 +4577,209 @@
                     []
                     []
                     false
-                    )))))
-
-  (testing "assignment"
-    (is (s/valid? ::asr/Assignment
-                  (legacy
-                   (=
-                    (Var 2 _lpython_return_variable)
-                    (IntegerConstant 5 (Integer 4 []))
-                    ()
-                    )))))
-
-  (testing "return"
-    (is (s/valid? ::asr/Return
-                  (legacy
-                   (Return)))))
-
-  (testing "function with function type"
-    (is (s/valid? ::asr/Function
-                  (legacy
-                   (Function
-                    (SymbolTable
-                     2
-                     {
-                      :_lpython_return_variable
-                      (Variable
-                       2
-                       _lpython_return_variable
-                       []
-                       ReturnVar
-                       ()
-                       ()
-                       Default
-                       (Integer 4 [])
-                       Source
-                       Public
-                       Required
-                       false
-                       )
-                      })
-                    g
-                    (FunctionType
-                     []
-                     (Integer 4 [])
-                     Source
-                     Implementation
+                    )
+                   []
+                   []
+                   [(=
+                     (Var 2 _lpython_return_variable)
+                     (IntegerConstant 5 (Integer 4 []))
                      ()
-                     false
-                     false
-                     false
-                     false
-                     false
-                     []
-                     []
-                     false
                      )
-                    []
-                    []
-                    [(=
-                      (Var 2 _lpython_return_variable)
-                      (IntegerConstant 5 (Integer 4 []))
-                      ()
-                      )
-                     (Return)]
-                    (Var 2 _lpython_return_variable)
-                    Public
-                    false
-                    false
-                    )))))
-
-  (testing "another function"
-    (is (s/valid? ::asr/Function
-                  (legacy
-                   (Function
-                    (SymbolTable
-                     6
-                     {
-
-                      })
-                    _lpython_main_program
-                    (FunctionType
-                     []
-                     ()
-                     Source
-                     Implementation
-                     ()
-                     false
-                     false
-                     false
-                     false
-                     false
-                     []
-                     []
-                     false
-                     )
-                    [test_fn1]
-                    []
-                    [(SubroutineCall
-                      7 test_fn1
-                      ()
+                    (Return)]
+                   (Var 2 _lpython_return_variable)
+                   Public
+                   false
+                   false
+                   ),
+                  :gsubrout
+                  (Function
+                   (SymbolTable
+                    3
+                    {
+                     :x
+                     (Variable
+                      3
+                      x
                       []
+                      In
                       ()
-                      )]
+                      ()
+                      Default
+                      (Integer 4 [])
+                      Source
+                      Public
+                      Required
+                      false
+                      )
+                     })
+                   gsubrout
+                   (FunctionType
+                    [(Integer 4 [])]
                     ()
-                    Public
+                    Source
+                    Implementation
+                    ()
                     false
+                    false
+                    false
+                    false
+                    false
+                    []
+                    []
                     false
                     )
-                   ))))
-
-  (testing "bigger function"
-    (is (s/valid? ::asr/Function
-                  (legacy
-                   (Function
-                    (SymbolTable
-                     3
-                     {
-                      :x
-                      (Variable
-                       3
-                       x
-                       []
-                       In
-                       ()
-                       ()
-                       Default
-                       (Integer 4 [])
-                       Source
-                       Public
-                       Required
-                       false
-                       )
-                      })
-                    gsubrout
-                    (FunctionType
-                     [(Integer 4 [])]
+                   []
+                   [(Var 3 x)]
+                   [(Print
                      ()
-                     Source
-                     Implementation
+                     [(Var 3 x)]
                      ()
-                     false
-                     false
-                     false
-                     false
-                     false
-                     []
-                     []
-                     false
-                     )
-                    []
-                    [(Var 3 x)]
-                    [(Print
-                      ()
-                      [(Var 3 x)]
-                      ()
-                      ()
-                      )]
-                    ()
-                    Public
-                    false
-                    false
-                    )))))
-
-  (testing "even bigger function"
-    (is (s/valid? ::asr/Function
-                  (legacy
-                   (Function
-                    (SymbolTable
-                     4
-                     {
-                      :__lcompilers_dummy
-                      (Variable
-                       4
-                       __lcompilers_dummy
-                       []
-                       Local
-                       ()
-                       ()
-                       Default
-                       (Integer 4 [])
-                       Source
-                       Public
-                       Required
-                       false
-                       ),
-                      :i
-                      (Variable
-                       4
-                       i
-                       []
-                       Local
-                       ()
-                       ()
-                       Default
-                       (Integer 4 [])
-                       Source
-                       Public
-                       Required
-                       false
-                       ),
-                      :j
-                      (Variable
-                       4
-                       j
-                       []
-                       Local
-                       ()
-                       ()
-                       Default
-                       (Integer 4 [])
-                       Source
-                       Public
-                       Required
-                       false
-                       )
-                      })
-                    test_fn1
-                    (FunctionType
-                     []
                      ()
-                     Source
-                     Implementation
-                     ()
-                     false
-                     false
-                     false
-                     false
-                     false
-                     []
-                     []
-                     false
-                     )
-                    [g
-                     gsubrout]
-                    []
-                    [(= (Var 4 i)
-                      (FunctionCall
-                       7 g
-                       ()
-                       []
-                       (Integer 4 [])
-                       ()
-                       ()) ())
-                     (= (Var 4 j)
-                      (FunctionCall
-                       7 g
-                       ()
-                       []
-                       (Integer 4 [])
-                       ()
-                       ()) ())
-                     (= (Var 4 __lcompilers_dummy)
-                      (FunctionCall
-                       7 g
-                       ()
-                       []
-                       (Integer 4 [])
-                       ()
-                       ()) ())
-                     (SubroutineCall
-                      7 gsubrout
-                      ()
-                      ((Var 4 i))
-                      ())]
-                    ()
-                    Public
-                    false
-                    false
-                    )))))
-
-  (testing "bigger symbol table"
-    (is (s/valid? ::asr/SymbolTable
-                  (legacy
+                     )]
+                   ()
+                   Public
+                   false
+                   false
+                   ),
+                  :test_fn1
+                  (Function
                    (SymbolTable
-                    7
+                    4
                     {
-                     :_lpython_main_program
-                     (Function
-                      (SymbolTable
-                       6
-                       {
-
-                        })
-                      _lpython_main_program
-                      (FunctionType
-                       []
-                       ()
-                       Source
-                       Implementation
-                       ()
-                       false
-                       false
-                       false
-                       false
-                       false
-                       []
-                       []
-                       false
-                       )
-                      [test_fn1]
+                     :__lcompilers_dummy
+                     (Variable
+                      4
+                      __lcompilers_dummy
                       []
-                      [(SubroutineCall
-                        7 test_fn1
-                        ()
-                        []
-                        ()
-                        )]
+                      Local
                       ()
+                      ()
+                      Default
+                      (Integer 4 [])
+                      Source
                       Public
-                      false
+                      Required
                       false
                       ),
-                     :g
-                     (Function
-                      (SymbolTable
-                       2
-                       {
-                        :_lpython_return_variable
-                        (Variable
-                         2
-                         _lpython_return_variable
-                         []
-                         ReturnVar
-                         ()
-                         ()
-                         Default
-                         (Integer 4 [])
-                         Source
-                         Public
-                         Required
-                         false
-                         )
-                        })
-                      g
-                      (FunctionType
-                       []
-                       (Integer 4 [])
-                       Source
-                       Implementation
-                       ()
-                       false
-                       false
-                       false
-                       false
-                       false
-                       []
-                       []
-                       false
-                       )
+                     :i
+                     (Variable
+                      4
+                      i
                       []
-                      []
-                      [(=
-                        (Var 2 _lpython_return_variable)
-                        (IntegerConstant 5 (Integer 4 []))
-                        ()
-                        )
-                       (Return)]
-                      (Var 2 _lpython_return_variable)
+                      Local
+                      ()
+                      ()
+                      Default
+                      (Integer 4 [])
+                      Source
                       Public
-                      false
+                      Required
                       false
                       ),
-                     :gsubrout
-                     (Function
-                      (SymbolTable
-                       3
-                       {
-                        :x
-                        (Variable
-                         3
-                         x
-                         []
-                         In
-                         ()
-                         ()
-                         Default
-                         (Integer 4 [])
-                         Source
-                         Public
-                         Required
-                         false
-                         )
-                        })
-                      gsubrout
-                      (FunctionType
-                       [(Integer 4 [])]
-                       ()
-                       Source
-                       Implementation
-                       ()
-                       false
-                       false
-                       false
-                       false
-                       false
-                       []
-                       []
-                       false
-                       )
+                     :j
+                     (Variable
+                      4
+                      j
                       []
-                      [(Var 3 x)]
-                      [(Print
-                        ()
-                        [(Var 3 x)]
-                        ()
-                        ()
-                        )]
+                      Local
                       ()
-                      Public
-                      false
-                      false
-                      ),
-                     :test_fn1
-                     (Function
-                      (SymbolTable
-                       4
-                       {
-                        :__lcompilers_dummy
-                        (Variable
-                         4
-                         __lcompilers_dummy
-                         []
-                         Local
-                         ()
-                         ()
-                         Default
-                         (Integer 4 [])
-                         Source
-                         Public
-                         Required
-                         false
-                         ),
-                        :i
-                        (Variable
-                         4
-                         i
-                         []
-                         Local
-                         ()
-                         ()
-                         Default
-                         (Integer 4 [])
-                         Source
-                         Public
-                         Required
-                         false
-                         ),
-                        :j
-                        (Variable
-                         4
-                         j
-                         []
-                         Local
-                         ()
-                         ()
-                         Default
-                         (Integer 4 [])
-                         Source
-                         Public
-                         Required
-                         false
-                         )
-                        })
-                      test_fn1
-                      (FunctionType
-                       []
-                       ()
-                       Source
-                       Implementation
-                       ()
-                       false
-                       false
-                       false
-                       false
-                       false
-                       []
-                       []
-                       false
-                       )
-                      [g
-                       gsubrout]
-                      []
-                      [(= (Var 4 i)
-                        (FunctionCall
-                         7 g
-                         ()
-                         []
-                         (Integer 4 [])
-                         ()
-                         ()) ())
-                       (= (Var 4 j)
-                        (FunctionCall
-                         7 g
-                         ()
-                         []
-                         (Integer 4 [])
-                         ()
-                         ()) ())
-                       (= (Var 4 __lcompilers_dummy)
-                        (FunctionCall
-                         7 g
-                         ()
-                         []
-                         (Integer 4 [])
-                         ()
-                         ()) ())
-                       (SubroutineCall
-                        7 gsubrout
-                        ()
-                        [((Var 4 i))]
-                        ()
-                        )]
                       ()
+                      Default
+                      (Integer 4 [])
+                      Source
                       Public
-                      false
+                      Required
                       false
                       )
-                     })))))
-
-  (testing "module"
-    (is (s/valid? ::asr/Module
-                  (legacy
-                   (Module
-                    (SymbolTable
-                     7
-                     {
-                      :_lpython_main_program
-                      (Function
-                       (SymbolTable
-                        6
-                        {
-
-                         })
-                       _lpython_main_program
-                       (FunctionType
-                        []
+                     })
+                   test_fn1
+                   (FunctionType
+                    []
+                    ()
+                    Source
+                    Implementation
+                    ()
+                    false
+                    false
+                    false
+                    false
+                    false
+                    []
+                    []
+                    false
+                    )
+                   [g
+                    gsubrout]
+                   []
+                   [(= (Var 4 i)
+                       (FunctionCall
+                        7 g
                         ()
-                        Source
-                        Implementation
-                        ()
-                        false
-                        false
-                        false
-                        false
-                        false
-                        []
-                        []
-                        false
-                        )
-                       [test_fn1]
-                       []
-                       [(SubroutineCall
-                         7 test_fn1
-                         ()
-                         []
-                         ()
-                         )]
-                       ()
-                       Public
-                       false
-                       false
-                       ),
-                      :g
-                      (Function
-                       (SymbolTable
-                        2
-                        {
-                         :_lpython_return_variable
-                         (Variable
-                          2
-                          _lpython_return_variable
-                          []
-                          ReturnVar
-                          ()
-                          ()
-                          Default
-                          (Integer 4 [])
-                          Source
-                          Public
-                          Required
-                          false
-                          )
-                         })
-                       g
-                       (FunctionType
                         []
                         (Integer 4 [])
-                        Source
-                        Implementation
                         ()
-                        false
-                        false
-                        false
-                        false
-                        false
-                        []
-                        []
-                        false
-                        )
-                       []
-                       []
-                       [(=
-                         (Var 2 _lpython_return_variable)
-                         (IntegerConstant 5 (Integer 4 []))
-                         ()
-                         )
-                        (Return)]
-                       (Var 2 _lpython_return_variable)
-                       Public
-                       false
-                       false
-                       ),
-                      :gsubrout
-                      (Function
-                       (SymbolTable
-                        3
-                        {
-                         :x
-                         (Variable
-                          3
-                          x
-                          []
-                          In
-                          ()
-                          ()
-                          Default
-                          (Integer 4 [])
-                          Source
-                          Public
-                          Required
-                          false
-                          )
-                         })
-                       gsubrout
-                       (FunctionType
-                        [(Integer 4 [])]
-                        ()
-                        Source
-                        Implementation
-                        ()
-                        false
-                        false
-                        false
-                        false
-                        false
-                        []
-                        []
-                        false
-                        )
-                       []
-                       [(Var 3 x)]
-                       [(Print
-                         ()
-                         [(Var 3 x)]
-                         ()
-                         ()
-                         )]
-                       ()
-                       Public
-                       false
-                       false
-                       ),
-                      :test_fn1
-                      (Function
-                       (SymbolTable
-                        4
-                        {
-                         :__lcompilers_dummy
-                         (Variable
-                          4
-                          __lcompilers_dummy
-                          []
-                          Local
-                          ()
-                          ()
-                          Default
-                          (Integer 4 [])
-                          Source
-                          Public
-                          Required
-                          false
-                          ),
-                         :i
-                         (Variable
-                          4
-                          i
-                          []
-                          Local
-                          ()
-                          ()
-                          Default
-                          (Integer 4 [])
-                          Source
-                          Public
-                          Required
-                          false
-                          ),
-                         :j
-                         (Variable
-                          4
-                          j
-                          []
-                          Local
-                          ()
-                          ()
-                          Default
-                          (Integer 4 [])
-                          Source
-                          Public
-                          Required
-                          false
-                          )
-                         })
-                       test_fn1
-                       (FunctionType
-                        []
-                        ()
-                        Source
-                        Implementation
-                        ()
-                        false
-                        false
-                        false
-                        false
-                        false
-                        []
-                        []
-                        false
-                        )
-                       [g
-                        gsubrout]
-                       []
-                       [(= (Var 4 i)
-                         (FunctionCall
-                          7 g
-                          ()
-                          []
-                          (Integer 4 [])
-                          ()
-                          ()) ())
-                        (= (Var 4 j)
-                         (FunctionCall
-                          7 g
-                          ()
-                          []
-                          (Integer 4 [])
-                          ()
-                          ()) ())
-                        (= (Var 4 __lcompilers_dummy)
-                         (FunctionCall
-                          7 g
-                          ()
-                          []
-                          (Integer 4 [])
-                          ()
-                          ()) ())
-                        (SubroutineCall
-                         7 gsubrout
-                         ()
-                         [((Var 4 i))]
-                         ()
-                         )]
-                       ()
-                       Public
-                       false
-                       false
-                       )
-                      })
-                    _global_symbols
-                    []
-                    false
-                    false
-                    )))))
-
-  (testing "even bigger symbol table"
-    (is (s/valid? ::asr/SymbolTable
-                  (legacy
-                   (SymbolTable
-                    1
-                    {
-                     :_global_symbols
-                     (Module
-                      (SymbolTable
-                       7
-                       {
-                        :_lpython_main_program
-                        (Function
-                         (SymbolTable
-                          6
-                          {
-
-                           })
-                         _lpython_main_program
-                         (FunctionType
-                          []
-                          ()
-                          Source
-                          Implementation
-                          ()
-                          false
-                          false
-                          false
-                          false
-                          false
-                          []
-                          []
-                          false
-                          )
-                         [test_fn1]
-                         []
-                         [(SubroutineCall
-                           7 test_fn1
-                           ()
-                           []
-                           ()
-                           )]
-                         ()
-                         Public
-                         false
-                         false
-                         ),
-                        :g
-                        (Function
-                         (SymbolTable
-                          2
-                          {
-                           :_lpython_return_variable
-                           (Variable
-                            2
-                            _lpython_return_variable
-                            []
-                            ReturnVar
-                            ()
-                            ()
-                            Default
-                            (Integer 4 [])
-                            Source
-                            Public
-                            Required
-                            false
-                            )
-                           })
-                         g
-                         (FunctionType
-                          []
-                          (Integer 4 [])
-                          Source
-                          Implementation
-                          ()
-                          false
-                          false
-                          false
-                          false
-                          false
-                          []
-                          []
-                          false
-                          )
-                         []
-                         []
-                         [(=
-                           (Var 2 _lpython_return_variable)
-                           (IntegerConstant 5 (Integer 4 []))
-                           ()
-                           )
-                          (Return)]
-                         (Var 2 _lpython_return_variable)
-                         Public
-                         false
-                         false
-                         ),
-                        :gsubrout
-                        (Function
-                         (SymbolTable
-                          3
-                          {
-                           :x
-                           (Variable
-                            3
-                            x
-                            []
-                            In
-                            ()
-                            ()
-                            Default
-                            (Integer 4 [])
-                            Source
-                            Public
-                            Required
-                            false
-                            )
-                           })
-                         gsubrout
-                         (FunctionType
-                          [(Integer 4 [])]
-                          ()
-                          Source
-                          Implementation
-                          ()
-                          false
-                          false
-                          false
-                          false
-                          false
-                          []
-                          []
-                          false
-                          )
-                         []
-                         [(Var 3 x)]
-                         [(Print
-                           ()
-                           [(Var 3 x)]
-                           ()
-                           ()
-                           )]
-                         ()
-                         Public
-                         false
-                         false
-                         ),
-                        :test_fn1
-                        (Function
-                         (SymbolTable
-                          4
-                          {
-                           :__lcompilers_dummy
-                           (Variable
-                            4
-                            __lcompilers_dummy
-                            []
-                            Local
-                            ()
-                            ()
-                            Default
-                            (Integer 4 [])
-                            Source
-                            Public
-                            Required
-                            false
-                            ),
-                           :i
-                           (Variable
-                            4
-                            i
-                            []
-                            Local
-                            ()
-                            ()
-                            Default
-                            (Integer 4 [])
-                            Source
-                            Public
-                            Required
-                            false
-                            ),
-                           :j
-                           (Variable
-                            4
-                            j
-                            []
-                            Local
-                            ()
-                            ()
-                            Default
-                            (Integer 4 [])
-                            Source
-                            Public
-                            Required
-                            false
-                            )
-                           })
-                         test_fn1
-                         (FunctionType
-                          []
-                          ()
-                          Source
-                          Implementation
-                          ()
-                          false
-                          false
-                          false
-                          false
-                          false
-                          []
-                          []
-                          false
-                          )
-                         [g
-                          gsubrout]
-                         []
-                         [(= (Var 4 i)
-                           (FunctionCall
-                            7 g
-                            ()
-                            []
-                            (Integer 4 [])
-                            ()
-                            ()) ())
-                          (= (Var 4 j)
-                           (FunctionCall
-                            7 g
-                            ()
-                            []
-                            (Integer 4 [])
-                            ()
-                            ()) ())
-                          (= (Var 4 __lcompilers_dummy)
-                           (FunctionCall
-                            7 g
-                            ()
-                            []
-                            (Integer 4 [])
-                            ()
-                            ()) ())
-                          (SubroutineCall
-                           7 gsubrout
-                           ()
-                           [((Var 4 i))]
-                           ()
-                           )]
-                         ()
-                         Public
-                         false
-                         false
-                         )
-                        })
-                      _global_symbols
-                      []
-                      false
-                      false
-                      ),
-                     :main_program
-                     (Program
-                      (SymbolTable
-                       5
-                       {
-                        :_lpython_main_program
-                        (ExternalSymbol
-                         5
-                         _lpython_main_program
-                         7 _lpython_main_program
-                         _global_symbols
-                         []
-                         _lpython_main_program
-                         Public
-                         )
-                        })
-                      main_program
-                      [_global_symbols]
-                      [(SubroutineCall
-                        5 _lpython_main_program
+                        ()) ())
+                    (= (Var 4 j)
+                       (FunctionCall
+                        7 g
                         ()
                         []
+                        (Integer 4 [])
                         ()
-                        )]
-                      )
-                     }))))))
+                        ()) ())
+                    (= (Var 4 __lcompilers_dummy)
+                       (FunctionCall
+                        7 g
+                        ()
+                        []
+                        (Integer 4 [])
+                        ()
+                        ()) ())
+                    (SubroutineCall
+                     7 gsubrout
+                     ()
+                     [((Var 4 i))]
+                     ()
+                     )]
+                   ()
+                   Public
+                   false
+                   false
+                   )
+                  })
+                _global_symbols
+                []
+                false
+                false
+                ),
+               :main_program
+               (Program
+                (SymbolTable
+                 5
+                 {
+                  :_lpython_main_program
+                  (ExternalSymbol
+                   5
+                   _lpython_main_program
+                   7 _lpython_main_program
+                   _global_symbols
+                   []
+                   _lpython_main_program
+                   Public
+                   )
+                  })
+                main_program
+                [_global_symbols]
+                [(SubroutineCall
+                  5 _lpython_main_program
+                  ()
+                  []
+                  ()
+                  )]
+                )
+               }))]
+      (idempotency-check x)
+      (is (s/valid? ::asr/SymbolTable x)))))
 
 
 ;; ================================================================
@@ -4786,6 +4813,7 @@
   (let [tstr (str "whole translation unit for " filenamefrag)
         fstr (str filenamefrag)]
     `(testing ~tstr
+       (idempotency-check ~tstr)
        (is (s/valid? ::asr/unit (long-form-asr ~fstr))))))
 
 
@@ -5162,7 +5190,7 @@
 
 
 (deftest bisecting-6cf8821
-  (is (s/valid? ::asr/identifier '__1))
+  (is (s/valid? ::asr/identifier "__1"))
   (is (s/valid? ::asr/GoTo
                 (GoTo 1 __1)))
   (is (s/valid? ::asr/If
@@ -5190,14 +5218,14 @@
                  (BlockCall 1 3 __TILDE__empty_block)))))
 
 
-(deftest bisecting-6dd742e
-  (is (s/valid? ::asr/GenericProcedure
-                (GenericProcedure
-                 3
-                 arccos
-                 [3 __lpython_overloaded_0__arccos
-                  3 __lpython_overloaded_1__arccos]
-                 Public ))))
+(deftest generic-procedure-test
+  (let [x (GenericProcedure
+           3
+           arccos
+           [3 __lpython_overloaded_0__arccos
+            3 __lpython_overloaded_1__arccos]
+           Public )]
+   (is (s/valid? ::asr/GenericProcedure x))))
 
 
 (deftest bisecting-fcdedc2
@@ -5803,63 +5831,6 @@
          (->asdl-type (Logical 4 [[6 60] []]))))
   (is (= "SubroutineCall(symbol name, symbol? original_name, call_arg* args, expr? dt)"
          (->asdl-type (SubroutineCall 7 test_fn1 () [] ())))))
-
-
-;; ================================================================
-;;     _    _   _    _    _  __   ____________ ____  ____
-;;    / \  | \ | |  / \  | | \ \ / /__  / ____|  _ \/ ___|
-;;   / _ \ |  \| | / _ \ | |  \ V /  / /|  _| | |_) \___ \
-;;  / ___ \| |\  |/ ___ \| |___| |  / /_| |___|  _ < ___) |
-;; /_/   \_\_| \_/_/   \_\_____|_| /____|_____|_| \_\____/
-
-
-(deftest leaf-list-test
-  (let [sample '(Real 4 [])]
-    (is (list? sample))
-    (is (leaf-list? sample)))
-  (let [fsample '(Function
-                  (SymbolTable 113 {})
-                  _lpython_main_program
-                  (FunctionType
-                   []                ()    Source
-                   Implementation    ()    false
-                   false             false false
-                   false             []    []
-                   false)
-                  [main0]
-                  []
-                  [(SubroutineCall 114 main0
-                    ()    []    ())]
-                  ()    Public    false
-                  false)
-        sample
-        `(TranslationUnit
-          (SymbolTable    1
-           {:_global_symbols
-            (Module
-             (SymbolTable    114
-              {:_lpython_main_program
-               ~fsample})
-             _global_symbols
-             [lpython_builtin]
-             false
-             false)})
-          [])]
-    (is (s/valid? ::asr/Function (to-full-form fsample)))
-    (is (s/valid? ::asr/TranslationUnit (to-full-form sample)))
-
-    #_(is (nil? (s/explain ::asr/Function (bottom-up-full-form fsample))))
-    #_(is (nil? (pprint (bottom-up-full-form sample))))
-    #_(is (s/valid? ::asr/TranslationUnit
-                  (bottom-up-full-form
-                   sample))))
-  #_(is (nil? (pprint
-               (bottom-up-full-form
-                too-big-slurped-1bcc4ec))))
-  #_(is (s/valid? ::asr/TranslationUnit
-                  (bottom-up-full-form
-                   too-big-slurped-1bcc4ec))))
-
 
 
 ;; ================================================================
