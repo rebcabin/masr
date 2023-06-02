@@ -637,22 +637,6 @@
 ;; and heavy sugar produce identical full-forms.
 ;;
 ;;
-;; For example, The following is heavy sugar for a
-;; `Variable`, similar but not identical to its
-;; legacy sugar:
-;;
-;;
-;; #+begin_src clojure
-
-#_
-(Variable-- 2 'x (Integer 4) ;; <~~~ quote mark
-            nil [] Local
-            [] []  Default
-            Source Public Required
-            false)
-;; #+end_src
-
-;;
 ;; Heavy sugar and legacy sugar employ positional
 ;; arguments that depend on order. Heavy-sugar
 ;; functions may have final arguments with defaults.
@@ -3649,7 +3633,7 @@
 ;; #+begin_src clojure
 
 (defmacro IntrinsicFunction
-  "Quote the intrinsic identifier."
+  "Stringulate the intrinsic identifier."
   [intrinsic-ident    expr*    overload-id
    return-type        value?]
   (let [i_ident (str intrinsic-ident)]
@@ -5395,7 +5379,8 @@
 ;; #+begin_src clojure
 
 (defmacro Program
-  "Quote the nym and the dependencies."
+  "Stringulate the nym and the dependencies
+  and vectorate the dependencies."
   [stab, nym, deps, body-]
   (let [i_nym (str nym)
         i_deps (vec (map str deps))]
@@ -5441,7 +5426,8 @@
 ;; #+begin_src clojure
 
 (defmacro Module
-  "Quote the mondnym and the deps."
+  "Stringulate the mondnym and the deps
+  and vectorate the deps."
   [symtab, modnym, deps, loaded, intrinsic-]
   (let [i_modnym (str modnym)
         i_strss (vec (map str deps))]
@@ -5836,7 +5822,8 @@
 (defmacro Variable
   "Honor legacy parameter order of
   lpython/src/libasr/ASR.asdl as of 25 April 2023.
-  Quote the varnym and dependencies; pass along
+  Stringulate the varnym and dependencies,
+  vectorate the dependencies; pass along
   all other params."
   [symtab-id-,     varnym-,          dependencies-,
    intent-,        symbolic-value-,  value?-,
