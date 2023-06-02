@@ -3580,8 +3580,8 @@
     args, rettype, value?, dt?]
    (let [i_ident (str ident)
          i_odent (str odent)]
-    `(FunctionCall-- (symbol-ref '~i_ident, ~stid)
-                     (symbol-ref '~i_odent, ~ostid)
+    `(FunctionCall-- (symbol-ref ~i_ident, ~stid)
+                     (symbol-ref ~i_odent, ~ostid)
                      ~args
                      ~rettype
                      ~value?
@@ -5842,21 +5842,18 @@
    intent-,        symbolic-value-,  value?-,
    storage-type-,  ttype-,           abi-,
    access-,        presence-,        value-attr-]
-  `(Variable-- ;; heavy sugar
-    ~symtab-id-
-    '~varnym-  ;; notice the tick mark
-    ~ttype-    ;; moved up from between storage type and abi
-    nil ;; legacy doesn't have type-declaration
-    (for [d# '~dependencies-] d#)
-    ~intent-
-    ~symbolic-value-
-    ~value?-
-    ~storage-type-
-    ;; ttype goes here in legacy
-    ~abi-
-    ~access-
-    ~presence-
-    ~value-attr-))
+  (let [i_varnym (str varnym-)
+        i_deps (vec dependencies-)]
+   `(Variable-- ;; heavy sugar
+     ~symtab-id-
+     ~i_varnym
+     ~ttype- ;; moved up from between storage type and abi
+     nil     ;; legacy doesn't have type-declaration
+     ~i_deps   ~intent-   ~symbolic-value-
+     ~value?-  ~storage-type-
+     ;; ttype goes here in legacy
+     ~abi-     ~access-   ~presence-
+     ~value-attr-)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5899,7 +5896,8 @@
 (defmacro Block [SymbolTable
                  blocknym
                  body]
-  `(Block-- ~SymbolTable '~blocknym ~body))
+  (let [i_nym (str blocknym)]
+   `(Block-- ~SymbolTable ~i_nym ~body)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
