@@ -1,6 +1,304 @@
+- [1. PROLOGUE](#1-prologue)
+  - [1.1. Namespace Declaration](#11-namespace-declaration)
+  - [1.2. Lightweight, Load-Time Testing:](#12-lightweight-load-time-testing)
+  - [1.3. Unmap External Names](#13-unmap-external-names)
+- [2. MASR OVERVIEW \& BACKGROUND](#2-masr-overview--background)
+  - [2.1. MASR IS A TYPE SYSTEM](#21-masr-is-a-type-system)
+  - [2.2. SNAPSHOT SUMMARY](#22-snapshot-summary)
+    - [2.2.1. Terms (Nodes) in the ASDL Grammar](#221-terms-nodes-in-the-asdl-grammar)
+    - [2.2.2. Terms Used but not Defined in ASDL](#222-terms-used-but-not-defined-in-asdl)
+    - [2.2.3. Term-Like Items](#223-term-like-items)
+    - [2.2.4. Mappings from ASDL to MASR](#224-mappings-from-asdl-to-masr)
+- [3. WHAT IS A _SPECIFICATION_?](#3-what-is-a-specification)
+  - [3.1. CHECKING INSTANCES](#31-checking-instances)
+- [4. FULL-FORM ENTITY HASH-MAPS](#4-full-form-entity-hash-maps)
+- [5. IDEMPOTENCY](#5-idempotency)
+- [6. SUGAR](#6-sugar)
+  - [6.1. NAMING CONVENTION FOR SUGAR](#61-naming-convention-for-sugar)
+    - [6.1.1. Light Sugar](#611-light-sugar)
+    - [6.1.2. Heavy Sugar](#612-heavy-sugar)
+    - [6.1.3. Legacy Sugar](#613-legacy-sugar)
+- [7. WHAT ARE TERMS AND HEADS?](#7-what-are-terms-and-heads)
+- [8. QUALIFIED KEYWORDS ARE FUNCTIONS \& SPEC-NAMES](#8-qualified-keywords-are-functions--spec-names)
+- [9. POLYMORPHIC SPECS FOR TERMS](#9-polymorphic-specs-for-terms)
+- [10. NESTED MULTI-SPECS](#10-nested-multi-specs)
+- [11. NAMING CONVENTION FOR MULTI-SPECS](#11-naming-convention-for-multi-specs)
+- [12. TELESCOPING SPECS](#12-telescoping-specs)
+- [13. TERM ENTITY KEY](#13-term-entity-key)
+- [14. DEFMASRNESTED](#14-defmasrnested)
+  - [14.1. Use of `defmasrnested`](#141-use-of-defmasrnested)
+- [15. TERM-HEAD ENTITY KEY](#15-term-head-entity-key)
+- [16. DEFMASRTYPE](#16-defmasrtype)
+  - [16.1. EXTRACTING ASDL FROM MASR](#161-extracting-asdl-from-masr)
+- [17. TO ASDL-TYPE](#17-to-asdl-type)
+- [18. ADD NEW DEFINITIONS HERE](#18-add-new-definitions-here)
+  - [18.1. UNIT](#181-unit)
+  - [18.2. SYMBOL](#182-symbol)
+  - [18.3. STMT](#183-stmt)
+  - [18.4. EXPR](#184-expr)
+  - [18.5. TTYPE](#185-ttype)
+- [19. REWRITING FOR LEGACY](#19-rewriting-for-legacy)
+- [20. IMPLEMENTATIONS](#20-implementations)
+- [21. CALL-ARG](#21-call-arg)
+  - [21.1. Issues](#211-issues)
+  - [21.2. Original ASDL](#212-original-asdl)
+  - [21.3. Examples](#213-examples)
+- [22. DIMENSION](#22-dimension)
+  - [22.1. Original ASDL](#221-original-asdl)
+  - [22.2. Dimension-Content](#222-dimension-content)
+  - [22.3. Full-Form](#223-full-form)
+  - [22.4. Heavy Sugar](#224-heavy-sugar)
+- [23. DIMENSION\*](#23-dimension)
+  - [23.1. Heavy Sugar](#231-heavy-sugar)
+- [24. SYMTAB-ID](#24-symtab-id)
+  - [24.1. Heavy Sugar](#241-heavy-sugar)
+- [25. SYMBOL TABLE](#25-symbol-table)
+  - [25.1. Heavy Sugar](#251-heavy-sugar)
+- [26. ENUM-LIKE](#26-enum-like)
+  - [26.1. Helpers for Enum-Like](#261-helpers-for-enum-like)
+  - [26.2. Enum-Like, Proper](#262-enum-like-proper)
+  - [26.3. Most Enum-Likes](#263-most-enum-likes)
+  - [26.4. Abi](#264-abi)
+    - [26.4.1. Full-Form](#2641-full-form)
+    - [26.4.2. Heavy Sugar](#2642-heavy-sugar)
+    - [26.4.3. The ABIs](#2643-the-abis)
+- [27. TTYPE](#27-ttype)
+  - [27.1. Prerequisite Types and Aliases](#271-prerequisite-types-and-aliases)
+    - [27.1.1. For Loop Statements](#2711-for-loop-statements)
+    - [27.1.2. For Character](#2712-for-character)
+  - [27.2. Kind](#272-kind)
+  - [27.3. Support Specs For Kinds](#273-support-specs-for-kinds)
+  - [27.4. Heavy Sugar for `ttype`](#274-heavy-sugar-for-ttype)
+  - [27.5. Sugar for the Kinds](#275-sugar-for-the-kinds)
+  - [27.6. INTEGER, REAL, COMPLEX, LOGICAL](#276-integer-real-complex-logical)
+  - [27.7. CHARACTER](#277-character)
+    - [27.7.1. Original ASDL](#2771-original-asdl)
+    - [27.7.2. Example](#2772-example)
+    - [27.7.3. Heavy Sugar](#2773-heavy-sugar)
+  - [27.8. TUPLE](#278-tuple)
+  - [27.9. List](#279-list)
+  - [27.10. Set](#2710-set)
+  - [27.11. FUNCTION-TYPE](#2711-function-type)
+    - [27.11.1. Original ASDL](#27111-original-asdl)
+    - [27.11.2. Heavy Sugar](#27112-heavy-sugar)
+  - [27.12. TODO The Rest of the `ttypes`](#2712-todo-the-rest-of-the-ttypes)
+    - [27.12.1. Original ASDL](#27121-original-asdl)
+- [28. PLACEHOLDERS](#28-placeholders)
+  - [28.1. ESCAPE TARGET](#281-escape-target)
+  - [28.2. SYMBOLIC VALUE](#282-symbolic-value)
+    - [28.2.1. Sugar](#2821-sugar)
+- [29. EXPR](#29-expr)
+  - [29.1. Prerequisite Types and Aliases](#291-prerequisite-types-and-aliases)
+    - [29.1.1. Unchecked Element Types](#2911-unchecked-element-types)
+    - [29.1.2. Logical Types](#2912-logical-types)
+    - [29.1.3. Integer Types](#2913-integer-types)
+    - [29.1.4. Index Types](#2914-index-types)
+    - [29.1.5. Real Types](#2915-real-types)
+    - [29.1.6. Complex Types](#2916-complex-types)
+    - [29.1.7. Array Types](#2917-array-types)
+    - [29.1.8. List Types](#2918-list-types)
+    - [29.1.9. Tuple Types](#2919-tuple-types)
+    - [29.1.10. String Types](#29110-string-types)
+  - [29.2. IF EXP](#292-if-exp)
+    - [29.2.1. Original ASDL](#2921-original-asdl)
+    - [29.2.2. Example](#2922-example)
+    - [29.2.3. Heavy Sugar](#2923-heavy-sugar)
+  - [29.3. INTEGER BIT NOT](#293-integer-bit-not)
+    - [29.3.1. Original ASDL](#2931-original-asdl)
+    - [29.3.2. Heavy Sugar](#2932-heavy-sugar)
+  - [29.4. INTEGER, REAL, COMPLEX UNARY MINUS](#294-integer-real-complex-unary-minus)
+    - [29.4.1. Typed Uminus Macro](#2941-typed-uminus-macro)
+    - [29.4.2. Using the Macro](#2942-using-the-macro)
+  - [29.5. NAMED EXPR](#295-named-expr)
+    - [29.5.1. Original ASDL](#2951-original-asdl)
+    - [29.5.2. Example](#2952-example)
+    - [29.5.3. Heavy Sugar](#2953-heavy-sugar)
+  - [29.6. FUNCTION CALL](#296-function-call)
+    - [29.6.1. Original ASDL](#2961-original-asdl)
+    - [29.6.2. Example](#2962-example)
+    - [29.6.3. Heavy Sugar](#2963-heavy-sugar)
+    - [29.6.4. Legacy Sugar](#2964-legacy-sugar)
+  - [29.7. INTRINSIC FUNCTION](#297-intrinsic-function)
+    - [29.7.1. Original ASDL](#2971-original-asdl)
+    - [29.7.2. Example](#2972-example)
+    - [29.7.3. Heavy Sugar](#2973-heavy-sugar)
+    - [29.7.4. Legacy Sugar](#2974-legacy-sugar)
+  - [29.8. LOGICAL, INTEGER, REAL CONSTANTS](#298-logical-integer-real-constants)
+    - [29.8.1. Typed Constant Macro](#2981-typed-constant-macro)
+    - [29.8.2. Using the Macro](#2982-using-the-macro)
+  - [29.9. STRING CONSTANT](#299-string-constant)
+    - [29.9.1. Original ASDL](#2991-original-asdl)
+    - [29.9.2. Example](#2992-example)
+    - [29.9.3. Heavy Sugar](#2993-heavy-sugar)
+  - [29.10. STRING REPEAT](#2910-string-repeat)
+    - [29.10.1. Heavy Sugar](#29101-heavy-sugar)
+  - [29.11. COMPLEX CONSTANT](#2911-complex-constant)
+    - [29.11.1. Original ASDL](#29111-original-asdl)
+    - [29.11.2. Example](#29112-example)
+    - [29.11.3. Heavy Sugar](#29113-heavy-sugar)
+  - [29.12. VAR](#2912-var)
+    - [29.12.1. Issue #23](#29121-issue-23)
+    - [29.12.2. Heavy Sugar](#29122-heavy-sugar)
+    - [29.12.3. Legacy Sugar](#29123-legacy-sugar)
+  - [29.13. symbol-table! That's part of abstract execution.](#2913-symbol-table-thats-part-of-abstract-execution)
+  - [29.14. ARRAY CONSTANT](#2914-array-constant)
+  - [29.15. ARRAY ITEM](#2915-array-item)
+    - [29.15.1. Example](#29151-example)
+    - [29.15.2. Heavy Sugar](#29152-heavy-sugar)
+  - [29.16. ARRAY RESHAPE](#2916-array-reshape)
+    - [29.16.1. Example](#29161-example)
+    - [29.16.2. Heavy Sugar](#29162-heavy-sugar)
+  - [29.17. STRING CHR](#2917-string-chr)
+    - [29.17.1. Heavy Sugar](#29171-heavy-sugar)
+  - [29.18. STRING LEN](#2918-string-len)
+    - [29.18.1. Heavy Sugar](#29181-heavy-sugar)
+  - [29.19. STRING ITEM](#2919-string-item)
+    - [29.19.1. Heavy Sugar](#29191-heavy-sugar)
+  - [29.20. STRING SECTION](#2920-string-section)
+    - [29.20.1. Heavy Sugar](#29201-heavy-sugar)
+  - [29.21. STRING ORD](#2921-string-ord)
+    - [29.21.1. Original ASDL](#29211-original-asdl)
+    - [29.21.2. Example](#29212-example)
+    - [29.21.3. Legacy Sugar](#29213-legacy-sugar)
+  - [29.22. INTEGER BINOP](#2922-integer-binop)
+    - [29.22.1. Original ASDL](#29221-original-asdl)
+    - [29.22.2. Example](#29222-example)
+    - [29.22.3. Heavy Sugar](#29223-heavy-sugar)
+  - [29.23. REAL BINOP](#2923-real-binop)
+    - [29.23.1. Original ASDL](#29231-original-asdl)
+    - [29.23.2. Example](#29232-example)
+    - [29.23.3. Heavy Sugar](#29233-heavy-sugar)
+    - [29.23.4. Legacy Sugar](#29234-legacy-sugar)
+  - [29.24. COMPLEX BINOP](#2924-complex-binop)
+    - [29.24.1. Original ASDL](#29241-original-asdl)
+    - [29.24.2. Heavy Sugar](#29242-heavy-sugar)
+    - [29.24.3. Legacy Sugar](#29243-legacy-sugar)
+  - [29.25. LOGICAL BINOP](#2925-logical-binop)
+    - [29.25.1. Original ASDL](#29251-original-asdl)
+    - [29.25.2. Example](#29252-example)
+    - [29.25.3. Heavy Sugar](#29253-heavy-sugar)
+  - [29.26. LIST CONSTANT](#2926-list-constant)
+    - [29.26.1. Heavy Sugar](#29261-heavy-sugar)
+  - [29.27. LIST LEN](#2927-list-len)
+    - [29.27.1. Heavy Sugar](#29271-heavy-sugar)
+  - [29.28. TUPLE CONSTANT](#2928-tuple-constant)
+    - [29.28.1. Heavy Sugar](#29281-heavy-sugar)
+  - [29.29. TUPLE LEN](#2929-tuple-len)
+    - [29.29.1. Heavy Sugar](#29291-heavy-sugar)
+  - [29.30. TUPLE COMPARE](#2930-tuple-compare)
+    - [29.30.1. Heavy Sugar](#29301-heavy-sugar)
+  - [29.31. COMPLEX RE](#2931-complex-re)
+  - [29.32. COMPLEX IM](#2932-complex-im)
+  - [29.33. INTEGER COMPARE](#2933-integer-compare)
+    - [29.33.1. Original ASDL](#29331-original-asdl)
+    - [29.33.2. Example](#29332-example)
+    - [29.33.3. Heavy Sugar](#29333-heavy-sugar)
+  - [29.34. REAL COMPARE](#2934-real-compare)
+    - [29.34.1. Heavy Sugar](#29341-heavy-sugar)
+    - [29.34.2. Legacy Sugar](#29342-legacy-sugar)
+  - [29.35. COMPLEX COMPARE](#2935-complex-compare)
+    - [29.35.1. Heavy Sugar](#29351-heavy-sugar)
+    - [29.35.2. Legacy Sugar](#29352-legacy-sugar)
+  - [29.36. STRING COMPARE](#2936-string-compare)
+    - [29.36.1. Heavy Sugar](#29361-heavy-sugar)
+    - [29.36.2. Legacy Sugar](#29362-legacy-sugar)
+  - [29.37. LOGICAL COMPARE](#2937-logical-compare)
+    - [29.37.1. Original ASDL](#29371-original-asdl)
+    - [29.37.2. Example](#29372-example)
+    - [29.37.3. Heavy Sugar](#29373-heavy-sugar)
+    - [29.37.4. Legacy Sugar](#29374-legacy-sugar)
+  - [29.38. LOGICAL NOT](#2938-logical-not)
+    - [29.38.1. Original ASDL](#29381-original-asdl)
+    - [29.38.2. Heavy Sugar](#29382-heavy-sugar)
+  - [29.39. CAST](#2939-cast)
+    - [29.39.1. Original ASDL](#29391-original-asdl)
+    - [29.39.2. Example](#29392-example)
+    - [29.39.3. Heavy Sugar](#29393-heavy-sugar)
+  - [29.40. LIST ITEM](#2940-list-item)
+  - [29.41. TUPLE ITEM](#2941-tuple-item)
+- [30. STMT](#30-stmt)
+  - [30.1. Prerequisite Types and Aliases](#301-prerequisite-types-and-aliases)
+  - [30.2. LIST APPEND](#302-list-append)
+  - [30.3. EXPLICIT DEALLOCATE](#303-explicit-deallocate)
+    - [30.3.1. Original ASDL](#3031-original-asdl)
+    - [30.3.2. Heavy Sugar](#3032-heavy-sugar)
+  - [30.4. ASSERT](#304-assert)
+    - [30.4.1. Original ASDL](#3041-original-asdl)
+    - [30.4.2. Heavy Sugar](#3042-heavy-sugar)
+  - [30.5. GOTO](#305-goto)
+    - [30.5.1. Heavy Sugar](#3051-heavy-sugar)
+    - [30.5.2. Legacy Sugar](#3052-legacy-sugar)
+  - [30.6. IF](#306-if)
+    - [30.6.1. Original ASDL](#3061-original-asdl)
+    - [30.6.2. Example](#3062-example)
+    - [30.6.3. Heavy Sugar](#3063-heavy-sugar)
+  - [30.7. ASSIGNMENT](#307-assignment)
+    - [30.7.1. Original ASDL](#3071-original-asdl)
+    - [30.7.2. Issues](#3072-issues)
+    - [30.7.3. Heavy Sugar](#3073-heavy-sugar)
+  - [30.8. DO LOOP](#308-do-loop)
+    - [30.8.1. Example](#3081-example)
+    - [30.8.2. Do-Loop Head Support](#3082-do-loop-head-support)
+    - [30.8.3. Heavy Sugar](#3083-heavy-sugar)
+  - [30.9. WHILE LOOP](#309-while-loop)
+    - [30.9.1. Original ASDL](#3091-original-asdl)
+    - [30.9.2. Example](#3092-example)
+    - [30.9.3. Heavy Sugar](#3093-heavy-sugar)
+  - [30.10. PRINT](#3010-print)
+    - [30.10.1. Original ASDL](#30101-original-asdl)
+    - [30.10.2. Heavy Sugar](#30102-heavy-sugar)
+  - [30.11. RETURN](#3011-return)
+  - [30.12. SUBROUTINE CALL](#3012-subroutine-call)
+    - [30.12.1. Original ASDL](#30121-original-asdl)
+    - [30.12.2. Examples](#30122-examples)
+    - [30.12.3. Heavy Sugar](#30123-heavy-sugar)
+    - [30.12.4. Legacy Sugar](#30124-legacy-sugar)
+    - [30.12.5. Heavy Sugar](#30125-heavy-sugar)
+    - [30.12.6. Legacy Sugar](#30126-legacy-sugar)
+- [31. SYMBOL](#31-symbol)
+  - [31.1. Prerequisite Types and Aliases](#311-prerequisite-types-and-aliases)
+  - [31.2. PROGRAM](#312-program)
+    - [31.2.1. Original ASDL](#3121-original-asdl)
+    - [31.2.2. Heavy Sugar](#3122-heavy-sugar)
+    - [31.2.3. Legacy Sugar](#3123-legacy-sugar)
+  - [31.3. MODULE](#313-module)
+    - [31.3.1. Original ASDL](#3131-original-asdl)
+    - [31.3.2. Heavy Sugar](#3132-heavy-sugar)
+    - [31.3.3. Legacy Sugar](#3133-legacy-sugar)
+  - [31.4. FUNCTION](#314-function)
+    - [31.4.1. Original ASDL](#3141-original-asdl)
+    - [31.4.2. Heavy Sugar](#3142-heavy-sugar)
+    - [31.4.3. Legacy Sugar](#3143-legacy-sugar)
+  - [31.5. GENERIC PROCEDURE](#315-generic-procedure)
+    - [31.5.1. Original ASDL](#3151-original-asdl)
+    - [31.5.2. Example](#3152-example)
+    - [31.5.3. Heavy Sugar](#3153-heavy-sugar)
+    - [31.5.4. Legacy Sugar](#3154-legacy-sugar)
+  - [31.6. EXTERNAL SYMBOL](#316-external-symbol)
+    - [31.6.1. Original ASDL](#3161-original-asdl)
+    - [31.6.2. Example](#3162-example)
+    - [31.6.3. Heavy Sugar](#3163-heavy-sugar)
+    - [31.6.4. Legacy Sugar](#3164-legacy-sugar)
+  - [31.7. VARIABLE](#317-variable)
+    - [31.7.1. Original ASDL](#3171-original-asdl)
+    - [31.7.2. Example](#3172-example)
+    - [31.7.3. Light Sugar](#3173-light-sugar)
+    - [31.7.4. Heavy Sugar](#3174-heavy-sugar)
+    - [31.7.5. Legacy Sugar](#3175-legacy-sugar)
+  - [31.8. BLOCK](#318-block)
+    - [31.8.1. Original ASDL](#3181-original-asdl)
+    - [31.8.2. Legacy Sugar](#3182-legacy-sugar)
+  - [31.9. INTRINSIC MODULE](#319-intrinsic-module)
+    - [31.9.1. Original ASDL](#3191-original-asdl)
+    - [31.9.2. Legacy Sugar](#3192-legacy-sugar)
+- [32. UNIT](#32-unit)
+  - [32.1. Prerequisite Type Aliases](#321-prerequisite-type-aliases)
+  - [32.2. Pluralities](#322-pluralities)
+  - [32.3. TRANSLATION UNIT](#323-translation-unit)
+    - [32.3.1. Heavy Sugar](#3231-heavy-sugar)
 
 
-# PROLOGUE
+# 1. PROLOGUE
 
 
 
@@ -97,7 +395,7 @@ However, you should not need this emergency step if you
 have committed frequently.
 
 
-## Namespace Declaration
+## 1.1. Namespace Declaration
 
 
 Because we must define things before using them,
@@ -133,14 +431,14 @@ the rest of the code in this file.
             ))
 ```
 
-## Lightweight, Load-Time Testing:
+## 1.2. Lightweight, Load-Time Testing:
 
 
 ```clojure
 (hyperfiddle.rcf/enable!)
 ```
 
-## Unmap External Names
+## 1.3. Unmap External Names
 
 
 Unmap `Integer` and `Character` so we can have
@@ -157,11 +455,11 @@ also want `deftype`. Access original `deftype` as
 ```
 
 
-# MASR OVERVIEW & BACKGROUND
+# 2. MASR OVERVIEW & BACKGROUND
 
 
 ----------------------------------------------------------------
-## MASR IS A TYPE SYSTEM
+## 2.1. MASR IS A TYPE SYSTEM
 
 
 MASR is "Meta Abstract Semantics Representation,"
@@ -193,7 +491,7 @@ back-channel. The legacy back-channel writes
 types in ASDL format from MASR instances.
 
 ----------------------------------------------------------------
-## SNAPSHOT SUMMARY
+## 2.2. SNAPSHOT SUMMARY
 
 
 We begin with a summary of a snapshot of the full
@@ -201,7 +499,7 @@ ASDL specification:
 https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
 
 
-### Terms (Nodes) in the ASDL Grammar
+### 2.2.1. Terms (Nodes) in the ASDL Grammar
 
 
 Terms are items to the left of equals signs:
@@ -240,21 +538,21 @@ Terms are items to the left of equals signs:
 30 enumtype        = IntegerConsecutiveFromZero | ... | NonInteger
 ```
 
-### Terms Used but not Defined in ASDL
+### 2.2.2. Terms Used but not Defined in ASDL
 
 ```c
 31 symbol_table    = a clojure map
 32 dimension*      = dimension*, see below
 ```
 
-### Term-Like Items
+### 2.2.3. Term-Like Items
 
 ```c
  0 atoms           = int, float, bool, string, nat, bignat
  0 identifier      = specified below
 ```
 
-### Mappings from ASDL to MASR
+### 2.2.4. Mappings from ASDL to MASR
 
 * ASDL tuples like `(1 2)` are Clojure lists or
   vectors.
@@ -266,7 +564,7 @@ Terms are items to the left of equals signs:
 * ASDL symbol_tables are Clojure maps.
 
 
-# WHAT IS A _SPECIFICATION_?
+# 3. WHAT IS A _SPECIFICATION_?
 
 
 
@@ -315,7 +613,7 @@ dependency types and concurrency types. Such
 advanced types are work-in-progress for MASR.
 
 ----------------------------------------------------------------
-## CHECKING INSTANCES
+## 3.1. CHECKING INSTANCES
 
 
 An instance hash-map may inhabit multiple sets.
@@ -337,7 +635,7 @@ the way down to the atoms.
 
 
 
-# FULL-FORM ENTITY HASH-MAPS
+# 4. FULL-FORM ENTITY HASH-MAPS
 
 
 
@@ -433,7 +731,7 @@ same:
 
 
 
-# IDEMPOTENCY
+# 5. IDEMPOTENCY
 
 
 
@@ -501,7 +799,7 @@ output from lpython and lfortran.
 
 
 
-# SUGAR
+# 6. SUGAR
 
 
 
@@ -546,10 +844,10 @@ and _legacy_.
    output from `--show-asr`.
 
 ----------------------------------------------------------------
-## NAMING CONVENTION FOR SUGAR
+## 6.1. NAMING CONVENTION FOR SUGAR
 
 
-### Light Sugar
+### 6.1.1. Light Sugar
 
 
 The names of light-sugar functions, like
@@ -570,7 +868,7 @@ order):
 #_(Integer- {:kind 4, :dimension* []})
 ```
 
-### Heavy Sugar
+### 6.1.2. Heavy Sugar
 
 
 The names of heavy-sugar functions, like
@@ -582,20 +880,6 @@ legacy sugar has the name with no hyphens, like
 two hyphens, like `Variable--`. Both legacy sugar
 and heavy sugar produce identical full-forms.
 
-
-For example, The following is heavy sugar for a
-`Variable`, similar but not identical to its
-legacy sugar:
-
-
-```clojure
-#_
-(Variable-- 2 'x (Integer 4) ;; <~~~ quote mark
-            nil [] Local
-            [] []  Default
-            Source Public Required
-            false)
-```
 
 Heavy sugar and legacy sugar employ positional
 arguments that depend on order. Heavy-sugar
@@ -611,7 +895,7 @@ to both `::asr-term` and to `::ttype`:
 #_(Integer 8 [[6 60] [1 42]])
 ```
 
-### Legacy Sugar
+### 6.1.3. Legacy Sugar
 
 
 The purpose of legacy sugar is to auto-quote
@@ -645,7 +929,7 @@ two trailing hyphens in its name.
 
 
 
-# WHAT ARE TERMS AND HEADS?
+# 7. WHAT ARE TERMS AND HEADS?
 
 
 
@@ -673,7 +957,7 @@ In MASR, alternatives are called _heads_.
 
 
 
-# QUALIFIED KEYWORDS ARE FUNCTIONS & SPEC-NAMES
+# 8. QUALIFIED KEYWORDS ARE FUNCTIONS & SPEC-NAMES
 
 
 
@@ -709,7 +993,7 @@ EXAMPLE: `::intent` is a valid `::term` because
 ```
 
 
-# POLYMORPHIC SPECS FOR TERMS
+# 9. POLYMORPHIC SPECS FOR TERMS
 
 
 
@@ -746,7 +1030,7 @@ like polymorphic structs in C.
 
 
 
-# NESTED MULTI-SPECS
+# 10. NESTED MULTI-SPECS
 
 
 
@@ -769,7 +1053,7 @@ multi-specs via techniques shown below.
 
 
 
-# NAMING CONVENTION FOR MULTI-SPECS
+# 11. NAMING CONVENTION FOR MULTI-SPECS
 
 
 
@@ -785,7 +1069,7 @@ not, begin with `::asr-...`, as in
 ```
 
 
-# TELESCOPING SPECS
+# 12. TELESCOPING SPECS
 
 
 
@@ -822,7 +1106,7 @@ siblings of equal precision, both `::Variable` and
 
 
 
-# TERM ENTITY KEY
+# 13. TERM ENTITY KEY
 
 
 
@@ -857,7 +1141,7 @@ checked by `::symbol` specs.
 ```
 
 
-# DEFMASRNESTED
+# 14. DEFMASRNESTED
 
 
 
@@ -928,7 +1212,7 @@ built-in `name` function.
          )))
 ```
 
-## Use of `defmasrnested`
+## 14.1. Use of `defmasrnested`
 
 
 ```clojure
@@ -940,7 +1224,7 @@ built-in `name` function.
 ```
 
 
-# TERM-HEAD ENTITY KEY
+# 15. TERM-HEAD ENTITY KEY
 
 
 
@@ -990,7 +1274,7 @@ like `::Variable` and `::FunctionType`.
 ```
 
 
-# DEFMASRTYPE
+# 16. DEFMASRTYPE
 
 
 
@@ -1008,7 +1292,7 @@ present the extraction code first ("define" before
 "use"):
 
 ----------------------------------------------------------------
-## EXTRACTING ASDL FROM MASR
+## 16.1. EXTRACTING ASDL FROM MASR
 
 
 ```clojure
@@ -1120,7 +1404,7 @@ present the extraction code first ("define" before
 ```
 
 
-# TO ASDL-TYPE
+# 17. TO ASDL-TYPE
 
 
 
@@ -1169,14 +1453,14 @@ on the _head_ keys of each multi-spec, keys like
 ```
 
 
-# ADD NEW DEFINITIONS HERE
+# 18. ADD NEW DEFINITIONS HERE
 
 
 
 Fill out implementations later.
 
 ----------------------------------------------------------------
-## UNIT
+## 18.1. UNIT
 
 
 ```clojure
@@ -1188,7 +1472,7 @@ Fill out implementations later.
   (SymbolTable    nodes))
 ```
 ----------------------------------------------------------------
-## SYMBOL
+## 18.2. SYMBOL
 
 
 ```clojure
@@ -1256,7 +1540,7 @@ Fill out implementations later.
   (modulenym))
 ```
 ----------------------------------------------------------------
-## STMT
+## 18.3. STMT
 
 
 ```clojure
@@ -1333,7 +1617,7 @@ Fill out implementations later.
   (list-expr    list-element))
 ```
 ----------------------------------------------------------------
-## EXPR
+## 18.4. EXPR
 
 
 ```clojure
@@ -1583,7 +1867,7 @@ Fill out implementations later.
   (complex-expr    Real    real-value?))
 ```
 ----------------------------------------------------------------
-## TTYPE
+## 18.5. TTYPE
 
 
 ```clojure
@@ -1642,7 +1926,7 @@ Fill out implementations later.
 ```
 
 
-# REWRITING FOR LEGACY
+# 19. REWRITING FOR LEGACY
 
 
 
@@ -1713,7 +1997,7 @@ an idempotent, bottom-up evaluation strategy.
 ```
 
 
-# IMPLEMENTATIONS
+# 20. IMPLEMENTATIONS
 
 
 
@@ -1723,11 +2007,11 @@ for the `defmasrtype`s.
 
 
 
-# CALL-ARG
+# 21. CALL-ARG
 
 
 
-## Issues
+## 21.1. Issues
 
 https://github.com/rebcabin/masr/issues/32
 `call-arg` intentionally introduces a level of
@@ -1736,7 +2020,7 @@ function call or subroutine call. We spec the
 extra nesting as a collection of length one.
 
 
-## Original ASDL
+## 21.2. Original ASDL
 
 ```c
 call_arg = (expr? value)
@@ -1756,7 +2040,7 @@ call_arg = (expr? value)
         :call-args ::call-args))
 ```
 
-## Examples
+## 21.3. Examples
 
 
 Examples can't be executed until `expr?` is
@@ -1765,7 +2049,7 @@ defined. See the first example in in
 
 
 
-# DIMENSION
+# 22. DIMENSION
 
 
 
@@ -1774,7 +2058,7 @@ It is a handwritten special case, not defined via
 `defmasrtype`.
 
 
-## Original ASDL
+## 22.1. Original ASDL
 
 ```c
 dimension = (expr? start, expr? length)
@@ -1787,7 +2071,7 @@ both `start` and `length` or we have nothing.
 MASR makes exposes this secret explicitly.
 
 
-## Dimension-Content
+## 22.2. Dimension-Content
 
 
 
@@ -1809,7 +2093,7 @@ elements.
    (fn [it] (not (= 1 (count it))))))
 ```
 
-## Full-Form
+## 22.3. Full-Form
 
 
 
@@ -1843,7 +2127,7 @@ not fleshed out in general.
 ;; => (() (0 0) (1 1))
 ```
 
-## Heavy Sugar
+## 22.4. Heavy Sugar
 
 
 ```clojure
@@ -1860,7 +2144,7 @@ not fleshed out in general.
 ```
 
 
-# DIMENSION*
+# 23. DIMENSION*
 
 
 
@@ -1880,7 +2164,7 @@ TODO https://github.com/rebcabin/masr/issues/14
 #_(gen/sample (s/gen ::dimension*) 3)
 ```
 
-## Heavy Sugar
+## 23.1. Heavy Sugar
 
 
 ```clojure
@@ -1902,7 +2186,7 @@ TODO https://github.com/rebcabin/masr/issues/14
 ```
 
 
-# SYMTAB-ID
+# 24. SYMTAB-ID
 
 
 
@@ -1920,7 +2204,7 @@ whilst ASDL embraces the secret.
 (s/def ::symtab-id ::nat)
 ```
 
-## Heavy Sugar
+## 24.1. Heavy Sugar
 
 
 ```clojure
@@ -1928,7 +2212,7 @@ whilst ASDL embraces the secret.
 ```
 
 
-# SYMBOL TABLE
+# 25. SYMBOL TABLE
 
 
 
@@ -1948,7 +2232,7 @@ nested multi-specs. Write it out fully by hand.
 (def-term-entity-key SymbolTable)
 ```
 
-## Heavy Sugar
+## 25.1. Heavy Sugar
 
 
 ```clojure
@@ -1959,7 +2243,7 @@ nested multi-specs. Write it out fully by hand.
 ```
 
 
-# ENUM-LIKE
+# 26. ENUM-LIKE
 
 
 
@@ -1971,7 +2255,7 @@ without parameters _qua_ arguments. Example: ASDL
 one macro, `enum-like`.
 
 
-## Helpers for Enum-Like
+## 26.1. Helpers for Enum-Like
 
 
 ```clojure
@@ -1990,7 +2274,7 @@ one macro, `enum-like`.
     `(list ~@cmds)))
 ```
 ----------------------------------------------------------------
-## Enum-Like, Proper
+## 26.2. Enum-Like, Proper
 
 
 ```clojure
@@ -2025,7 +2309,7 @@ one macro, `enum-like`.
        )))
 ```
 
-## Most Enum-Likes
+## 26.3. Most Enum-Likes
 
 
 ```clojure
@@ -2103,7 +2387,7 @@ See Legacy Sugar for `LogicalCompare.`
                            "IntegerToCharacter"  "LogicalToCharacter"})
 ```
 ----------------------------------------------------------------
-## Abi
+## 26.4. Abi
 
 
 
@@ -2121,7 +2405,7 @@ See Legacy Sugar for `LogicalCompare.`
 (s/def ::abi-external ::bool)
 ```
 
-### Full-Form
+### 26.4.1. Full-Form
 
 
 ```clojure
@@ -2144,7 +2428,7 @@ See Legacy Sugar for `LogicalCompare.`
 (def-term-entity-key abi)
 ```
 
-### Heavy Sugar
+### 26.4.2. Heavy Sugar
 
 
 ```clojure
@@ -2166,7 +2450,7 @@ See Legacy Sugar for `LogicalCompare.`
       ::abi-external the-bool})))
 ```
 
-### The ABIs
+### 26.4.3. The ABIs
 
 
 ```clojure
@@ -2179,14 +2463,14 @@ See Legacy Sugar for `LogicalCompare.`
 ```
 
 
-# TTYPE
+# 27. TTYPE
 
 
 
 `Ttype` is a term with nested multi-specs.
 
 ----------------------------------------------------------------
-## Prerequisite Types and Aliases
+## 27.1. Prerequisite Types and Aliases
 
 
 ```clojure
@@ -2230,7 +2514,7 @@ See Legacy Sugar for `LogicalCompare.`
 (s/def ::expr?            (.? ::expr))
 ```
 
-### For Loop Statements
+### 27.1.1. For Loop Statements
 
 ```clojure
 (s/def ::loop-v               ::expr?) ;; TODO: ?
@@ -2245,7 +2529,7 @@ See Legacy Sugar for `LogicalCompare.`
                 ::loop-increment]))
 ```
 
-### For Character
+### 27.1.2. For Character
 
 ```clojure
 (s/def ::len         ::int)   ;; Issues #36
@@ -2256,7 +2540,7 @@ See Legacy Sugar for `LogicalCompare.`
 (s/def ::len-expr?   ::expr?) ;; TODO: check that it's >= 0
 ```
 ----------------------------------------------------------------
-## Kind
+## 27.2. Kind
 
 
 
@@ -2284,7 +2568,7 @@ MASR currently supports the following:
    default for Logical.
 
 ----------------------------------------------------------------
-## Support Specs For Kinds
+## 27.3. Support Specs For Kinds
 
 
 ```clojure
@@ -2295,7 +2579,7 @@ MASR currently supports the following:
 (s/def ::character-kind      #{1})
 ```
 ----------------------------------------------------------------
-## Heavy Sugar for `ttype`
+## 27.4. Heavy Sugar for `ttype`
 
 
 ```clojure
@@ -2319,7 +2603,7 @@ MASR currently supports the following:
    ::asr-ttype-head it})
 ```
 ----------------------------------------------------------------
-## Sugar for the Kinds
+## 27.5. Sugar for the Kinds
 
 
 ```clojure
@@ -2390,7 +2674,7 @@ MASR currently supports the following:
        )))
 ```
 ----------------------------------------------------------------
-## INTEGER, REAL, COMPLEX, LOGICAL
+## 27.6. INTEGER, REAL, COMPLEX, LOGICAL
 
 
 See also `defmasrtypes` at top of the file.
@@ -2401,17 +2685,17 @@ See also `defmasrtypes` at top of the file.
 (def-ttype-and-head Logical)
 ```
 ----------------------------------------------------------------
-## CHARACTER
+## 27.7. CHARACTER
 
 
 
-### Original ASDL
+### 27.7.1. Original ASDL
 
 ```c
 | Character(int kind, int len, expr? len_expr, dimension* dims)
 ```
 
-### Example
+### 27.7.2. Example
 
 
 ```clojure
@@ -2419,7 +2703,7 @@ See also `defmasrtypes` at top of the file.
 (Character 1 1 () [])
 ```
 
-### Heavy Sugar
+### 27.7.3. Heavy Sugar
 
 
 ```clojure
@@ -2453,7 +2737,7 @@ See also `defmasrtypes` at top of the file.
    (Character 1 1 () [])))
 ```
 ----------------------------------------------------------------
-## TUPLE
+## 27.8. TUPLE
 
 ```clojure
 (defn Tuple [ttypes]
@@ -2463,7 +2747,7 @@ See also `defmasrtypes` at top of the file.
     ::ttype*     ttypes}})
 ```
 ----------------------------------------------------------------
-## List
+## 27.9. List
 
 ```clojure
 (defn List [ttype]
@@ -2473,7 +2757,7 @@ See also `defmasrtypes` at top of the file.
     ::ttype      ttype}})
 ```
 ----------------------------------------------------------------
-## Set
+## 27.10. Set
 
 ```clojure
 (defn Set [ttype]
@@ -2483,14 +2767,14 @@ See also `defmasrtypes` at top of the file.
     ::ttype      ttype}})
 ```
 ----------------------------------------------------------------
-## FUNCTION-TYPE
+## 27.11. FUNCTION-TYPE
 
 
 
 This is a rich `ttype` that we spell out by hand.
 
 
-### Original ASDL
+### 27.11.1. Original ASDL
 
 ```c
 | FunctionType(ttype*  arg_types,       ;; rename param-type*
@@ -2508,7 +2792,7 @@ This is a rich `ttype` that we spell out by hand.
                bool    is_restriction)
 ```
 
-### Heavy Sugar
+### 27.11.2. Heavy Sugar
 
 
 ```clojure
@@ -2544,10 +2828,10 @@ This is a rich `ttype` that we spell out by hand.
      ::is-restriction    is-restriction-}}))
 ```
 ----------------------------------------------------------------
-## TODO The Rest of the `ttypes`
+## 27.12. TODO The Rest of the `ttypes`
 
 
-### Original ASDL
+### 27.12.1. Original ASDL
 
 ```c
 >>> Integer, Real, Complex, Logical are already done ...
@@ -2571,28 +2855,28 @@ This is a rich `ttype` that we spell out by hand.
 
 
 
-# PLACEHOLDERS
+# 28. PLACEHOLDERS
 
 
 
 things we haven't fully defined yet
 
 ----------------------------------------------------------------
-## ESCAPE TARGET
+## 28.1. ESCAPE TARGET
 
 
 ```clojure
 (s/def ::escape-target empty?)
 ```
 ----------------------------------------------------------------
-## SYMBOLIC VALUE
+## 28.2. SYMBOLIC VALUE
 
 
 ```clojure
 (s/def ::symbolic-value empty?)
 ```
 
-### Sugar
+### 28.2.1. Sugar
 
 
 ```clojure
@@ -2600,11 +2884,11 @@ things we haven't fully defined yet
 ```
 
 
-# EXPR
+# 29. EXPR
 
 
 ----------------------------------------------------------------
-## Prerequisite Types and Aliases
+## 29.1. Prerequisite Types and Aliases
 
 
 ```clojure
@@ -2639,7 +2923,7 @@ things we haven't fully defined yet
 (s/def ::varnym               ::identifier)
 ```
 ----------------------------------------------------------------
-### Unchecked Element Types
+### 29.1.1. Unchecked Element Types
 
 
 
@@ -2664,7 +2948,7 @@ collection type
 ))
 ```
 ----------------------------------------------------------------
-### Logical Types
+### 29.1.2. Logical Types
 
 
 ```clojure
@@ -2687,7 +2971,7 @@ collection type
 (s/def ::logical-right        ::logical-expr)
 ```
 ----------------------------------------------------------------
-### Integer Types
+### 29.1.3. Integer Types
 
 
 ```clojure
@@ -2711,7 +2995,7 @@ collection type
 (s/def ::integer-right        ::integer-expr)
 ```
 ----------------------------------------------------------------
-### Index Types
+### 29.1.4. Index Types
 
 
 ```clojure
@@ -2726,7 +3010,7 @@ collection type
 (s/def ::index-step?          ::integer-expr?)
 ```
 ----------------------------------------------------------------
-### Real Types
+### 29.1.5. Real Types
 
 
 ```clojure
@@ -2744,7 +3028,7 @@ collection type
 (s/def ::real-right           ::real-expr)
 ```
 ----------------------------------------------------------------
-### Complex Types
+### 29.1.6. Complex Types
 
 
 ```clojure
@@ -2769,7 +3053,7 @@ collection type
 (s/def ::complex-right        ::complex-expr)
 ```
 ----------------------------------------------------------------
-### Array Types
+### 29.1.7. Array Types
 
 
 ```clojure
@@ -2797,7 +3081,7 @@ work-in-progress:
 (s/def ::array-index*       (.* ::array-index))
 ```
 ----------------------------------------------------------------
-### List Types
+### 29.1.8. List Types
 
 ```clojure
 (s/def ::list-expr
@@ -2810,7 +3094,7 @@ work-in-progress:
   (s/or :expr                   ::expr))
 ```
 ----------------------------------------------------------------
-### Tuple Types
+### 29.1.9. Tuple Types
 
 ```clojure
 (s/def ::tuple-expr
@@ -2823,7 +3107,7 @@ work-in-progress:
 (s/def ::elements               ::expr*)
 ```
 ----------------------------------------------------------------
-### String Types
+### 29.1.10. String Types
 
 
 ```clojure
@@ -2845,11 +3129,11 @@ For `IntrinsicFunction`:
 (s/def ::overload-id            ::nat)
 ```
 ----------------------------------------------------------------
-## IF EXP
+## 29.2. IF EXP
 
 
 
-### Original ASDL
+### 29.2.1. Original ASDL
 
 ```c
  IfExp(expr test,
@@ -2859,7 +3143,7 @@ For `IntrinsicFunction`:
        expr? value)
 ```
 
-### Example
+### 29.2.2. Example
 
 
 ```clojure
@@ -2876,7 +3160,7 @@ For `IntrinsicFunction`:
  (Logical 4 []) () )
 ```
 
-### Heavy Sugar
+### 29.2.3. Heavy Sugar
 
 
 ```clojure
@@ -2891,17 +3175,17 @@ For `IntrinsicFunction`:
     ::value?    value?}})
 ```
 ----------------------------------------------------------------
-## INTEGER BIT NOT
+## 29.3. INTEGER BIT NOT
 
 
 
-### Original ASDL
+### 29.3.1. Original ASDL
 
 ```c
 IntegerBitNot(expr arg, ttype type, expr? value)
 ```
 
-### Heavy Sugar
+### 29.3.2. Heavy Sugar
 
 
 ```clojure
@@ -2915,11 +3199,11 @@ IntegerBitNot(expr arg, ttype type, expr? value)
     ::integer-value? ivalue?}})
 ```
 ----------------------------------------------------------------
-## INTEGER, REAL, COMPLEX UNARY MINUS
+## 29.4. INTEGER, REAL, COMPLEX UNARY MINUS
 
 
 
-### Typed Uminus Macro
+### 29.4.1. Typed Uminus Macro
 
 ```clojure
 (defmacro typed-uminus                 ;; -- Examples --
@@ -2946,24 +3230,24 @@ IntegerBitNot(expr arg, ttype type, expr? value)
          ~tvqkw       val?#}}   ;;  ::integer-value? val?}}]
        )))
 ```
-### Using the Macro
+### 29.4.2. Using the Macro
 ```clojure
 (typed-uminus Integer)
 (typed-uminus Real)
 (typed-uminus Complex)
 ```
 ----------------------------------------------------------------
-## NAMED EXPR
+## 29.5. NAMED EXPR
 
 
 
-### Original ASDL
+### 29.5.1. Original ASDL
 
 ```c
 | NamedExpr(expr target, expr value, ttype type)
 ```
 
-### Example
+### 29.5.2. Example
 
 ```clojure
 #_
@@ -2973,7 +3257,7 @@ IntegerBitNot(expr arg, ttype type, expr? value)
  (Integer 4 [])    )
 ```
 
-### Heavy Sugar
+### 29.5.3. Heavy Sugar
 
 
 ```clojure
@@ -2986,11 +3270,11 @@ IntegerBitNot(expr arg, ttype type, expr? value)
     ::ttype  ttype}})
 ```
 ----------------------------------------------------------------
-## FUNCTION CALL
+## 29.6. FUNCTION CALL
 
 
 
-### Original ASDL
+### 29.6.1. Original ASDL
 
 ```c
 | FunctionCall(symbol     name,
@@ -3002,7 +3286,7 @@ IntegerBitNot(expr arg, ttype type, expr? value)
 ```
 
 
-### Example
+### 29.6.2. Example
 
 ```clojure
 #_
@@ -3015,7 +3299,7 @@ IntegerBitNot(expr arg, ttype type, expr? value)
  () )
 ```
 
-### Heavy Sugar
+### 29.6.3. Heavy Sugar
 
 ```clojure
 (defn FunctionCall-- [fn-symref orig-symref call-args
@@ -3032,7 +3316,7 @@ IntegerBitNot(expr arg, ttype type, expr? value)
     }})
 ```
 
-### Legacy Sugar
+### 29.6.4. Legacy Sugar
 
 ```clojure
 (defmacro FunctionCall
@@ -3059,11 +3343,11 @@ IntegerBitNot(expr arg, ttype type, expr? value)
                      ~dt?))))
 ```
 ----------------------------------------------------------------
-## INTRINSIC FUNCTION
+## 29.7. INTRINSIC FUNCTION
 
 
 
-### Original ASDL
+### 29.7.1. Original ASDL
 
 ```c
 IntrinsicFunction(int    intrinsic_id,
@@ -3074,7 +3358,7 @@ IntrinsicFunction(int    intrinsic_id,
 ```
 
 
-### Example
+### 29.7.2. Example
 
 ```clojure
 #_
@@ -3091,7 +3375,7 @@ IntrinsicFunction(int    intrinsic_id,
  (Real 8 [])   ()   )
 ```
 
-### Heavy Sugar
+### 29.7.3. Heavy Sugar
 
 ```clojure
 (defn IntrinsicFunction--
@@ -3108,11 +3392,11 @@ IntrinsicFunction(int    intrinsic_id,
     }})
 ```
 
-### Legacy Sugar
+### 29.7.4. Legacy Sugar
 
 ```clojure
 (defmacro IntrinsicFunction
-  "Quote the intrinsic identifier."
+  "Stringulate the intrinsic identifier."
   [intrinsic-ident    expr*    overload-id
    return-type        value?]
   (let [i_ident (str intrinsic-ident)]
@@ -3121,7 +3405,7 @@ IntrinsicFunction(int    intrinsic_id,
       ~return-type, ~value?)))
 ```
 ----------------------------------------------------------------
-## LOGICAL, INTEGER, REAL CONSTANTS
+## 29.8. LOGICAL, INTEGER, REAL CONSTANTS
 
 
 
@@ -3133,7 +3417,7 @@ String. Complex is a special case because it
 takes two Real inputs. Write those by hand.
 
 
-### Typed Constant Macro
+### 29.8.1. Typed Constant Macro
 
 ```clojure
 (defmacro typed-constant              ;; -- Examples --
@@ -3167,7 +3451,7 @@ takes two Real inputs. Write those by hand.
         (~fnsym ~vpsym (~ttsym))))))
 ```
 
-### Using the Macro
+### 29.8.2. Using the Macro
 
 ```clojure
 (typed-constant Logical bool)
@@ -3175,24 +3459,24 @@ takes two Real inputs. Write those by hand.
 (typed-constant Integer int)
 ```
 ----------------------------------------------------------------
-## STRING CONSTANT
+## 29.9. STRING CONSTANT
 
 
 
-### Original ASDL
+### 29.9.1. Original ASDL
 
 ```c
 | StringConstant(string s, ttype type)
 ```
 
-### Example
+### 29.9.2. Example
 
 ```clojure
 #_
 (StringConstant "3" (Character 1 1 () []))
 ```
 
-### Heavy Sugar
+### 29.9.3. Heavy Sugar
 
 ```clojure
 (defn StringConstant
@@ -3208,11 +3492,11 @@ takes two Real inputs. Write those by hand.
    (StringConstant string (Character))))
 ```
 ----------------------------------------------------------------
-## STRING REPEAT
+## 29.10. STRING REPEAT
 
 
 
-### Heavy Sugar
+### 29.10.1. Heavy Sugar
 
 ```clojure
 (defn StringRepeat
@@ -3230,25 +3514,25 @@ takes two Real inputs. Write those by hand.
    (StringRepeat string-expr (Character) ())))
 ```
 ----------------------------------------------------------------
-## COMPLEX CONSTANT
+## 29.11. COMPLEX CONSTANT
 
 
 
-### Original ASDL
+### 29.11.1. Original ASDL
 
 ```c
 ComplexConstant(float re, float im, ttype type)
 ```
 
 
-### Example
+### 29.11.2. Example
 
 ```clojure
 #_
 (ComplexConstant 3.000000 4.000000 (Complex 8 []))
 ```
 
-### Heavy Sugar
+### 29.11.3. Heavy Sugar
 
 ```clojure
 (defn ComplexConstant
@@ -3265,11 +3549,11 @@ ComplexConstant(float re, float im, ttype type)
    (ComplexConstant re-float, im-float, (Complex))))
 ```
 ----------------------------------------------------------------
-## VAR
+## 29.12. VAR
 
 
 
-### Issue #23
+### 29.12.1. Issue #23
 
 Is the parameter `symbol` for `Var` really a `symbol`?
 Or just an identifier? #23
@@ -3287,7 +3571,7 @@ we probably need something like:
 Var(symtab_id stid, identifier it)
 ```
 
-### Heavy Sugar
+### 29.12.2. Heavy Sugar
 
 ```clojure
 (defn Var-- [stid, ident]
@@ -3299,7 +3583,7 @@ Var(symtab_id stid, identifier it)
     }})
 ```
 
-### Legacy Sugar
+### 29.12.3. Legacy Sugar
 
 ```clojure
 (defmacro Var [stid, unquoted-ident]
@@ -3308,9 +3592,9 @@ Var(symtab_id stid, identifier it)
 ```
 
 TODO: make Var look up a value in the
-symbol-table! That's part of abstract execution.
+29.13. symbol-table! That's part of abstract execution.
 ----------------------------------------------------------------
-## ARRAY CONSTANT
+## 29.14. ARRAY CONSTANT
 
 
 ```clojure
@@ -3324,11 +3608,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## ARRAY ITEM
+## 29.15. ARRAY ITEM
 
 
 
-### Example
+### 29.15.1. Example
 
 ```clojure
 #_
@@ -3342,7 +3626,7 @@ symbol-table! That's part of abstract execution.
  ())
 ```
 
-### Heavy Sugar
+### 29.15.2. Heavy Sugar
 
 ```clojure
 (defn array-index [[start, end, incr]]
@@ -3367,11 +3651,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## ARRAY RESHAPE
+## 29.16. ARRAY RESHAPE
 
 
 
-### Example
+### 29.16.1. Example
 
 ```clojure
 #_
@@ -3382,7 +3666,7 @@ symbol-table! That's part of abstract execution.
  ())
 ```
 
-### Heavy Sugar
+### 29.16.2. Heavy Sugar
 
 ```clojure
 (defn ArrayReshape
@@ -3400,11 +3684,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## STRING CHR
+## 29.17. STRING CHR
 
 
 
-### Heavy Sugar
+### 29.17.1. Heavy Sugar
 
 ```clojure
 (defn StringChr
@@ -3421,11 +3705,11 @@ symbol-table! That's part of abstract execution.
    (StringChr str-expr, (Character) string-val?)))
 ```
 ----------------------------------------------------------------
-## STRING LEN
+## 29.18. STRING LEN
 
 
 
-### Heavy Sugar
+### 29.18.1. Heavy Sugar
 
 ```clojure
 (defn StringLen
@@ -3442,11 +3726,11 @@ symbol-table! That's part of abstract execution.
    (StringLen str-expr, (Integer) int-val?)))
 ```
 ----------------------------------------------------------------
-## STRING ITEM
+## 29.19. STRING ITEM
 
 
 
-### Heavy Sugar
+### 29.19.1. Heavy Sugar
 
 ```clojure
 (defn StringItem
@@ -3464,11 +3748,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## STRING SECTION
+## 29.20. STRING SECTION
 
 
 
-### Heavy Sugar
+### 29.20.1. Heavy Sugar
 
 ```clojure
 (defn StringSection
@@ -3490,17 +3774,17 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## STRING ORD
+## 29.21. STRING ORD
 
 
 
-### Original ASDL
+### 29.21.1. Original ASDL
 
 ```c
 | StringOrd(expr arg, ttype type, expr? value)
 ```
 
-### Example
+### 29.21.2. Example
 
 ```clojure
 #_
@@ -3514,7 +3798,7 @@ symbol-table! That's part of abstract execution.
  )
 ```
 
-### Legacy Sugar
+### 29.21.3. Legacy Sugar
 
 ```clojure
 (defn StringOrd
@@ -3531,11 +3815,11 @@ symbol-table! That's part of abstract execution.
    (StringOrd str-expr, (Integer) int-val?)))
 ```
 ----------------------------------------------------------------
-## INTEGER BINOP
+## 29.22. INTEGER BINOP
 
 
 
-### Original ASDL
+### 29.22.1. Original ASDL
 
 ```c
 | IntegerBinOp(expr  left,
@@ -3545,7 +3829,7 @@ symbol-table! That's part of abstract execution.
                expr? value)
 ```
 
-### Example
+### 29.22.2. Example
 
 ```clojure
 #_
@@ -3563,7 +3847,7 @@ symbol-table! That's part of abstract execution.
  (IntegerConstant 25 (Integer 4 [])))
 ```
 
-### Heavy Sugar
+### 29.22.3. Heavy Sugar
 
 ```clojure
 (defn IntegerBinOp [left- bo- right- itt- ival?-]
@@ -3578,11 +3862,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## REAL BINOP
+## 29.23. REAL BINOP
 
 
 
-### Original ASDL
+### 29.23.1. Original ASDL
 
 ```c
 | RealBinOp(expr  left,
@@ -3592,7 +3876,7 @@ symbol-table! That's part of abstract execution.
                expr? value)
 ```
 
-### Example
+### 29.23.2. Example
 
 ```clojure
 #_
@@ -3610,7 +3894,7 @@ symbol-table! That's part of abstract execution.
  (RealConstant 25 (Real 4 [])))
 ```
 
-### Heavy Sugar
+### 29.23.3. Heavy Sugar
 
 ```clojure
 (defn RealBinOp-- [left- bo- right- rtt- rval?-]
@@ -3626,7 +3910,7 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 
-### Legacy Sugar
+### 29.23.4. Legacy Sugar
 
 ```clojure
 (defmacro RealBinOp
@@ -3636,11 +3920,11 @@ symbol-table! That's part of abstract execution.
     `(RealBinOp-- ~left- ~rop ~right- ~rtt- ~rval?-)))
 ```
 ----------------------------------------------------------------
-## COMPLEX BINOP
+## 29.24. COMPLEX BINOP
 
 
 
-### Original ASDL
+### 29.24.1. Original ASDL
 
 ```c
 | ComplexBinOp(expr  left,
@@ -3650,7 +3934,7 @@ symbol-table! That's part of abstract execution.
                expr? value)
 ```
 
-### Heavy Sugar
+### 29.24.2. Heavy Sugar
 
 ```clojure
 (defn ComplexBinOp-- [left- bo- right- ctt- cval?-]
@@ -3666,7 +3950,7 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 
-### Legacy Sugar
+### 29.24.3. Legacy Sugar
 
 ```clojure
 (defmacro ComplexBinOp
@@ -3676,18 +3960,18 @@ symbol-table! That's part of abstract execution.
     `(ComplexBinOp-- ~left- ~rop ~right- ~ctt- ~cval?-)))
 ```
 ----------------------------------------------------------------
-## LOGICAL BINOP
+## 29.25. LOGICAL BINOP
 
 
 
-### Original ASDL
+### 29.25.1. Original ASDL
 
 ```c
 | LogicalBinOp(expr left, logicalbinop op, expr
   right, ttype type, expr? value)
 ```
 
-### Example
+### 29.25.2. Example
 
 
 ```clojure
@@ -3703,7 +3987,7 @@ symbol-table! That's part of abstract execution.
  (Logical 4 []) ())
 ```
 
-### Heavy Sugar
+### 29.25.3. Heavy Sugar
 
 ```clojure
 (defn LogicalBinOp [left- lbo- right- tt- val?-]
@@ -3718,11 +4002,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## LIST CONSTANT
+## 29.26. LIST CONSTANT
 
 
 
-### Heavy Sugar
+### 29.26.1. Heavy Sugar
 
 ```clojure
 (defn ListConstant [expr* ttype]
@@ -3735,11 +4019,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## LIST LEN
+## 29.27. LIST LEN
 
 
 
-### Heavy Sugar
+### 29.27.1. Heavy Sugar
 
 ```clojure
 (defn ListLen [list-expr int-ttype int-val?]
@@ -3752,11 +4036,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## TUPLE CONSTANT
+## 29.28. TUPLE CONSTANT
 
 
 
-### Heavy Sugar
+### 29.28.1. Heavy Sugar
 
 ```clojure
 (defn TupleConstant [elements ttype]
@@ -3768,11 +4052,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## TUPLE LEN
+## 29.29. TUPLE LEN
 
 
 
-### Heavy Sugar
+### 29.29.1. Heavy Sugar
 
 ```clojure
 (defn TupleLen [tuple-expr int-ttype int-val?]
@@ -3785,11 +4069,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## TUPLE COMPARE
+## 29.30. TUPLE COMPARE
 
 
 
-### Heavy Sugar
+### 29.30.1. Heavy Sugar
 
 ```clojure
 (defn TupleCompare [tuple-left any-cmpop tuple-right
@@ -3805,7 +4089,7 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## COMPLEX RE
+## 29.31. COMPLEX RE
 
 ```clojure
 (defn ComplexRe [cexpr, rtt, rv?]
@@ -3818,7 +4102,7 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## COMPLEX IM
+## 29.32. COMPLEX IM
 
 ```clojure
 (defn ComplexIm [cexpr, rtt, rv?]
@@ -3831,11 +4115,11 @@ symbol-table! That's part of abstract execution.
     }})
 ```
 ----------------------------------------------------------------
-## INTEGER COMPARE
+## 29.33. INTEGER COMPARE
 
 
 
-### Original ASDL
+### 29.33.1. Original ASDL
 
 ```c
 | IntegerCompare(expr  left,
@@ -3845,7 +4129,7 @@ symbol-table! That's part of abstract execution.
                  expr? value)
 ```
 
-### Example
+### 29.33.2. Example
 
 ```clojure
 #_
@@ -3857,7 +4141,7 @@ symbol-table! That's part of abstract execution.
  ())
 ```
 
-### Heavy Sugar
+### 29.33.3. Heavy Sugar
 
 ```clojure
 (defn IntegerCompare [l- cmp- r- tt- val?-]
@@ -3871,11 +4155,11 @@ symbol-table! That's part of abstract execution.
     ::logical-value? val?-}})
 ```
 ----------------------------------------------------------------
-## REAL COMPARE
+## 29.34. REAL COMPARE
 
 
 
-### Heavy Sugar
+### 29.34.1. Heavy Sugar
 
 ```clojure
 (defn RealCompare-- [l- cmp- r- tt- val?-]
@@ -3889,7 +4173,7 @@ symbol-table! That's part of abstract execution.
     ::logical-value? val?-}})
 ```
 
-### Legacy Sugar
+### 29.34.2. Legacy Sugar
 
 ```clojure
 (defmacro RealCompare
@@ -3898,11 +4182,11 @@ symbol-table! That's part of abstract execution.
     `(RealCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ```
 ----------------------------------------------------------------
-## COMPLEX COMPARE
+## 29.35. COMPLEX COMPARE
 
 
 
-### Heavy Sugar
+### 29.35.1. Heavy Sugar
 
 ```clojure
 (defn ComplexCompare-- [l- cmp- r- tt- val?-]
@@ -3916,7 +4200,7 @@ symbol-table! That's part of abstract execution.
     ::logical-value? val?-}})
 ```
 
-### Legacy Sugar
+### 29.35.2. Legacy Sugar
 
 ```clojure
 (defmacro ComplexCompare
@@ -3925,11 +4209,11 @@ symbol-table! That's part of abstract execution.
     `(ComplexCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ```
 ----------------------------------------------------------------
-## STRING COMPARE
+## 29.36. STRING COMPARE
 
 
 
-### Heavy Sugar
+### 29.36.1. Heavy Sugar
 
 ```clojure
 (defn StringCompare-- [l- cmp- r- tt- val?-]
@@ -3943,7 +4227,7 @@ symbol-table! That's part of abstract execution.
     ::logical-value? val?-}})
 ```
 
-### Legacy Sugar
+### 29.36.2. Legacy Sugar
 
 ```clojure
 (defmacro StringCompare
@@ -3952,11 +4236,11 @@ symbol-table! That's part of abstract execution.
     `(StringCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ```
 ----------------------------------------------------------------
-## LOGICAL COMPARE
+## 29.37. LOGICAL COMPARE
 
 
 
-### Original ASDL
+### 29.37.1. Original ASDL
 
 ```c
 | LogicalCompare(expr left,   ;; must have type ::Logical
@@ -3967,7 +4251,7 @@ symbol-table! That's part of abstract execution.
 ```
 
 
-### Example
+### 29.37.2. Example
 
 ```clojure
 #_
@@ -3978,7 +4262,7 @@ symbol-table! That's part of abstract execution.
   (Logical 4 []) ())
 ```
 
-### Heavy Sugar
+### 29.37.3. Heavy Sugar
 
 ```clojure
 (defn LogicalCompare-- [l- cmp- r- tt- val?-]
@@ -3993,7 +4277,7 @@ symbol-table! That's part of abstract execution.
     ::logical-value? val?-}})
 ```
 
-### Legacy Sugar
+### 29.37.4. Legacy Sugar
 
 ```clojure
 (defmacro LogicalCompare
@@ -4003,17 +4287,17 @@ symbol-table! That's part of abstract execution.
     `(LogicalCompare-- ~l- ~lop ~r- ~tt- ~val?-)))
 ```
 ----------------------------------------------------------------
-## LOGICAL NOT
+## 29.38. LOGICAL NOT
 
 
 
-### Original ASDL
+### 29.38.1. Original ASDL
 
 ```c
 LogicalNot(expr arg, ttype type, expr? value)
 ```
 
-### Heavy Sugar
+### 29.38.2. Heavy Sugar
 
 ```clojure
 (defn LogicalNot
@@ -4026,17 +4310,17 @@ LogicalNot(expr arg, ttype type, expr? value)
     ::logical-value? lvalue?}})
 ```
 ----------------------------------------------------------------
-## CAST
+## 29.39. CAST
 
 
 
-### Original ASDL
+### 29.39.1. Original ASDL
 
 ```c
 | Cast(expr arg, cast-kind kind, ttype type, expr? value)
 ```
 
-### Example
+### 29.39.2. Example
 
 
 ```clojure
@@ -4054,7 +4338,7 @@ LogicalNot(expr arg, ttype type, expr? value)
  (IntegerConstant 4 (Integer 4 [])))
 ```
 
-### Heavy Sugar
+### 29.39.3. Heavy Sugar
 
 
 ```clojure
@@ -4069,7 +4353,7 @@ LogicalNot(expr arg, ttype type, expr? value)
     ::value?    value?}})
 ```
 ----------------------------------------------------------------
-## LIST ITEM
+## 29.40. LIST ITEM
 
 
 ```clojure
@@ -4084,7 +4368,7 @@ LogicalNot(expr arg, ttype type, expr? value)
     }})
 ```
 ----------------------------------------------------------------
-## TUPLE ITEM
+## 29.41. TUPLE ITEM
 
 
 ```clojure
@@ -4100,11 +4384,11 @@ LogicalNot(expr arg, ttype type, expr? value)
 ```
 
 
-# STMT
+# 30. STMT
 
 
 ----------------------------------------------------------------
-## Prerequisite Types and Aliases
+## 30.1. Prerequisite Types and Aliases
 
 
 ```clojure
@@ -4170,7 +4454,7 @@ TODO: there is ambiguity regarding identifier-sets and lists:
 (s/def ::goto-target        ::nat)
 ```
 ----------------------------------------------------------------
-## LIST APPEND
+## 30.2. LIST APPEND
 
 ```clojure
 (defn ListAppend [list-expr list-element]
@@ -4182,17 +4466,17 @@ TODO: there is ambiguity regarding identifier-sets and lists:
     }})
 ```
 ----------------------------------------------------------------
-## EXPLICIT DEALLOCATE
+## 30.3. EXPLICIT DEALLOCATE
 
 
 
-### Original ASDL
+### 30.3.1. Original ASDL
 
 ```c
     | ExplicitDeallocate(expr* vars)
 ```
 
-### Heavy Sugar
+### 30.3.2. Heavy Sugar
 
 ```clojure
 (defn ExplicitDeallocate [vars]
@@ -4202,17 +4486,17 @@ TODO: there is ambiguity regarding identifier-sets and lists:
     ::vars vars}})
 ```
 ----------------------------------------------------------------
-## ASSERT
+## 30.4. ASSERT
 
 
 
-### Original ASDL
+### 30.4.1. Original ASDL
 
 ```c
 | Assert(expr test, expr? msg)
 ```
 
-### Heavy Sugar
+### 30.4.2. Heavy Sugar
 
 ```clojure
 (defn Assert [test-expr message?]
@@ -4223,11 +4507,11 @@ TODO: there is ambiguity regarding identifier-sets and lists:
     ::message?  message?}})
 ```
 ----------------------------------------------------------------
-## GOTO
+## 30.5. GOTO
 
 
 
-### Heavy Sugar
+### 30.5.1. Heavy Sugar
 
 ```clojure
 (defn GoTo-- [goto-target identifier]
@@ -4238,7 +4522,7 @@ TODO: there is ambiguity regarding identifier-sets and lists:
     ::identifier  identifier}})
 ```
 
-### Legacy Sugar
+### 30.5.2. Legacy Sugar
 
 ```clojure
 (defmacro GoTo [goto-target identifier]
@@ -4246,17 +4530,17 @@ TODO: there is ambiguity regarding identifier-sets and lists:
    `(GoTo-- ~goto-target ~i_ident)))
 ```
 ----------------------------------------------------------------
-## IF
+## 30.6. IF
 
 
 
-### Original ASDL
+### 30.6.1. Original ASDL
 
 ```c
 | If(expr test, stmt* body, stmt* orelse)
 ```
 
-### Example
+### 30.6.2. Example
 
 ```clojure
 #_
@@ -4277,7 +4561,7 @@ TODO: there is ambiguity regarding identifier-sets and lists:
    )]  []  )
 ```
 
-### Heavy Sugar
+### 30.6.3. Heavy Sugar
 
 ```clojure
 (defn If [test-expr body orelse]
@@ -4289,25 +4573,25 @@ TODO: there is ambiguity regarding identifier-sets and lists:
     ::orelse    orelse}})
 ```
 ----------------------------------------------------------------
-## ASSIGNMENT
+## 30.7. ASSIGNMENT
 
 
 
-### Original ASDL
+### 30.7.1. Original ASDL
 
 ```c
 | Assignment(expr target, expr value, stmt? overloaded)
          --- Var ---
 ```
 
-### Issues
+### 30.7.2. Issues
 
 
 https://github.com/rebcabin/masr/issues/21
 https://github.com/rebcabin/masr/issues/22
 https://github.com/rebcabin/masr/issues/26
 
-### Heavy Sugar
+### 30.7.3. Heavy Sugar
 
 ```clojure
 (defn Assignment [lhs, rhs, unk]
@@ -4319,11 +4603,11 @@ https://github.com/rebcabin/masr/issues/26
     ::overloaded  unk}})
 ```
 ----------------------------------------------------------------
-## DO LOOP
+## 30.8. DO LOOP
 
 
 
-### Example
+### 30.8.1. Example
 
 
 ```clojure
@@ -4344,7 +4628,7 @@ https://github.com/rebcabin/masr/issues/26
    )] )
 ```
 
-### Do-Loop Head Support
+### 30.8.2. Do-Loop Head Support
 
 ```clojure
 (defn do-loop-head [[var start end incr]]
@@ -4354,7 +4638,7 @@ https://github.com/rebcabin/masr/issues/26
    ::loop-increment incr})
 ```
 
-### Heavy Sugar
+### 30.8.3. Heavy Sugar
 
 ```clojure
 (defn DoLoop [escape-target
@@ -4372,17 +4656,17 @@ https://github.com/rebcabin/masr/issues/26
     ::body            body}})
 ```
 ----------------------------------------------------------------
-## WHILE LOOP
+## 30.9. WHILE LOOP
 
 
 
-### Original ASDL
+### 30.9.1. Original ASDL
 
 ```c
 | WhileLoop(expr test, stmt* body)
 ```
 
-### Example
+### 30.9.2. Example
 
 ```clojure
 #_
@@ -4401,7 +4685,7 @@ https://github.com/rebcabin/masr/issues/26
  )
 ```
 
-### Heavy Sugar
+### 30.9.3. Heavy Sugar
 
 ```clojure
 (defn WhileLoop
@@ -4414,17 +4698,17 @@ https://github.com/rebcabin/masr/issues/26
     ::body             body}})
 ```
 ----------------------------------------------------------------
-## PRINT
+## 30.10. PRINT
 
 
-### Original ASDL
+### 30.10.1. Original ASDL
 
 ```c
 | Print(expr? fmt, expr* values, expr? separator, expr? end)
 ```
 
 
-### Heavy Sugar
+### 30.10.2. Heavy Sugar
 
 
 ```clojure
@@ -4439,7 +4723,7 @@ https://github.com/rebcabin/masr/issues/26
    })
 ```
 ----------------------------------------------------------------
-## RETURN
+## 30.11. RETURN
 
 
 ```clojure
@@ -4449,14 +4733,14 @@ https://github.com/rebcabin/masr/issues/26
    {::stmt-head ::Return}})
 ```
 ----------------------------------------------------------------
-## SUBROUTINE CALL
+## 30.12. SUBROUTINE CALL
 
 
 `SubroutineCall` is a special case because it
 abuses the word `symbol` to mean a `symbol-ref`.
 
 
-### Original ASDL
+### 30.12.1. Original ASDL
 
 
 ```c
@@ -4469,7 +4753,7 @@ SubroutineCall(symbol     name,          ~~~> symref
 (s/def ::dt? ::expr?)
 ```
 
-### Examples
+### 30.12.2. Examples
 
 ```clojure
 #_
@@ -4479,7 +4763,7 @@ SubroutineCall(symbol     name,          ~~~> symref
 (SubroutineCall  7 test_fn1  ()  ((Var 42 i))  ())
 ```
 
-### Heavy Sugar
+### 30.12.3. Heavy Sugar
 
 ```clojure
 (defn SubroutineCall--
@@ -4494,7 +4778,7 @@ SubroutineCall(symbol     name,          ~~~> symref
     }})
 ```
 
-### Legacy Sugar
+### 30.12.4. Legacy Sugar
 
 ```clojure
 (defmacro SubroutineCall
@@ -4529,7 +4813,7 @@ SubroutineCall(symbol     name,          ~~~> symref
 (s/def ::label ::nat)
 ```
 
-### Heavy Sugar
+### 30.12.5. Heavy Sugar
 
 ```clojure
 (defn BlockCall--
@@ -4542,7 +4826,7 @@ SubroutineCall(symbol     name,          ~~~> symref
     }})
 ```
 
-### Legacy Sugar
+### 30.12.6. Legacy Sugar
 
 ```clojure
 (defmacro BlockCall
@@ -4555,11 +4839,11 @@ SubroutineCall(symbol     name,          ~~~> symref
 ```
 
 
-# SYMBOL
+# 31. SYMBOL
 
 
 ----------------------------------------------------------------
-## Prerequisite Types and Aliases
+## 31.1. Prerequisite Types and Aliases
 
 
 ```clojure
@@ -4576,11 +4860,11 @@ SubroutineCall(symbol     name,          ~~~> symref
 (s/def ::blocknym           ::identifier)
 ```
 ----------------------------------------------------------------
-## PROGRAM
+## 31.2. PROGRAM
 
 
 
-### Original ASDL
+### 31.2.1. Original ASDL
 
 
 ```c
@@ -4590,7 +4874,7 @@ SubroutineCall(symbol     name,          ~~~> symref
           stmt*        body)
 ```
 
-### Heavy Sugar
+### 31.2.2. Heavy Sugar
 
 ```clojure
 (defn Program-- [stab, nym, deps, body-]
@@ -4603,22 +4887,23 @@ SubroutineCall(symbol     name,          ~~~> symref
     ::body         body-}})
 ```
 
-### Legacy Sugar
+### 31.2.3. Legacy Sugar
 
 ```clojure
 (defmacro Program
-  "Quote the nym and the dependencies."
+  "Stringulate the nym and the dependencies
+  and vectorate the dependencies."
   [stab, nym, deps, body-]
   (let [i_nym (str nym)
         i_deps (vec (map str deps))]
    `(Program--  ~stab,  ~i_nym,  ~i_deps,  ~body-)))
 ```
 ----------------------------------------------------------------
-## MODULE
+## 31.3. MODULE
 
 
 
-### Original ASDL
+### 31.3.1. Original ASDL
 
 ```c
 | Module(symbol_table   symtab,
@@ -4628,7 +4913,7 @@ SubroutineCall(symbol     name,          ~~~> symref
          bool           intrinsic)
 ```
 
-### Heavy Sugar
+### 31.3.2. Heavy Sugar
 
 ```clojure
 (defn Module-- [symtab, modnym, deps, loaded, intrinsic-]
@@ -4642,11 +4927,12 @@ SubroutineCall(symbol     name,          ~~~> symref
     ::intrinsic       intrinsic-}})
 ```
 
-### Legacy Sugar
+### 31.3.3. Legacy Sugar
 
 ```clojure
 (defmacro Module
-  "Quote the mondnym and the deps."
+  "Stringulate the mondnym and the deps
+  and vectorate the deps."
   [symtab, modnym, deps, loaded, intrinsic-]
   (let [i_modnym (str modnym)
         i_strss (vec (map str deps))]
@@ -4655,11 +4941,11 @@ SubroutineCall(symbol     name,          ~~~> symref
       ~loaded  ~intrinsic-)))
 ```
 ----------------------------------------------------------------
-## FUNCTION
+## 31.4. FUNCTION
 
 
 
-### Original ASDL
+### 31.4.1. Original ASDL
 
 ```c
 | Function(symbol_table symtab,
@@ -4676,7 +4962,7 @@ SubroutineCall(symbol     name,          ~~~> symref
            bool         side_effect_free)
 ```
 
-### Heavy Sugar
+### 31.4.2. Heavy Sugar
 
 ```clojure
 (defn Function-- [symtab,
@@ -4703,7 +4989,7 @@ SubroutineCall(symbol     name,          ~~~> symref
     }})
 ```
 
-### Legacy Sugar
+### 31.4.3. Legacy Sugar
 
 The bodies of functions can get very big, too big
 for Clojure to eval due to a limit in Java of
@@ -4728,10 +5014,10 @@ bodies, replacing them with their full-forms.
                 ~access-, ~determ, ~sefree)))
 ```
 ----------------------------------------------------------------
-## GENERIC PROCEDURE
+## 31.5. GENERIC PROCEDURE
 
 
-### Original ASDL
+### 31.5.1. Original ASDL
 
 
 ```c
@@ -4741,7 +5027,7 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
                  access         access)
 ```
 
-### Example
+### 31.5.2. Example
 
 ```clojure
 #_
@@ -4753,7 +5039,7 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
  Public )
 ```
 
-### Heavy Sugar
+### 31.5.3. Heavy Sugar
 
 ```clojure
 (defn GenericProcedure--
@@ -4768,7 +5054,7 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
    })
 ```
 
-### Legacy Sugar
+### 31.5.4. Legacy Sugar
 
 ```clojure
 (defmacro GenericProcedure
@@ -4784,10 +5070,10 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
       ~access)))
 ```
 ----------------------------------------------------------------
-## EXTERNAL SYMBOL
+## 31.6. EXTERNAL SYMBOL
 
 
-### Original ASDL
+### 31.6.1. Original ASDL
 
 
 ```c
@@ -4800,7 +5086,7 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
                  access       access)        ~~~> access
 ```
 
-### Example
+### 31.6.2. Example
 
 ```clojure
 #_
@@ -4811,7 +5097,7 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
  _lpython_main_program    Public)
 ```
 
-### Heavy Sugar
+### 31.6.3. Heavy Sugar
 
 ```clojure
 (defn ExternalSymbol--
@@ -4834,7 +5120,7 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
    })
 ```
 
-### Legacy Sugar
+### 31.6.4. Legacy Sugar
 
 
 ```clojure
@@ -4864,11 +5150,11 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
             ~i_modnym,  ~i_snyms,  ~i_onym,  ~access))))
 ```
 ----------------------------------------------------------------
-## VARIABLE
+## 31.7. VARIABLE
 
 
 
-### Original ASDL
+### 31.7.1. Original ASDL
 
 
 ```c
@@ -4887,7 +5173,7 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
 ```
 
 
-### Example
+### 31.7.2. Example
 
 
 ```clojure
@@ -4908,7 +5194,7 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
  .false.)                ;   bool            value-attr
 ```
 
-### Light Sugar
+### 31.7.3. Light Sugar
 
 ```clojure
 (defn Variable-
@@ -4956,7 +5242,7 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
     }})
 ```
 
-### Heavy Sugar
+### 31.7.4. Heavy Sugar
 
 ```clojure
 (defn Variable--
@@ -5003,13 +5289,14 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
      }}))
 ```
 
-### Legacy Sugar
+### 31.7.5. Legacy Sugar
 
 ```clojure
 (defmacro Variable
   "Honor legacy parameter order of
   lpython/src/libasr/ASR.asdl as of 25 April 2023.
-  Quote the varnym and dependencies; pass along
+  Stringulate the varnym and dependencies,
+  vectorate the dependencies; pass along
   all other params."
   [symtab-id-,     varnym-,          dependencies-,
    intent-,        symbolic-value-,  value?-,
@@ -5029,11 +5316,11 @@ GenericProcedure(symbol_table   parent_symtab, <~~~ symtab-id
      ~value-attr-)))
 ```
 ----------------------------------------------------------------
-## BLOCK
+## 31.8. BLOCK
 
 
 
-### Original ASDL
+### 31.8.1. Original ASDL
 
 
 ```c
@@ -5056,7 +5343,7 @@ Heavy Sugar
     }})
 ```
 
-### Legacy Sugar
+### 31.8.2. Legacy Sugar
 
 ```clojure
 (defmacro Block [SymbolTable
@@ -5066,11 +5353,11 @@ Heavy Sugar
    `(Block-- ~SymbolTable ~i_nym ~body)))
 ```
 ----------------------------------------------------------------
-## INTRINSIC MODULE
+## 31.9. INTRINSIC MODULE
 
 
 
-### Original ASDL
+### 31.9.1. Original ASDL
 
 
 There is no ASDL for this symbol in our snapshot.
@@ -5085,7 +5372,7 @@ Heavy Sugar
     ::modulenym       modnym}})
 ```
 
-### Legacy Sugar
+### 31.9.2. Legacy Sugar
 
 ```clojure
 (defmacro IntrinsicModule [modnym]
@@ -5094,11 +5381,11 @@ Heavy Sugar
 ```
 
 
-# UNIT
+# 32. UNIT
 
 
 ----------------------------------------------------------------
-## Prerequisite Type Aliases
+## 32.1. Prerequisite Type Aliases
 
 
 ```clojure
@@ -5109,7 +5396,7 @@ Heavy Sugar
 (defn node [candidate] candidate)
 ```
 
-## Pluralities
+## 32.2. Pluralities
 
 
 
@@ -5119,10 +5406,10 @@ TODO: Consider a regex-spec.
 (s/def ::nodes (.* ::node))
 ```
 ----------------------------------------------------------------
-## TRANSLATION UNIT
+## 32.3. TRANSLATION UNIT
 
 
-### Heavy Sugar
+### 32.3.1. Heavy Sugar
 
 ```clojure
 (defn TranslationUnit [stab, node-preimages]
