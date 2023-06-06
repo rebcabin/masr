@@ -24,8 +24,7 @@
                                             identifier-set
                                             identifier-list
                                             identifier-suit
-                                            ]])
-  )
+                                            ]]))
 
 
 (warnings-banner)
@@ -866,12 +865,26 @@
 
 
 (deftest function-type-test
-  (let [ft (FunctionType
+  (testing "idempotency of to-full-form"
+    (let [ft (to-full-form
+              (to-full-form
+               (FunctionType ;; from 1bcc4ec
+                []  ()  Source
+                Implementation  ()  false
+                false  false  false
+                false  []  []  false
+                )))]
+      (testing "idempotency of eval -- 1"
+        (is (= ft (eval ft) (eval (eval ft)))))
+      (is (s/valid?  ::asr/asr-term      ft))
+      (is (s/valid?  ::asr/ttype         ft))
+      (is (s/valid?  ::asr/FunctionType  ft))))
+  (let [ft (FunctionType ;; looks the same
             [] () Source
             Implementation () false
             false false false
             false [] [] false)]
-    (testing "idempotency"
+    (testing "idempotency of eval -- 2"
       (is (= ft (eval ft) (eval (eval ft)))))
     (is (s/valid?  ::asr/asr-term      ft))
     (is (s/valid?  ::asr/ttype         ft))
@@ -1114,6 +1127,27 @@
 
 
 (deftest Var-test
+  (testing "debugging explode"
+    (is (s/valid? ::asr/Var
+                  (Var 2 a)))
+    (is (s/valid? ::asr/Assignment
+                  (eval
+                   (rewrite-for-legacy
+                    '(= (Var 2 a)
+                        (LogicalConstant false (Logical 4 []))
+                        ())))))
+    (is (s/valid? ::asr/TranslationUnit
+                  (eval
+                   (rewrite-for-legacy
+                    '(TranslationUnit
+                      (SymbolTable 42 {})
+                      [(Program
+                        (SymbolTable 3 {})
+                        main_program
+                        []
+                        [(= (Var 2 a)
+                            (LogicalConstant false (Logical 4 []))
+                            ())])]))))))
   (let [vlv {::asr/term ::asr/expr,
              ::asr/asr-expr-head
              {::asr/expr-head  ::asr/Var
@@ -4809,7 +4843,7 @@
            eval)))
 
 
-(defmacro test-unit [filenamefrag]
+(defmacro test-translation-unit [filenamefrag]
   (let [tstr (str "whole translation unit for " filenamefrag)
         fstr (str filenamefrag)]
     `(testing ~tstr
@@ -5126,51 +5160,51 @@
     (testing "textual identity of slurped e2e0267"
       (is (= hand-written-quoted-e2e0267 slurped-e2e0267)))
 
-    (test-unit -expr1-dde511e)
-    (test-unit -expr10-31c163f)
-    (test-unit -expr11-1134d3f)
-    (test-unit -expr12-2a30333)
-    (test-unit -expr13-10040d8)
-    (test-unit -expr4-cf512ef)
-    (test-unit -expr6-bfb3384)
-    (test-unit -expr7-2ef3822)
-    (test-unit -expr8-2a4630a)
-    (test-unit -expr9-c6fe691)
-    (test-unit -expr_01-03055c0)
-    (test-unit -expr_01-eafd41c)
-    (test-unit -expr_14-6023c49)
-    (test-unit -test_bool_binop-3075d22)
-    (test-unit -test_bool_binop-3075d22)
-    (test-unit -test_builtin-4f04bbc)
-    (test-unit -test_builtin_abs-06a7e49)
-    (test-unit -test_builtin_bin-0ca34fe)
-    (test-unit -test_builtin_bool-fe3fe33)
-    (test-unit -test_builtin_float-97f9316)
-    (test-unit -test_builtin_hex-d4abc3e)
-    (test-unit -test_builtin_int-990d1de)
-    (test-unit -test_builtin_len-922cf65)
-    (test-unit -test_builtin_oct-490a98b)
-    (test-unit -test_builtin_pow-cea529e)
-    (test-unit -test_builtin_round-cca5cba)
-    (test-unit -test_builtin_str-fcdedc2)
-    (test-unit -test_c_interop_01-8bee4ec)
-    (test-unit -test_complex_01-c199562)
-    (test-unit -test_complex_02-6516823)
-    (test-unit -test_end_sep_keywords-49ea13f)
-    (test-unit -test_integer_bitnot-0d0eafa)
-    (test-unit -test_max_min-e73decc)
-    (test-unit -test_numpy_03-6dd742e)
-    (test-unit -test_numpy_04-3376b7a)
-    (test-unit -test_pow-6f6a69d)
-    (test-unit -tuple1-ce358d9)
-    (test-unit -vec_01-9b22f33)
-    (test-unit _expr2_5311701)
-    (test-unit _expr_10_e2e0267)
-    (test-unit _pass_inline_function_calls-func_inline_01-6cf8821)
+    (test-translation-unit -expr1-dde511e)
+    (test-translation-unit -expr10-31c163f)
+    (test-translation-unit -expr11-1134d3f)
+    (test-translation-unit -expr12-2a30333)
+    (test-translation-unit -expr13-10040d8)
+    (test-translation-unit -expr4-cf512ef)
+    (test-translation-unit -expr6-bfb3384)
+    (test-translation-unit -expr7-2ef3822)
+    (test-translation-unit -expr8-2a4630a)
+    (test-translation-unit -expr9-c6fe691)
+    (test-translation-unit -expr_01-03055c0)
+    (test-translation-unit -expr_01-eafd41c)
+    (test-translation-unit -expr_14-6023c49)
+    (test-translation-unit -test_bool_binop-3075d22)
+    (test-translation-unit -test_bool_binop-3075d22)
+    (test-translation-unit -test_builtin-4f04bbc)
+    (test-translation-unit -test_builtin_abs-06a7e49)
+    (test-translation-unit -test_builtin_bin-0ca34fe)
+    (test-translation-unit -test_builtin_bool-fe3fe33)
+    (test-translation-unit -test_builtin_float-97f9316)
+    (test-translation-unit -test_builtin_hex-d4abc3e)
+    (test-translation-unit -test_builtin_int-990d1de)
+    (test-translation-unit -test_builtin_len-922cf65)
+    (test-translation-unit -test_builtin_oct-490a98b)
+    (test-translation-unit -test_builtin_pow-cea529e)
+    (test-translation-unit -test_builtin_round-cca5cba)
+    (test-translation-unit -test_builtin_str-fcdedc2)
+    (test-translation-unit -test_c_interop_01-8bee4ec)
+    (test-translation-unit -test_complex_01-c199562)
+    (test-translation-unit -test_complex_02-6516823)
+    (test-translation-unit -test_end_sep_keywords-49ea13f)
+    (test-translation-unit -test_integer_bitnot-0d0eafa)
+    (test-translation-unit -test_max_min-e73decc)
+    (test-translation-unit -test_numpy_03-6dd742e)
+    (test-translation-unit -test_numpy_04-3376b7a)
+    (test-translation-unit -test_pow-6f6a69d)
+    (test-translation-unit -tuple1-ce358d9)
+    (test-translation-unit -vec_01-9b22f33)
+    (test-translation-unit _expr2_5311701)
+    (test-translation-unit _expr_10_e2e0267)
+    (test-translation-unit _pass_inline_function_calls-func_inline_01-6cf8821)
     (comment "too big for evaluation"
              "see big_test.clj for bisection and analysis")
     #_
-    (test-unit _pass_print_list_tuple-print_02-1bcc4ec)
+    (test-translation-unit _pass_print_list_tuple-print_02-1bcc4ec)
     ))
 
 
@@ -5179,7 +5213,7 @@
 ;; section in the code and Markdown file.
 
 
-(def too-big-slurped-1bcc4ec
+#_(def too-big-slurped-1bcc4ec
     (->> "_pass_print_list_tuple-print_02-1bcc4ec"
          slurp-asr))
 
