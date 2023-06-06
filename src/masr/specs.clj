@@ -219,7 +219,8 @@
 ;; ### Terms (Nodes) in the ASDL Grammar
 ;;
 ;;
-;; Terms are items to the left of equals signs:
+;; Terms are items to the left of equals signs. Terms may
+;; also be called `nodes`.
 ;;
 ;;
 ;; ```c
@@ -231,7 +232,7 @@
 ;;  6 deftype         = Implementation | Interface
 ;;  7 presence        = Required | Optional
 ;;  8 abi             = Source | LFortranModule | ... | Intrinsic
-;; 09 stmt            = ... many heads ...
+;;  9 stmt            = ... many heads ...
 ;; 10 expr            = ... many heads ...
 ;; 11 ttype           = Integer(int, dim*) | ... | FunctionType( ... )
 ;; 12 restriction_arg = RestrictionArg(identifier, symbol)
@@ -258,8 +259,8 @@
 ;; ### Terms Used but not Defined in ASDL
 ;;
 ;; ```c
-;; 31 symbol_table    = a clojure map
-;; 32 dimension*      = dimension*, see below
+;; 31 symbol_table    = a clojure hash-map
+;; 32 dimension*      = see below
 ;; ```
 ;;
 ;; ### Term-Like Items
@@ -305,35 +306,30 @@
 ;; example, "does `(Integer 4 [])`, syntax sugar for
 ;; a hash-map instance, meet the general
 ;; specification of an ASR `ttype`, which describes
-;; an infinite class of instances?"
+;; an infinite class of hash-map instances?"
 ;;
 ;;
 ;; In MASR, specs describe mathematical _sets_ of
 ;; valid or conforming values, and MASR type
 ;; checking is often just checking whether an
-;; instance inhabits a certain specified set.
+;; instance inhabits a certain set.
 ;;
 ;;
 ;; Therefore, a type system like MASR's can act like
-;; a _set theory_ with respect to instances. See
-;; this Stack-Exchange question for the fine points
-;; of set theory versus type theory:
+;; a _decidable set theory_ with respect to
+;; instances. See this Stack-Exchange question for
+;; the fine points of set theory versus type theory:
 ;;
-
 ;;
 ;;   https://math.stackexchange.com/questions/489369
 ;;
-
 ;;
-;; The gist is that a type theory is a
-;; self-contained logic, and set theory is one such
-;; logic. Clojure specs are arbitrary predicate
-;; functions. We can build any type-theory that
-;; needs only first-order predicate calculus.
-;; Therefore, Clojure specs can be more general than
-;; set theory, and suffice for advanced types like
-;; dependency types and concurrency types. Such
-;; advanced types are work-in-progress for MASR.
+;; Clojure specs are arbitrary predicate functions.
+;; We can build any type-theory that needs only
+;; first-order predicate calculus. Clojure specs
+;; suffice for advanced types like dependency types
+;; and concurrency types. Such advanced types are
+;; work-in-progress for MASR.
 ;;
 
 ;; ----------------------------------------------------------------
@@ -370,8 +366,8 @@
 ;;
 ;; Every MASR `asr-term` instance has a full-form. A
 ;; full-form is a Clojure _hash-map_ that contains
-;; the key `::term`. Clojure hash-maps are
-;; collections of key-value pairs like Python
+;; the key `::term` at top level. Clojure hash-maps
+;; are collections of key-value pairs like Python
 ;; dictionaries.[https://clojuredocs.org/clojure.core/hash-map]
 ;;
 ;;
@@ -383,7 +379,7 @@
 
 ;; key         value
 {::term        ::intent,
- ::intent-enum 'Local}
+ ::intent-enum "Local"}
 ;; #+end_src
 
 ;;
@@ -399,14 +395,14 @@
 ;; This file, `specs.clj` creates, defines, and is
 ;; _in_ namespace `masr.specs`. In any file in that
 ;; namespace, we denote qualified keywords with
-;; double colons Other files, like `core_tests.clj`,
-;; might be _in_ other namespaces. Qualified
-;; keywords in `masr.specs` must be written out in
-;; full in such files, say with an explicit prefix
-;; as in `:masr.specs/intent`, or with a namespace
-;; alias as in `::asr/intent`. The test file,
-;; `core_tests.clj`, employs the namespace alias
-;; `asr`.
+;; double colons. Other files, like
+;; `core_tests.clj`, might be _in_ other namespaces.
+;; Qualified keywords in `masr.specs` must be
+;; written out in full in such files, say with an
+;; explicit prefix as in `:masr.specs/intent`, or
+;; with a namespace alias as in `::asr/intent`. The
+;; test file, `core_tests.clj`, employs the
+;; namespace alias `asr`.
 ;;
 ;;
 ;; Namespace-qualified keywords may have specs
@@ -419,13 +415,13 @@
 ;; EXAMPLES -- all the following full-forms mean the
 ;; same:
 ;;
-;; * always acceptable, if verbose:
+;; * always acceptable, though verbose:
 ;;
 ;;
 ;; #+begin_src clojure
 
 {:masr.specs/term        :masr.specs/intent,
- :masr.specs/intent-enum 'Unspecified}
+ :masr.specs/intent-enum "Unspecified"}
 ;; #+end_src
 
 ;;
@@ -436,23 +432,25 @@
 ;; #+begin_src clojure
 
 #:masr.specs{:term        :intent,
-             :intent-enum 'Unspecified}
+             :intent-enum "Unspecified"}
 ;; #+end_src
 
 ;;
-;; * when in this file or in namespace masr.specs
+;; * when in this file or in namespace `masr.specs`
 ;;   via the line `(in-ns 'masr.specs)`:
 ;;
 ;;
 ;; #+begin_src clojure
 
 {::term        ::intent,
- ::intent-enum 'Unspecified}
+ ::intent-enum "Unspecified"}
 ;; #+end_src
 
 ;;
 ;; * if `masr.specs` is aliased to `asr`, as in
-;; `(:use [masr.specs :as asr])` in `core_test.clj`:
+;; `(:use [masr.specs :as asr])` in
+;; `core_test.clj` (commented out because it's not
+;; executable in the file `specs.clj`):
 ;;
 ;;
 ;; #+begin_src clojure
@@ -478,8 +476,7 @@
 
 
 ;;
-;; We've identified a design issue with large ASR
-;; expressions. Such expressions overflow the Java
+;; Large ASR expressions overflow the Java
 ;; method-size limit of 64KB when evaluated
 ;; recursively. Bottom-up evaluation requires
 ;; idempotency: evaluating a full-form produces the
@@ -493,7 +490,8 @@
 ;; and notice the external quote, preventing
 ;; evaluation. Without this quote, Clojure would
 ;; error when evaluating this expression at
-;; load-time.
+;; load-time because it would attempt to evaluate
+;; the unbound symbol `main0`:
 ;;
 ;; #+begin_src clojure
 
@@ -533,17 +531,11 @@
 
 ;;
 ;; Every element of that hash-map is
-;; self-evaluating: keywords, numbers, strings, ().
-;; Turns out that vectors with self-evaluating
-;; elements are also self-evaluating. We're in
-;; business if we replace all unbound symbols with
-;; strings.
-;;
-
-;;
-;; The issue arose because of legacy sugar (see
-;; below), which artificially quotes symbols in ASR
-;; output from lpython and lfortran.
+;; self-evaluating: keywords, numbers, strings, the
+;; empty list `()`. It turns out that vectors with
+;; self-evaluating elements are also
+;; self-evaluating. We're in business if we replace
+;; all unbound symbols with strings.
 ;;
 
 
@@ -564,10 +556,10 @@
 ;;
 ;;
 ;; Sugared forms are function-calls at
-;; bottom (examples below). Some employ macros to
-;; replace symbols with strings and to perform other
-;; utilitarian transformations on the way to
-;; bottoming out at a function call.
+;; bottom (examples below). Some sugared forms
+;; employ macros to replace symbols with strings and
+;; for other utilitarian transformations on the way
+;; to bottoming out at a function call.
 ;;
 ;;
 ;; Sugar comes in three flavors: _light_, _heavy_,
@@ -582,7 +574,7 @@
 ;;
 ;; 2. Heavy sugar employs functions with positional
 ;;    arguments, with possible default values for
-;;    some tail arguments. Heavy sugar is short and
+;;    tail arguments. Heavy sugar is short and
 ;;    mostly compatible with ASDL output from
 ;;    `--show-asr`. Heavy sugar is more risky to
 ;;    write and much harder to read than light
@@ -594,6 +586,9 @@
 ;;    say, requiring fewer tick marks on symbols.
 ;;    Legacy sugar is the most compatible with ASDL
 ;;    output from `--show-asr`.
+;;
+;;
+;; All sugared forms produce identical full-forms.
 ;;
 
 ;; ----------------------------------------------------------------
@@ -633,14 +628,24 @@
 ;; legacy. If legacy sugar exists for a term, the
 ;; legacy sugar has the name with no hyphens, like
 ;; `Variable`, and the heavy sugar has the name with
-;; two hyphens, like `Variable--`. Both legacy sugar
-;; and heavy sugar produce identical full-forms.
+;; two hyphens, like `Variable--`. For example:
+;;
+
+;; #+begin_src clojure
+
+#_(Variable-- 2 "x" (Integer 4)
+            nil [] Local
+            [] []  Default
+            Source Public Required
+            false)
+;; #+end_src
+
 ;;
 ;;
 ;; Heavy sugar and legacy sugar employ positional
 ;; arguments that depend on order. Heavy-sugar
 ;; functions may have final arguments with defaults.
-;; For example, the following examples all conform
+;; The following examples of heavy sugar all conform
 ;; to both `::asr-term` and to `::ttype`:
 ;;
 ;;
@@ -656,31 +661,29 @@
 ;; ### Legacy Sugar
 ;;
 ;;
-;; The purpose of legacy sugar is to auto-quote
-;; symbols and to accommodate certain defects in the
-;; original design of ASDL, such as nested lists'
-;; denoting function calls and ambiguity in
-;; symbol-ref, sometimes a list and sometimes a
-;; naked pair.
+;; The purpose of legacy sugar is to convert symbols
+;; to idempotent strings and to accommodate certain
+;; defects in the original design of ASDL, such as
+;; (1) nested lists' denoting improper function
+;; calls and (2) ambiguity in `symbol-ref`,
+;; sometimes a list and sometimes a naked pair.
 ;;
 ;;
-;; Here is a legacy version of the Variable above:
+;; Here is a legacy version of the `Variable` above:
 ;;
 ;;
 ;; #+begin_src clojure
 
 #_
-(Variable 2 x [] ;; <~~~ no quote mark on x
+(Variable 2 x [] ;; <~~~ unquoted `x`
           Local () ()
           Default (Integer 4 []) Source
           Public Required false)
 ;; #+end_src
 
 ;;
-;; Notice NO QUOTE MARK on the name of the variable.
-;; That's the way `--show-asr` prints it. That's the
-;; only difference between heavy sugar and legacy
-;; sugar for `Variable`.
+;; Notice NO QUOTES on the name of the variable.
+;; That's the way `--show-asr` prints it.
 ;;
 ;;
 ;; For specs like `Integer`, where heavy sugar and
@@ -714,10 +717,8 @@
 ;; | ...
 ;; ```
 ;;
-;; is an ASDL production.
 ;;
-;;
-;; In MASR, alternatives are called _heads_.
+;; MASR alternatives are called _heads_.
 ;;
 
 
@@ -788,6 +789,9 @@
 ;; #+begin_src clojure
 
 (defmulti term ::term)
+#_(defmethod term ::symbol [_] ,,,)
+#_(defmethod term ::expr   [_] ,,,)
+,,,
 ;; #+end_src
 
 ;;
@@ -799,7 +803,7 @@
 ;; are thus another Clojure idiom for polymorphism.
 ;;
 ;;
-;; The name of the one multi-spec for all terms is
+;; The name of the _one_ multi-spec for all terms is
 ;; `::asr-term`, a qualified keyword, as are all
 ;; names of specs. Multi-specs act like tagged
 ;; unions in C -- MASR's polymorphic entities are
@@ -825,8 +829,8 @@
 ;;
 ;;
 ;; Some `defmethods` like `::intent` are simple,
-;; just checking that an instance like `'Local` or
-;; `'ReturnVar` inhabits a set of allowed intents.
+;; just checking that an instance like `"Local"` or
+;; `"ReturnVar"` inhabits a set of allowed intents.
 ;; Other `defmethods`, like `::symbol`, have _nested
 ;; multi-specs_ that dispatch on _heads_, like
 ;; `Variable` or `Program`. MASR handles nested
@@ -845,7 +849,8 @@
 ;; The names of all multi-specs in MASR, nested or
 ;; not, begin with `::asr-...`, as in
 ;; `::asr-term` (not nested) and
-;; `::asr-ttype-head` (nested in `ttypes`).
+;; `::asr-ttype-head`, nested in `ttypes`, and
+;; `::asr-expr-head`, nested in `expr`.
 ;;
 ;;
 ;; #+begin_src clojure
@@ -1054,8 +1059,8 @@
               (-> % ::asr-symbol-head ;; nested multi-spec
                     ::symbol-head)))) ;; tag fetcher
 
-  From term `stmt`, and head `Assignment`, generate
-  a spec `s/def` like
+  For another example, From term `stmt`, and head
+  `Assignment`, generate a spec `s/def` like
 
       (s/def ::Assignment             ;; head entity key
         (s/and ::asr-term             ;; top multi-spec
@@ -1211,7 +1216,7 @@
          [{~keys-key ~parm-vec}]
          ;;              symbol (SymbolTable, ..., body)
          (asdl-type-string ~term ~keyseq))
-       ;; defmethod symbol ::program [_]
+       ;; defmethod symbol ::Program [_]
        (defmethod ~term-head ~head-key [_#]
          ;; [::symbol-head, ::SymbolTable, ..., ::body]
          (s/keys :req ~key-vec))
@@ -1294,10 +1299,13 @@
 
 (defmulti  unit->asdl-type ::unit-head)
 (term->asdl-type unit)
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   TranslationUnit unit
-  (SymbolTable    nodes))
+  (SymbolTable  nodes))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -1314,7 +1322,7 @@
 
 (defmasrtype
   Program symbol
-  (SymbolTable    prognym    dependencies    body))
+  (SymbolTable  prognym  dependencies  body))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1322,7 +1330,7 @@
 (defmasrtype
   Module symbol
   (SymbolTable
-   modulenym       dependencies    loaded-from-mod
+   modulenym  dependencies  loaded-from-mod
    intrinsic))
 ;; #+end_src
 
@@ -1331,9 +1339,9 @@
 (defmasrtype
   Function symbol
   (SymbolTable ;; not a symtab-id!
-   function-name    function-signature    dependencies
-   param*           body                  return-var?
-   access           deterministic         side-effect-free
+   function-name  function-signature  dependencies
+   param*         body                return-var?
+   access         deterministic       side-effect-free
    ))
 ;; #+end_src
 
@@ -1341,9 +1349,7 @@
 
 (defmasrtype
   GenericProcedure symbol
-  (symtab-id
-   function-name
-   symbol-ref*
+  (symtab-id  function-name  symbol-ref*
    access))
 ;; #+end_src
 
@@ -1352,8 +1358,8 @@
 (defmasrtype
   ExternalSymbol symbol
   (symtab-id
-   nym          extern-symref
-   modulenym    scope-nyms       orig-nym
+   nym        extern-symref
+   modulenym  scope-nyms     orig-nym
    access))
 ;; #+end_src
 
@@ -1394,11 +1400,14 @@
 
 (defmulti  stmt->asdl-type ::stmt-head)
 (term->asdl-type stmt)   ;; CIDER macro-expand removes namespace.
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Assignment stmt
   ;; types of the attributes:
-  (lvalue    rvalue    overloaded))
+  (lvalue  rvalue  overloaded))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1456,7 +1465,7 @@
 
 (defmasrtype
   SubroutineCall stmt
-  (symbol-ref    orig-symref    call-args    dt?))
+  (symbol-ref  orig-symref  call-args  dt?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1470,8 +1479,7 @@
 
 (defmasrtype
   WhileLoop stmt
-  (escape-target ;; NO SPEC! NO TARGET!
-   test-expr    body))
+  (escape-target  test-expr  body))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1486,7 +1494,7 @@
 
 (defmasrtype
   ListAppend stmt
-  (list-expr    list-element))
+  (list-expr  list-element))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -1517,16 +1525,16 @@
 
 (defmasrtype
   FunctionCall expr
-  (symbol-ref    orig-symref    call-args
-                 return-type    value?    dt?))
+  (symbol-ref  orig-symref  call-args
+               return-type  value?    dt?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   IntrinsicFunction expr
-  (intrinsic-ident    expr*          overload-id
-                      return-type    value?))
+  (intrinsic-ident  expr*        overload-id
+   return-type      value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1547,30 +1555,30 @@
 
 (defmasrtype
   IntegerUnaryMinus expr
-  (integer-expr, Integer, integer-value?))
+  (integer-expr  Integer  integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   IntegerCompare expr
-  (integer-left    integer-cmpop   integer-right
-                   Logical         logical-value?))
+  (integer-left  integer-cmpop   integer-right
+                 Logical         logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   IntegerBinOp expr
-  (integer-left    integer-binop   integer-right
-                   Integer         integer-value?))
+  (integer-left  integer-binop   integer-right
+                 Integer         integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   RealConstant expr
-  (float    Real))
+  (float  Real))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1584,134 +1592,135 @@
 
 (defmasrtype
   RealCompare expr
-  (real-left       real-cmpop      real-right
-                   Logical         logical-value?))
+  (real-left     real-cmpop    real-right
+                 Logical       logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   RealBinOp expr
-  (real-left       real-binop       real-right
-                   Real             real-value?))
+  (real-left  real-binop  real-right
+   Real       real-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ComplexConstant expr
-  (real-part    imaginary-part    Complex))
+  (real-part  imaginary-part  Complex))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ComplexUnaryMinus expr
-  (complex-expr, Complex, complex-value?))
+  (complex-expr  Complex  complex-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ComplexCompare expr
-  (complex-left    complex-cmpop   complex-right
-                   Logical         logical-value?))
+  (complex-left  complex-cmpop complex-right
+   Logical       logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ComplexBinOp expr
-  (complex-left    complex-binop    complex-right
-                   Complex          complex-value?))
+  (complex-left  complex-binop  complex-right
+   Complex       complex-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   LogicalConstant expr
-  (bool    Logical))
+  (bool  Logical))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   LogicalNot expr
-  (logical-expr, Logical, logical-value?))
+  (logical-expr  Logical  logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   LogicalCompare expr
-  (logical-left    logical-cmpop   logical-right
-                   Logical         logical-value?))
+  (logical-left  logical-cmpop  logical-right
+   Logical       logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   LogicalBinOp expr
-  (logical-left    logicalbinop    logical-right
-                   Logical         logical-value?))
+  (logical-left  logicalbinop  logical-right
+   Logical       logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ListConstant expr
-  (expr* ttype))
+  (expr*  ttype))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ListLen expr
-  (list-expr Integer integer-value?))
+  (list-expr  Integer  integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   TupleConstant expr
-  (elements ttype))
+  (elements  ttype))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   TupleLen expr
-  (tuple-expr Integer integer-value?))
+  (tuple-expr  Integer  integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   TupleCompare expr
-  (tuple-left any-cmpop tuple-right
-              Logical logical-value?))
+  (tuple-left  any-cmpop  tuple-right
+   Logical     logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   StringConstant expr
-  (string Character))
+  (string  Character))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   StringCompare expr
-  (string-left     string-cmpop    string-right
-                   Logical         logical-value?))
+  (string-left  string-cmpop  string-right
+   Logical      logical-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   StringRepeat expr
-  (string-expr integer-expr Character string-expr?))
+  (string-expr  integer-expr  Character
+   string-expr?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1745,50 +1754,43 @@
 
 (defmasrtype
   StringOrd expr
-  (string-expr Integer integer-value?))
+  (string-expr  Integer  integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   StringChr expr
-  (string-expr Character string-value?))
+  (string-expr  Character  string-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   Var expr
-  (symtab-id    varnym))
+  (symtab-id  varnym))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ArrayConstant expr
-  (expr*
-   ttype
-   array-storage))
+  (expr*  ttype  array-storage))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ArrayItem expr
-  (array-expr
-   array-index*
-   ttype
-   array-storage
-   expr?))
+  (array-expr     array-index*  ttype
+   array-storage  expr?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ArrayReshape expr
-  (array-expr
-   array-shape
-   ttype
+  (array-expr  array-shape  ttype
    array-value?))
 ;; #+end_src
 
@@ -1796,35 +1798,35 @@
 
 (defmasrtype
   Cast expr
-  (arg cast-kind ttype value?))
+  (arg  cast-kind  ttype  value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ListItem expr
-  (list-expr index ttype value?))
+  (list-expr  index  ttype  value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   TupleItem expr
-  (tuple-expr index ttype value?))
+  (tuple-expr  index  ttype  value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ComplexRe expr
-  (complex-expr    Real    real-value?))
+  (complex-expr  Real  real-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   ComplexIm expr
-  (complex-expr    Real    real-value?))
+  (complex-expr  Real  real-value?))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -1835,32 +1837,35 @@
 
 (defmulti  ttype->asdl-type ::ttype-head)
 (term->asdl-type ttype)
+;; #+end_src
+
+;; #+begin_src clojure
 
 (defmasrtype
   Complex ttype
   ;; types of the attributes:
-  (complex-kind dimension*))
+  (complex-kind  dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   Integer ttype
-  (integer-kind dimension*))
+  (integer-kind  dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   Logical ttype
-  (logical-kind dimension*))
+  (logical-kind  dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
 (defmasrtype
   Real ttype
-  (real-kind dimension*))
+  (real-kind  dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1888,7 +1893,8 @@
 
 (defmasrtype
   Character ttype
-  (character-kind len disposition len-expr? dimension*))
+  (character-kind  len         disposition
+   len-expr?       dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1896,7 +1902,7 @@
 (defmasrtype
   FunctionType ttype
   (param-type*
-   return-var-type?    abi
+   return-var-type?   abi
    deftype            bindc-name     elemental
    pure               module         inline
    static             type-param*    restrictions
@@ -1936,17 +1942,12 @@
 ;;
 ;; The function `rewrite-for-legacy` converts `=`
 ;; into `Assignment` in a whole tree and converts
-;; unwanted nested call syntax into vectors. `eval`,
-;; in the namespace `masr.specs`, applies all the
-;; sugar functions to an expression. Call
-;; `to-full-form` to do both. The `legacy` macro
-;; simply quotes a whole sugared expression before
-;; feeding it to `to-full-form`.
-;;
-;; NOTE: This recursive, top-down evaluation
-;; strategy fails a Java code-size limitation for
-;; large sugar expressions. The mitigation requires
-;; an idempotent, bottom-up evaluation strategy.
+;; unwanted nested call syntax into vectors. `Eval`,
+;; in the namespace `masr.specs`, applies all sugar
+;; functions to an expression. Call `to-full-form`
+;; to do both. The `legacy` macro simply quotes a
+;; whole sugared expression before feeding it to
+;; `to-full-form`.
 ;;
 ;; #+begin_src clojure
 
@@ -2259,7 +2260,6 @@
   (s/keys :req [::term
                 ::symtab-id
                 ::hash-map]))
-
 
 (def-term-entity-key SymbolTable)
 ;; #+end_src
@@ -2834,16 +2834,16 @@
      ::dimension*     (dimension* dims)
      }})
   ([kind, len, dims]
-   ;; trinary
+   "trinary"
    (Character kind len () dims))
   ([kind, len]
-   ;; binary
+   "binary"
    (Character kind len () []))
   ([len]
-   ;; unary
+   "unary"
    (Character 1 len ( [])))
   ([]
-   ;; nullary
+   "nullary"
    (Character 1 1 () [])))
 ;; #+end_src
 
@@ -3549,9 +3549,9 @@
 ;; #+begin_src clojure
 
 (defmacro FunctionCall
-  ;; heptenary
   ([stid, ident, orig-symref,
     args, rettype, value?, dt?]
+   "septenary"
    (let [i_ident (str ident)]
     `(FunctionCall-- (symbol-ref ~i_ident ~stid)
                      ~orig-symref
@@ -3559,9 +3559,9 @@
                      ~rettype
                      ~value?
                      ~dt?)))
-  ;; octenary
   ([stid, ident, ostid, odent,
     args, rettype, value?, dt?]
+   "octonary"
    (let [i_ident (str ident)
          i_odent (str odent)]
     `(FunctionCall-- (symbol-ref ~i_ident, ~stid)
@@ -3794,16 +3794,16 @@
 ;; #+begin_src clojure
 
 (defn ComplexConstant
-  ;; trinary
   ([re-float, im-float c-ttype]
+   "trinary"
    {::term ::expr,
     ::asr-expr-head
     {::expr-head ::ComplexConstant
      ::real-part      re-float
      ::imaginary-part im-float
      ::Complex        c-ttype}})
-  ;; binary
   ([re-float, im-float]
+   "binary"
    (ComplexConstant re-float, im-float, (Complex))))
 ;; #+end_src
 
@@ -5144,9 +5144,9 @@
   {::term ::stmt
    ::asr-stmt-head
    {::stmt-head ::WhileLoop
-    ::escape-target escape-target
-    ::test-expr        test-expr
-    ::body             body}})
+    ::escape-target  escape-target
+    ::test-expr      test-expr
+    ::body           body}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5261,6 +5261,7 @@
       ;; outer `vec` for idempotency
       (vec (map (fn [a#] [a#]) ~args))
       ~dt?))) ;; #+end_src
+;; #+end_src
 
 ;; ----------------------------------------------------------------
 ;; ## BLOCK CALL
@@ -5646,7 +5647,7 @@
   ([stid, nym,
     orig-symref-stid, orig-symref-ident,
     modnym, scope-nyms, orig-nym, access]
-   "octenary"
+   "octonary"
    (let [i_nym    (str nym)
          i_oid    (str orig-symref-ident)
          i_modnym (str modnym)
@@ -5658,7 +5659,7 @@
       ~i_modnym,  ~i_snyms,  ~i_onym,  ~access)))
   ([stid, nym, empty-symref,
     modnym, scope-nyms, orig-nym, access]
-   "heptenary"
+   "septenary"
    (let [i_nym (str nym)
          i_modnym (str modnym)
          i_onym   (str orig-nym)
