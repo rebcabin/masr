@@ -1893,8 +1893,8 @@
 
 (defmasrtype
   Character ttype
-  (character-kind  len         disposition
-   len-expr?       dimension*))
+  (character-kind  len        disposition
+                   len-expr?  dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -3071,6 +3071,52 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
+;; ### Scalar Detection
+;;
+;;
+;; #+begin_src clojure
+
+(defmacro ttyped-scalar-spec
+  [it]
+  (let [ns  "masr.specs"
+        cap (str/capitalize (str it)) ;; e.g. "Integer"
+        tth (keyword ns cap) ;; e.g. ::Integer
+        lwr (str/lower-case (str it)) ;; e.g. "integer"
+        scl (keyword
+             ns (str lwr "-scalar")) ;; e.g. ::integer-scalar
+        xpr (keyword
+             ns (str lwr "-expr")) ;; e.g. ::integer-expr
+        ]
+    `(s/def ~scl
+       (s/and (fn [x#] (s/valid? ~xpr x#))
+              (fn [x#] (let [dims# (-> x# ::asr-expr-head
+                                       ~tth
+                                       ::asr-ttype-head
+                                       ::dimension*)]
+                         ;; nil is empty? !!!
+                         (and (not (nil? dims#))
+                              (empty? dims#))))))))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(ttyped-scalar-spec Integer)
+(ttyped-scalar-spec Logical)
+(ttyped-scalar-spec Real)
+(ttyped-scalar-spec Complex)
+;; special case for String because its ttype is ::Character
+(s/def ::string-scalar
+  (s/and #(s/valid? ::string-expr %)
+         #(let [dims (-> % ::asr-expr-head
+                         ::Character
+                         ::asr-ttype-head
+                         ::dimension*)]
+            (and (not (nil? dims))
+                 (empty? dims)))))
+;; #+end_src
+
+
+;; ----------------------------------------------------------------
 ;; ### Unchecked Element Types
 ;;
 ;;
@@ -3090,12 +3136,12 @@
 (s/def ::unchecked-element-expr
   (s/or :array-item           ::ArrayItem ;; TODO check return type!
         :tuple-item           ::TupleItem ;; TODO check return type!
-        :list-item            ::ListItem  ;; TODO check return type!
-        :cast                 ::Cast      ;; TODO check return type!
-        :if-expr              ::IfExp     ;; TODO check return type!
+        :list-item            ::ListItem ;; TODO check return type!
+        :cast                 ::Cast ;; TODO check return type!
+        :if-expr              ::IfExp ;; TODO check return type!
         :named-expr           ::NamedExpr ;; TODO check return type!
-        :var                  ::Var       ;; TODO check return type!
-))
+        :var                  ::Var ;; TODO check return type!
+        ))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------

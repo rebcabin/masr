@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         190
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -95,7 +95,7 @@
                                                     Required
                                                     false
                                                 ),
-                                            vector_copy_f64f64i32@:IntrinsicOptimization
+                                            :vector_copy_f64f64i32__AT__IntrinsicOptimization
                                                 (Function
                                                     (SymbolTable
                                                         192
@@ -208,7 +208,7 @@
                                                                     false
                                                                 )
                                                         })
-                                                    vector_copy_f64f64i32@IntrinsicOptimization
+                                                    vector_copy_f64f64i32__AT__IntrinsicOptimization
                                                     (FunctionType
                                                         [(Real 8 [((IntegerConstant 0 (Integer 4 []))
                                                         (IntegerConstant 9216 (Integer 4 [])))])
@@ -319,7 +319,7 @@
                                         []
                                         false
                                     )
-                                    [vector_copy_f64f64i32@IntrinsicOptimization]
+                                    [vector_copy_f64f64i32__AT__IntrinsicOptimization]
                                     []
                                     [(DoLoop
                                         ()
@@ -357,7 +357,7 @@
                                         (IntegerConstant 1151 (Integer 4 []))
                                         (IntegerConstant 1 (Integer 4 [])))
                                         [(SubroutineCall
-                                            185 vector_copy_f64f64i32@IntrinsicOptimization
+                                            185 vector_copy_f64f64i32__AT__IntrinsicOptimization
                                             ()
                                             [((Var 185 a))
                                             ((Var 185 b))
@@ -1757,10 +1757,10 @@
                                                     _mod
                                                     Private
                                                 ),
-                                            _mod@:__lpython_overloaded_4___mod
+                                            :_mod__AT____lpython_overloaded_4___mod
                                                 (ExternalSymbol
                                                     72
-                                                    _mod@__lpython_overloaded_4___mod
+                                                    _mod__AT____lpython_overloaded_4___mod
                                                     79 __lpython_overloaded_4___mod
                                                     lpython_builtin
                                                     []
@@ -1815,7 +1815,7 @@
                                         []
                                         false
                                     )
-                                    [_mod@__lpython_overloaded_4___mod]
+                                    [_mod__AT____lpython_overloaded_4___mod]
                                     [(Var 72 x1)
                                     (Var 72 x2)]
                                     [(If
@@ -1847,7 +1847,7 @@
                                     (=
                                         (Var 72 _lpython_return_variable)
                                         (FunctionCall
-                                            72 _mod@__lpython_overloaded_4___mod
+                                            72 _mod__AT____lpython_overloaded_4___mod
                                             72 _mod
                                             [((Var 72 x1))
                                             ((Var 72 x2))]
@@ -3620,10 +3620,10 @@
                                                     _mod
                                                     Private
                                                 ),
-                                            _mod@:__lpython_overloaded_2___mod
+                                            :_mod__AT____lpython_overloaded_2___mod
                                                 (ExternalSymbol
                                                     73
-                                                    _mod@__lpython_overloaded_2___mod
+                                                    _mod__AT____lpython_overloaded_2___mod
                                                     79 __lpython_overloaded_2___mod
                                                     lpython_builtin
                                                     []
@@ -3678,7 +3678,7 @@
                                         []
                                         false
                                     )
-                                    [_mod@__lpython_overloaded_2___mod]
+                                    [_mod__AT____lpython_overloaded_2___mod]
                                     [(Var 73 x1)
                                     (Var 73 x2)]
                                     [(If
@@ -3700,7 +3700,7 @@
                                     (=
                                         (Var 73 _lpython_return_variable)
                                         (FunctionCall
-                                            73 _mod@__lpython_overloaded_2___mod
+                                            73 _mod__AT____lpython_overloaded_2___mod
                                             73 _mod
                                             [((Var 73 x1))
                                             ((Var 73 x2))]
