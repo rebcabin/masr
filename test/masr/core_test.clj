@@ -111,7 +111,19 @@
   (idempotency-check (dimension [1 60]))
   (idempotency-check (dimension ()))
   (idempotency-check (dimension []))
+  (idempotency-check
+   (legacy
+    (dimension
+     ((IntegerConstant 0 (Integer 4 []))
+      (IntegerConstant 9216 (Integer 4 []))))))
+
   (testing "better syntax"
+    (is (s/valid?
+         ::asr/dimension
+         (legacy
+          (dimension
+           ((IntegerConstant 0 (Integer 4 []))
+            (IntegerConstant 9216 (Integer 4 [])))))))
     (is (s/valid? ::asr/asr-term (dimension '(1 60))))
     (is (s/valid? ::asr/asr-term (dimension [1 60])))
     (is (s/valid? ::asr/asr-term (dimension '())))
@@ -186,6 +198,7 @@
                   (dimension
                    [606 66979216746710640882869059905284213752707])))))
       ))
+
   (testing "conformance"
     (is (let [fullform {::asr/term ::asr/dimension,
                         ::asr/dimension-content '(1 60)}]
@@ -216,20 +229,34 @@
 
 (deftest dimensions-test
   (idempotency-check (dimension* [[1 60] []]))
-  #_(idempotency-check
+  (idempotency-check
    (dimension*
     [[(IntegerConstant 0 (Integer 4 []))
-      (IntegerConstant 9216 (Integer 4 []))]]))
+      (IntegerConstant 9216 (Integer 4 []))]
+     [6 60]
+     []]))
   (idempotency-check (dimension* '([1 60] [])))
   (idempotency-check (dimension* []))
   (idempotency-check (dimension* ()))
 
   (is (s/valid?
        ::asr/dimension*
-       [#:masr.specs{:term :masr.specs/dimension,
-                     :dimension-content [1 60]}
-        #:masr.specs{:term :masr.specs/dimension,
-                     :dimension-content ()}]))
+       (dimension*
+        [[(IntegerConstant 0 (Integer 4 []))
+          (IntegerConstant 9216 (Integer 4 []))]
+         [6 60]
+         []])))
+
+  (let [int-scalar-pair
+        [(IntegerConstant  1 (Integer))
+         (IntegerConstant 60 (Integer))]]
+    (is (s/valid?
+         ::asr/dimension*
+         [#:masr.specs{:term :masr.specs/dimension,
+                       :dimension-content
+                       int-scalar-pair}
+          #:masr.specs{:term :masr.specs/dimension,
+                       :dimension-content ()}])))
   (let [dims [(dimension [1 60]), (dimension [])]]
     (is (s/valid? ::asr/dimension* dims))
     (is (= dims (s/conform ::asr/dimension* dims)))
@@ -238,6 +265,7 @@
                            (dimension* [[1 60] []])))))
   (is (vds? (dimension* ['(1 60) '()])))
   (is (vds? (dimension* ['(1 60)])))
+  (is (vds? (dimension* [[1 60]])))
   (is (vds? (dimension* ['(1 60) []])))
 
   (is (vds? (dimension* [])))
@@ -1038,11 +1066,11 @@
 
   (testing "integer scalars"
 
-    (testing "valid integer scalar"
+    (testing "valid integer scalar constant"
       (is (s/valid? ::asr/integer-scalar
                     (IntegerConstant 42 (Integer 8 [])))))
 
-    (testing "invalid integer scalars"
+    (testing "invalid integer scalar constants"
       (testing "nil dims"
         (is (not (s/valid? ::asr/integer-scalar
                            (IntegerConstant
@@ -1066,16 +1094,36 @@
       (testing "non-empty dims"
         (is (not (s/valid? ::asr/integer-scalar
                            (IntegerConstant
-                            42 (Integer 8 [[6 60] []]))))))))
+                            42 (Integer 8 [[6 60] []])))))))
 
-  (testing "real scalars"
+    (testing "valid integer scalar expressions"
 
-    (testing "valid real scalar"
+      (is (s/valid? ::asr/integer-scalar
+                    (IntegerBinOp
+                     (IntegerConstant 2 (Integer 4 []))
+                     Add
+                     (IntegerConstant 3 (Integer 4 []))
+                     (Integer 4 [])
+                     (IntegerConstant 5 (Integer 4 [])))))
+
+      (is (s/valid? ::asr/integer-scalar
+                    (IntegerUnaryMinus
+                     (IntegerConstant 42 (Integer))
+                     (Integer) [])))
+
+      ;; ... every other integer expr
+      ))
+
+
+
+  (testing "real scalar constants"
+
+    (testing "valid real scalar constant"
       (is (s/valid? ::asr/real-scalar
                     (RealConstant
                      42.0 (Real 8 [])))))
 
-    (testing "invalid real scalars"
+    (testing "invalid real scalar constants"
 
       (testing "nil dims"
         (is (not (s/valid? ::asr/real-scalar
@@ -1104,12 +1152,12 @@
 
   (testing "logical scalars"
 
-    (testing "valid logical scalar"
+    (testing "valid logical scalar constant"
       (is (s/valid? ::asr/logical-scalar
                     (LogicalConstant
                      true (Logical 4 [])))))
 
-    (testing "invalid logical scalars"
+    (testing "invalid logical scalar constants"
 
       (testing "nil dims"
         (is (not (s/valid? ::asr/logical-scalar
@@ -1138,12 +1186,12 @@
 
   (testing "complex scalars"
 
-    (testing "valid complex scalar"
+    (testing "valid complex scalar constant"
       (is (s/valid? ::asr/complex-scalar
                     (ComplexConstant
                      3.0 4.0 (Complex 8 [])))))
 
-    (testing "invalid complex scalars"
+    (testing "invalid complex scalar constants"
 
       (testing "nil dims"
         (is (not (s/valid? ::asr/complex-scalar
@@ -1172,12 +1220,12 @@
 
   (testing "string scalars"
 
-    (testing "valid string scalar"
+    (testing "valid string scalar constant"
       (is (s/valid? ::asr/string-scalar
                     (StringConstant
                      "42" (Character 1 1 () [])))))
 
-    (testing "invalid string scalars"
+    (testing "invalid string scalar constants"
       (testing "nil dims"
         (is (not (s/valid? ::asr/string-scalar
                            (StringConstant
@@ -1202,7 +1250,7 @@
       (testing "non-empty dims"
         (is (not (s/valid? ::asr/string-scalar
                            (StringConstant
-                            "42" (Character 1 1 () [[6 60] []]))))))))  )
+                            "42" (Character 1 1 () [[6 60] []])))))))))
 
 
 ;;  ___     _                     ___             _            _

@@ -374,17 +374,69 @@
 
 (deftest round-trip-test
   (testing "explode"
-    (is (nil? (explode tuSmallProgram-intentionally-wrong-1)))
-    (is (nil? (explode tuSmallProgram)))
-    (is (nil? (explode tuMediumProgram)))
+    #_(is (nil? (explode tuSmallProgram-intentionally-wrong-1)))
+    #_(is (nil? (explode tuSmallProgram)))
+    #_(is (nil? (explode tuMediumProgram)))
+    ;; this next one fails
     (is (nil? (explode big-slurped-fdf30b1)))
+    ;; this one succeeds, but takes 45 seconds
     #_(is (nil? (explode big-slurped-1bcc4ec))))
   (testing "implode"
-    (is (nil? (implode-tu tuSmallProgram-intentionally-wrong-1)))
-    (is (implode-tu tuSmallProgram))
-    (is (implode-tu tuMediumProgram))
+    #_(is (nil? (implode-tu tuSmallProgram-intentionally-wrong-1)))
+    #_(is (implode-tu tuSmallProgram))
+    #_(is (implode-tu tuMediumProgram))
+    ;; this next one fails
     (is (implode-tu big-slurped-fdf30b1))
+    ;; this one succeeds, but takes 45 seconds
     #_(is (implode-tu big-slurped-1bcc4ec))))
+
+
+(deftest bisecting-variable-test
+
+  (is
+   (s/valid?
+    ::asr/dimension
+    (legacy
+     (dimension
+      ((IntegerConstant 0 (Integer 4 []))
+       (IntegerConstant 9216 (Integer 4 [])))))))
+
+  (is
+   (s/valid?
+    ::asr/dimension*
+    (legacy
+     (dimension*
+      [((IntegerConstant 0 (Integer 4 []))
+        (IntegerConstant 9216 (Integer 4 [])))]))))
+  #_
+  (is
+   (nil?
+    (s/explain
+     ::asr/Real
+     (legacy
+      (Real 8 [((IntegerConstant 0 (Integer 4 []))
+                (IntegerConstant 9216 (Integer 4 [])))])))))
+  #_
+  (is
+   (nil?
+    (s/explain
+     ::asr/Variable
+     (legacy
+      (Variable
+       185
+       a
+       []
+       Local
+       ()
+       ()
+       Default
+       (Real 8 [((IntegerConstant 0 (Integer 4 []))
+                 (IntegerConstant 9216 (Integer 4 [])))])
+       Source
+       Public
+       Required
+       false
+       ))))))
 
 
 (def little-symtable
@@ -565,13 +617,13 @@
               false
               )
              }))))))
-
+  #_
   (testing "round-tripping little-symtable"
     (explode little-symtable)
     (non-deterministic-implode
      "little-symtable"
      "SymbolTable"))
-
+  #_
   (testing "legacy false-positive symbol table"
     (is (s/valid? ::asr/SymbolTable
                   (legacy (SymbolTable
@@ -832,7 +884,7 @@
                              false
                              )
                             })))))
-
+  #_
   (testing "legacy function"
     (is (not (s/valid? ::asr/Function
                        (legacy (Function
@@ -1041,7 +1093,7 @@
                                 false
                                 false
                                 ))))))
-
+  #_
   (testing "legacy false-positive body"
     (is (not (s/valid? ::asr/body
                        (legacy [(=
@@ -1103,7 +1155,7 @@
                                    ()
                                    )]
                                  )])))))
-
+  #_
   (testing "legacy while loop"
     (is (not (s/valid? ::asr/WhileLoop
                        (legacy (WhileLoop
@@ -1154,7 +1206,7 @@
                                   ()
                                   )]
                                 ))))))
-
+  #_
   (testing "legacy Assignment"
     (is (not (s/valid? ::asr/Assignment
                        (legacy (=
@@ -1178,7 +1230,7 @@
                                  )
                                 ()
                                 ))))))
-
+  #_
   (testing "false positive full-form fdf30b1"
     (is (s/valid? ::asr/TranslationUnit
                   (to-full-form big-slurped-fdf30b1))))

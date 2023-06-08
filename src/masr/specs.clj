@@ -2090,7 +2090,7 @@
 
 (s/def ::dimension-content
   (s/and
-   (s/coll-of ::nat
+   (s/coll-of ::integer-scalar
               :min-count MIN-DIMENSION-COUNT,
               :max-count MAX-DIMENSION-COUNT,
               :into [])
@@ -2144,6 +2144,9 @@
 ;;
 ;; #+begin_src clojure
 
+(defn IntegerConstant [stt end] :forward-reference)
+(defn Integer [] :forward-reference)
+
 (defn dimension [candidate-contents]
   (if (or (not (coll? candidate-contents))
           (set? candidate-contents)
@@ -2152,8 +2155,13 @@
     ;; else
     {::term ::dimension,
      ;; `vec` for idempotency
-     ::dimension-content (vec candidate-contents)}
-    ))
+     ::dimension-content
+     (if (every? #(s/valid? ::integer-scalar %)
+                 candidate-contents)
+       candidate-contents
+       (->> candidate-contents
+            (map #(IntegerConstant % (Integer)))
+            vec))}))
 ;; #+end_src
 
 
@@ -2163,6 +2171,11 @@
 ;;
 ;;
 
+
+;; `Dimension*` is not an `asr-term`. It's a collection
+;; of `dimension`s, each of which is an `asr-term`.
+
+
 ;;
 ;; Convert lists to vectors on-the-fly.
 ;;
@@ -2171,6 +2184,7 @@
 (s/def ::dimension*
   (s/coll-of (term-selector-spec ::dimension),
              :into []))
+
 ;; #+end_src
 
 ;;
@@ -2196,14 +2210,9 @@
           (map? candidate-contents))
     ::invalid-dimension*
     ;; else
-    (let [dims-coll (map dimension candidate-contents)]
-      (if (s/valid? ::dimension* dims-coll)
-        (let [dims-cont (map
-                         ::dimension-content
-                         dims-coll)]
-          ;; `vec` for idempotency
-          (vec (map dimension dims-cont)))
-        ::invalid-dimension*))))
+    (->> candidate-contents
+         (map dimension)
+         vec)))
 ;; #+end_src
 
 
@@ -2761,7 +2770,8 @@
        (defn ~scp ;; e.g. Integer
          ;; binary
          ([kindx# dimsx#]
-          (~lcp {:kind kindx# :dimension* dimsx#}))
+          (~lcp {:kind kindx#
+                 :dimension* dimsx#}))
          ;; unary
          ([kindy#]
           (~lcp {:kind kindy# :dimension* ~dfd}))
@@ -3080,12 +3090,12 @@
   [it]
   (let [ns  "masr.specs"
         cap (str/capitalize (str it)) ;; e.g. "Integer"
-        tth (keyword ns cap) ;; e.g. ::Integer
+        tth (keyword ns cap)          ;; e.g. ::Integer
         lwr (str/lower-case (str it)) ;; e.g. "integer"
         scl (keyword
-             ns (str lwr "-scalar")) ;; e.g. ::integer-scalar
+             ns (str lwr "-scalar"))  ;; e.g. ::integer-scalar
         xpr (keyword
-             ns (str lwr "-expr")) ;; e.g. ::integer-expr
+             ns (str lwr "-expr"))    ;; e.g. ::integer-expr
         ]
     `(s/def ~scl
        (s/and (fn [x#] (s/valid? ~xpr x#))
@@ -3134,13 +3144,14 @@
 ;; #+begin_src clojure
 
 (s/def ::unchecked-element-expr
-  (s/or :array-item           ::ArrayItem ;; TODO check return type!
-        :tuple-item           ::TupleItem ;; TODO check return type!
-        :list-item            ::ListItem ;; TODO check return type!
-        :cast                 ::Cast ;; TODO check return type!
-        :if-expr              ::IfExp ;; TODO check return type!
-        :named-expr           ::NamedExpr ;; TODO check return type!
-        :var                  ::Var ;; TODO check return type!
+  (s/or :array-item     ::ArrayItem    ;; TODO check return type!
+        :tuple-item     ::TupleItem    ;; TODO check return type!
+        :list-item      ::ListItem     ;; TODO check return type!
+        :cast           ::Cast         ;; TODO check return type!
+        :if-expr        ::IfExp        ;; TODO check return type!
+        :named-expr     ::NamedExpr    ;; TODO check return type!
+        :function-call  ::FunctionCall ;; TODO check return type!
+        :var            ::Var          ;; TODO check return type!
         ))
 ;; #+end_src
 
@@ -3185,7 +3196,6 @@
         :integer-bit-not      ::IntegerBitNot
         :string-ord           ::StringOrd
         :string-len           ::StringLen
-        :string-item          ::StringItem
         :tuple-len            ::TupleLen
         :list-len             ::ListLen
         :unchecked            ::unchecked-element-expr))
@@ -4840,7 +4850,8 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::lvalue             ::Var)
+(s/def ::lvalue       (s/or :var        ::Var
+                            :array-item ::ArrayItem))
 (s/def ::rvalue             ::expr)
 (s/def ::overloaded         ::stmt?)
 ;; #+end_src
