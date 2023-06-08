@@ -2125,23 +2125,6 @@
 (def-term-entity-key dimension)
 ;; #+end_src
 
-;;
-;; This spec can generate samples. TODO: Samples are
-;; not fleshed out in general.
-;;
-;;
-;; #+begin_src clojure
-
-#_
-(gen/sample (s/gen ::dimension-content) 3)
-
-;; => (() (0 0) (1 1))
-;; #+end_src
-
-;;
-;; ## Heavy Sugar
-;;
-;;
 ;; #+begin_src clojure
 
 (defn IntegerConstant [stt end] :forward-reference)
@@ -2154,13 +2137,13 @@
     ::invalid-dimension ;; return this,
     ;; else
     {::term ::dimension,
-     ;; `vec` for idempotency
      ::dimension-content
      (if (every? #(s/valid? ::integer-scalar %)
                  candidate-contents)
        candidate-contents
        (->> candidate-contents
             (map #(IntegerConstant % (Integer)))
+            ;; `vec` for idempotency
             vec))}))
 ;; #+end_src
 
@@ -3012,7 +2995,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::symbolic-value empty?)
+(s/def ::symbolic-value ::expr?)
 ;; #+end_src
 
 ;;
@@ -5316,6 +5299,9 @@
       ;; Took a while to find this ...
       ;; `(map vec ~args)` does not work!
       ;; outer `vec` for idempotency
+      (if (empty? ~args)
+        []
+        (vec ~args)) #_
       (vec (map (fn [a#] [a#]) ~args))
       ~dt?))) ;; #+end_src
 ;; #+end_src

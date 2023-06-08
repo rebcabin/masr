@@ -169,6 +169,24 @@
   (slurp-asr "_pass_loop_vectorise-vec_01-fdf30b1"))
 
 
+(def offending-variable
+  '(Variable
+    185
+    a
+    []
+    Local
+    ()
+    ()
+    Default
+    (Real 8 [((IntegerConstant 0 (Integer 4 []))
+              (IntegerConstant 9216 (Integer 4 [])))])
+    Source
+    Public
+    Required
+    false
+    ))
+
+
 ;;               _         _
 ;;  _____ ___ __| |___  __| |___
 ;; / -_) \ / '_ \ / _ \/ _` / -_)
@@ -247,13 +265,13 @@
     (->>
      tree
      rewrite-for-legacy
-     (fd nymstr 'IntegerConstant)
-     (fd nymstr 'RealConstant)
-     (fd nymstr 'ComplexConstant)
-     (fd nymstr 'StringConstant)
-     (fd nymstr 'LogicalConstant)
-     (fd nymstr 'ListConstant)
-     (fd nymstr 'TupleConstant)
+     ;; (fd nymstr 'IntegerConstant)
+     ;; (fd nymstr 'RealConstant)
+     ;; (fd nymstr 'ComplexConstant)
+     ;; (fd nymstr 'StringConstant)
+     ;; (fd nymstr 'LogicalConstant)
+     ;; (fd nymstr 'ListConstant)
+     ;; (fd nymstr 'TupleConstant)
      (fd nymstr 'Var)
      (fd nymstr 'Variable)
      (fd nymstr 'FunctionType)
@@ -374,69 +392,25 @@
 
 (deftest round-trip-test
   (testing "explode"
-    #_(is (nil? (explode tuSmallProgram-intentionally-wrong-1)))
-    #_(is (nil? (explode tuSmallProgram)))
-    #_(is (nil? (explode tuMediumProgram)))
+    (is (nil? (explode tuSmallProgram-intentionally-wrong-1)))
+    (is (nil? (explode tuSmallProgram)))
+    (is (nil? (explode tuMediumProgram)))
+    (is (nil? (explode offending-variable)))
     ;; this next one fails
     (is (nil? (explode big-slurped-fdf30b1)))
     ;; this one succeeds, but takes 45 seconds
-    #_(is (nil? (explode big-slurped-1bcc4ec))))
+    (is (nil? (explode big-slurped-1bcc4ec))))
   (testing "implode"
-    #_(is (nil? (implode-tu tuSmallProgram-intentionally-wrong-1)))
-    #_(is (implode-tu tuSmallProgram))
-    #_(is (implode-tu tuMediumProgram))
+    (is (nil? (implode-tu tuSmallProgram-intentionally-wrong-1)))
+    (is (implode-tu tuSmallProgram))
+    (is (implode-tu tuMediumProgram))
+    (is (non-deterministic-implode
+         "offending-variable"
+         "Variable"))
     ;; this next one fails
     (is (implode-tu big-slurped-fdf30b1))
     ;; this one succeeds, but takes 45 seconds
-    #_(is (implode-tu big-slurped-1bcc4ec))))
-
-
-(deftest bisecting-variable-test
-
-  (is
-   (s/valid?
-    ::asr/dimension
-    (legacy
-     (dimension
-      ((IntegerConstant 0 (Integer 4 []))
-       (IntegerConstant 9216 (Integer 4 [])))))))
-
-  (is
-   (s/valid?
-    ::asr/dimension*
-    (legacy
-     (dimension*
-      [((IntegerConstant 0 (Integer 4 []))
-        (IntegerConstant 9216 (Integer 4 [])))]))))
-  #_
-  (is
-   (nil?
-    (s/explain
-     ::asr/Real
-     (legacy
-      (Real 8 [((IntegerConstant 0 (Integer 4 []))
-                (IntegerConstant 9216 (Integer 4 [])))])))))
-  #_
-  (is
-   (nil?
-    (s/explain
-     ::asr/Variable
-     (legacy
-      (Variable
-       185
-       a
-       []
-       Local
-       ()
-       ()
-       Default
-       (Real 8 [((IntegerConstant 0 (Integer 4 []))
-                 (IntegerConstant 9216 (Integer 4 [])))])
-       Source
-       Public
-       Required
-       false
-       ))))))
+    (is (implode-tu big-slurped-1bcc4ec))))
 
 
 (def little-symtable

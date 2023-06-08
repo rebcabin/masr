@@ -2139,7 +2139,7 @@
              (SubroutineCall
               7 test_fn1
               ()
-              ((Var 42 i))
+              [((Var 42 i))]
               ()))]
       (is (s/valid? ::asr/SubroutineCall x))
       (idempotency-check x))
@@ -2147,7 +2147,7 @@
              (SubroutineCall
               7 test_fn1
               ()
-              ((Var 42 i) (Var 43 j))
+              [((Var 42 i)) ((Var 43 j))]
               ()))]
       (is (s/valid? ::asr/SubroutineCall x))
       (idempotency-check x))
@@ -4229,7 +4229,7 @@
                (SubroutineCall
                 7 gsubrout
                 ()
-                ((Var 4 i))
+                [((Var 4 i))]
                 ())]
               ()
               Public
