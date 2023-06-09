@@ -2092,7 +2092,8 @@
 
 (s/def ::dimension-content
   (s/and
-   (s/coll-of ::integer-scalar
+   (s/coll-of (s/or :empty    empty?
+                    :i-scalar ::integer-scalar)
               :min-count MIN-DIMENSION-COUNT,
               :max-count MAX-DIMENSION-COUNT,
               :into [])
@@ -2130,7 +2131,7 @@
 ;; #+begin_src clojure
 
 (defn IntegerConstant [stt end] :forward-reference)
-(defn Integer [] :forward-reference)
+(defn Integer         [       ] :forward-reference)
 
 (defn dimension [candidate-contents]
   (if (or (not (coll? candidate-contents))
@@ -2140,13 +2141,14 @@
     ;; else
     {::term ::dimension,
      ::dimension-content
-     (if (every? #(s/valid? ::integer-scalar %)
+     (if (every? #(or (and (coll? %) (empty? %))
+                      (s/valid? ::integer-scalar %))
                  candidate-contents)
-       candidate-contents
-       (->> candidate-contents
-            (map #(IntegerConstant % (Integer)))
-            ;; `vec` for idempotency
-            vec))}))
+         candidate-contents
+         (->> candidate-contents
+              (map #(IntegerConstant % (Integer)))
+              ;; `vec` for idempotency
+              vec))}))
 ;; #+end_src
 
 
@@ -2192,12 +2194,14 @@
   [candidate-contents]
   (if (or (not (coll? candidate-contents))
           (set? candidate-contents)
-          (map? candidate-contents))
+          (map? candidate-contents)
+          (not (every? coll? candidate-contents)))
     ::invalid-dimension*
     ;; else
     (->> candidate-contents
+         (map vec) ;; Like legacy -- prevent bogus fn call;
          (map dimension)
-         vec)))
+         vec))) ;; again -- dimension* are double-nested.
 ;; #+end_src
 
 
@@ -2370,11 +2374,6 @@
 (def complex-cmpops #{"CEq" "CNotEq"})
 (def integer-cmpops #{"Eq" "NotEq" "Lt" "LtE" "Gt" "GtE"})
 (def string-cmpops  #{"SEq" "SNotEq" "SLt" "SLtE" "SGt" "SGtE"})
-(def all-cmpops     (set/union logical-cmpops
-                               real-cmpops
-                               complex-cmpops
-                               integer-cmpops
-                               string-cmpops))
 ;; #+end_src
 
 ;;
@@ -2408,11 +2407,12 @@
 (enum-like integer-cmpop integer-cmpops)
 (enum-like string-cmpop  string-cmpops)
 
-(s/def ::any-cmpop (set/union logical-cmpops
-                              real-cmpops
-                              complex-cmpops
-                              integer-cmpops
-                              string-cmpops))
+(s/def ::any-cmpop
+  (s/or :logical-cmpop ::logical-cmpop
+        :real-compop   ::real-cmpop
+        :complex-cmpop ::complex-cmpop
+        :integer-cmpop ::integer-cmpop
+        :string-cmpop  ::string-cmpop))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -3280,6 +3280,7 @@
 (s/def ::array-expr
   (s/or :var                    ::Var
         :array-constant         ::ArrayConstant
+        :array-reshape          ::ArrayReshape
         :unchecked              ::unchecked-element-expr))
 ;; #+end_src
 
@@ -4842,8 +4843,11 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::lvalue       (s/or :var        ::Var
-                            :array-item ::ArrayItem))
+(s/def ::lvalue       (s/or :var         ::Var
+                            :array-item  ::ArrayItem
+                            :tuple-const ::TupleConstant
+                            :list-item   ::ListItem
+                            ))
 (s/def ::rvalue             ::expr)
 (s/def ::overloaded         ::stmt?)
 ;; #+end_src
@@ -5331,7 +5335,7 @@
 
 ;; #+begin_src clojure
 
-(s/def ::label ::nat)
+(s/def ::label ::int)  ;; TODO: Issue 49: what do negative ones mean
 ;; #+end_src
 
 ;;

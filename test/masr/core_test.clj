@@ -198,13 +198,7 @@
                   (dimension
                    [606 66979216746710640882869059905284213752707])))))
       ))
-
-  (testing "conformance"
-    (is (let [fullform {::asr/term ::asr/dimension,
-                        ::asr/dimension-content '(1 60)}]
-          (= (s/conform ::asr/asr-term  fullform)
-             (s/conform ::asr/dimension fullform))))
-    ))
+  )
 
 
 ;;     _ _                   _
@@ -228,6 +222,9 @@
 
 
 (deftest dimensions-test
+  (idempotency-check (dimension* [[() ()]]))
+  (idempotency-check (dimension* '[(() ())]))
+
   (idempotency-check (dimension* [[1 60] []]))
   (idempotency-check
    (dimension*
@@ -257,12 +254,11 @@
                        int-scalar-pair}
           #:masr.specs{:term :masr.specs/dimension,
                        :dimension-content ()}])))
+
   (let [dims [(dimension [1 60]), (dimension [])]]
     (is (s/valid? ::asr/dimension* dims))
-    (is (= dims (s/conform ::asr/dimension* dims)))
-    (is (= dims (dimension* [[1 60] []])))
-    (is (= dims (s/conform ::asr/dimension*
-                           (dimension* [[1 60] []])))))
+    (is (= dims (dimension* [[1 60] []]))))
+
   (is (vds? (dimension* ['(1 60) '()])))
   (is (vds? (dimension* ['(1 60)])))
   (is (vds? (dimension* [[1 60]])))
@@ -744,7 +740,8 @@
     (is (vt? ::asr/Integer (Integer 4)))
     (is (vt? ::asr/Integer (Integer 4 [])))
     (is (vt? ::asr/Integer (Integer 4 [[6 60] [1 42]])))
-    (is (vt? ::asr/Integer (Integer)))
+    (is (vt? ::asr/Integer (Integer 4 [() ()])))
+
     (is (vt? ::asr/Integer (Integer 8)))
     (is (vt? ::asr/Integer (Integer 8 [])))
     (is (vt? ::asr/Integer (Integer 8 [[6 60] [1 82]])))
@@ -753,6 +750,7 @@
     (is (vt? ::asr/Real    (Real 4)))
     (is (vt? ::asr/Real    (Real 4 [])))
     (is (vt? ::asr/Real    (Real 4 [[6 60] [1 42]])))
+
     (is (vt? ::asr/Real    (Real)))
     (is (vt? ::asr/Real    (Real 8)))
     (is (vt? ::asr/Real    (Real 8 [])))
@@ -778,17 +776,17 @@
       (is (not (vt? ::asr/Logical (Logical 42 [[6 60] [42]]))))))
   (testing "full-form"
     (is (vt? ::asr/Integer
-         {::asr/term ::asr/ttype,
-          ::asr/asr-ttype-head
-          {::asr/ttype-head   ::asr/Integer,
-           ::asr/integer-kind 4
-           ::asr/dimension*   []}}))
+             {::asr/term ::asr/ttype,
+              ::asr/asr-ttype-head
+              {::asr/ttype-head   ::asr/Integer,
+               ::asr/integer-kind 4
+               ::asr/dimension*   []}}))
     (is (vt? ::asr/Real
-         {::asr/term ::asr/ttype,
-          ::asr/asr-ttype-head
-          {::asr/ttype-head   ::asr/Real,
-           ::asr/real-kind    4
-           ::asr/dimension*   []}})))
+             {::asr/term ::asr/ttype,
+              ::asr/asr-ttype-head
+              {::asr/ttype-head   ::asr/Real,
+               ::asr/real-kind    4
+               ::asr/dimension*   []}})))
   (testing "defaults"
     (is (= (Integer)   (Integer 4 [])))
     (is (= (Integer 4) (Integer 4 []))))
@@ -811,20 +809,6 @@
                       ::asr/integer-kind 4
                       ::asr/dimension*
                       (dimension* [[6 60] [1 42]])})      true))
-
-    ;; Check a conformed one.
-    (let [a {::asr/ttype-head   ::asr/Integer
-             ::asr/integer-kind 4
-             ::asr/dimension*
-             (dimension* [[6 60] [1 42]])}]
-      (is (= (s/conform ::asr/asr-ttype-head a)           a)))
-
-    ;; Check a Real instead of an Integer.
-    (let [a {::asr/ttype-head   ::asr/Real
-             ::asr/real-kind    8
-             ::asr/dimension*
-             (dimension* [[6 60] [1 42]])}]
-      (is (= (s/conform ::asr/asr-ttype-head a)           a)))
 
     (is (= (s/valid? ::asr/asr-term
                      {::asr/term ::asr/ttype,
@@ -868,8 +852,44 @@
     (is (= (s/valid? ::asr/ttype
                      (Integer- {:dimension* [], :kind 4}))  true))
     (is (= (s/valid? ::asr/ttype
-                     (Integer- {:kind 4, :dimension* []}))  true))
-    ))
+                     (Integer- {:kind 4, :dimension* []}))  true))))
+
+
+(deftest difficult-dimensions-test
+
+  (is
+   (s/valid?
+    ::asr/dimension*
+    (legacy
+     (dimension*
+      [((IntegerConstant 0 (Integer 4 []))
+        (IntegerConstant 16 (Integer 4 [])))
+       ((IntegerConstant 0 (Integer 4 []))
+        (IntegerConstant 16 (Integer 4 [])))]))))
+
+  (is
+   (s/valid?
+    ::asr/Real
+    (legacy
+     (Real 8 [((IntegerConstant 0 (Integer 4 []))
+               (IntegerConstant 16 (Integer 4 [])))
+              ((IntegerConstant 0 (Integer 4 []))
+               (IntegerConstant 16 (Integer 4 [])))]))))
+
+  (is
+   (s/valid?
+    ::asr/dimension*
+    (legacy
+     (dimension*
+      [(()
+        ())]))))
+
+  (is
+   (s/valid?
+    ::asr/Real
+    (legacy
+     (Real 8 [(()
+               ())])))))
 
 
 ;;  ___            _         _ _____     _    _

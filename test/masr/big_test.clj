@@ -562,28 +562,80 @@
       (is (implode-tu -test_complex_01-c199562)))
     #_(round-trip-tu -test_complex_01-c199562)
 
+    (let [-test_complex_02-6516823
+          (slurp-asr "-test_complex_02-6516823")]
+      (is (nil? (explode -test_complex_02-6516823)))
+      (is (implode-tu -test_complex_02-6516823)))
     #_(round-trip-tu -test_complex_02-6516823)
+
+    (let [-test_end_sep_keywords-49ea13f
+          (slurp-asr "-test_end_sep_keywords-49ea13f")]
+      (is (nil? (explode -test_end_sep_keywords-49ea13f)))
+      (is (implode-tu -test_end_sep_keywords-49ea13f)))
     #_(round-trip-tu -test_end_sep_keywords-49ea13f)
+
+    (let [-test_integer_bitnot-0d0eafa
+          (slurp-asr "-test_integer_bitnot-0d0eafa")]
+      (is (nil? (explode -test_integer_bitnot-0d0eafa)))
+      (is (implode-tu -test_integer_bitnot-0d0eafa)))
     #_(round-trip-tu -test_integer_bitnot-0d0eafa)
+
+    (let [-test_max_min-e73decc
+          (slurp-asr "-test_max_min-e73decc")]
+      (is (nil? (explode -test_max_min-e73decc)))
+      (is (implode-tu -test_max_min-e73decc)))
     #_(round-trip-tu -test_max_min-e73decc)
+
+    (let [-test_numpy_03-6dd742e
+          (slurp-asr "-test_numpy_03-6dd742e")]
+      (is (nil? (explode -test_numpy_03-6dd742e)))
+      (is (implode-tu -test_numpy_03-6dd742e)))
     #_(round-trip-tu -test_numpy_03-6dd742e)
+
+    (let [-test_numpy_04-3376b7a
+          (slurp-asr "-test_numpy_04-3376b7a")]
+      (is (nil? (explode -test_numpy_04-3376b7a)))
+      (is (implode-tu -test_numpy_04-3376b7a)))
     #_(round-trip-tu -test_numpy_04-3376b7a)
+
+    (let [-test_pow-6f6a69d
+          (slurp-asr "-test_pow-6f6a69d")]
+      (is (nil? (explode -test_pow-6f6a69d)))
+      (is (implode-tu -test_pow-6f6a69d)))
     #_(round-trip-tu -test_pow-6f6a69d)
+
+    (let [-tuple1-ce358d9
+          (slurp-asr "-tuple1-ce358d9")]
+      (is (nil? (explode -tuple1-ce358d9)))
+      (is (implode-tu -tuple1-ce358d9)))
     #_(round-trip-tu -tuple1-ce358d9)
+
+    (let [-vec_01-9b22f33
+          (slurp-asr "-vec_01-9b22f33")]
+      (is (nil? (explode -vec_01-9b22f33)))
+      (is (implode-tu -vec_01-9b22f33)))
     #_(round-trip-tu -vec_01-9b22f33)
+
+    (let [_expr2_5311701
+          (slurp-asr "_expr2_5311701")]
+      (is (nil? (explode _expr2_5311701)))
+      (is (implode-tu _expr2_5311701)))
     #_(round-trip-tu _expr2_5311701)
+
+    (let [_expr_10_e2e0267
+          (slurp-asr "_expr_10_e2e0267")]
+      (is (nil? (explode _expr_10_e2e0267)))
+      (is (implode-tu _expr_10_e2e0267)))
     #_(round-trip-tu _expr_10_e2e0267)
-    #_(round-trip-tu
-       _pass_inline_function_calls-func_inline_01-6cf8821)    ))
+
+    (let [_pass_inline_function_calls-func_inline_01-6cf8821
+          (slurp-asr "_pass_inline_function_calls-func_inline_01-6cf8821")]
+      (is (nil? (explode _pass_inline_function_calls-func_inline_01-6cf8821)))
+      (is (implode-tu _pass_inline_function_calls-func_inline_01-6cf8821)))
+    #_(round-trip-tu _pass_inline_function_calls-func_inline_01-6cf8821)    ))
+
 
 
 (deftest bisection-test
-  #_
-  (is
-     (nil?
-      (s/explain
-       ::asr/Function
-       (to-full-form
-        big-fn))))
 
-  )
+)
