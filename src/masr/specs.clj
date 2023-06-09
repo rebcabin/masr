@@ -1437,7 +1437,7 @@
 
 (defmasrtype
   If stmt
-  (test-expr body orelse))
+  (test-expr  body  orelse))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1511,7 +1511,7 @@
 
 (defmasrtype
   IfExp expr
-  (test-expr body orelse ttype value?))
+  (test-expr body-expr orelse-expr ttype value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1973,7 +1973,9 @@
 (defn to-full-form
   [sexp]
   (do (in-ns 'masr.specs)
-      (eval (rewrite-for-legacy sexp))))
+      (->> sexp
+           rewrite-for-legacy
+           eval)))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -3127,14 +3129,15 @@
 ;; #+begin_src clojure
 
 (s/def ::unchecked-element-expr
-  (s/or :array-item     ::ArrayItem    ;; TODO check return type!
-        :tuple-item     ::TupleItem    ;; TODO check return type!
-        :list-item      ::ListItem     ;; TODO check return type!
-        :cast           ::Cast         ;; TODO check return type!
-        :if-expr        ::IfExp        ;; TODO check return type!
-        :named-expr     ::NamedExpr    ;; TODO check return type!
-        :function-call  ::FunctionCall ;; TODO check return type!
-        :var            ::Var          ;; TODO check return type!
+  (s/or :array-item         ::ArrayItem    ;; TODO check return type!
+        :tuple-item         ::TupleItem    ;; TODO check return type!
+        :list-item          ::ListItem     ;; TODO check return type!
+        :cast               ::Cast         ;; TODO check return type!
+        :if-expr            ::IfExp        ;; TODO check return type!
+        :named-expr         ::NamedExpr    ;; TODO check return type!
+        :function-call      ::FunctionCall ;; TODO check return type!
+        :var                ::Var          ;; TODO check return type!
+        :intrinsic-function ::IntrinsicFunction ;; TODO return type!
         ))
 ;; #+end_src
 
@@ -3150,6 +3153,7 @@
         :integer-compare      ::IntegerCompare
         :real-compare         ::RealCompare
         :complex-compare      ::ComplexCompare
+        :string-compare       ::StringCompare
         :tuple-compare        ::TupleCompare
         :logical-binop        ::LogicalBinOp
         :logical-not          ::LogicalNot
@@ -3221,6 +3225,8 @@
   (s/or :real-constant        ::RealConstant
         :real-binop           ::RealBinOp
         :real-unary-minus     ::RealUnaryMinus
+        :complex-im           ::ComplexIm
+        :complex-re           ::ComplexRe
         :unchecked            ::unchecked-element-expr))
 ;; #+end_src
 
@@ -3408,15 +3414,18 @@
 ;;
 ;; #+begin_src clojure
 
+(s/def ::body-expr   ::expr)
+(s/def ::orelse-expr ::expr)
+
 (defn IfExp [test-expr, body, orelse, ttype, value?]
   {::term ::expr,
    ::asr-expr-head
-   {::expr-head ::IfExp
-    ::test-expr test-expr
-    ::body      body
-    ::orelse    orelse
-    ::ttype     ttype
-    ::value?    value?}})
+   {::expr-head    ::IfExp
+    ::test-expr    test-expr
+    ::body-expr    body
+    ::orelse-expr  orelse
+    ::ttype        ttype
+    ::value?       value?}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -5299,10 +5308,8 @@
       ;; Took a while to find this ...
       ;; `(map vec ~args)` does not work!
       ;; outer `vec` for idempotency
-      (if (empty? ~args)
-        []
-        (vec ~args)) #_
-      (vec (map (fn [a#] [a#]) ~args))
+      (if (empty? ~args) []
+        (vec ~args))
       ~dt?))) ;; #+end_src
 ;; #+end_src
 
