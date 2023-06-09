@@ -1437,7 +1437,7 @@
 
 (defmasrtype
   If stmt
-  (test-expr body orelse))
+  (test-expr  body  orelse))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1511,7 +1511,7 @@
 
 (defmasrtype
   IfExp expr
-  (test-expr body orelse ttype value?))
+  (test-expr body-expr orelse-expr ttype value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1893,8 +1893,8 @@
 
 (defmasrtype
   Character ttype
-  (character-kind  len         disposition
-   len-expr?       dimension*))
+  (character-kind  len        disposition
+                   len-expr?  dimension*))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1973,7 +1973,9 @@
 (defn to-full-form
   [sexp]
   (do (in-ns 'masr.specs)
-      (eval (rewrite-for-legacy sexp))))
+      (->> sexp
+           rewrite-for-legacy
+           eval)))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2090,7 +2092,8 @@
 
 (s/def ::dimension-content
   (s/and
-   (s/coll-of ::nat
+   (s/coll-of (s/or :empty    empty?
+                    :i-scalar ::integer-scalar)
               :min-count MIN-DIMENSION-COUNT,
               :max-count MAX-DIMENSION-COUNT,
               :into [])
@@ -2125,24 +2128,10 @@
 (def-term-entity-key dimension)
 ;; #+end_src
 
-;;
-;; This spec can generate samples. TODO: Samples are
-;; not fleshed out in general.
-;;
-;;
 ;; #+begin_src clojure
 
-#_
-(gen/sample (s/gen ::dimension-content) 3)
-
-;; => (() (0 0) (1 1))
-;; #+end_src
-
-;;
-;; ## Heavy Sugar
-;;
-;;
-;; #+begin_src clojure
+(defn IntegerConstant [stt end] :forward-reference)
+(defn Integer         [       ] :forward-reference)
 
 (defn dimension [candidate-contents]
   (if (or (not (coll? candidate-contents))
@@ -2151,9 +2140,15 @@
     ::invalid-dimension ;; return this,
     ;; else
     {::term ::dimension,
-     ;; `vec` for idempotency
-     ::dimension-content (vec candidate-contents)}
-    ))
+     ::dimension-content
+     (if (every? #(or (and (coll? %) (empty? %))
+                      (s/valid? ::integer-scalar %))
+                 candidate-contents)
+         candidate-contents
+         (->> candidate-contents
+              (map #(IntegerConstant % (Integer)))
+              ;; `vec` for idempotency
+              vec))}))
 ;; #+end_src
 
 
@@ -2163,6 +2158,11 @@
 ;;
 ;;
 
+
+;; `Dimension*` is not an `asr-term`. It's a collection
+;; of `dimension`s, each of which is an `asr-term`.
+
+
 ;;
 ;; Convert lists to vectors on-the-fly.
 ;;
@@ -2171,6 +2171,7 @@
 (s/def ::dimension*
   (s/coll-of (term-selector-spec ::dimension),
              :into []))
+
 ;; #+end_src
 
 ;;
@@ -2193,17 +2194,14 @@
   [candidate-contents]
   (if (or (not (coll? candidate-contents))
           (set? candidate-contents)
-          (map? candidate-contents))
+          (map? candidate-contents)
+          (not (every? coll? candidate-contents)))
     ::invalid-dimension*
     ;; else
-    (let [dims-coll (map dimension candidate-contents)]
-      (if (s/valid? ::dimension* dims-coll)
-        (let [dims-cont (map
-                         ::dimension-content
-                         dims-coll)]
-          ;; `vec` for idempotency
-          (vec (map dimension dims-cont)))
-        ::invalid-dimension*))))
+    (->> candidate-contents
+         (map vec) ;; Like legacy -- prevent bogus fn call;
+         (map dimension)
+         vec))) ;; again -- dimension* are double-nested.
 ;; #+end_src
 
 
@@ -2376,11 +2374,6 @@
 (def complex-cmpops #{"CEq" "CNotEq"})
 (def integer-cmpops #{"Eq" "NotEq" "Lt" "LtE" "Gt" "GtE"})
 (def string-cmpops  #{"SEq" "SNotEq" "SLt" "SLtE" "SGt" "SGtE"})
-(def all-cmpops     (set/union logical-cmpops
-                               real-cmpops
-                               complex-cmpops
-                               integer-cmpops
-                               string-cmpops))
 ;; #+end_src
 
 ;;
@@ -2414,11 +2407,12 @@
 (enum-like integer-cmpop integer-cmpops)
 (enum-like string-cmpop  string-cmpops)
 
-(s/def ::any-cmpop (set/union logical-cmpops
-                              real-cmpops
-                              complex-cmpops
-                              integer-cmpops
-                              string-cmpops))
+(s/def ::any-cmpop
+  (s/or :logical-cmpop ::logical-cmpop
+        :real-compop   ::real-cmpop
+        :complex-cmpop ::complex-cmpop
+        :integer-cmpop ::integer-cmpop
+        :string-cmpop  ::string-cmpop))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -2761,7 +2755,8 @@
        (defn ~scp ;; e.g. Integer
          ;; binary
          ([kindx# dimsx#]
-          (~lcp {:kind kindx# :dimension* dimsx#}))
+          (~lcp {:kind kindx#
+                 :dimension* dimsx#}))
          ;; unary
          ([kindy#]
           (~lcp {:kind kindy# :dimension* ~dfd}))
@@ -3002,7 +2997,7 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::symbolic-value empty?)
+(s/def ::symbolic-value ::expr?)
 ;; #+end_src
 
 ;;
@@ -3071,6 +3066,52 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
+;; ### Scalar Detection
+;;
+;;
+;; #+begin_src clojure
+
+(defmacro ttyped-scalar-spec
+  [it]
+  (let [ns  "masr.specs"
+        cap (str/capitalize (str it)) ;; e.g. "Integer"
+        tth (keyword ns cap)          ;; e.g. ::Integer
+        lwr (str/lower-case (str it)) ;; e.g. "integer"
+        scl (keyword
+             ns (str lwr "-scalar"))  ;; e.g. ::integer-scalar
+        xpr (keyword
+             ns (str lwr "-expr"))    ;; e.g. ::integer-expr
+        ]
+    `(s/def ~scl
+       (s/and (fn [x#] (s/valid? ~xpr x#))
+              (fn [x#] (let [dims# (-> x# ::asr-expr-head
+                                       ~tth
+                                       ::asr-ttype-head
+                                       ::dimension*)]
+                         ;; nil is empty? !!!
+                         (and (not (nil? dims#))
+                              (empty? dims#))))))))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(ttyped-scalar-spec Integer)
+(ttyped-scalar-spec Logical)
+(ttyped-scalar-spec Real)
+(ttyped-scalar-spec Complex)
+;; special case for String because its ttype is ::Character
+(s/def ::string-scalar
+  (s/and #(s/valid? ::string-expr %)
+         #(let [dims (-> % ::asr-expr-head
+                         ::Character
+                         ::asr-ttype-head
+                         ::dimension*)]
+            (and (not (nil? dims))
+                 (empty? dims)))))
+;; #+end_src
+
+
+;; ----------------------------------------------------------------
 ;; ### Unchecked Element Types
 ;;
 ;;
@@ -3088,14 +3129,16 @@
 ;; #+begin_src clojure
 
 (s/def ::unchecked-element-expr
-  (s/or :array-item           ::ArrayItem ;; TODO check return type!
-        :tuple-item           ::TupleItem ;; TODO check return type!
-        :list-item            ::ListItem  ;; TODO check return type!
-        :cast                 ::Cast      ;; TODO check return type!
-        :if-expr              ::IfExp     ;; TODO check return type!
-        :named-expr           ::NamedExpr ;; TODO check return type!
-        :var                  ::Var       ;; TODO check return type!
-))
+  (s/or :array-item         ::ArrayItem    ;; TODO check return type!
+        :tuple-item         ::TupleItem    ;; TODO check return type!
+        :list-item          ::ListItem     ;; TODO check return type!
+        :cast               ::Cast         ;; TODO check return type!
+        :if-expr            ::IfExp        ;; TODO check return type!
+        :named-expr         ::NamedExpr    ;; TODO check return type!
+        :function-call      ::FunctionCall ;; TODO check return type!
+        :var                ::Var          ;; TODO check return type!
+        :intrinsic-function ::IntrinsicFunction ;; TODO return type!
+        ))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3110,6 +3153,7 @@
         :integer-compare      ::IntegerCompare
         :real-compare         ::RealCompare
         :complex-compare      ::ComplexCompare
+        :string-compare       ::StringCompare
         :tuple-compare        ::TupleCompare
         :logical-binop        ::LogicalBinOp
         :logical-not          ::LogicalNot
@@ -3139,7 +3183,6 @@
         :integer-bit-not      ::IntegerBitNot
         :string-ord           ::StringOrd
         :string-len           ::StringLen
-        :string-item          ::StringItem
         :tuple-len            ::TupleLen
         :list-len             ::ListLen
         :unchecked            ::unchecked-element-expr))
@@ -3182,6 +3225,8 @@
   (s/or :real-constant        ::RealConstant
         :real-binop           ::RealBinOp
         :real-unary-minus     ::RealUnaryMinus
+        :complex-im           ::ComplexIm
+        :complex-re           ::ComplexRe
         :unchecked            ::unchecked-element-expr))
 ;; #+end_src
 
@@ -3235,6 +3280,7 @@
 (s/def ::array-expr
   (s/or :var                    ::Var
         :array-constant         ::ArrayConstant
+        :array-reshape          ::ArrayReshape
         :unchecked              ::unchecked-element-expr))
 ;; #+end_src
 
@@ -3369,15 +3415,18 @@
 ;;
 ;; #+begin_src clojure
 
+(s/def ::body-expr   ::expr)
+(s/def ::orelse-expr ::expr)
+
 (defn IfExp [test-expr, body, orelse, ttype, value?]
   {::term ::expr,
    ::asr-expr-head
-   {::expr-head ::IfExp
-    ::test-expr test-expr
-    ::body      body
-    ::orelse    orelse
-    ::ttype     ttype
-    ::value?    value?}})
+   {::expr-head    ::IfExp
+    ::test-expr    test-expr
+    ::body-expr    body
+    ::orelse-expr  orelse
+    ::ttype        ttype
+    ::value?       value?}})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4794,7 +4843,11 @@
 ;;
 ;; #+begin_src clojure
 
-(s/def ::lvalue             ::Var)
+(s/def ::lvalue       (s/or :var         ::Var
+                            :array-item  ::ArrayItem
+                            :tuple-const ::TupleConstant
+                            :list-item   ::ListItem
+                            ))
 (s/def ::rvalue             ::expr)
 (s/def ::overloaded         ::stmt?)
 ;; #+end_src
@@ -5259,7 +5312,8 @@
       ;; Took a while to find this ...
       ;; `(map vec ~args)` does not work!
       ;; outer `vec` for idempotency
-      (vec (map (fn [a#] [a#]) ~args))
+      (if (empty? ~args) []
+        (vec ~args))
       ~dt?))) ;; #+end_src
 ;; #+end_src
 
@@ -5281,7 +5335,7 @@
 
 ;; #+begin_src clojure
 
-(s/def ::label ::nat)
+(s/def ::label ::int)  ;; TODO: Issue 49: what do negative ones mean
 ;; #+end_src
 
 ;;

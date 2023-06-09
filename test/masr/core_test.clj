@@ -111,7 +111,19 @@
   (idempotency-check (dimension [1 60]))
   (idempotency-check (dimension ()))
   (idempotency-check (dimension []))
+  (idempotency-check
+   (legacy
+    (dimension
+     ((IntegerConstant 0 (Integer 4 []))
+      (IntegerConstant 9216 (Integer 4 []))))))
+
   (testing "better syntax"
+    (is (s/valid?
+         ::asr/dimension
+         (legacy
+          (dimension
+           ((IntegerConstant 0 (Integer 4 []))
+            (IntegerConstant 9216 (Integer 4 [])))))))
     (is (s/valid? ::asr/asr-term (dimension '(1 60))))
     (is (s/valid? ::asr/asr-term (dimension [1 60])))
     (is (s/valid? ::asr/asr-term (dimension '())))
@@ -186,12 +198,7 @@
                   (dimension
                    [606 66979216746710640882869059905284213752707])))))
       ))
-  (testing "conformance"
-    (is (let [fullform {::asr/term ::asr/dimension,
-                        ::asr/dimension-content '(1 60)}]
-          (= (s/conform ::asr/asr-term  fullform)
-             (s/conform ::asr/dimension fullform))))
-    ))
+  )
 
 
 ;;     _ _                   _
@@ -215,35 +222,60 @@
 
 
 (deftest dimensions-test
+  (idempotency-check (dimension* [[() ()]]))
+  (idempotency-check (dimension* '[(() ())]))
+
   (idempotency-check (dimension* [[1 60] []]))
+  (idempotency-check
+   (dimension*
+    [[(IntegerConstant 0 (Integer 4 []))
+      (IntegerConstant 9216 (Integer 4 []))]
+     [6 60]
+     []]))
   (idempotency-check (dimension* '([1 60] [])))
   (idempotency-check (dimension* []))
   (idempotency-check (dimension* ()))
 
   (is (s/valid?
        ::asr/dimension*
-       [#:masr.specs{:term :masr.specs/dimension,
-                     :dimension-content [1 60]}
-        #:masr.specs{:term :masr.specs/dimension,
-                     :dimension-content ()}]))
+       (dimension*
+        [[(IntegerConstant 0 (Integer 4 []))
+          (IntegerConstant 9216 (Integer 4 []))]
+         [6 60]
+         []])))
+
+  (let [int-scalar-pair
+        [(IntegerConstant  1 (Integer))
+         (IntegerConstant 60 (Integer))]]
+    (is (s/valid?
+         ::asr/dimension*
+         [#:masr.specs{:term :masr.specs/dimension,
+                       :dimension-content
+                       int-scalar-pair}
+          #:masr.specs{:term :masr.specs/dimension,
+                       :dimension-content ()}])))
+
   (let [dims [(dimension [1 60]), (dimension [])]]
     (is (s/valid? ::asr/dimension* dims))
-    (is (= dims (s/conform ::asr/dimension* dims)))
-    (is (= dims (dimension* [[1 60] []])))
-    (is (= dims (s/conform ::asr/dimension*
-                           (dimension* [[1 60] []])))))
+    (is (= dims (dimension* [[1 60] []]))))
+
   (is (vds? (dimension* ['(1 60) '()])))
   (is (vds? (dimension* ['(1 60)])))
+  (is (vds? (dimension* [[1 60]])))
   (is (vds? (dimension* ['(1 60) []])))
+
   (is (vds? (dimension* [])))
   (is (vds? (dimension* '((1 60) ()))))
   (is (vds? (dimension* '((1 60)))))
+
   (is (vds? (dimension* '((1 60) []))))
   (is (vds? (dimension* ())))
   (is (vds? (dimension* [[1 60] []])))
+
   (is (vds? (dimension* [[1 60]  [42 43]])))
   (is (vds? (dimension* [[1 60] '(42 43)])))
   (is (vds? (dimension* ())))
+
   (is (not (vds? (dimension* #{'(1 60) []}))))
   (is (not (vds? (dimension* #{}))))
   (is (not (vds? (dimension* {}))))
@@ -708,7 +740,8 @@
     (is (vt? ::asr/Integer (Integer 4)))
     (is (vt? ::asr/Integer (Integer 4 [])))
     (is (vt? ::asr/Integer (Integer 4 [[6 60] [1 42]])))
-    (is (vt? ::asr/Integer (Integer)))
+    (is (vt? ::asr/Integer (Integer 4 [() ()])))
+
     (is (vt? ::asr/Integer (Integer 8)))
     (is (vt? ::asr/Integer (Integer 8 [])))
     (is (vt? ::asr/Integer (Integer 8 [[6 60] [1 82]])))
@@ -717,6 +750,7 @@
     (is (vt? ::asr/Real    (Real 4)))
     (is (vt? ::asr/Real    (Real 4 [])))
     (is (vt? ::asr/Real    (Real 4 [[6 60] [1 42]])))
+
     (is (vt? ::asr/Real    (Real)))
     (is (vt? ::asr/Real    (Real 8)))
     (is (vt? ::asr/Real    (Real 8 [])))
@@ -742,17 +776,17 @@
       (is (not (vt? ::asr/Logical (Logical 42 [[6 60] [42]]))))))
   (testing "full-form"
     (is (vt? ::asr/Integer
-         {::asr/term ::asr/ttype,
-          ::asr/asr-ttype-head
-          {::asr/ttype-head   ::asr/Integer,
-           ::asr/integer-kind 4
-           ::asr/dimension*   []}}))
+             {::asr/term ::asr/ttype,
+              ::asr/asr-ttype-head
+              {::asr/ttype-head   ::asr/Integer,
+               ::asr/integer-kind 4
+               ::asr/dimension*   []}}))
     (is (vt? ::asr/Real
-         {::asr/term ::asr/ttype,
-          ::asr/asr-ttype-head
-          {::asr/ttype-head   ::asr/Real,
-           ::asr/real-kind    4
-           ::asr/dimension*   []}})))
+             {::asr/term ::asr/ttype,
+              ::asr/asr-ttype-head
+              {::asr/ttype-head   ::asr/Real,
+               ::asr/real-kind    4
+               ::asr/dimension*   []}})))
   (testing "defaults"
     (is (= (Integer)   (Integer 4 [])))
     (is (= (Integer 4) (Integer 4 []))))
@@ -775,20 +809,6 @@
                       ::asr/integer-kind 4
                       ::asr/dimension*
                       (dimension* [[6 60] [1 42]])})      true))
-
-    ;; Check a conformed one.
-    (let [a {::asr/ttype-head   ::asr/Integer
-             ::asr/integer-kind 4
-             ::asr/dimension*
-             (dimension* [[6 60] [1 42]])}]
-      (is (= (s/conform ::asr/asr-ttype-head a)           a)))
-
-    ;; Check a Real instead of an Integer.
-    (let [a {::asr/ttype-head   ::asr/Real
-             ::asr/real-kind    8
-             ::asr/dimension*
-             (dimension* [[6 60] [1 42]])}]
-      (is (= (s/conform ::asr/asr-ttype-head a)           a)))
 
     (is (= (s/valid? ::asr/asr-term
                      {::asr/term ::asr/ttype,
@@ -832,8 +852,44 @@
     (is (= (s/valid? ::asr/ttype
                      (Integer- {:dimension* [], :kind 4}))  true))
     (is (= (s/valid? ::asr/ttype
-                     (Integer- {:kind 4, :dimension* []}))  true))
-    ))
+                     (Integer- {:kind 4, :dimension* []}))  true))))
+
+
+(deftest difficult-dimensions-test
+
+  (is
+   (s/valid?
+    ::asr/dimension*
+    (legacy
+     (dimension*
+      [((IntegerConstant 0 (Integer 4 []))
+        (IntegerConstant 16 (Integer 4 [])))
+       ((IntegerConstant 0 (Integer 4 []))
+        (IntegerConstant 16 (Integer 4 [])))]))))
+
+  (is
+   (s/valid?
+    ::asr/Real
+    (legacy
+     (Real 8 [((IntegerConstant 0 (Integer 4 []))
+               (IntegerConstant 16 (Integer 4 [])))
+              ((IntegerConstant 0 (Integer 4 []))
+               (IntegerConstant 16 (Integer 4 [])))]))))
+
+  (is
+   (s/valid?
+    ::asr/dimension*
+    (legacy
+     (dimension*
+      [(()
+        ())]))))
+
+  (is
+   (s/valid?
+    ::asr/Real
+    (legacy
+     (Real 8 [(()
+               ())])))))
 
 
 ;;  ___            _         _ _____     _    _
@@ -874,8 +930,7 @@
                 false  false  false
                 false  []  []  false
                 )))]
-      (testing "idempotency of eval -- 1"
-        (is (= ft (eval ft) (eval (eval ft)))))
+      (idempotency-check ft)
       (is (s/valid?  ::asr/asr-term      ft))
       (is (s/valid?  ::asr/ttype         ft))
       (is (s/valid?  ::asr/FunctionType  ft))))
@@ -884,8 +939,7 @@
             Implementation () false
             false false false
             false [] [] false)]
-    (testing "idempotency of eval -- 2"
-      (is (= ft (eval ft) (eval (eval ft)))))
+    (idempotency-check ft)
     (is (s/valid?  ::asr/asr-term      ft))
     (is (s/valid?  ::asr/ttype         ft))
     (is (s/valid?  ::asr/FunctionType  ft)))
@@ -931,8 +985,7 @@
                   RealToInteger
                   (Integer 4 [])
                   (IntegerConstant 4 (Integer 4 []))))]
-    (testing "idempotency"
-      (is (= example (eval example) (eval (eval example)))))
+    (idempotency-check example)
     (is (s/valid? ::asr/Cast example)))
 
   (let [example (legacy ;; fixes round brackets.
@@ -978,8 +1031,7 @@
                  (IntegerConstant 0 (Integer 4 []))
                  (Integer 4 [])
                  )]
-    (testing "idempotency"
-      (is (= example (eval example) (eval (eval example)))))
+    (idempotency-check example)
     (is (s/valid? ::asr/asr-term  example))
     (is (s/valid? ::asr/expr      example))
     (is (s/valid? ::asr/NamedExpr example))))
@@ -999,8 +1051,7 @@
                {::asr/expr-head ::asr/LogicalConstant
                 ::asr/bool      true
                 ::asr/Logical   (Logical)}}]
-      (testing "idempotency"
-        (is (= alv (eval alv) (eval (eval alv)))))
+      (idempotency-check alv)
       (testing "telescoping specs"
         (is (s/valid? ::asr/asr-term        alv))
         (is (s/valid? ::asr/expr            alv))
@@ -1025,6 +1076,203 @@
       )))
 
 
+;;              _
+;;  ___ __ __ _| |__ _ _ _
+;; (_-</ _/ _` | / _` | '_|
+;; /__/\__\__,_|_\__,_|_|
+
+
+(deftest scalar-test
+
+  (testing "integer scalars"
+
+    (testing "valid integer scalar constant"
+      (is (s/valid? ::asr/integer-scalar
+                    (IntegerConstant 42 (Integer 8 [])))))
+
+    (testing "invalid integer scalar constants"
+      (testing "nil dims"
+        (is (not (s/valid? ::asr/integer-scalar
+                           (IntegerConstant
+                            42 (Integer 8 nil))))))
+
+      (testing "invalid integer size"
+        (is (not (s/valid? ::asr/integer-scalar
+                           (IntegerConstant
+                            42 (Integer 86 []))))))
+
+      (testing "invalid integer value"
+        (is (not (s/valid? ::asr/integer-scalar
+                           (IntegerConstant
+                            42.0 (Integer 8 []))))))
+
+      (testing "invalid integer ttype"
+        (is (not (s/valid? ::asr/integer-scalar
+                           (IntegerConstant
+                            42 (Real 8 []))))))
+
+      (testing "non-empty dims"
+        (is (not (s/valid? ::asr/integer-scalar
+                           (IntegerConstant
+                            42 (Integer 8 [[6 60] []])))))))
+
+    (testing "valid integer scalar expressions"
+
+      (is (s/valid? ::asr/integer-scalar
+                    (IntegerBinOp
+                     (IntegerConstant 2 (Integer 4 []))
+                     Add
+                     (IntegerConstant 3 (Integer 4 []))
+                     (Integer 4 [])
+                     (IntegerConstant 5 (Integer 4 [])))))
+
+      (is (s/valid? ::asr/integer-scalar
+                    (IntegerUnaryMinus
+                     (IntegerConstant 42 (Integer))
+                     (Integer) [])))
+
+      ;; ... every other integer expr
+      ))
+
+
+
+  (testing "real scalar constants"
+
+    (testing "valid real scalar constant"
+      (is (s/valid? ::asr/real-scalar
+                    (RealConstant
+                     42.0 (Real 8 [])))))
+
+    (testing "invalid real scalar constants"
+
+      (testing "nil dims"
+        (is (not (s/valid? ::asr/real-scalar
+                           (RealConstant
+                            42.0 (Real 8 nil))))))
+
+      (testing "invalid real size"
+        (is (not (s/valid? ::asr/real-scalar
+                           (RealConstant
+                            42.0 (Real 86 []))))))
+
+      (testing "invalid real value"
+        (is (not (s/valid? ::asr/real-scalar
+                           (RealConstant
+                            42 (Real 8 []))))))
+
+      (testing "invalid real ttype"
+        (is (not (s/valid? ::asr/real-scalar
+                           (RealConstant
+                            42.0 (Integer 8 []))))))
+
+      (testing "non-empty dims"
+        (is (not (s/valid? ::asr/real-scalar
+                           (RealConstant
+                            42.0 (Real 8 [[6 60] []]))))))))
+
+  (testing "logical scalars"
+
+    (testing "valid logical scalar constant"
+      (is (s/valid? ::asr/logical-scalar
+                    (LogicalConstant
+                     true (Logical 4 [])))))
+
+    (testing "invalid logical scalar constants"
+
+      (testing "nil dims"
+        (is (not (s/valid? ::asr/logical-scalar
+                           (LogicalConstant
+                            true (Logical 4 nil))))))
+
+      (testing "invalid logical size"
+        (is (not (s/valid? ::asr/logical-scalar
+                           (LogicalConstant
+                            true (Logical 86 []))))))
+
+      (testing "invalid logical value"
+        (is (not (s/valid? ::asr/logical-scalar
+                           (LogicalConstant
+                            42 (Logical 8 []))))))
+
+      (testing "invalid logical ttype"
+        (is (not (s/valid? ::asr/logical-scalar
+                           (LogicalConstant
+                            true (Integer 8 []))))))
+
+      (testing "non-empty dims"
+        (is (not (s/valid? ::asr/logical-scalar
+                           (LogicalConstant
+                            true (Logical 8 [[6 60] []]))))))))
+
+  (testing "complex scalars"
+
+    (testing "valid complex scalar constant"
+      (is (s/valid? ::asr/complex-scalar
+                    (ComplexConstant
+                     3.0 4.0 (Complex 8 [])))))
+
+    (testing "invalid complex scalar constants"
+
+      (testing "nil dims"
+        (is (not (s/valid? ::asr/complex-scalar
+                           (ComplexConstant
+                            3.0 4.0 (Complex 8 nil))))))
+
+      (testing "invalid complex size"
+        (is (not (s/valid? ::asr/complex-scalar
+                           (ComplexConstant
+                            3.0 4.0 (Complex 86 []))))))
+
+      (testing "invalid complex value"
+        (is (not (s/valid? ::asr/complex-scalar
+                           (ComplexConstant
+                            3 4 (Complex 8 []))))))
+
+      (testing "invalid complex ttype"
+        (is (not (s/valid? ::asr/complex-scalar
+                           (ComplexConstant
+                            3.0 4.0 (Integer 8 []))))))
+
+      (testing "non-empty dims"
+        (is (not (s/valid? ::asr/complex-scalar
+                           (ComplexConstant
+                            3.0 4.0 (Complex 8 [[6 60] []]))))))))
+
+  (testing "string scalars"
+
+    (testing "valid string scalar constant"
+      (is (s/valid? ::asr/string-scalar
+                    (StringConstant
+                     "42" (Character 1 1 () [])))))
+
+    (testing "invalid string scalar constants"
+      (testing "nil dims"
+        (is (not (s/valid? ::asr/string-scalar
+                           (StringConstant
+                            "42" (Character 1 1 () nil))))))
+
+      ;; TODO: check len!
+      (testing "invalid string size"
+        (is (not (s/valid? ::asr/string-scalar
+                           (StringConstant
+                            "42" (Character 86 1 () []))))))
+
+      (testing "invalid string value"
+        (is (not (s/valid? ::asr/string-scalar
+                           (StringConstant
+                            42 (Character 1 1 () []))))))
+
+      (testing "invalid string ttype"
+        (is (not (s/valid? ::asr/string-scalar
+                           (StringConstant
+                            "42" (Integer 4 []))))))
+
+      (testing "non-empty dims"
+        (is (not (s/valid? ::asr/string-scalar
+                           (StringConstant
+                            "42" (Character 1 1 () [[6 60] []])))))))))
+
+
 ;;  ___     _                     ___             _            _
 ;; |_ _|_ _| |_ ___ __ _ ___ _ _ / __|___ _ _  __| |_ __ _ _ _| |_
 ;;  | || ' \  _/ -_) _` / -_) '_| (__/ _ \ ' \(_-<  _/ _` | ' \  _|
@@ -1034,22 +1282,22 @@
 
 (deftest IntegerConstant-test
   (testing "valid"
-    (let [aiv {::asr/term ::asr/expr,
+    (let [avv {::asr/term ::asr/expr,
                ::asr/asr-expr-head
                {::asr/expr-head ::asr/IntegerConstant
                 ::asr/int       42
                 ::asr/Integer   (Integer)}}]
-      (testing "idempotency"
-        (is (= aiv (eval aiv) (eval (eval aiv)))))
+      (idempotency-check avv)
       (testing "telescoping specs"
-        (is (s/valid? ::asr/asr-term        aiv))
-        (is (s/valid? ::asr/expr            aiv))
-        (is (s/valid? ::asr/IntegerConstant aiv)))
+        (is (s/valid? ::asr/asr-term        avv))
+        (is (s/valid? ::asr/expr            avv))
+        (is (s/valid? ::asr/integer-expr    avv))
+        (is (s/valid? ::asr/IntegerConstant avv)))
 
-      (is (= aiv (IntegerConstant 42)))
-      (is (= aiv (IntegerConstant 42 (Integer 4 []))))
-      (is (= aiv (IntegerConstant 42 (Integer 4))))
-      (is (= aiv (IntegerConstant 42 (Integer))))
+      (is (= avv (IntegerConstant 42)))
+      (is (= avv (IntegerConstant 42 (Integer 4 []))))
+      (is (= avv (IntegerConstant 42 (Integer 4))))
+      (is (= avv (IntegerConstant 42 (Integer))))
       ))
 
   (testing "invalid"
@@ -1074,8 +1322,7 @@
 
 (deftest StringConstant-test
   (let [x (StringConstant "boofar")]
-    (testing "idempotency"
-      (is (= x (eval x) (eval (eval x)))))
+    (idempotency-check x)
     (testing "telescoping specs"
       (is (s/valid? ::asr/StringConstant x))
       (is (s/valid? ::asr/expr           x))
@@ -1096,8 +1343,7 @@
            (StringConstant "boofar"),
            (Integer),
            (IntegerConstant 51 (Integer)))]
-    (testing "idempotency"
-      (is (= x (eval x) (eval (eval x)))))
+    (idempotency-check x)
     (is (s/valid? ::asr/StringOrd x)))
   (is (s/valid? ::asr/StringOrd
                 (StringOrd
@@ -1131,23 +1377,21 @@
     (is (s/valid? ::asr/Var
                   (Var 2 a)))
     (is (s/valid? ::asr/Assignment
-                  (eval
-                   (rewrite-for-legacy
-                    '(= (Var 2 a)
-                        (LogicalConstant false (Logical 4 []))
-                        ())))))
+                  (to-full-form
+                   '(= (Var 2 a)
+                       (LogicalConstant false (Logical 4 []))
+                       ()))))
     (is (s/valid? ::asr/TranslationUnit
-                  (eval
-                   (rewrite-for-legacy
-                    '(TranslationUnit
-                      (SymbolTable 42 {})
-                      [(Program
-                        (SymbolTable 3 {})
-                        main_program
-                        []
-                        [(= (Var 2 a)
-                            (LogicalConstant false (Logical 4 []))
-                            ())])]))))))
+                  (to-full-form
+                   '(TranslationUnit
+                     (SymbolTable 42 {})
+                     [(Program
+                       (SymbolTable 3 {})
+                       main_program
+                       []
+                       [(= (Var 2 a)
+                           (LogicalConstant false (Logical 4 []))
+                           ())])])))))
   (let [vlv {::asr/term ::asr/expr,
              ::asr/asr-expr-head
              {::asr/expr-head  ::asr/Var
@@ -1212,8 +1456,7 @@
            (IntegerConstant 5 (Integer 4 []))
            (Integer 4 [])
            (IntegerConstant 25 (Integer 4 [])))]
-    (testing "idempotency"
-      (is (= x (eval x) (eval (eval x)))))
+    (idempotency-check x)
     (is (s/valid? ::asr/IntegerBinOp x)))
 
   (is (not (s/valid? ::asr/IntegerBinOp
@@ -1291,7 +1534,7 @@
   (is (not (s/valid? ::asr/RealBinOp
                      (RealBinOp
                       (IntegerConstant 2 (Integer 4 [])) ;; <~~~ booger
-                      Add                                ;; legacy sugar
+                      Add                               ;; legacy sugar
                       (RealConstant 3.0 (Real 4 []))
                       (Real 4 []) ;; <~~~ booger
                       (RealConstant 5.0 (Real 4 []))
@@ -1308,8 +1551,7 @@
            (RealConstant 5.0 (Real 4 []))
            (Real 4 [])
            (RealConstant 25.0 (Real 4 [])))]
-    (testing "idempotency"
-      (is (= x (eval x) (eval (eval x)))))
+    (idempotency-check x)
     (is (s/valid? ::asr/RealBinOp x)))
   )
 
@@ -1332,8 +1574,7 @@
             (Var 2 b)
             (Logical 4 []) ())
            (Logical 4 []) ())]
-    (testing "idempotency"
-      (is (= x (eval x) (eval (eval x)))))
+    (idempotency-check x)
     (is (s/valid? ::asr/LogicalBinOp x)))
 
   (is (not (s/valid? ::asr/LogicalBinOp
@@ -1369,8 +1610,7 @@
            Eq
            (Var 2 b)
            (Logical 4 []) ())]
-    (testing "idempotency"
-      (is (= x (eval x) (eval (eval x)))))
+    (idempotency-check x)
     (is (s/valid? ::asr/LogicalCompare x)))
   (is (not (s/valid? ::asr/LogicalCompare
                      (LogicalCompare
@@ -1405,8 +1645,8 @@
          (rewrite-for-legacy
           '[(Var 42 x)])))
   (let [x (legacy (Var 42 x))]
-    (testing "idempotency"
-      (is (= x (eval x) (eval (eval x))))))
+    (idempotency-check x)
+)
   (is (s/valid? ::asr/expr? ()))
   (is (s/valid? ::asr/expr? []))
   (is (s/valid? ::asr/expr? (legacy (Var 42 x))))
@@ -1464,8 +1704,7 @@
             0
             (Real 8 [])  ()  )
            )]
-    (testing "idempotency"
-      (is (= x (eval x) (eval (eval x)))))
+    (idempotency-check x)
     (is (s/valid? ::asr/IntrinsicFunction x))))
 
 
@@ -1512,8 +1751,7 @@
             (Complex 4 [])
             (ComplexConstant 5.000000 6.000000
                              (Complex 4 []) ) ))]
-    (testing "idempotency"
-      (is (= x (eval x) (eval (eval x)))))
+    (idempotency-check x)
     (is (s/valid? ::asr/ComplexBinOp x))))
 
 
@@ -1717,9 +1955,7 @@
                (Var 2 i)
                )] )]
       (is (s/valid? ::asr/DoLoop x))
-      (testing "idempotency macro itself"
-        (is (= x (eval x) (eval (eval x))))
-        (idempotency-check x)))
+      (idempotency-check x))
     (let [x (DoLoop
              ()
              [(Var 2 i)
@@ -1923,7 +2159,7 @@
              (SubroutineCall
               7 test_fn1
               ()
-              ((Var 42 i))
+              [((Var 42 i))]
               ()))]
       (is (s/valid? ::asr/SubroutineCall x))
       (idempotency-check x))
@@ -1931,7 +2167,7 @@
              (SubroutineCall
               7 test_fn1
               ()
-              ((Var 42 i) (Var 43 j))
+              [((Var 42 i)) ((Var 43 j))]
               ()))]
       (is (s/valid? ::asr/SubroutineCall x))
       (idempotency-check x))
@@ -4013,7 +4249,7 @@
                (SubroutineCall
                 7 gsubrout
                 ()
-                ((Var 4 i))
+                [((Var 4 i))]
                 ())]
               ()
               Public
@@ -4834,7 +5070,7 @@
          ".stdout.clj"))))
 
 
-(defn long-form-asr
+(defn full-form-slurped-asr
   [refnym]
   (do (in-ns 'masr.specs)
       (->> refnym
@@ -4843,12 +5079,13 @@
            eval)))
 
 
-(defmacro test-translation-unit [filenamefrag]
+#_(defmacro test-translation-unit [filenamefrag]
   (let [tstr (str "whole translation unit for " filenamefrag)
-        fstr (str filenamefrag)]
+        fstr (str filenamefrag)
+        casE (full-form-slurped-asr fstr)]
     `(testing ~tstr
-       (idempotency-check ~tstr)
-       (is (s/valid? ::asr/unit (long-form-asr ~fstr))))))
+       (idempotency-check ~casE)
+       (is (s/valid? ::asr/unit ~casE)))))
 
 
 (deftest slurp-test
@@ -5063,29 +5300,29 @@
                  gsubrout]
                 []
                 [(= (Var 4 i)
-                  (FunctionCall
-                   7 g
-                   ()
-                   []
-                   (Integer 4 [])
-                   ()
-                   ()) ())
+                    (FunctionCall
+                     7 g
+                     ()
+                     []
+                     (Integer 4 [])
+                     ()
+                     ()) ())
                  (= (Var 4 j)
-                  (FunctionCall
-                   7 g
-                   ()
-                   []
-                   (Integer 4 [])
-                   ()
-                   ()) ())
+                    (FunctionCall
+                     7 g
+                     ()
+                     []
+                     (Integer 4 [])
+                     ()
+                     ()) ())
                  (= (Var 4 __lcompilers_dummy)
-                  (FunctionCall
-                   7 g
-                   ()
-                   []
-                   (Integer 4 [])
-                   ()
-                   ()) ())
+                    (FunctionCall
+                     7 g
+                     ()
+                     []
+                     (Integer 4 [])
+                     ()
+                     ()) ())
                  (SubroutineCall
                   7 gsubrout
                   ()
@@ -5132,9 +5369,7 @@
           ),
 
         long-form-legacy-e2e0267
-        (do (in-ns 'masr.specs)
-            (eval (rewrite-for-legacy
-                   hand-written-quoted-e2e0267)))
+        (to-full-form  hand-written-quoted-e2e0267)
 
         rewritten-e2e0267
         (rewrite-for-legacy
@@ -5147,7 +5382,7 @@
         (slurp-asr refnym)
 
         long-form-slurped-e2e0267
-        (long-form-asr refnym)]
+        (full-form-slurped-asr refnym)]
 
     (testing "whole translation unit for e2e0267"
       (is (s/valid? ::asr/unit            long-form-legacy-e2e0267))
@@ -5160,67 +5395,286 @@
     (testing "textual identity of slurped e2e0267"
       (is (= hand-written-quoted-e2e0267 slurped-e2e0267)))
 
+
+    (testing "-expr1-dde511e"
+      (let [case- (full-form-slurped-asr "-expr1-dde511e")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr1-dde511e)
+
+    (testing "-expr10-31c163f"
+      (let [case- (full-form-slurped-asr "-expr10-31c163f")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr10-31c163f)
+
+    (testing "-expr11-1134d3f"
+      (let [case- (full-form-slurped-asr "-expr11-1134d3f")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr11-1134d3f)
+
+    (testing "-expr12-2a30333"
+      (let [case- (full-form-slurped-asr "-expr12-2a30333")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr12-2a30333)
+
+    (testing "-expr13-10040d8"
+      (let [case- (full-form-slurped-asr "-expr13-10040d8")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr13-10040d8)
+
+    (testing "-expr4-cf512ef"
+      (let [case- (full-form-slurped-asr "-expr4-cf512ef")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr4-cf512ef)
+
+    (testing "-expr6-bfb3384"
+      (let [case- (full-form-slurped-asr "-expr6-bfb3384")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr6-bfb3384)
+
+    (testing "-expr7-2ef3822"
+      (let [case- (full-form-slurped-asr "-expr7-2ef3822")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr7-2ef3822)
+
+    (testing "-expr8-2a4630a"
+      (let [case- (full-form-slurped-asr "-expr8-2a4630a")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr8-2a4630a)
+
+    (testing "-expr9-c6fe691"
+      (let [case- (full-form-slurped-asr "-expr9-c6fe691")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr9-c6fe691)
+
+    (testing "-expr_01-03055c0"
+      (let [case- (full-form-slurped-asr "-expr_01-03055c0")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr_01-03055c0)
+
+    (testing "-expr_01-eafd41c"
+      (let [case- (full-form-slurped-asr "-expr_01-eafd41c")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr_01-eafd41c)
+
+    (testing "-expr_14-6023c49"
+      (let [case- (full-form-slurped-asr "-expr_14-6023c49")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -expr_14-6023c49)
+
+    (testing "-test_bool_binop-3075d22"
+      (let [case- (full-form-slurped-asr "-test_bool_binop-3075d22")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -test_bool_binop-3075d22)
+
+    (testing "-test_bool_binop-3075d22"
+      (let [case- (full-form-slurped-asr "-test_bool_binop-3075d22")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit -test_bool_binop-3075d22)
-    (test-translation-unit -test_builtin-4f04bbc)
-    (test-translation-unit -test_builtin_abs-06a7e49)
-    (test-translation-unit -test_builtin_bin-0ca34fe)
-    (test-translation-unit -test_builtin_bool-fe3fe33)
-    (test-translation-unit -test_builtin_float-97f9316)
-    (test-translation-unit -test_builtin_hex-d4abc3e)
-    (test-translation-unit -test_builtin_int-990d1de)
-    (test-translation-unit -test_builtin_len-922cf65)
-    (test-translation-unit -test_builtin_oct-490a98b)
-    (test-translation-unit -test_builtin_pow-cea529e)
-    (test-translation-unit -test_builtin_round-cca5cba)
-    (test-translation-unit -test_builtin_str-fcdedc2)
-    (test-translation-unit -test_c_interop_01-8bee4ec)
-    (test-translation-unit -test_complex_01-c199562)
-    (test-translation-unit -test_complex_02-6516823)
-    (test-translation-unit -test_end_sep_keywords-49ea13f)
-    (test-translation-unit -test_integer_bitnot-0d0eafa)
-    (test-translation-unit -test_max_min-e73decc)
-    (test-translation-unit -test_numpy_03-6dd742e)
-    (test-translation-unit -test_numpy_04-3376b7a)
-    (test-translation-unit -test_pow-6f6a69d)
-    (test-translation-unit -tuple1-ce358d9)
-    (test-translation-unit -vec_01-9b22f33)
-    (test-translation-unit _expr2_5311701)
-    (test-translation-unit _expr_10_e2e0267)
-    (test-translation-unit _pass_inline_function_calls-func_inline_01-6cf8821)
-    (comment "too big for evaluation"
-             "see big_test.clj for bisection and analysis")
+
+    (comment "-test_builtin-4f04bbc is TOO BIG")
     #_
+    (testing "-test_builtin-4f04bbc"
+      (let [case- (full-form-slurped-asr "-test_builtin-4f04bbc")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin-4f04bbc)
+
+    (testing "-test_builtin_abs-06a7e49"
+      (let [case- (full-form-slurped-asr "-test_builtin_abs-06a7e49")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_abs-06a7e49)
+
+    (testing "-test_builtin_bin-0ca34fe"
+      (let [case- (full-form-slurped-asr "-test_builtin_bin-0ca34fe")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_bin-0ca34fe)
+
+    (testing "-test_builtin_bool-fe3fe33"
+      (let [case- (full-form-slurped-asr "-test_builtin_bool-fe3fe33")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_bool-fe3fe33)
+
+    (testing "-test_builtin_float-97f9316"
+      (let [case- (full-form-slurped-asr "-test_builtin_float-97f9316")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_float-97f9316)
+
+    (testing "-test_builtin_hex-d4abc3e"
+      (let [case- (full-form-slurped-asr "-test_builtin_hex-d4abc3e")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_hex-d4abc3e)
+
+    (testing "-test_builtin_int-990d1de"
+      (let [case- (full-form-slurped-asr "-test_builtin_int-990d1de")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_int-990d1de)
+
+    (testing "-test_builtin_len-922cf65"
+      (let [case- (full-form-slurped-asr "-test_builtin_len-922cf65")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_len-922cf65)
+
+    (testing "-test_builtin_oct-490a98b"
+      (let [case- (full-form-slurped-asr "-test_builtin_oct-490a98b")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_oct-490a98b)
+
+    (testing "-test_builtin_pow-cea529e"
+      (let [case- (full-form-slurped-asr "-test_builtin_pow-cea529e")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_pow-cea529e)
+
+    (testing "-test_builtin_round-cca5cba"
+      (let [case- (full-form-slurped-asr "-test_builtin_round-cca5cba")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_round-cca5cba)
+
+    (testing "-test_builtin_str-fcdedc2"
+      (let [case- (full-form-slurped-asr "-test_builtin_str-fcdedc2")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_builtin_str-fcdedc2)
+
+    (testing "-test_c_interop_01-8bee4ec"
+      (let [case- (full-form-slurped-asr "-test_c_interop_01-8bee4ec")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_c_interop_01-8bee4ec)
+
+    (testing "-test_complex_01-c199562"
+      (let [case- (full-form-slurped-asr "-test_complex_01-c199562")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_complex_01-c199562)
+
+    (testing "-test_complex_02-6516823"
+      (let [case- (full-form-slurped-asr "-test_complex_02-6516823")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_complex_02-6516823)
+
+    (testing "-test_end_sep_keywords-49ea13f"
+      (let [case- (full-form-slurped-asr "-test_end_sep_keywords-49ea13f")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_end_sep_keywords-49ea13f)
+
+    (testing "-test_integer_bitnot-0d0eafa"
+      (let [case- (full-form-slurped-asr "-test_integer_bitnot-0d0eafa")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_integer_bitnot-0d0eafa)
+
+    (testing "-test_max_min-e73decc"
+      (let [case- (full-form-slurped-asr "-test_max_min-e73decc")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_max_min-e73decc)
+
+    (comment "-test_numpy_03-6dd742e is TOO BIG")
+    #_
+    (testing "-test_numpy_03-6dd742e"
+      (let [case- (full-form-slurped-asr "-test_numpy_03-6dd742e")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_numpy_03-6dd742e)
+
+    (comment "-test_numpy_04-3376b7a is TOO BIG")
+    #_
+    (testing "-test_numpy_04-3376b7a"
+      (let [case- (full-form-slurped-asr "-test_numpy_04-3376b7a")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_numpy_04-3376b7a)
+
+    (testing "-test_pow-6f6a69d"
+      (let [case- (full-form-slurped-asr "-test_pow-6f6a69d")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -test_pow-6f6a69d)
+
+    (testing "-tuple1-ce358d9"
+      (let [case- (full-form-slurped-asr "-tuple1-ce358d9")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -tuple1-ce358d9)
+    (comment "-vec_01-9b22f33 is TOO BIG")
+    #_
+    (testing "-vec_01-9b22f33"
+      (let [case- (full-form-slurped-asr "-vec_01-9b22f33")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit -vec_01-9b22f33)
+
+    (testing "_expr2_5311701"
+      (let [case- (full-form-slurped-asr "_expr2_5311701")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit _expr2_5311701)
+
+    (testing "_expr_10_e2e0267"
+      (let [case- (full-form-slurped-asr "_expr_10_e2e0267")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit _expr_10_e2e0267)
+
+    (testing "_pass_inline_function_calls-func_inline_01-6cf8821"
+      (let [case-
+            (full-form-slurped-asr
+             "_pass_inline_function_calls-func_inline_01-6cf8821")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit
+     _pass_inline_function_calls-func_inline_01-6cf8821)
+
+    (comment "_pass_print_list_tuple-print_02-1bcc4ec is TOO BIG."
+             "see big_test.clj for bottom-up evaluation.")
+    #_
+    (testing "_pass_print_list_tuple-print_02-1bcc4ec"
+      (let [case-
+            (full-form-slurped-asr "_pass_print_list_tuple-print_02-1bcc4ec")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
     (test-translation-unit _pass_print_list_tuple-print_02-1bcc4ec)
+
+    (comment "_pass_loop_vectorise-vec_01-fdf30b1 is TOO BIG.")
+    #_
+    (testing "_pass_loop_vectorise-vec_01-fdf30b1"
+      (let [case- (full-form-slurped-asr
+                   "_pass_loop_vectorise-vec_01-fdf30b1")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-)))) #_
+    (test-translation-unit _pass_loop_vectorise-vec_01-fdf30b1)
     ))
 
 
-;; See tests named "big....clj" for analysis of
-;; these difficult cases. Also see ANALYZERS
-;; section in the code and Markdown file.
-
-
-#_(def too-big-slurped-1bcc4ec
-    (->> "_pass_print_list_tuple-print_02-1bcc4ec"
-         slurp-asr))
-
-
-#_(deftest too-big-slurped-1bcc4ec-test
-  (is (s/valid? ::asr/TranslationUnit
-                (to-full-form too-big-slurped-1bcc4ec))))
+;; See tests named "big....clj" for analysis of big
+;; cases.
 
 
 (deftest bisecting-6cf8821
@@ -5307,18 +5761,25 @@
   (is (s/valid? ::asr/loop-increment
                 (IntegerConstant 1 (Integer 4 []))))
   (is (s/valid? ::asr/do-loop-head
-                {::asr/loop-v         (Var 2 i)
-                 ::asr/loop-start     (IntegerConstant 0 (Integer 4 []))
-                 ::asr/loop-end       (IntegerBinOp
-                                       (TupleLen
-                                        (Var 2 t2)
-                                        (Integer 4 [])
-                                        (IntegerConstant 5 (Integer 4 [])))
-                                       Sub
-                                       (IntegerConstant 1 (Integer 4 []))
-                                       (Integer 4 [])
-                                       (IntegerConstant 4 (Integer 4 [])))
-                 ::asr/loop-increment (IntegerConstant 1 (Integer 4 []))}))
+                {::asr/loop-v
+                 (Var 2 i)
+
+                 ::asr/loop-start
+                 (IntegerConstant 0 (Integer 4 []))
+
+                 ::asr/loop-end
+                 (IntegerBinOp
+                  (TupleLen
+                   (Var 2 t2)
+                   (Integer 4 [])
+                   (IntegerConstant 5 (Integer 4 [])))
+                  Sub
+                  (IntegerConstant 1 (Integer 4 []))
+                  (Integer 4 [])
+                  (IntegerConstant 4 (Integer 4 [])))
+
+                 ::asr/loop-increment
+                 (IntegerConstant 1 (Integer 4 []))}))
   (is (= {::asr/loop-v         (Var 2 i)
           ::asr/loop-start     (IntegerConstant 0 (Integer 4 []))
           ::asr/loop-end       (IntegerBinOp
