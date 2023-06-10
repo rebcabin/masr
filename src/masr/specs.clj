@@ -1988,6 +1988,22 @@
 
 
 ;;
+;; Full-forms must be checked against a spec. The
+;; following function does a rudimentary
+;; uninformative check, returning a given error code
+;; in case of any error. Its parameter order helps
+;; reduce indentation at its call sites.
+;;
+;; #+begin_src clojure
+
+(defn check-full-form
+  [spec errcode form]
+  (if (not (s/valid? spec form))
+    errcode, #_else spec))
+;; #+end_src
+
+
+;;
 ;;
 ;; # IMPLEMENTATIONS
 ;;
@@ -2028,7 +2044,7 @@
 
 (s/def ::call-arg
   (s/coll-of ::expr?
-             :min-count 1   ;; Issue 32
+             :min-count 1 ;; Issue 32
              :max-count 1))
 
 (s/def ::call-args (s/coll-of ::call-arg))
@@ -2247,7 +2263,8 @@
 
 ;;
 ;; `SymbolTable` is an unwritten term. It doesn't have
-;; nested multi-specs. Write it out fully by hand.
+;; nested multi-specs. Write it out fully by hand. Its
+;; hash must relate keywords and valid asr-terms.
 ;;
 ;;
 ;; #+begin_src clojure
@@ -2255,9 +2272,14 @@
 (s/def ::hash-map map?)
 
 (defmethod term ::SymbolTable [_]
-  (s/keys :req [::term
-                ::symtab-id
-                ::hash-map]))
+  (s/and
+   #(every? (fn [[k v]]
+              (and (keyword? k)
+                   (s/valid? ::asr-term v)))
+            (::hash-map %))
+   (s/keys :req [::term
+                 ::symtab-id
+                 ::hash-map])))
 
 (def-term-entity-key SymbolTable)
 ;; #+end_src

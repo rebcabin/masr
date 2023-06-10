@@ -903,11 +903,9 @@
 
   (idempotency-check (SymbolTable 42 {:main "main"}))
 
-  (is (s/valid? ::asr/asr-term
-                (SymbolTable 42 {:main "main"})))
-
-  (is (s/valid? ::asr/SymbolTable
-                (SymbolTable 42 {:main "main"})))
+  (let [st (SymbolTable 42 {:main (Var 42 x)})]
+    (is (s/valid? ::asr/asr-term    st))
+    (is (s/valid? ::asr/SymbolTable st)))
 
   (is (not (s/valid? ::asr/SymbolTable
                    (SymbolTable "foo" {:main "main"})))))
@@ -2357,10 +2355,11 @@
                             :symtab-id  2
                             :ttype      (Integer 42))]
 
+      (idempotency-check a-var)
+
       (is (= (s/valid? ::asr/asr-symbol-head a-var-head) true))
 
       (is (= (s/valid? ::asr/asr-term a-var)             true))
-      (idempotency-check a-var)
       (is (= (s/valid? ::asr/asr-term a-var-light)       true))
       (is (= (s/valid? ::asr/asr-term avl-2)             false))
 
@@ -2372,6 +2371,7 @@
       (is (= (s/valid? ::asr/Variable a-var-light)       true))
       (is (= (s/valid? ::asr/Variable avl-2)             false))
       ))
+
   (testing "light sugar"
     ;; fully spec'ced, order does not matter
     (let [a-valid
@@ -2396,6 +2396,7 @@
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/Variable a-valid))
       (idempotency-check a-valid))
+
     (let [a-valid
           (Variable- :symtab-id 2,
                      :varnym    "x",
@@ -2405,6 +2406,7 @@
       (is (s/valid? ::asr/symbol   a-valid))
       (is (s/valid? ::asr/Variable a-valid))
       (idempotency-check a-valid))
+
     (let [a-valid
           (Variable- :symtab-id 2,
                      :varnym    "x",
@@ -2414,6 +2416,7 @@
       (is (s/valid? ::asr/symbol   a-valid))
       (is (s/valid? ::asr/Variable a-valid))
       (idempotency-check a-valid))
+
     (let [a-valid ;; default intent
           (Variable- :symtab-id 2,
                      :varnym    "x",
@@ -2422,20 +2425,25 @@
       (is (s/valid? ::asr/symbol   a-valid))
       (is (s/valid? ::asr/Variable a-valid))
       (idempotency-check a-valid))
+
     (let [a-valid
           (Variable- :symtab-id (symtab-id 2), ;; HERE
                      :varnym    "x",
                      :ttype     (Integer 4 [[1 42]]))]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
-      (is (s/valid? ::asr/Variable a-valid)))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid))
+
     (let [a-valid
           (Variable- :symtab-id 2, ;; HERE
                      :varnym    "x",
                      :ttype     (Integer 4 [[1 42]]))]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
-      (is (s/valid? ::asr/Variable a-valid)))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid))
+
     (let [a-valid
           (Variable- :symtab-id 2,
                      :varnym    "x",
@@ -2444,7 +2452,9 @@
                      :abi       (abi "Source" :external false))]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
-      (is (s/valid? ::asr/Variable a-valid)))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid))
+
     (let [a-valid
           (Variable- :symtab-id 2,
                      :varnym    "x",
@@ -2453,7 +2463,9 @@
                      :abi       (abi "Source"))]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
-      (is (s/valid? ::asr/Variable a-valid))) ;; invalid examples
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid)) ;; invalid examples
+
     (let [a-valid
           (Variable- :symtab-id 2,
                      :varnym    "x",
@@ -2462,7 +2474,9 @@
                      :abi       Source)]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
-      (is (s/valid? ::asr/Variable a-valid)))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid))
+
     (let [a-valid
           (Variable- :symtab-id 2,
                      :varnym    "x",
@@ -2472,6 +2486,7 @@
       (is (s/valid? ::asr/symbol   a-valid))
       (is (s/valid? ::asr/Variable a-valid))
       (idempotency-check a-valid))
+
     (let [a-inval
           (Variable- :symtab-id 2,
                      :varnym    "x",
@@ -2481,6 +2496,7 @@
       (is (not (s/valid? ::asr/asr-term a-inval)))
       (is (not (s/valid? ::asr/symbol   a-inval)))
       (is (not (s/valid? ::asr/Variable a-inval)))))
+
   (testing "back tests"
     (let [v (Variable-- 2 "a" (Logical 4)
                         nil [] "Local"
@@ -2502,7 +2518,9 @@
                               (presence "Required")
                               false)]
       (is (s/valid? ::asr/asr-term a-valid))
-      (is (s/valid? ::asr/Variable a-valid)))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid))
+
     (let [a-valid (Variable-- 2 "x" (Integer 4)
                               nil [] Local
                               [] []  Default
@@ -2510,85 +2528,116 @@
                               false)]
       (is (s/valid? ::asr/asr-term a-valid))
       (is (s/valid? ::asr/symbol   a-valid))
-      (is (s/valid? ::asr/Variable a-valid))))
+      (is (s/valid? ::asr/Variable a-valid))
+      (idempotency-check a-valid)))
+
   (testing "heavy sugar invalid examples"
-    (let [a-inval (Variable-- "foo" "x" (Integer 4) ;; bad symtab-id
-                              nil [] Local
-                              [] []  Default
-                              Source Public Required
-                              false)]
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 "x" (Integer 42424242) ;; bad ttupe
-                              nil [] Local
-                              [] []  Default
-                              Source Public Required
-                              false)]
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 "x" (Integer 42424242)
-                              "FOOBAR" [] Local ;; bad dependencies
-                              [] []  Default
-                              Source Public Required
-                              false)]
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 "x" (Integer 4)
-                              nil [] (intent "FOOBAR") ;; bad intent
-                              [] []  Default
-                              Source Public Required
-                              false)]
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 "x" (Integer 4)
-                              nil ["x" "y" 'foo] ;; bad dependencies
-                              Local
-                              [] []  Default
-                              Source Public Required
-                              false)]
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 "x" (Integer 4)
-                              nil [] Local
-                              [] []
-                              ;; bad storage-type
-                              (storage-type "FOOBAR")
-                              Source Public Required
-                              false)]
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 "x" (Integer 4)
-                              nil [] Local
-                              [] []  Default
-                              (abi "FOOBAR")
-                              Public Required ;; bad abi
-                              false)]
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 "x" (Integer 4)
-                              nil [] Local
-                              [] []  Default
-                              Source
-                              (access "FOOBAR") ;; bad access
-                              Required
-                              false)]
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 "x" (Integer 4)
-                              nil [] Local
-                              [] []  Default
-                              Source Public
-                              (presence "FOOBAR") ;; bad presence
-                              false)]
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval))))
-    (let [a-inval (Variable-- 2 "x" (Integer 4)
-                              nil [] Local
-                              [] []  Default
-                              Source Public Required
-                              "FOOBAR")] ;; bad value-attr
-      (is (not (s/valid? ::asr/asr-term a-inval)))
-      (is (not (s/valid? ::asr/Variable a-inval)))))
+    (testing "bad symtab-id"
+      (let [a-inval (Variable-- "foo" "x" (Integer 4)
+                                nil [] Local
+                                [] []  Default
+                                Source Public Required
+                                false)]
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval)))))
+
+    (testing "bad varnym"
+      (let [a-inval (Variable-- 2 43 (Integer 4)
+                                nil [] Local
+                                [] []  Default
+                                Source Public Required
+                                false)]
+        #_(is (nil? (s/explain ::asr/Variable a-inval)))
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval)))))
+
+    (testing "bad ttype"
+      (let [a-inval (Variable-- 2 "x" (Integer 42424242)
+                                nil [] Local
+                                [] []  Default
+                                Source Public Required
+                                false)]
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval)))))
+
+    (testing "bad type declaration"
+      (let [a-inval (Variable-- 2 "x" (Integer 4)
+                                "FOOBAR" [] Local
+                                [] []  Default
+                                Source Public Required
+                                false)]
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval)))))
+
+    (testing "bad intent"
+      (let [a-inval (Variable-- 2 "x" (Integer 4)
+                                nil [] (intent "FOOBAR")
+                                [] []  Default
+                                Source Public Required
+                                false)]
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval)))))
+
+    (testing "bad dependencies"
+      (let [a-inval (Variable-- 2 "x" (Integer 4)
+                                nil ["x" "y" 'foo]
+                                Local
+                                [] []  Default
+                                Source Public Required
+                                false)]
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval)))))
+
+    (testing "bad storage type"
+      (let [a-inval (Variable-- 2 "x" (Integer 4)
+                                nil [] Local
+                                [] []
+                                (storage-type "FOOBAR")
+                                Source Public Required
+                                false)]
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval)))))
+
+    (testing "bad abi"
+      (let [a-inval (Variable-- 2 "x" (Integer 4)
+                                nil [] Local
+                                [] []  Default
+                                (abi "FOOBAR")
+                                Public Required
+                                false)]
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval)))))
+
+    (testing "bad access"
+      (let [a-inval (Variable-- 2 "x" (Integer 4)
+                                nil [] Local
+                                [] []  Default
+                                Source
+                                (access "FOOBAR")
+                                Required
+                                false)]
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval)))))
+
+    (testing "bad presence"
+      (let [a-inval (Variable-- 2 "x" (Integer 4)
+                                nil [] Local
+                                [] []  Default
+                                Source Public
+                                (presence "FOOBAR")
+                                false)]
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval)))))
+
+    (testing "bad value-attr"
+      (let [a-inval (Variable-- 2 "x" (Integer 4)
+                                nil [] Local
+                                [] []  Default
+                                Source Public Required
+                                "FOOBAR")] ;; bad value-attr
+        (is (not (s/valid? ::asr/asr-term a-inval)))
+        (is (not (s/valid? ::asr/Variable a-inval))))))
+
   (testing "legacy macro"
     (let [v (Variable
              2 a []
@@ -2607,6 +2656,7 @@
       (is (s/valid? ::asr/Variable v))
       (is (s/valid? ::asr/symbol   v))
       (is (s/valid? ::asr/asr-term v))))
+
   (testing "SymbolTable with Variable"
     (let [st (SymbolTable
               2 {:a
@@ -2622,8 +2672,29 @@
       (idempotency-check st)
       (is (not (s/valid? ::asr/symbol st)))
       (is (s/valid? ::asr/SymbolTable st))
-      (is (s/valid? ::asr/asr-term    st))))
-  )
+      (is (s/valid? ::asr/asr-term    st)))
+
+    (testing "double checking bad varnym"
+      (let [v (Variable
+               2 0xBADBEEF [] Local
+               () () Default (Logical 4 [])
+               Source Public Required false)]
+        (is (not (s/valid? ::asr/Variable v)))))
+
+    (testing "bad values in SymbolTable"
+      (let [st (SymbolTable
+                2 {:a
+                   (Variable
+                    2 0xBADBEEF [] Local
+                    () () Default (Logical 4 [])
+                    Source Public Required false),
+                   :b
+                   (Variable
+                    2 b [] Local
+                    () () Default (Logical 4 [])
+                    Source Public Required false)})]
+        (is (not (s/valid? ::asr/SymbolTable st)))
+        (is (not (s/valid? ::asr/asr-term    st)))))) )
 
 
 ;;  ___             _   _
@@ -5061,31 +5132,35 @@
 
 
 (defn slurp-asr
-  [refnym]
-  (read-string
-   (slurp
-    ;;   sometimes _, sometimes -, after asr
-    (str "resources/reference/asr"
-         refnym
-         ".stdout.clj"))))
+  ([subdir refnym]
+   (read-string
+    (slurp
+     ;;   sometimes _, sometimes -, after asr
+     (str "resources/" subdir "/asr"
+          refnym
+          ".stdout.clj"))))
+  ([refnym]
+   (slurp-asr "reference" refnym)))
 
 
 (defn full-form-slurped-asr
-  [refnym]
-  (do (in-ns 'masr.specs)
-      (->> refnym
-           slurp-asr
-           rewrite-for-legacy
-           eval)))
+  ([subdir refnym]
+   (do (in-ns 'masr.specs)
+       (->> refnym
+            (slurp-asr subdir)
+            rewrite-for-legacy
+            eval)))
+  ([refnym]
+   (full-form-slurped-asr "reference" refnym)))
 
 
-#_(defmacro test-translation-unit [filenamefrag]
-  (let [tstr (str "whole translation unit for " filenamefrag)
-        fstr (str filenamefrag)
-        casE (full-form-slurped-asr fstr)]
-    `(testing ~tstr
-       (idempotency-check ~casE)
-       (is (s/valid? ::asr/unit ~casE)))))
+(deftest slurp-negatives-test
+  (testing "-expr1-dde511e"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-expr1-dde511e")]
+      (idempotency-check case-)
+      (is (not (s/valid? ::asr/unit case-))))))
 
 
 (deftest slurp-test
@@ -5394,7 +5469,6 @@
 
     (testing "textual identity of slurped e2e0267"
       (is (= hand-written-quoted-e2e0267 slurped-e2e0267)))
-
 
     (testing "-expr1-dde511e"
       (let [case- (full-form-slurped-asr "-expr1-dde511e")]
