@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         115
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -48,7 +48,7 @@
                                     (SymbolTable
                                         6
                                         {
-                                            
+
                                         })
                                     check
                                     (FunctionType
@@ -168,7 +168,7 @@
                                                     lpython_builtin
                                                     []
                                                     __lpython_overloaded_2__max
-                                                    Public
+                                                    0xBADBEEF
                                                 ),
                                             :max__AT____lpython_overloaded_3__max
                                                 (ExternalSymbol

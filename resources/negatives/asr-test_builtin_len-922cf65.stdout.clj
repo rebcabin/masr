@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         6
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -272,7 +272,7 @@
                                             )
                                             Eq
                                             (IntegerConstant 0 (Integer 4 []))
-                                            (Logical 4 [])
+                                            (Integer 4 []) ;; badbeef
                                             ()
                                         )
                                         ()

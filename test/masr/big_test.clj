@@ -480,9 +480,6 @@
     (let [-test_bool_binop-3075d22  (slurp-asr "-test_bool_binop-3075d22")]
       (is (nil? (explode -test_bool_binop-3075d22)))
       (is (implode-tu -test_bool_binop-3075d22)))
-    (let [-test_bool_binop-3075d22  (slurp-asr "-test_bool_binop-3075d22")]
-      (is (nil? (explode -test_bool_binop-3075d22)))
-      (is (implode-tu -test_bool_binop-3075d22)))
     (let [-test_builtin-4f04bbc     (slurp-asr "-test_builtin-4f04bbc")]
       (is (nil? (explode -test_builtin-4f04bbc)))
       (is (implode-tu -test_builtin-4f04bbc)))
@@ -490,11 +487,11 @@
           (slurp-asr "-test_builtin_abs-06a7e49")]
       (is (nil? (explode -test_builtin_abs-06a7e49)))
       (is (implode-tu -test_builtin_abs-06a7e49)))
-    ;; 25
     (let [-test_builtin_bin-0ca34fe
           (slurp-asr "-test_builtin_bin-0ca34fe")]
       (is (nil? (explode -test_builtin_bin-0ca34fe)))
       (is (implode-tu -test_builtin_bin-0ca34fe)))
+    ;; 25
     (let [-test_builtin_bool-fe3fe33
           (slurp-asr "-test_builtin_bool-fe3fe33")]
       (is (nil? (explode -test_builtin_bool-fe3fe33)))
@@ -511,11 +508,11 @@
           (slurp-asr "-test_builtin_int-990d1de")]
       (is (nil? (explode -test_builtin_int-990d1de)))
       (is (implode-tu -test_builtin_int-990d1de)))
-    ;; 30
     (let [-test_builtin_len-922cf65
           (slurp-asr "-test_builtin_len-922cf65")]
       (is (nil? (explode -test_builtin_len-922cf65)))
       (is (implode-tu -test_builtin_len-922cf65)))
+    ;; 30
     (let [-test_builtin_oct-490a98b
           (slurp-asr "-test_builtin_oct-490a98b")]
       (is (nil? (explode -test_builtin_oct-490a98b)))
@@ -532,11 +529,11 @@
           (slurp-asr "-test_builtin_str-fcdedc2")]
       (is (nil? (explode -test_builtin_str-fcdedc2)))
       (is (implode-tu -test_builtin_str-fcdedc2)))
-    ;; 35
     (let [-test_c_interop_01-8bee4ec
           (slurp-asr "-test_c_interop_01-8bee4ec")]
       (is (nil? (explode -test_c_interop_01-8bee4ec)))
       (is (implode-tu -test_c_interop_01-8bee4ec)))
+    ;; 35
     (let [-test_complex_01-c199562
           (slurp-asr "-test_complex_01-c199562")]
       (is (nil? (explode -test_complex_01-c199562)))
@@ -553,11 +550,11 @@
           (slurp-asr "-test_integer_bitnot-0d0eafa")]
       (is (nil? (explode -test_integer_bitnot-0d0eafa)))
       (is (implode-tu -test_integer_bitnot-0d0eafa)))
-    ;; 40
     (let [-test_max_min-e73decc
           (slurp-asr "-test_max_min-e73decc")]
       (is (nil? (explode -test_max_min-e73decc)))
       (is (implode-tu -test_max_min-e73decc)))
+    ;; 40
     (let [-test_numpy_03-6dd742e
           (slurp-asr "-test_numpy_03-6dd742e")]
       (is (nil? (explode -test_numpy_03-6dd742e)))
@@ -574,11 +571,11 @@
           (slurp-asr "-tuple1-ce358d9")]
       (is (nil? (explode -tuple1-ce358d9)))
       (is (implode-tu -tuple1-ce358d9)))
-    ;; 45
     (let [-vec_01-9b22f33
           (slurp-asr "-vec_01-9b22f33")]
       (is (nil? (explode -vec_01-9b22f33)))
       (is (implode-tu -vec_01-9b22f33)))
+    ;; 45
     (let [_expr_10_e2e0267
           (slurp-asr "_expr_10_e2e0267")]
       (is (nil? (explode _expr_10_e2e0267)))
@@ -595,6 +592,7 @@
           (slurp-asr "_pass_loop_vectorise-vec_01-fdf30b1")]
       (is (nil? (explode _pass_loop_vectorise-vec_01-fdf30b1)))
       (is (implode-tu _pass_loop_vectorise-vec_01-fdf30b1)))
+
     ;; 50
     ))
 

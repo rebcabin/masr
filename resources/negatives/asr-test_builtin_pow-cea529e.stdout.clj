@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         111
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -216,7 +216,7 @@
                                                     Source
                                                     Public
                                                     Required
-                                                    false
+                                                    0xBADBEEF
                                                 ),
                                             :i
                                                 (Variable

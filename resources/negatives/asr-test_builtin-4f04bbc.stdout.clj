@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         6
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -890,7 +890,7 @@
                                         (StringCompare
                                             (StringChr
                                                 (IntegerConstant 59 (Integer 4 []))
-                                                (Character 1 1 () [])
+                                                (Character 0xBADBEEF 1 () [])
                                                 (StringConstant
                                                     ";"
                                                     (Character 1 1 () [])

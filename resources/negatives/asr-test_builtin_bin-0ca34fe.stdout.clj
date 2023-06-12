@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         111
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -81,7 +81,7 @@
                                         Source
                                         Implementation
                                         ()
-                                        false
+                                        0xBADBEEF
                                         false
                                         false
                                         false

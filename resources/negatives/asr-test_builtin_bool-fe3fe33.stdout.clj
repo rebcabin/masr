@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         111
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -715,7 +715,7 @@
                                                         IntegerToComplex
                                                         (Complex 8 [])
                                                         (ComplexConstant
-                                                            0.000000
+                                                            0xBADBEEF
                                                             0.000000
                                                             (Complex 8 [])
                                                         )

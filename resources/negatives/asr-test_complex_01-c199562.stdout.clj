@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         115
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -48,7 +48,7 @@
                                     (SymbolTable
                                         6
                                         {
-                                            
+
                                         })
                                     check
                                     (FunctionType
@@ -354,6 +354,7 @@
                                     )
                                     [complex__AT____lpython_overloaded_5__complex
                                     complex__AT____lpython_overloaded_9__complex
+                                     0xBADBEEF
                                     complex__AT____lpython_overloaded_13__complex
                                     complex__AT____lpython_overloaded_14__complex
                                     complex__AT____lpython_overloaded_6__complex

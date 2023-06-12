@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         4
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -323,7 +323,7 @@
                                                     4235.000000
                                                     (Real 8 [])
                                                 )
-                                                (Real 8 [])
+                                                (Integer 8 []) ;; badbeef !
                                                 (RealConstant
                                                     -4235.000000
                                                     (Real 8 [])

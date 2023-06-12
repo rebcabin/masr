@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         111
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -307,7 +307,7 @@
                                                 ))
                                                 ((LogicalConstant
                                                     true
-                                                    (Logical 4 [])
+                                                    (Logical 0xBADBEEF [])
                                                 ))]
                                                 (Logical 4 [])
                                                 (LogicalConstant

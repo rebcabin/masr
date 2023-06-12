@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         111
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -71,7 +71,7 @@
                                                     lpython_builtin
                                                     []
                                                     oct
-                                                    Private
+                                                    0xBADBEEF
                                                 )
                                         })
                                     test_oct

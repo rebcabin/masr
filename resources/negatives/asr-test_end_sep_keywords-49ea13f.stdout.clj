@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         4
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -48,7 +48,7 @@
                                     (SymbolTable
                                         2
                                         {
-                                            
+
                                         })
                                     testEndSepKeywords
                                     (FunctionType
@@ -71,7 +71,7 @@
                                     [(Print
                                         ()
                                         [(StringConstant
-                                            "abc"
+                                            0xBADBEEF
                                             (Character 1 3 () [])
                                         )
                                         (StringConstant

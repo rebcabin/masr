@@ -5180,7 +5180,7 @@
                  "negatives"
                  "-expr13-10040d8")]
       (is (not (s/valid? ::asr/unit case-)))))
-
+  ;; 5
   (testing "_expr2_5311701"
     (let [case- (full-form-slurped-asr
                  "negatives"
@@ -5206,7 +5206,7 @@
                  "negatives"
                  "-expr7-2ef3822")]
       (is (not (s/valid? ::asr/unit case-)))))
-
+  ;; 10
   (testing "-expr8-2a4630a"
     (let [case- (full-form-slurped-asr
                  "negatives"
@@ -5232,7 +5232,7 @@
                  "negatives"
                  "-expr_05-45e5844")]
       (is (not (s/valid? ::asr/unit case-)))))
-
+  ;; 15
   (testing "-expr_07-ccf2455"
     (let [case- (full-form-slurped-asr
                  "negatives"
@@ -5258,7 +5258,112 @@
                  "negatives"
                  "-func_inline_01-56dbc9a")]
       (is (not (s/valid? ::asr/unit case-)))))
-
+  ;; 20
+  (testing "-expr_14-6023c49"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-expr_14-6023c49")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_bool_binop-3075d22"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_bool_binop-3075d22")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (comment "TODO 4f04bbc mysteriously not too big here, but too big below")
+  (testing "-test_builtin-4f04bbc"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin-4f04bbc")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_builtin_abs-06a7e49"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_abs-06a7e49")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_builtin_bin-0ca34fe"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_bin-0ca34fe")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  ;; 25
+  (testing "-test_builtin_bool-fe3fe33"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_bool-fe3fe33")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_builtin_float-97f9316"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_float-97f9316")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_builtin_hex-d4abc3e"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_hex-d4abc3e")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_builtin_int-990d1de"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_int-990d1de")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_builtin_len-922cf65"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_len-922cf65")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  ;; 30
+  (testing "-test_builtin_oct-490a98b"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_oct-490a98b")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_builtin_pow-cea529e"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_pow-cea529e")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_builtin_round-cca5cba"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_round-cca5cba")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_builtin_str-fcdedc2"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_builtin_str-fcdedc2")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_c_interop_01-8bee4ec"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_c_interop_01-8bee4ec")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  ;; 35
+  (testing "-test_complex_01-c199562"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_complex_01-c199562")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_complex_02-6516823"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_complex_02-6516823")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_end_sep_keywords-49ea13f"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_end_sep_keywords-49ea13f")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_integer_bitnot-0d0eafa"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_integer_bitnot-0d0eafa")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  (testing "-test_max_min-e73decc"
+    (let [case- (full-form-slurped-asr
+                 "negatives"
+                 "-test_max_min-e73decc")]
+      (is (not (s/valid? ::asr/unit case-)))))
+  ;; 40
 )
 
 (deftest bisection-test
@@ -5673,20 +5778,16 @@
       (let [case- (full-form-slurped-asr "-test_bool_binop-3075d22")]
         (idempotency-check case-)
         (is (s/valid? ::asr/unit case-))))
-    (testing "-test_bool_binop-3075d22"
-      (let [case- (full-form-slurped-asr "-test_bool_binop-3075d22")]
-        (idempotency-check case-)
-        (is (s/valid? ::asr/unit case-))))
     (comment "-test_builtin-4f04bbc is TOO BIG")
     (testing "-test_builtin_abs-06a7e49"
       (let [case- (full-form-slurped-asr "-test_builtin_abs-06a7e49")]
         (idempotency-check case-)
         (is (s/valid? ::asr/unit case-))))
-    ;; 25
     (testing "-test_builtin_bin-0ca34fe"
       (let [case- (full-form-slurped-asr "-test_builtin_bin-0ca34fe")]
         (idempotency-check case-)
         (is (s/valid? ::asr/unit case-))))
+    ;; 25
     (testing "-test_builtin_bool-fe3fe33"
       (let [case- (full-form-slurped-asr "-test_builtin_bool-fe3fe33")]
         (idempotency-check case-)
@@ -5703,11 +5804,11 @@
       (let [case- (full-form-slurped-asr "-test_builtin_int-990d1de")]
         (idempotency-check case-)
         (is (s/valid? ::asr/unit case-))))
-    ;; 30
     (testing "-test_builtin_len-922cf65"
       (let [case- (full-form-slurped-asr "-test_builtin_len-922cf65")]
         (idempotency-check case-)
         (is (s/valid? ::asr/unit case-))))
+    ;; 30
     (testing "-test_builtin_oct-490a98b"
       (let [case- (full-form-slurped-asr "-test_builtin_oct-490a98b")]
         (idempotency-check case-)
@@ -5724,11 +5825,11 @@
       (let [case- (full-form-slurped-asr "-test_builtin_str-fcdedc2")]
         (idempotency-check case-)
         (is (s/valid? ::asr/unit case-))))
-    ;; 35
     (testing "-test_c_interop_01-8bee4ec"
       (let [case- (full-form-slurped-asr "-test_c_interop_01-8bee4ec")]
         (idempotency-check case-)
         (is (s/valid? ::asr/unit case-))))
+    ;; 35
     (testing "-test_complex_01-c199562"
       (let [case- (full-form-slurped-asr "-test_complex_01-c199562")]
         (idempotency-check case-)
@@ -5745,11 +5846,11 @@
       (let [case- (full-form-slurped-asr "-test_integer_bitnot-0d0eafa")]
         (idempotency-check case-)
         (is (s/valid? ::asr/unit case-))))
-    ;; 40
     (testing "-test_max_min-e73decc"
       (let [case- (full-form-slurped-asr "-test_max_min-e73decc")]
         (idempotency-check case-)
         (is (s/valid? ::asr/unit case-))))
+    ;; 40
     (comment "-test_numpy_03-6dd742e is TOO BIG")
     (comment "-test_numpy_04-3376b7a is TOO BIG")
     (testing "-test_pow-6f6a69d"
@@ -5760,8 +5861,8 @@
       (let [case- (full-form-slurped-asr "-tuple1-ce358d9")]
         (idempotency-check case-)
         (is (s/valid? ::asr/unit case-))))
-    ;; 45
     (comment "-vec_01-9b22f33 is TOO BIG")
+    ;; 45
     (testing "_expr_10_e2e0267"
       (let [case- (full-form-slurped-asr "_expr_10_e2e0267")]
         (idempotency-check case-)
@@ -5774,6 +5875,7 @@
         (is (s/valid? ::asr/unit case-))))
     (comment "_pass_print_list_tuple-print_02-1bcc4ec is TOO BIG.")
     (comment "_pass_loop_vectorise-vec_01-fdf30b1 is TOO BIG.")
+
     ;; 50
     ))
 

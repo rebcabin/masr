@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         4
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -129,7 +129,7 @@
                                         (Var 2 i)
                                         (IntegerUnaryMinus
                                             (IntegerConstant 235346 (Integer 4 []))
-                                            (Integer 4 [])
+                                            (Logical 4 []) ;; badbeef !
                                             (IntegerConstant -235346 (Integer 4 []))
                                         )
                                         ()

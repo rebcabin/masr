@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         4
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -376,7 +376,7 @@
                                                     (Var 2 a3)
                                                     Sub
                                                     (RealConstant
-                                                        9.000000
+                                                        0xBADBEEF
                                                         (Real 8 [])
                                                     )
                                                     (Real 8 [])

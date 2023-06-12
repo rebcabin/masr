@@ -286,7 +286,7 @@
                                     (SymbolTable
                                         8
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -313,7 +313,7 @@
                                         ()
                                     )]
                                     ()
-                                    Public
+                                    0xBADBEEF
                                     false
                                     false
                                 ),

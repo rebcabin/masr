@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         6
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -48,7 +48,7 @@
                                     (SymbolTable
                                         4
                                         {
-                                            
+
                                         })
                                     check_all
                                     (FunctionType
@@ -272,7 +272,7 @@
                                             (Var 3 b)
                                             Eq
                                             (IntegerConstant 1 (Integer 4 []))
-                                            (Logical 4 [])
+                                            (Integer 4 []) ;; badbeef
                                             ()
                                         )
                                         ()
