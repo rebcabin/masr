@@ -592,7 +592,10 @@
           (slurp-asr "_pass_loop_vectorise-vec_01-fdf30b1")]
       (is (nil? (explode _pass_loop_vectorise-vec_01-fdf30b1)))
       (is (implode-tu _pass_loop_vectorise-vec_01-fdf30b1)))
-
+    (let [-global_scope1-b335bb9
+          (slurp-asr "-global_scope1-b335bb9")]
+      (is (nil? (explode -global_scope1-b335bb9)))
+      (is (implode-tu -global_scope1-b335bb9)))
     ;; 50
     ))
 

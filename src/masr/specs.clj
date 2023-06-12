@@ -6,46 +6,125 @@
 
 
 ;;
+;; MASR converts _ASR S-expressions_ like this:
+;;
+;; #+begin_src clojure
+
+'(TranslationUnit
+ (SymbolTable 42 {})
+ [(Program
+   (SymbolTable 3 {})
+   main_program
+   []
+   [(= (Var 2 a)
+       (LogicalConstant false (Logical 4 []))
+       ())])])
+;; #+end_src
+
+;;
+;; into _entity hash-maps_ in _full-form_, like this:
+;;
+;; #+begin_src clojure
+
+{:term :m/unit,
+ :asr-unit-head
+ #:m{:unit-head     :m/TranslationUnit,
+     :SymbolTable  #:m{:term       :m/SymbolTable,
+                       :symtab-id  42,
+                       :hash-map   {}},
+     :nodes
+     [#:m{:term :m/symbol,
+          :asr-symbol-head
+          #:m{:symbol-head   :m/Program,
+              :SymbolTable  #:m{:term :m/SymbolTable,
+                                :symtab-id 3,
+                                :hash-map
+                                {}},
+              :prognym      "main_program",
+              :dependencies [],
+              :body
+              [#:m{:term  :m/stmt,
+                   :asr-stmt-head
+                   #:m{:stmt-head :m/Assignment,
+                       :lvalue   #:m{:term  :m/expr,
+                                     :asr-expr-head
+                                     #:m{:expr-head  :m/Var,
+                                         :symtab-id  2,
+                                         :varnym     "a"}},
+                       :rvalue   #:m{:term  :m/expr,
+                                     :asr-expr-head
+                                     #:m{:Logical
+                                         #:m{:term  :m/ttype,
+                                             :asr-ttype-head
+                                             #:m{:logical-kind  4,
+                                                 :ttype-head
+                                                 :m/Logical,
+                                                 :dimension*   []}},
+                                         :expr-head  :m/LogicalConstant,
+                                         :bool      false}},
+                       :overloaded  ()}}]}}]}}
+;; #+end_src
+
+;;
+;; Entity hash-maps have all information from the
+;; ASR S-expression syntax, but type-checked and in
+;; a form for downstream analysis, interpretation,
+;; optimization, code-generation, storage,
+;; retrieval, decompilation, etc. While the ASR
+;; S-expression syntax is more terse, it cannot be
+;; understood without reference to ASDL
+;; documentation because the component data items
+;; are not labeled. The entity hash-map is intended
+;; to be more intelligible and self-contained.
+;;
+;;
+;; The type-checking performed during conversion is
+;; aggressive and fine-grained. It is intended to
+;; find bugs in compiler front ends like LPython and
+;; LFortran.
+;;
+
+;;
+;; ## Maintaining the Code and Markdown
+;;
+
+;;
 ;; This file is semi-literate programming. Blocks of
 ;; code in this Markdown file, `specs.md`, are
-;; extracted from the live source code in
-;; `specs.clj`. This document, if built properly
-;; prior to check-in, cannot get out-of-date from
+;; extracted from the live source code in the file
+;; `specs.clj`. This Markdown file, if extracted
+;; properly, cannot get out-of-date with respect to
 ;; the code.
 ;;
 ;;
 ;; To contribute, write code in the source files,
-;; mostly in `specs.clj` and format comments in
-;; Markdown. Precede a block of code with a
+;; mostly in `specs.clj`. Write accurate comments
+;; and format them in Markdown. Precede a code block
+;; with `#+_begin_src clojure` (or some other
+;; language like `bash` or `c`) in a
 ;; double-semicolon-space comment beginning in
-;; column 1 that says `#+begin_src clojure` by
-;; itself, then add a blank line. Terminate such src
-;; blocks with `#+end_src` in a
+;; column 1, by itself, plus a blank line. Terminate
+;; code blocks with `#+end_src` in a
 ;; double-semicolon-space comment beginning in
-;; column 1. You'll see many examples below. AWK
-;; picks up these lines, so be sure to format them
-;; exactly as the examples show.
+;; column 1. You'll see many examples below.
 ;;
 ;;
-;; When reading this Markdown file, `specs.md`,
-;; backtrack to definitions when you encounter code
-;; that needs the definitions. If you read a lot of
-;; code, you will be accustomed to such interruption
-;; to natural narrative order. Alternatively, read
-;; the entire documentation _backwards_: such will
-;; give you an approximation of narrative order.
+;; This file is in order of definitions before
+;; usages, not in top-down narrative order. Skim
+;; over the definitions until you get to use cases,
+;; then backtrack for details. Alternatively, read
+;; the documentation _backwards_ for an
+;; approximation of narrative order.
 ;;
 ;;
-;; When the narrative really MUST talk about code
-;; that isn't defined yet, comment out the code or
-;; precede s-expressions with `#_`. Clojure will
-;; parse but ignore such escaped s-expressions. You
-;; will see examples below.
+;; When narrative really MUST talk about use-cases
+;; that are not defined yet, comment out the code or
+;; escape S-expressions with `#_`. You will see
+;; examples below.
 ;;
 ;;
 ;; Just before checking in new code, extract
-;; `specs.md` from `specs.clj` via the following
-;; shell command:
+;; `specs.md` from `specs.clj` as follows:
 ;;
 ;;
 ;; ```bash
@@ -76,36 +155,26 @@
 ;;
 ;; 6. `git commit` `specs.mf` and `git push` it.
 ;;
+
 ;;
-;; The Markdown viewer in Visual Studio Code is
-;; _not_ adequate for reading this file. It jumps
-;; around too much and sometimes gets stuck. We
-;; recommend the Markdown viewer in PyCharm or CLion
-;; or other products from JetBrains. There are
-;; numerous paid alternatives for Markdown on the
-;; Mac, but we have not tried them.
-;;
-;;
-;; In case of emergency _only_, you might rebuild
-;; `specs.clj` from `specs.md` with the following
-;; **UNTESTED** command:
-;;
-;;
-;; ```bash
-;; awk -f code4md.awk < specs.md > ./src/masr/specs.clj
-;; ```
-;;
-;; However, you should not need this emergency step if you
-;; have committed frequently.
+;; ## Reading the Markdown
 ;;
 
 ;;
-;; ## Namespace Declaration
+;; The Markdown viewer in Visual Studio Code is
+;; _not_ adequate for reading this file. It jumps
+;; around and gets stuck. We recommend the Markdown
+;; viewer in PyCharm or CLion. There are numerous
+;; paid Markdown viewers on the Mac, but we have not
+;; tried them.
+;;
+
+;;
+;; # NAMESPACE DECLARATION
 ;;
 ;;
-;; Because we must define things before using them,
-;; we must first declare Clojure dependencies for
-;; the rest of the code in this file.
+;; Declare Clojure dependencies for the rest of the
+;; code in this file.
 ;;
 ;;
 ;; #+begin_src clojure
@@ -140,6 +209,9 @@
 ;;
 ;; ## Lightweight, Load-Time Testing:
 ;;
+;; Currently used in `simplespecs.clj`, but
+;; dependency retained here for convenience going
+;; forward.
 ;;
 ;; #+begin_src clojure
 
@@ -152,8 +224,9 @@
 ;;
 ;; Unmap `Integer` and `Character` so we can have
 ;; those symbols in `ttypes`. Access the originals
-;; via `java.lang.Integer` `java.lang.Character`. We
-;; also want `deftype`. Access original `deftype` as
+;; via the full syntax `java.lang.Integer`
+;; `java.lang.Character`. We also want `deftype`.
+;; Access original `deftype` as
 ;; `clojure.core/deftype`.
 ;;
 ;;
@@ -173,7 +246,7 @@
 
 
 ;; ----------------------------------------------------------------
-;; ## MASR IS A TYPE SYSTEM
+;; ## Masr is a Type System
 ;;
 ;;
 ;; MASR is "Meta Abstract Semantics Representation,"
@@ -183,18 +256,18 @@
 ;; the aging ASDL with by a more precise and
 ;; discriminating type system.
 ;;
-;; * MASR is less ambiguous than ASDL; For example,
+;; * MASR is more precise than ASDL; For example,
 ;;   MASR distinguishes names of programs from names
-;;   of functions. In ASDL, they're both just
-;;   `identifier`.
+;;   of functions.
 ;;
 ;; * MASR is more explicit than ASDL. For example,
-;;   we can say in MASR an argument list may have no
-;;   more than a certain number of arguments.
+;;   we can say a MASR argument list has no more
+;;   than a certain number of arguments.
 ;;
-;; * MASR is more precise and less overloaded. For
-;;   example, `symbol` is separate from
-;;   `symbol_table`, `symbol-ref` in MASR.
+;; * MASR is less overloaded than ASDL. For example,
+;;   `symbol` is separate from `symbol_table`,
+;;   `symbol-ref` in MASR, but they are all the same
+;;   in ASDL.
 ;;
 ;; * MASR exposes secret semantics that ASDL cannot
 ;;   express. TODO: example.
@@ -202,11 +275,11 @@
 ;;
 ;; Until MASR is integrated, it will have a legacy
 ;; back-channel. The legacy back-channel writes
-;; types in ASDL format from MASR instances.
+;; types in ASDL format from MASR entity hash-maps.
 ;;
 
 ;; ----------------------------------------------------------------
-;; ## SNAPSHOT SUMMARY
+;; ## Snapshot Summary
 ;;
 
 ;;
@@ -219,8 +292,8 @@
 ;; ### Terms (Nodes) in the ASDL Grammar
 ;;
 ;;
-;; Terms are items to the left of equals signs. Terms may
-;; also be called `nodes`.
+;; `Terms` appear to the left of equals signs. Terms
+;; may also be called `nodes`.
 ;;
 ;;
 ;; ```c
@@ -300,40 +373,36 @@
 ;;
 ;;
 ;; The main use-case for specifications is checking
-;; instances against specs: "does this instance
+;; entity hash-maps against specs: "does this entity
 ;; hash-map meet the general specification for
-;; hash-maps of this type?" For
+;; entity hash-maps of this type?" For
 ;; example, "does `(Integer 4 [])`, syntax sugar for
-;; a hash-map instance, meet the general
+;; an entity hash-map, meet the general
 ;; specification of an ASR `ttype`, which describes
-;; an infinite class of hash-map instances?"
+;; a whole class of entity hash-maps?"
 ;;
 ;;
-;; In MASR, specs describe mathematical _sets_ of
-;; valid or conforming values, and MASR type
-;; checking is often just checking whether an
-;; instance inhabits a certain set.
-;;
-;;
-;; Therefore, a type system like MASR's can act like
-;; a _decidable set theory_ with respect to
-;; instances. See this Stack-Exchange question for
-;; the fine points of set theory versus type theory:
+;; In MASR, specs describe decidable _sets_ of valid
+;; or conforming values. MASR type checking is often
+;; just checking whether an instance inhabits a
+;; certain set. A "decidable set" is one for which
+;; the question of set membership is decidable. See
+;; this Stack-Exchange question for theoretical fine
+;; points:
 ;;
 ;;
 ;;   https://math.stackexchange.com/questions/489369
 ;;
 ;;
-;; Clojure specs are arbitrary predicate functions.
-;; We can build any type-theory that needs only
-;; first-order predicate calculus. Clojure specs
-;; suffice for advanced types like dependency types
-;; and concurrency types. Such advanced types are
-;; work-in-progress for MASR.
+;; Clojure specs are arbitrary boolean-valued
+;; functions. We can build any type-theory that
+;; needs only first-order predicate calculus.
+;; Clojure specs suffice for advanced types like
+;; dependency types and concurrency types.
 ;;
 
 ;; ----------------------------------------------------------------
-;; ## CHECKING INSTANCES
+;; ## Checking Instances
 ;;
 
 ;;
@@ -364,15 +433,15 @@
 
 
 ;;
-;; Every MASR `asr-term` instance has a full-form. A
-;; full-form is a Clojure _hash-map_ that contains
-;; the key `::term` at top level. Clojure hash-maps
+;; Every MASR `asr-term` entity has a _full-form_. A
+;; MASR full-form is a Clojure _hash-map_ that
+;; contains the key `::term` at top level. Hash-maps
 ;; are collections of key-value pairs like Python
 ;; dictionaries.[https://clojuredocs.org/clojure.core/hash-map]
 ;;
 ;;
-;; Full-forms that are checked against Clojure specs
-;; are _entities_. For example,
+;; MASR checks full-form against Clojure specs.
+;; For example,
 ;;
 ;;
 ;; #+begin_src clojure
@@ -384,39 +453,55 @@
 
 ;;
 ;; is an entity checked against specs for `::term`,
-;; `::intent`, and `::intent-enum`.
+;; and `::intent-enum`.
+;;
+
+;;
+;; ## Fully Qualified Keywords
+;;
+
+;;
+;; All hash-map keys in MASR are _fully qualified
+;; keywords_ (FQKWs) in the namespace `masr.specs`,
+;; denoted with double-colons when _in_ that
+;; namespace.
 ;;
 ;;
-;; All hash-map keys in MASR are Clojure _qualified
-;; keywords_ in the namespace `masr.specs`, often
-;; denoted with double-colons.
+;; This file, `specs.clj`, is automatically _in_
+;; namespace `masr.specs`, so FQKWs like `::term`
+;; are written with double colons.
 ;;
 ;;
-;; This file, `specs.clj` creates, defines, and is
-;; _in_ namespace `masr.specs`. In any file in that
-;; namespace, we denote qualified keywords with
-;; double colons. Other files, like
-;; `core_tests.clj`, might be _in_ other namespaces.
-;; Qualified keywords in `masr.specs` must be
-;; written out in full in such files, say with an
-;; explicit prefix as in `:masr.specs/intent`, or
+;; In other files, there are multiple options for
+;; writing FQKWs in the namespace `masr.specs`: with
+;; an explicit prefix as in `:masr.specs/intent`, or
 ;; with a namespace alias as in `::asr/intent`. The
 ;; test file, `core_tests.clj`, employs the
-;; namespace alias `asr`.
+;; namespace alias `asr`. Other options include a
+;; namespace distributed across unqualified keys in
+;; a hash map, as in
 ;;
+;; #+begin_src clojure
+
+#:masr.specs{:term       :masr.specs/SymbolTable,
+             :symtab-id  42,
+             :hash-map   {}}
+;; #+end_src
+
 ;;
-;; Namespace-qualified keywords may have specs
-;; registered for them. When a spec is registered
-;; for a namespace-qualified keyword, Clojure
-;; automatically checks types of entities
-;; recursively.
+;; FQKWs may have specs registered for them. When a
+;; spec is registered for an FQKW, automatically
+;; checks types of entities recursively. For
+;; example, an entity that conforms to
+;; `::SymbolTable` will have a `::term`,
+;; `::symtab-id`, and a `::hash-map` that conform to
+;; specs registered to those FQKWs.
 ;;
 ;;
 ;; EXAMPLES -- all the following full-forms mean the
 ;; same:
 ;;
 ;; * always acceptable, though verbose:
-;;
 ;;
 ;; #+begin_src clojure
 
@@ -425,20 +510,19 @@
 ;; #+end_src
 
 ;;
-;; * Clojure-standard shorter form, always
+;; * Clojure-standard distributed form, always
 ;;   acceptable:
-;;
 ;;
 ;; #+begin_src clojure
 
-#:masr.specs{:term        :intent,
+#:masr.specs{:term        :masr.specs/intent,
              :intent-enum "Unspecified"}
 ;; #+end_src
 
 ;;
-;; * when in this file or in namespace `masr.specs`
-;;   via the line `(in-ns 'masr.specs)`:
-;;
+;; * when in this file or _in_ namespace
+;;   `masr.specs` via the
+;;   line `(in-ns 'masr.specs)`:
 ;;
 ;; #+begin_src clojure
 
@@ -452,7 +536,6 @@
 ;; `core_test.clj` (commented out because it's not
 ;; executable in the file `specs.clj`):
 ;;
-;;
 ;; #+begin_src clojure
 
 ;; {::asr/term        ::asr/intent,
@@ -461,10 +544,10 @@
 
 ;;
 ;; *PITFALL WARNING* -- If you do not register a
-;;  spec for a qualified keyword, `k`, Clojure will
-;;  _always pass_ an item in a hash-map with key
-;;  `k`. Unregistered qualified keywords can lead to
-;;  _false positive checks_.
+;; spec for a qualified keyword, `k`, Clojure will
+;; _always pass_ an item in a hash-map with key `k`.
+;; Unregistered qualified keywords can lead to
+;; _false positive checks_.
 ;;
 
 
@@ -477,42 +560,47 @@
 
 ;;
 ;; Large ASR expressions overflow the Java
-;; method-size limit of 64KB when evaluated
-;; recursively. Bottom-up evaluation requires
-;; idempotency: evaluating a full-form produces the
+;; method-size limit of 64KB when Clojure evaluates
+;; them recursively. The solution is to evaluate
+;; bottom-up: explode sub-entities into files or a
+;; database, then implode them back into a top-level
+;; entity. The file `big_test.clj` shows how to do
+;; this.
+;;
+;;
+;; Bottom-up evaluation also requires idempotency:
+;; evaluating a sub-entity full-form produces the
 ;; same full-form. This is easy only if we replace
 ;; symbols with strings because the mechanics of
-;; quoting symbols idempotently in context is too
-;; difficult and subtle.
+;; quoting symbols idempotently is difficult and
+;; subtle.
 ;;
 ;;
 ;; For an example, consider the following hash-map,
 ;; and notice the external quote, preventing
 ;; evaluation. Without this quote, Clojure would
-;; error when evaluating this expression at
-;; load-time because it would attempt to evaluate
-;; the unbound symbol `main0`:
+;; error when evaluating this expression a second
+;; time because it would attempt to evaluate the
+;; unbound symbol `main0`:
 ;;
 ;; #+begin_src clojure
 
 '#:masr.specs{:stmt-head  ;; <~~~ external quote
              :masr.specs/SubroutineCall,
              :symbol-ref
-             #:masr.specs{:identifier
-                          main0,
-                          :symtab-id
-                          114},
-             :orig-symref (),
-             :call-args (),
-             :dt? ()}
+             #:masr.specs{:identifier  main0,
+                          :symtab-id   114},
+             :orig-symref  (),
+             :call-args    (),
+             :dt?          ()}
 ;; #+end_src
 
 ;;
 ;; The above is the spec produced by evaluating the
-;; non-idempotent heavy-sugar function,
+;; old, non-idempotent heavy-sugar function,
 ;; `SubroutineCall`. The naked symbol `main0` is
 ;; unbound and won't survive another round of
-;; evaluation. The sugar function must be modified
+;; evaluation. The sugar function now produces
 ;; to the following:
 ;;
 ;; #+begin_src clojure
@@ -522,18 +610,17 @@
              :symbol-ref
              #:masr.specs{:identifier
                           "main0",  ;; <~~~ difference
-                          :symtab-id
-                          114},
-             :orig-symref (),
-             :call-args (),
-             :dt? ()}
+                          :symtab-id  114},
+             :orig-symref  (),
+             :call-args    (),
+             :dt?          ()}
 ;; #+end_src
 
 ;;
 ;; Every element of that hash-map is
 ;; self-evaluating: keywords, numbers, strings, the
-;; empty list `()`. It turns out that vectors with
-;; self-evaluating elements are also
+;; empty list `()`. It turns out that hash-maps and
+;; vectors with self-evaluating elements are also
 ;; self-evaluating. We're in business if we replace
 ;; all unbound symbols with strings.
 ;;
@@ -567,32 +654,32 @@
 ;;
 ;;
 ;; 1. Light sugar employs functions with
-;;    single-colon keyword arguments with default
-;;    values. Light sugar is unambiguous but more
-;;    verbose than heavy sugar.
+;;    single-colon, non-qualified keyword (NQKW)
+;;    arguments with default values. Light sugar is
+;;    unambiguous but more verbose than heavy sugar.
 ;;
 ;;
 ;; 2. Heavy sugar employs functions with positional
 ;;    arguments, with possible default values for
 ;;    tail arguments. Heavy sugar is short and
-;;    mostly compatible with ASDL output from
+;;    often compatible with ASDL output from
 ;;    `--show-asr`. Heavy sugar is more risky to
 ;;    write and much harder to read than light
 ;;    sugar, especially for long argument lists as
 ;;    with, say, `Variable` and `FunctionType`.
 ;;
 ;;
-;; 3. Legacy sugar is just like heavy sugar, just,
-;;    say, requiring fewer tick marks on symbols.
-;;    Legacy sugar is the most compatible with ASDL
-;;    output from `--show-asr`.
+;; 3. Legacy sugar is like heavy sugar, just, say,
+;;    requiring fewer tick marks on symbols. Legacy
+;;    sugar is compatible with ASDL output from
+;;    `--show-asr`.
 ;;
 ;;
 ;; All sugared forms produce identical full-forms.
 ;;
 
 ;; ----------------------------------------------------------------
-;; ## NAMING CONVENTION FOR SUGAR
+;; ## Naming Convention for Sugar
 ;;
 
 ;;
@@ -607,9 +694,9 @@
 ;; lists of light-sugar functions do not depend on
 ;; order. The following two examples of light sugar
 ;; both conform to specs registered for `::asr-term`
-;; and to `::ttype` (this is an example of escaped
-;; code that can't run yet because of narrative
-;; order):
+;; and to `::ttype` (the following is an example of
+;; escaped code that can't run yet because of
+;; narrative order):
 ;;
 ;;
 ;; #+begin_src clojure
@@ -724,25 +811,26 @@
 
 ;;
 ;;
-;; # QUALIFIED KEYWORDS ARE FUNCTIONS & SPEC-NAMES
+;; # QUALIFIED KEYWORDS ARE FUNCTIONS
 ;;
 ;;
 
 
 ;;
-;; `::term` is both a qualified keyword _and_ a
-;; tag-fetching function. A tag-fetching function
-;; picks the value of the key `::term` from any
-;; hash-map. For example,
+;; `::term` is both a FQKW _and_ a tag-fetching
+;; function. A tag-fetching function picks the value
+;; of the key `::term` from any hash-map. For
+;; example,
 ;;
 ;;
 ;; `(::term {::term ::intent ...})`
+;;
 ;;
 ;; calls the function `::term` with argument
 ;; `{::term ::intent ...}` and produces `::intent`.
 ;;
 ;;
-;; As a qualified keyword, `::term`, in addition to
+;; As a FQKW, `::term`, in addition to
 ;; being a tag-fetching function, can name a Clojure
 ;; spec registered to it via `s/def`. The following
 ;; spec will check whether `::intent` is a `::term`:
@@ -755,7 +843,7 @@
 
 ;;
 ;; EXAMPLE: `::intent` is a valid `::term` because
-;; `::intent` is a qualified keyword.
+;; `::intent` is a FQKW.
 ;;
 ;;
 ;; #+begin_src clojure
@@ -779,12 +867,11 @@
 ;;
 ;;
 ;; `(defmulti term ::term)` links the name
-;; `term` (no colons) to the tag-fetcher
+;; `term` (no colons) to the tag-fetcher function
 ;; `::term` (with colons). Each `defmethod` of
-;; `term` is tagged by the value fetched from an
-;; entity via `::term`. For example, there is one
-;; `defmethod` for `::symbol` and another for
-;; `::expr`.;;
+;; `term` is tagged by the value fetched via
+;; `::term`. For example, there is one `defmethod`
+;; for `::symbol` and another for `::expr`.
 ;;
 ;; #+begin_src clojure
 
@@ -797,17 +884,18 @@
 ;;
 ;; MASR handles _alternatives_ or _heads_ -- to the
 ;; right-hand sides of equals signs in ASDL -- via
-;; _multi-specs_. Multi-specs are to specs as
-;; `defmethods` are to functions -- one spec
-;; interface to many implementations. Multi-specs
-;; are thus another Clojure idiom for polymorphism.
+;; _multi-specs_. By analogy, multi-specs are to
+;; specs as `defmethods` are to functions -- one
+;; spec interface to many implementations.
+;; Multi-specs are thus another Clojure idiom for
+;; polymorphism.
 ;;
 ;;
 ;; The name of the _one_ multi-spec for all terms is
-;; `::asr-term`, a qualified keyword, as are all
-;; names of specs. Multi-specs act like tagged
-;; unions in C -- MASR's polymorphic entities are
-;; like polymorphic structs in C.
+;; `::asr-term`, an FQKW, as are all names of specs.
+;; Multi-specs act like tagged unions in C -- MASR's
+;; polymorphic entities are like polymorphic structs
+;; in C.
 ;;
 
 
@@ -822,7 +910,7 @@
 ;; At the top level, `::term` multi-specs dispatch
 ;; on values of the `::term` key in entities, values
 ;; like `::intent`, `::symbol`, `::unit`, etc.
-;; `defmethods` for those values specify the
+;; `Defmethods` for those values specify the
 ;; remaining required keys for the particular
 ;; entities conforming to the particular spec named
 ;; by `::intent`, `::symbol`, `::unit`, etc.
@@ -830,11 +918,12 @@
 ;;
 ;; Some `defmethods` like `::intent` are simple,
 ;; just checking that an instance like `"Local"` or
-;; `"ReturnVar"` inhabits a set of allowed intents.
-;; Other `defmethods`, like `::symbol`, have _nested
-;; multi-specs_ that dispatch on _heads_, like
-;; `Variable` or `Program`. MASR handles nested
-;; multi-specs via techniques shown below.
+;; `"ReturnVar"` inhabits a literal Clojure `set` of
+;; allowed intents. Other `defmethods`, like
+;; `::symbol`, have _nested multi-specs_ that
+;; dispatch on _heads_, like `Variable` or
+;; `Program`. MASR handles nested multi-specs via
+;; techniques shown below.
 ;;
 
 
@@ -868,9 +957,9 @@
 
 
 ;;
-;; A given entity (instance hash-map) may be
+;; A certain given entity (instance hash-map) may be
 ;;
-;; * an `::asr-term` -- any one of the terms
+;; * an `::asr-term` -- any one of the many terms
 ;;
 ;; * a `::symbol` -- a particular one of the several
 ;;   terms,
@@ -888,17 +977,6 @@
 ;; Variables.
 ;;
 ;;
-;; Vertically, in increasing precision, both
-;; `::Variable` and `::symbol` are `::asr-term` and
-;; `::Variable` is a `::symbol`. Horizontally, as
-;; siblings of equal precision, both `::Variable` and
-;; `::Function` are `::symbol`, and both are also
-;; `::asr-term`. For another example, vertically, both
-;; `::LogicalBinOp` and `::expr` are `::asr-term`, and
-;; `::LogicalBinOp` is an `::expr`. Horizontally, both
-;; `::LogicalBinOp` and `::LogicalCompare` are
-;; `::expr`, and both are `::asr-term`.
-;;
 
 
 ;;
@@ -909,29 +987,38 @@
 
 
 ;;
-;; Each term, like symbol, needs its own spec, named
-;; by a qualified keyword like `::symbol`. MASR
-;; recursively check specs when entity keys like
-;; `::symbol` have their own specs or multi-specs.
-;; Said another way, recursive conformance means
-;; that `::symbol` fields in other entities are
-;; checked by `::symbol` specs.
+;; Each term, like `symbol`, needs its own spec,
+;; named by a FQKW like `::symbol`. MASR recursively
+;; checks `::symbol` fields in other specs.
+;;
+;;
+;; `Def-term-entity-key` registers a spec for
+;; `symbol`, for instance. That spec checks that a
+;; given entity is an `::asr-term` and its `::term`
+;; equals a given FQKW like `::symbol`.
+;;
+;;
+;; `Def-term-entity-key` must be called for any
+;; hand-written spec like `dimension`. It's
+;; automatically invoked for any term defined via
+;; `defmasrnested`, which appears immediately below.
 ;;
 ;;
 ;; #+begin_src clojure
 
 (defn term-selector-spec
-  "Name a spec that checks that an asr-term entity
-  has a given kwd as the value, e.g., that the
+  "Return a s/and spec that checks that a given
+  entity is an ::asr-term entity and that its
+  ::term equals a given FQKW, e.g., that the
   ::term of an entity is ::symbol."
-  [kwd]
+  [fqkw]
   (s/and ::asr-term
-         #(= kwd (::term %))))
+         #(= fqkw (::term %))))
 
 
 (defmacro def-term-entity-key
-  "Define a spec for an entity key like ::symbol or
-  ::expr, which is an ::asr-term, a top-level
+  "Register a spec for an entity key like ::symbol
+  or ::expr, which is an ::asr-term, a top-level
   production in the ASDL grammar."
   [term]
   (let [ns "masr.specs"
@@ -961,18 +1048,17 @@
 ;; implementation of `defmasrnested` unless you are
 ;; maintaining it. The macro is tricky to understand
 ;; due mostly to Clojure's implicit insertion and
-;; deletion of namespaces in macros. Implicit
-;; namespacing is a good design, overall, but we
-;; must step around it when necessary via Clojure's
-;; built-in `name` function.
+;; deletion of namespaces in macros. We step around
+;; around it when necessary via Clojure's built-in
+;; `name` function.
 ;;
 ;;
 ;; #+begin_src clojure
 
 (defmacro defmasrnested
   "Automate constructions like the following, which
-  pertain to certain ::term specs that have nested
-  multi-specs like ::expr, ::symbol, ::stmt, etc.
+  pertain to certain `::term` specs that have nested
+  multi-specs, e.g., `::expr`, `::symbol`, `::stmt`.
   The only pertinent token is `expr`, `symbol`, etc.,
   and this macro mitigates the repetition of that
   token.
@@ -1007,7 +1093,7 @@
            ;; e.g.      ::term ::asr-expr-head
            (s/keys :req [~ttrm ~akwd]))
          ;; e.g.               expr
-         (def-term-entity-key ~tsym) ;; caution
+         (def-term-entity-key ~tsym)
          ;; e.g.    expr-head ::expr-head
          (defmulti ~esym       ~ekwd)
          ;; e.g. ::asr-expr-head
@@ -1039,16 +1125,16 @@
 
 
 ;;
-;; We need specs for each nested multi-spec
-;; like `::Variable` and `::FunctionType`.
+;; We need specs for each nested multi-spec for
+;; heads like `::Variable` and `::FunctionType`.
 ;;
 ;;
 ;; #+begin_src clojure
 
 (defmacro def-term-head--entity-key
   "Define an entity key like ::Variable, which is an
-  ::asr-symbol-head nested multi-spec, again
-  eliminating duplicated wordage.
+  ::asr-symbol-head nested multi-spec, eliminating
+  duplicated wordage.
 
   From a term, e.g., `symbol`, and head, e.g., `Variable`,
   generate a spec `s/def` like
@@ -1094,13 +1180,13 @@
 
 
 ;;
-;; `defmasrtype` is the easiest way to add new specs
+;; `Defmasrtype` is the easiest way to add new specs
 ;; that have nested multi-specs. Terms without
 ;; nested multi-specs are few. They are special
 ;; cases with hand-written specs.
 ;;
 ;;
-;; `defmasrtype` creates both (1) the specs for
+;; `Defmasrtype` creates both (1) the specs for
 ;; particular heads like `Variable` and `Assignment`,
 ;; and (2) a function, `->asdl-type`, that extracts
 ;; the ASDL type from any instance hash-map. We
@@ -6143,4 +6229,323 @@
      {::unit-head    ::TranslationUnit
       ::SymbolTable  stab
       ::nodes        node-cnd}}))
+;; #+end_src
+
+;;
+;;
+;; REGISTRY
+;;
+;;
+
+;;
+;; Here is a list of all the 301 specs defined in
+;; this file as of 12 June 2023, edited by hand to
+;; shorten them and to eliminate built-ins:
+;;
+
+;; #+begin_src clojure
+
+#_(s/registry)
+;; => {
+;;     ::ArrayConstant  #o[s$and_r_2177 0x1dffa309],
+;;     ::ArrayItem  #o[s$and_r_2177 0x34a828c0],
+;;     ::ArrayReshape  #o[s$and_r_2177 0xa4ca753],
+;;     ::Assert  #o[s$and_r_2177 0x5f7bd50c],
+;;     ::Assignment  #o[s$and_r_2177 0x460fc467],
+;;     ::Block  #o[s$and_r_2177 0x4edfa7fc],
+;;     ::BlockCall  #o[s$and_r_2177 0x1b1b9ed7],
+;;     ::Cast  #o[s$and_r_2177 0x4c3f0ece],
+;;     ::Character  #o[s$and_r_2177 0xdf12bdd],
+;;     ::Complex  #o[s$and_r_2177 0x4717b339],
+;;     ::ComplexBinOp  #o[s$and_r_2177 0x1a1a6722],
+;;     ::ComplexCompare  #o[s$and_r_2177 0xd1f083a],
+;;     ::ComplexConstant  #o[s$and_r_2177 0x5e2062a3],
+;;     ::ComplexIm  #o[s$and_r_2177 0x4f53036d],
+;;     ::ComplexRe  #o[s$and_r_2177 0xb040170],
+;;     ::ComplexUnaryMinus  #o[s$and_r_2177 0x1778f4ad],
+;;     ::DoLoop  #o[s$and_r_2177 0x30167fc3],
+;;     ::ExplicitDeallocate  #o[s$and_r_2177 0x44c8be43],
+;;     ::ExternalSymbol  #o[s$and_r_2177 0x3a258c0e],
+;;     ::Function  #o[s$and_r_2177 0x2472f561],
+;;     ::FunctionCall  #o[s$and_r_2177 0x442960a9],
+;;     ::FunctionType  #o[s$and_r_2177 0x2c0fab79],
+;;     ::GenericProcedure  #o[s$and_r_2177 0x156ba6e3],
+;;     ::GetPointer  #o[s$and_r_2177 0x35cdbbbd],
+;;     ::GoTo  #o[s$and_r_2177 0x5e8b3faf],
+;;     ::If  #o[s$and_r_2177 0x47fa80f2],
+;;     ::IfExp  #o[s$and_r_2177 0x1efc1d81],
+;;     ::Integer  #o[s$and_r_2177 0x16a2e13b],
+;;     ::IntegerBinOp  #o[s$and_r_2177 0x1ce9d2ab],
+;;     ::IntegerBitNot  #o[s$and_r_2177 0x5d349ba6],
+;;     ::IntegerCompare  #o[s$and_r_2177 0x4ee88671],
+;;     ::IntegerConstant  #o[s$and_r_2177 0xd4dbba8],
+;;     ::IntegerConstant?  #o[s$or_r_2112 0x4478bc9a],
+;;     ::IntegerUnaryMinus  #o[s$and_r_2177 0x1054eb07],
+;;     ::IntrinsicFunction  #o[s$and_r_2177 0xc067abe],
+;;     ::IntrinsicModule  #o[s$and_r_2177 0x4cb16a35],
+;;     ::List  #o[s$and_r_2177 0x20f52638],
+;;     ::ListAppend  #o[s$and_r_2177 0x7744954e],
+;;     ::ListConstant  #o[s$and_r_2177 0x48744e38],
+;;     ::ListItem  #o[s$and_r_2177 0x13e8579a],
+;;     ::ListLen  #o[s$and_r_2177 0x64d6e50],
+;;     ::Logical  #o[s$and_r_2177 0x225aabb6],
+;;     ::LogicalBinOp  #o[s$and_r_2177 0x28ca756e],
+;;     ::LogicalCompare  #o[s$and_r_2177 0x1a14b908],
+;;     ::LogicalConstant  #o[s$and_r_2177 0x5cda5ff3],
+;;     ::LogicalNot  #o[s$and_r_2177 0x21c5fcac],
+;;     ::NamedExpr  #o[s$and_r_2177 0x3f8aa38e],
+;;     ::Pointer  #o[s$and_r_2177 0x5b37b325],
+;;     ::Print  #o[s$and_r_2177 0x4affd722],
+;;     ::Program  #o[s$and_r_2177 0x44d004a8],
+;;     ::Real  #o[s$and_r_2177 0x7502e0af],
+;;     ::RealBinOp  #o[s$and_r_2177 0x6901d91],
+;;     ::RealCompare  #o[s$and_r_2177 0x76cb26bf],
+;;     ::RealConstant  #o[s$and_r_2177 0x7c768e16],
+;;     ::RealUnaryMinus  #o[s$and_r_2177 0x10a6ef4c],
+;;     ::Return  #o[s$and_r_2177 0x4750cf0],
+;;     ::Set  #o[s$and_r_2177 0x4e57d61c],
+;;     ::StringChr  #o[s$and_r_2177 0x61812d7f],
+;;     ::StringCompare  #o[s$and_r_2177 0x2fbc13de],
+;;     ::StringConcat  #o[s$and_r_2177 0x5d835614],
+;;     ::StringConstant  #o[s$and_r_2177 0x23f65dc5],
+;;     ::StringItem  #o[s$and_r_2177 0x1950ce2a],
+;;     ::StringLen  #o[s$and_r_2177 0x10687f84],
+;;     ::StringOrd  #o[s$and_r_2177 0x38589b3c],
+;;     ::StringRepeat  #o[s$and_r_2177 0x669f60ee],
+;;     ::StringSection  #o[s$and_r_2177 0x57d216aa],
+;;     ::SubroutineCall  #o[s$and_r_2177 0x41707fea],
+;;     ::SymbolTable  #o[s$and_r_2177 0x4f00a848],
+;;     ::TranslationUnit  #o[s$and_r_2177 0x70de2576],
+;;     ::Tuple  #o[s$and_r_2177 0x1f28a18d],
+;;     ::TupleCompare  #o[s$and_r_2177 0x5b7c122f],
+;;     ::TupleConstant  #o[s$and_r_2177 0x460faf61],
+;;     ::TupleItem  #o[s$and_r_2177 0x1168b9ee],
+;;     ::TupleLen  #o[s$and_r_2177 0x1962c92d],
+;;     ::Var  #o[s$and_r_2177 0x460571de],
+;;     ::Variable  #o[s$and_r_2177 0x5597779f],
+;;     ::WhileLoop  #o[s$and_r_2177 0x1a3faf6b],
+;;     ::abi  #o[s$and_r_2177 0x699b1f12],
+;;     ::abi-enum  #o[s$r_2053 0x1c40bf19],
+;;     ::abi-external ::bool,
+;;     ::access  #o[s$and_r_2177 0x82faaac],
+;;     ::access-enum  #o[s$r_2053 0x15d387be],
+;;     ::any-binop  #o[s$r_2053 0x3dda8a81],
+;;     ::any-cmpop  #o[s$or_r_2112 0x4d5fdc08],
+;;     ::arg ::expr,
+;;     ::array-expr  #o[s$or_r_2112 0x26afb40b],
+;;     ::array-index  #o[s$map_r_1991 0x685e5961],
+;;     ::array-index*  #o[s$every_impl$reify__2248 0x7df1881a],
+;;     ::array-index-end?
+;;     ::array-index-increment?
+;;     ::array-index-start?
+;;     ::array-shape ::expr,
+;;     ::array-value? ::expr?,
+;;     ::arraybound  #o[s$and_r_2177 0x59fae241],
+;;     ::arraybound-enum  #o[s$r_2053 0x500ac6aa],
+;;     ::arraystorage  #o[s$and_r_2177 0x59fe72c0],
+;;     ::arraystorage-enum  #o[s$r_2053 0x28b92d9e],
+;;     ::asr-expr-head  #o[s$multi_r_2068 0x1f970ace],
+;;     ::asr-stmt-head  #o[s$multi_r_2068 0x29a93b05],
+;;     ::asr-symbol-head  #o[s$multi_r_2068 0x5ebadcc8],
+;;     ::asr-term  #o[s$multi_r_2068 0x1cb0d70c],
+;;     ::asr-ttype-head  #o[s$multi_r_2068 0xa03ac9d],
+;;     ::asr-unit-head  #o[s$multi_r_2068 0x14f74fbe],
+;;     ::bignat  #o[s$and_r_2177 0x40d13ff6],
+;;     ::bindc-name  #o[s$nilable_impl$reify__2550 0x2946fff2],
+;;     ::blocknym ::identifier,
+;;     ::body ::stmt*,
+;;     ::body-expr ::expr,
+;;     ::bool  #o[s$r_2053 0x438b304c],
+;;     ::call-arg  #o[s$every_impl$reify__2248 0x7096232b],
+;;     ::call-arg-or-args  #o[s$or_r_2112 0x3971e124],
+;;     ::call-args  #o[s$every_impl$reify__2248 0x3de0f6c6],
+;;     ::cast-kind  #o[s$and_r_2177 0x194577a8],
+;;     ::cast-kind-enum  #o[s$r_2053 0x579c44a0],
+;;     ::character-kind  #o[s$r_2053 0x54784d4f],
+;;     ::character-or-integer-ttype  #o[s$or_r_2112 0x2f88813c],
+;;     ::character-or-integer-value?  #o[s$or_r_2112 0x6821c2e2],
+;;     ::complex-binop  #o[s$and_r_2177 0x5b17c798],
+;;     ::complex-binop-enum  #o[s$r_2053 0x61c6bebe],
+;;     ::complex-cmpop  #o[s$and_r_2177 0x49a80d97],
+;;     ::complex-cmpop-enum  #o[s$r_2053 0x59e1c0c3],
+;;     ::complex-expr,
+;;     ::complex-expr?  #o[s$or_r_2112 0x730798f3],
+;;     ::complex-expr?,
+;;     ::complex-kind  #o[s$r_2053 0x29d5f40e],
+;;     ::complex-left ::complex-expr,
+;;     ::complex-right
+;;     ::complex-scalar  #o[s$and_r_2177 0x62537e05],
+;;     ::complex-value?
+;;     ::deftype  #o[s$and_r_2177 0x653f3655],
+;;     ::deftype-enum  #o[s$r_2053 0x7b8256],
+;;     ::dependencies  ::identifier-set,
+;;     ::deterministic ::bool,
+;;     ::dimension  #o[s$and_r_2177 0x77c2873c],
+;;     ::dimension*  #o[s$every_impl$reify__2248 0x5812eed4],
+;;     ::dimension-content  #o[s$and_r_2177 0x2b503d27],
+;;     ::disposition  #o[s$r_2053 0x43c0b861],
+;;     ::do-loop-head  #o[s$map_r_1991 0x1ac5219],
+;;     ::dt? ::expr?}
+;;     ::elemental ::bool,
+;;     ::elements ::expr*,
+;;     ::end? ::expr?,
+;;     ::escape-target  #o[s$r_2053 0x9d143b3],
+;;     ::expr  #o[s$and_r_2177 0x7d2fe606],
+;;     ::expr*  #o[s$every_impl$reify__2248 0x64e08208],
+;;     ::expr?  #o[s$or_r_2112 0x5456c664],
+;;     ::extern-symref ::symbol-ref?,
+;;     ::float  #o[s$r_2053 0x45653834],
+;;     ::format? ::expr?,
+;;     ::function-name ::identifier,
+;;     ::function-signature  ::FunctionType,
+;;     ::goto-target ::nat,
+;;     ::hash-map  #o[s$r_2053 0xa292968],
+;;     ::identifier  #o[s$r_2053 0x38c7996d],
+;;     ::identifier,
+;;     ::identifier-list  #o[s$every_impl$reify__2248 0x82e2f39],
+;;     ::identifier-set  #o[s$every_impl$reify__2248 0x6c9b0aca],
+;;     ::identifier-suit  #o[s$and_r_2177 0x29366b6],
+;;     ::imiginary-part ::float,
+;;     ::index ::integer-expr,
+;;     ::index-end ::integer-expr,
+;;     ::index-end? ::integer-expr?,
+;;     ::index-start ::integer-expr,
+;;     ::index-start?
+;;     ::index-step ::integer-expr,
+;;     ::index-step? ::integer-expr?,
+;;     ::index? ::integer-expr?,
+;;     ::inline ::bool,
+;;     ::int  #o[s$r_2053 0x43c468],
+;;     ::integer-binop  #o[s$and_r_2177 0x2f87ad4a],
+;;     ::integer-binop-enum  #o[s$r_2053 0x1df5b9ff],
+;;     ::integer-cmpop  #o[s$and_r_2177 0x28843525],
+;;     ::integer-cmpop-enum  #o[s$r_2053 0x167b9758],
+;;     ::integer-expr  #o[s$or_r_2112 0x629e1132],
+;;     ::integer-expr,
+;;     ::integer-expr?  #o[s$or_r_2112 0x15204b8f],
+;;     ::integer-expr?,
+;;     ::integer-expr?,
+;;     ::integer-expr?,
+;;     ::integer-expr?,
+;;     ::integer-expr?,
+;;     ::integer-kind  #o[s$r_2053 0x350af25f],
+;;     ::integer-left ::integer-expr,
+;;     ::integer-right
+;;     ::integer-scalar  #o[s$and_r_2177 0x6e28e680],
+;;     ::integer-scalar-or-expr  #o[s$or_r_2112 0x312d2bc5],
+;;     ::integer-value?
+;;     ::intent  #o[s$and_r_2177 0x41480ad0],
+;;     ::intent-enum  #o[s$r_2053 0x6b1f393f],
+;;     ::intrinsic ::bool,
+;;     ::intrinsic-ident
+;;     ::is-restriction ::bool,
+;;     ::label ::int,
+;;     ::len ::int,
+;;     ::len-expr? ::expr?,
+;;     ::list-element  #o[s$or_r_2112 0x4e57e7b6],
+;;     ::loaded-from-mod ::bool,
+;;     ::logical-cmpop  #o[s$and_r_2177 0x401c4687],
+;;     ::logical-cmpop-enum  #o[s$r_2053 0x5a83c963],
+;;     ::logical-expr  #o[s$or_r_2112 0x2ba76202],
+;;     ::logical-expr,
+;;     ::logical-expr?  #o[s$or_r_2112 0x6d8c0300],
+;;     ::logical-expr?,
+;;     ::logical-kind  #o[s$r_2053 0x245b7fa6],
+;;     ::logical-left ::logical-expr,
+;;     ::logical-right
+;;     ::logical-scalar  #o[s$and_r_2177 0x75274b13],
+;;     ::logical-value?
+;;     ::logicalbinop  #o[s$and_r_2177 0x5b97fe89],
+;;     ::logicalbinop-enum  #o[s$r_2053 0x4dc13de5],
+;;     ::loop-end ::expr?,
+;;     ::loop-increment ::expr?,
+;;     ::loop-start ::expr?,
+;;     ::loop-v ::expr?,
+;;     ::lvalue  #o[s$or_r_2112 0x6f061f3a],
+;;     ::message?  #o[s$or_r_2112 0x95bf20e],
+;;     ::module ::bool,
+;;     ::modulenym ::identifier,
+;;     ::nat  #o[s$r_2053 0x5a731fd],
+;;     ::node  #o[s$or_r_2112 0x45294831],
+;;     ::nodes  #o[s$every_impl$reify__2248 0x39bf5cc8],
+;;     ::nym ::identifier,
+;;     ::orelse ::stmt*,
+;;     ::orelse-expr ::expr,
+;;     ::orig-nym ::identifier,
+;;     ::orig-symref ::symbol-ref?,
+;;     ::overload-id ::nat,
+;;     ::overloaded ::stmt?,
+;;     ::param* ::expr*,
+;;     ::param-type* ::ttype*,
+;;     ::pointer-value? ::expr?,
+;;     ::presence  #o[s$and_r_2177 0xbe75cb2],
+;;     ::presence-enum  #o[s$r_2053 0x3ad957cc],
+;;     ::prognym ::identifier,
+;;     ::pure ::bool,
+;;     ::real-binop  #o[s$and_r_2177 0x6b2c8483],
+;;     ::real-binop-enum  #o[s$r_2053 0x40395ef],
+;;     ::real-cmpop  #o[s$and_r_2177 0x779302a7],
+;;     ::real-cmpop-enum  #o[s$r_2053 0x6896e32],
+;;     ::real-expr  #o[s$or_r_2112 0x7f3d7ed8],
+;;     ::real-expr?  #o[s$or_r_2112 0x53526522],
+;;     ::real-kind  #o[s$r_2053 0x1b970a01],
+;;     ::real-left ::real-expr,
+;;     ::real-part ::float,
+;;     ::real-right ::real-expr,
+;;     ::real-scalar  #o[s$and_r_2177 0x5f8ba3fc],
+;;     ::real-value? ::real-expr?,
+;;     ::restrictions ::symbols,
+;;     ::return-type ::ttype,
+;;     ::return-var-type? ::ttype?,
+;;     ::return-var? ::expr?,
+;;     ::rvalue ::expr,
+;;     ::scope-nyms ::identifier-set,
+;;     ::separator? ::expr?,
+;;     ::side-effect-free ::bool,
+;;     ::static ::bool,
+;;     ::stmt  #o[s$and_r_2177 0x1e143f12],
+;;     ::stmt*  #o[s$every_impl$reify__2248 0x586a2aca],
+;;     ::stmt?  #o[s$or_r_2112 0x178a64bd],
+;;     ::storage-type  #o[s$and_r_2177 0xe432984],
+;;     ::storage-type-enum  #o[s$r_2053 0x81d6185],
+;;     ::string  #o[s$r_2053 0x793da1b0],
+;;     ::string-cmpop  #o[s$and_r_2177 0xd74ce15],
+;;     ::string-cmpop-enum  #o[s$r_2053 0x48242e92],
+;;     ::string-expr  #o[s$or_r_2112 0x348914d5],
+;;     ::string-expr?  #o[s$or_r_2112 0x5f2b56d2],
+;;     ::string-expr?,
+;;     ::string-left ::string-expr,
+;;     ::string-right ::string-expr,
+;;     ::string-scalar  #o[s$and_r_2177 0x4de54ba4],
+;;     ::string-value?
+;;     ::symbol  #o[s$and_r_2177 0x725faf0],
+;;     ::symbol-ref  #o[s$map_r_1991 0x343dbffb],
+;;     ::symbol-ref*  #o[s$every_impl$reify__2248 0x3de53264],
+;;     ::symbol-ref?  #o[s$or_r_2112 0x75b8e115],
+;;     ::symbol?  #o[s$or_r_2112 0x377acf11],
+;;     ::symbolic-value ::expr?,
+;;     ::symbols  #o[s$every_impl$reify__2248 0x67bd7a86],
+;;     ::symtab-id ::nat,
+;;     ::target ::expr,
+;;     ::term  #o[s$r_2053 0x789b045f],
+;;     ::test-expr ::logical-expr,
+;;     ::ttype  #o[s$and_r_2177 0x7430c052],
+;;     ::ttype*  #o[s$every_impl$reify__2248 0x66ecff12],
+;;     ::ttype?  #o[s$or_r_2112 0x1fba706b],
+;;     ::tuple-left ::tuple-expr,
+;;     ::tuple-right ::tuple-expr,
+;;     ::type-declaration  #o[s$nilable_impl$reify__2550 0x10f55b35],
+;;     ::type-param* ::ttype*,
+;;     ::unchecked-element-expr  #o[s$or_r_2112 0x7108ee55],
+;;     ::unit  #o[s$and_r_2177 0x2483fc1e],
+;;     ::value ::expr,
+;;     ::value* ::expr*,
+;;     ::value-attr ::bool,
+;;     ::value? ::expr?,
+;;     ::varnym ::identifier,
+;;     ::vars  #o[s$every_impl$reify__2248 0x1bd91c1d],
+;;     :cs/map-binding  #o[s$tuple_impl$reify__2092 0x66f1068b],
+;;     :cs/params+body
+;;     :cs/prefix  #o[s$r_2053 0x4f689d7],
+;;     :cs/syms  #o[s$every_impl$reify__2248 0x7639619d],
 ;; #+end_src

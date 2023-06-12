@@ -5875,7 +5875,10 @@
         (is (s/valid? ::asr/unit case-))))
     (comment "_pass_print_list_tuple-print_02-1bcc4ec is TOO BIG.")
     (comment "_pass_loop_vectorise-vec_01-fdf30b1 is TOO BIG.")
-
+    (testing "-global_scope1-b335bb9"
+      (let [case- (full-form-slurped-asr "-global_scope1-b335bb9")]
+        (idempotency-check case-)
+        (is (s/valid? ::asr/unit case-))))
     ;; 50
     ))
 
