@@ -106,7 +106,7 @@
                                                 "test"
                                                 (Character 1 4 () [])
                                             )
-                                            (Character 1 12 () [])
+                                            (Character 1 12 () 0xBADBEEF)
                                             (StringConstant
                                                 "testtesttest"
                                                 (Character 1 12 () [])
@@ -130,7 +130,7 @@
                     (SymbolTable
                         3
                         {
-                            
+
                         })
                     main_program
                     []

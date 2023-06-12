@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         6
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -165,7 +165,7 @@
                                                     true
                                                     (Logical 4 [])
                                                 )
-                                                LogicalToCharacter
+                                                0xBADBEEF
                                                 (Character 1 -2 () [])
                                                 (StringConstant
                                                     "True"

@@ -65,7 +65,7 @@
                  (Var 2 b)
                  NotEq
                  (Var 2 b)
-                 (Logical 4 []) ())
+                 0xBADBEEF ())
                 (Logical 4 []) ()) ())
             (= (Var 2 a)
                (LogicalBinOp
@@ -80,37 +80,3 @@
      (Program
       (SymbolTable 3 {})
       main_program [] [])}) [])
-
-
-
-
-
-;; Legacy lpython/src/libasr/ASR.asdl as of 25 April 2023
-;;
-;; Variable(symtab_id,     name,                 identifier* dependencies,
-;;          intent intent, expr? symbolic_value, expr? value,
-;;          storage_type,  ttype,                abi,
-;;          access,        presence,             bool value_attr)
-
-;; Legacy macro
-
-(tests true := (s/valid?
-                :masr.specs/Variable
-                (Variable
-                 2 a []
-                 Local () ()
-                 Default (Logical 4 []) Source
-                 Public Required false)))
-;; => true
-
-;; Heavy Sugar
-
-(tests true := (s/valid?
-                :masr.specs/Variable
-                (Variable--
-                 2 'x (Integer 4)
-                 nil [] Local
-                 [] []  Default
-                 Source Public Required
-                 false)))
-;; => true

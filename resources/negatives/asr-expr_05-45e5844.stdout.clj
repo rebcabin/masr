@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         113
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -576,7 +576,7 @@
                                                 (IntegerUnaryMinus
                                                     (IntegerConstant 105346 (Integer 4 []))
                                                     (Integer 4 [])
-                                                    (IntegerConstant -105346 (Integer 4 []))
+                                                    (IntegerConstant -105346 (Integer 0xBADBEEF []))
                                                 )
                                                 BitXor
                                                 (IntegerUnaryMinus

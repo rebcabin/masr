@@ -86,7 +86,7 @@
                                         (IfExp
                                             (IntegerCompare
                                                 (Var 2 a)
-                                                Eq
+                                                0xBADBEEF
                                                 (IntegerConstant 2 (Integer 4 []))
                                                 (Logical 4 [])
                                                 ()
@@ -137,7 +137,7 @@
                     (SymbolTable
                         3
                         {
-                            
+
                         })
                     main_program
                     []

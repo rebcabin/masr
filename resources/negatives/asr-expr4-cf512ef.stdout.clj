@@ -77,7 +77,7 @@
                                     )]
                                     ()
                                     Public
-                                    false
+                                    0xBADBEEF
                                     false
                                 )
                         })
@@ -91,7 +91,7 @@
                     (SymbolTable
                         3
                         {
-                            
+
                         })
                     main_program
                     []

@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         5
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -261,7 +261,7 @@
                                                 (IntegerConstant 102334155 (Integer 4 []))
                                                 IntegerToInteger
                                                 (Integer 8 [])
-                                                (IntegerConstant 102334155 (Integer 8 []))
+                                                (IntegerConstant 102334155 (Integer 0xBADBEEF []))
                                             )
                                             (Logical 4 [])
                                             ()

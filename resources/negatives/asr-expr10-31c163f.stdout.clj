@@ -347,7 +347,7 @@
                                                     (Logical 4 [])
                                                 )
                                                 LogicalToInteger
-                                                (Integer 4 [])
+                                                (Integer 0xBADBEEF [])
                                                 (IntegerConstant -2 (Integer 4 []))
                                             )
                                             (Integer 4 [])
@@ -435,7 +435,7 @@
                     (SymbolTable
                         110
                         {
-                            
+
                         })
                     main_program
                     []

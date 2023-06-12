@@ -239,7 +239,7 @@
                                                 )
                                                 Pow
                                                 (RealConstant
-                                                    3.450000
+                                                    0xBADBEEF
                                                     (Real 8 [])
                                                 )
                                                 (Real 8 [])
@@ -438,7 +438,7 @@
                     (SymbolTable
                         110
                         {
-                            
+
                         })
                     main_program
                     []

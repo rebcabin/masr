@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         6
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -321,7 +321,7 @@
                                         (GetPointer
                                             (Var 2 y)
                                             (Pointer
-                                                (Integer 2 [(()
+                                                (Integer 0xBADBEEF [(()
                                                 ())])
                                             )
                                             ()

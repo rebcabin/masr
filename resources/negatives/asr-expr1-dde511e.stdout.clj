@@ -15,7 +15,7 @@
                                             :a
                                                 (Variable
                                                     2
-                                                    42 ;; ERROR
+                                                    0xBADBEEF ;; ERROR
                                                     []
                                                     Local
                                                     ()

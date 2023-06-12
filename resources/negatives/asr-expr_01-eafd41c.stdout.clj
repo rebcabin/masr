@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         6
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -78,7 +78,7 @@
                                                     Required
                                                     false
                                                 ),
-                                            :y
+                                            0xBADBEEF
                                                 (Variable
                                                     2
                                                     y

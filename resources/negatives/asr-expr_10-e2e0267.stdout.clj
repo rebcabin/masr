@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         6
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -250,7 +250,7 @@
                                         ()
                                     )
                                     (SubroutineCall
-                                        7 gsubrout
+                                        7 0xBADBEEF
                                         ()
                                         [((Var 4 i))]
                                         ()

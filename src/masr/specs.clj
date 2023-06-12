@@ -1702,14 +1702,55 @@
 
 ;; #+begin_src clojure
 
-(defmasrtype
+(defmasrtype ;; 1 of 9 String... terms
   StringConstant expr
   (string  Character))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(defmasrtype
+(defmasrtype ;; 2 of 9 String... terms
+  StringConcat expr
+  (string-left  string-right
+   Character    string-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype ;; 3 of 9 String... terms
+  StringRepeat expr
+  (string-expr  integer-expr
+   Character    string-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype ;; 4 of 9 String... terms
+  StringLen expr
+  (string-expr Integer integer-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype ;; 5 of 9 String... terms
+  StringItem expr
+  (string-expr index?
+   character-or-integer-ttype
+   character-or-integer-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype ;; 6 of 9 String... terms
+  StringSection expr
+  (string-expr
+   index-start?  index-end?  index-step?
+   Character     string-value?))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype ;; 7 of 9 String... terms
   StringCompare expr
   (string-left  string-cmpop  string-right
    Logical      logical-value?))
@@ -1717,51 +1758,17 @@
 
 ;; #+begin_src clojure
 
-(defmasrtype
-  StringRepeat expr
-  (string-expr  integer-expr  Character
-   string-expr?))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  StringLen expr
-  (string-expr Integer integer-value?))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  StringItem expr
-  (string-expr index?
-               Integer
-               integer-value?))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
-  StringSection expr
-  (string-expr index-start?
-               index-end?
-               index-step?
-               Character
-               string-value?))
-;; #+end_src
-
-;; #+begin_src clojure
-
-(defmasrtype
+(defmasrtype ;; 8 of 9 String... terms
   StringOrd expr
   (string-expr  Integer  integer-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
 
-(defmasrtype
+(defmasrtype ;; 9 of 9 String... terms
   StringChr expr
-  (string-expr  Character  string-value?))
+  (integer-scalar-or-expr
+   Character  string-value?))
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -1829,6 +1836,13 @@
   (complex-expr  Real  real-value?))
 ;; #+end_src
 
+;; #+begin_src clojure
+
+(defmasrtype
+  GetPointer expr
+  (expr  Pointer  pointer-value?))
+;; #+end_src
+
 ;; ----------------------------------------------------------------
 ;; ## TTYPE
 ;;
@@ -1886,6 +1900,13 @@
 
 (defmasrtype
   Set ttype
+  (ttype))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(defmasrtype
+  Pointer ttype
   (ttype))
 ;; #+end_src
 
@@ -2901,6 +2922,18 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
+;; ## Set
+;;
+;; #+begin_src clojure
+
+(defn Pointer [ttype]
+  {::term ::ttype,
+   ::asr-ttype-head
+   {::ttype-head ::Pointer
+    ::ttype      ttype}})
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ## FUNCTION-TYPE
 ;;
 ;;
@@ -3203,8 +3236,9 @@
         :integer-binop        ::IntegerBinOp
         :integer-unary-minus  ::IntegerUnaryMinus
         :integer-bit-not      ::IntegerBitNot
-        :string-ord           ::StringOrd
         :string-len           ::StringLen
+        :string-item          ::StringItem ;; Issues 52, 53, 54
+        :string-ord           ::StringOrd
         :tuple-len            ::TupleLen
         :list-len             ::ListLen
         :unchecked            ::unchecked-element-expr))
@@ -3288,9 +3322,6 @@
 
 (s/def ::complex-expr?    (.? ::complex-expr))
 (s/def ::complex-value?       ::complex-expr?)
-
-(s/def ::complex-left         ::complex-expr)
-(s/def ::complex-right        ::complex-expr)
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -3373,11 +3404,18 @@
 
 (s/def ::string-expr
   (s/or :string-constant        ::StringConstant
-        :string-item            ::StringItem
-        :string-chr             ::StringChr
-        :string-section         ::StringSection
+        :string-concat          ::StringConcat
         :string-repeat          ::StringRepeat
+        :string-item            ::StringItem
+        :string-section         ::StringSection
+        :string-chr             ::StringChr
         :unchecked              ::unchecked-element-expr))
+;; #+end_src
+
+;; #+begin_src clojure
+
+(s/def ::string-left            ::string-expr)
+(s/def ::string-right           ::string-expr)
 ;; #+end_src
 
 ;; #+begin_src clojure
@@ -3813,6 +3851,28 @@
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
+;; ## STRING CONCAT
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn StringConcat [l- r- tt- val?-]
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head   ::StringConcat
+    ::string-left    l-
+    ::string-right   r-
+    ::Character      tt-
+    ::string-value?  val?-}})
+;; #+end_src
+
+;; #+end_src
+
+;; ----------------------------------------------------------------
 ;; ## STRING REPEAT
 ;;
 ;;
@@ -3831,10 +3891,179 @@
      ::string-expr    string-expr
      ::integer-expr   integer-expr
      ::Character      char-ttype
-     ::string-expr?   compiler-computed?}})
+     ::string-value?  compiler-computed?}})
   ([string-expr integer-expr]
    "binary"
    (StringRepeat string-expr (Character) ())))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## STRING LEN
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn StringLen
+  ([str-expr, int-ttype, int-val?]
+   "trinary ... Return ascii value of the indicated
+   character in the string."
+   {::term ::expr,
+    ::asr-expr-head
+    {::expr-head ::StringLen
+     ::string-expr       str-expr
+     ::Integer           int-ttype
+     ::integer-value?    int-val?}})
+  ([str-expr, int-val?]
+   (StringLen str-expr, (Integer) int-val?)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## STRING ITEM
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; See Issues #51, #52.
+;;
+;; #+begin_src clojure
+
+(s/def ::character-or-integer-ttype
+  (s/or :character      ::Character
+        :integer        ::Integer))
+
+(s/def ::character-or-integer-value?
+  (s/or :string-value?  ::string-value?
+        :integer-value? ::integer-value?))
+
+(defn StringItem
+  [string-expr
+   index?
+   character-or-integer-ttype
+   character-or-integer-value?]
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head    ::StringItem
+    ::string-expr  string-expr
+    ::index?       index?
+    ::character-or-integer-ttype
+    character-or-integer-ttype
+    ::character-or-integer-value?
+    character-or-integer-value?
+    }})
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## STRING SECTION
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; #+begin_src clojure
+
+(defn StringSection
+  [string-expr
+   index-start?
+   index-end?
+   index-step?
+   Character
+   string-value?]
+  {::term ::expr,
+   ::asr-expr-head
+   {::expr-head        ::StringSection
+    ::string-expr      string-expr
+    ::index-start?     index-start?
+    ::index-end?       index-end?
+    ::index-step?      index-step?
+    ::Character        Character
+    ::string-value?    string-value?
+    }})
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## STRING ORD
+;;
+;;
+
+;;
+;; ### Original ASDL
+;;
+;; ```c
+;; | StringOrd(expr arg, ttype type, expr? value)
+;; ```
+
+;;
+;; ### Example
+;;
+;; #+begin_src clojure
+
+#_
+(StringOrd
+ (StringConstant
+  "3"
+  (Character 1 1 () [])
+  )
+ (Integer 4 [])
+ (IntegerConstant 51 (Integer 4 []))
+ )
+;; #+end_src
+
+;;
+;; ### Legacy Sugar
+;;
+;; #+begin_src clojure
+
+(defn StringOrd
+  ([str-expr, int-ttype, int-val?]
+   "trinary ... Return ascii value of the indicated
+   character in the string."
+   {::term ::expr,
+    ::asr-expr-head
+    {::expr-head ::StringOrd
+     ::string-expr       str-expr
+     ::Integer           int-ttype
+     ::integer-value?    int-val?}})
+  ([str-expr, int-val?]
+   (StringOrd str-expr, (Integer) int-val?)))
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## STRING CHR
+;;
+;;
+
+;;
+;; ### Heavy Sugar
+;;
+;; Issue 53: Should integer-expr be tested for scalar property?
+;;           Such might require run-time testing. Test statically
+;;           when possible.
+;;
+;; #+begin_src clojure
+
+(s/def ::integer-scalar-or-expr
+  (s/or :integer-scalar ::integer-scalar
+        :integer-expr   ::integer-expr))
+
+(defn StringChr
+  ([integer-scalar-or-expr, char-ttype, string-val?]
+   "trinary ... Return ascii value of the integer
+   form of the character in the string."
+   {::term ::expr,
+    ::asr-expr-head
+    {::expr-head ::StringChr
+     ::integer-scalar-or-expr  integer-scalar-or-expr
+     ::Character               char-ttype
+     ::string-value?           string-val?}})
+  ([str-expr, string-val?]
+   (StringChr str-expr, (Character) string-val?)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4030,155 +4259,6 @@
     ::ttype        ttype
     ::array-value? array-value?
     }})
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## STRING CHR
-;;
-;;
-
-;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn StringChr
-  ([str-expr, char-ttype, string-val?]
-   "trinary ... Return ascii value of the indicated
-   character in the string."
-   {::term ::expr,
-    ::asr-expr-head
-    {::expr-head ::StringChr
-     ::string-expr       str-expr
-     ::Character         char-ttype
-     ::string-value?     string-val?}})
-  ([str-expr, string-val?]
-   (StringChr str-expr, (Character) string-val?)))
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## STRING LEN
-;;
-;;
-
-;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn StringLen
-  ([str-expr, int-ttype, int-val?]
-   "trinary ... Return ascii value of the indicated
-   character in the string."
-   {::term ::expr,
-    ::asr-expr-head
-    {::expr-head ::StringLen
-     ::string-expr       str-expr
-     ::Integer           int-ttype
-     ::integer-value?    int-val?}})
-  ([str-expr, int-val?]
-   (StringLen str-expr, (Integer) int-val?)))
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## STRING ITEM
-;;
-;;
-
-;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn StringItem
-  [string-expr
-   index?
-   Integer
-   integer-value?]
-  {::term ::expr,
-   ::asr-expr-head
-   {::expr-head         ::StringItem
-    ::string-expr       string-expr
-    ::index?            index?
-    ::Integer           Integer
-    ::integer-value?    integer-value?
-    }})
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## STRING SECTION
-;;
-;;
-
-;;
-;; ### Heavy Sugar
-;;
-;; #+begin_src clojure
-
-(defn StringSection
-  [string-expr
-   index-start?
-   index-end?
-   index-step?
-   Character
-   string-value?]
-  {::term ::expr,
-   ::asr-expr-head
-   {::expr-head        ::StringSection
-    ::string-expr      string-expr
-    ::index-start?     index-start?
-    ::index-end?       index-end?
-    ::index-step?      index-step?
-    ::Character        Character
-    ::string-value?    string-value?
-    }})
-;; #+end_src
-
-;; ----------------------------------------------------------------
-;; ## STRING ORD
-;;
-;;
-
-;;
-;; ### Original ASDL
-;;
-;; ```c
-;; | StringOrd(expr arg, ttype type, expr? value)
-;; ```
-
-;;
-;; ### Example
-;;
-;; #+begin_src clojure
-
-#_
-(StringOrd
- (StringConstant
-  "3"
-  (Character 1 1 () [])
-  )
- (Integer 4 [])
- (IntegerConstant 51 (Integer 4 []))
- )
-;; #+end_src
-
-;;
-;; ### Legacy Sugar
-;;
-;; #+begin_src clojure
-
-(defn StringOrd
-  ([str-expr, int-ttype, int-val?]
-   "trinary ... Return ascii value of the indicated
-   character in the string."
-   {::term ::expr,
-    ::asr-expr-head
-    {::expr-head ::StringOrd
-     ::string-expr       str-expr
-     ::Integer           int-ttype
-     ::integer-value?    int-val?}})
-  ([str-expr, int-val?]
-   (StringOrd str-expr, (Integer) int-val?)))
 ;; #+end_src
 
 ;; ----------------------------------------------------------------
@@ -4524,6 +4604,23 @@
     ::Real           rtt
     ::real-value?    rv? ;; TODO: Check arithmetic!
     }})
+;; #+end_src
+
+;; ----------------------------------------------------------------
+;; ## GET POINTER
+;;
+;; #+begin_src clojure
+
+(s/def ::pointer-value? ::expr?) ;; TODO: until it's better
+
+(defn GetPointer [expr, ptr, pv?]
+{::term ::expr,
+ ::asr-expr-head
+ {::expr-head       ::GetPointer
+  ::expr            expr
+  ::Pointer         ptr
+  ::pointer-value?  pv?
+  }})
 ;; #+end_src
 
 ;; ----------------------------------------------------------------

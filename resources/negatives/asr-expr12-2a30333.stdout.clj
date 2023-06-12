@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         6
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -252,7 +252,7 @@
                                         (Var 2 _lpython_return_variable)
                                         (IntegerBinOp
                                             (Var 2 a)
-                                            Pow
+                                            0xBADBEEF
                                             (Var 2 b)
                                             (Integer 4 [])
                                             ()

@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         8
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -218,7 +218,7 @@
                                     [(Var 2 a)]
                                     [(=
                                         (Var 2 x)
-                                        (IntegerConstant 5 (Integer 4 []))
+                                        (IntegerConstant 5 (Integer 0xBADBEEF []))
                                         ()
                                     )
                                     (=

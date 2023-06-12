@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         113
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -346,7 +346,7 @@
                                     _lpython_main_program
                                     114 _lpython_main_program
                                     _global_symbols
-                                    []
+                                    [0xBADBEEF]
                                     _lpython_main_program
                                     Public
                                 )

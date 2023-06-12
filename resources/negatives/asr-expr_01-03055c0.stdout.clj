@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         4
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -132,7 +132,7 @@
                                         (IntegerBinOp
                                             (IntegerBinOp
                                                 (IntegerConstant 2 (Integer 4 []))
-                                                Add
+                                                0xBADBEEF
                                                 (IntegerConstant 3 (Integer 4 []))
                                                 (Integer 4 [])
                                                 (IntegerConstant 5 (Integer 4 []))

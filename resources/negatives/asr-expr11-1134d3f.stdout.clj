@@ -166,7 +166,7 @@
                         })
                     _global_symbols
                     []
-                    false
+                    0xBADBEEF
                     false
                 ),
             :main_program
@@ -174,7 +174,7 @@
                     (SymbolTable
                         3
                         {
-                            
+
                         })
                     main_program
                     []

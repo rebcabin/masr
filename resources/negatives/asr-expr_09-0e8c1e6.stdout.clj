@@ -12,7 +12,7 @@
                                     (SymbolTable
                                         8
                                         {
-                                            
+
                                         })
                                     _lpython_main_program
                                     (FunctionType
@@ -309,7 +309,7 @@
                                                 (TupleItem
                                                     (Var 4 c)
                                                     (IntegerConstant 0 (Integer 4 []))
-                                                    (Integer 4 [])
+                                                    (Integer 0xBADBEEF [])
                                                     ()
                                                 )
                                                 Eq

@@ -308,7 +308,7 @@
                                         (StringCompare
                                             (StringConstant
                                                 "abc"
-                                                (Character 1 3 () [])
+                                                (Character 1 3 () 0xBADBEEF)
                                             )
                                             Eq
                                             (StringConstant
@@ -461,7 +461,7 @@
                     (SymbolTable
                         110
                         {
-                            
+
                         })
                     main_program
                     []
