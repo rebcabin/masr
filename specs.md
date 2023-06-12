@@ -5952,8 +5952,4 @@ shorten them and to eliminate built-ins:
 ;;     ::value? ::expr?,
 ;;     ::varnym ::identifier,
 ;;     ::vars  #o[s$every_impl$reify__2248 0x1bd91c1d],
-;;     :cs/map-binding  #o[s$tuple_impl$reify__2092 0x66f1068b],
-;;     :cs/params+body
-;;     :cs/prefix  #o[s$r_2053 0x4f689d7],
-;;     :cs/syms  #o[s$every_impl$reify__2248 0x7639619d],
 ```
