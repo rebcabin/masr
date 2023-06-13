@@ -67,26 +67,184 @@
 
 ;;
 ;; Entity hash-maps have all information from the
-;; ASR S-expression syntax, but type-checked and in
-;; a form for downstream analysis, interpretation,
-;; optimization, code-generation, storage,
-;; retrieval, decompilation, etc. While the ASR
-;; S-expression syntax is more terse, it cannot be
-;; understood without reference to ASDL
-;; documentation because the component data items
-;; are not labeled. The entity hash-map is intended
-;; to be more intelligible and self-contained.
+;; ASR S-expression syntax, but type-checked and
+;; self-contained, ready for downstream analysis,
+;; interpretation, optimization, code-generation,
+;; storage, retrieval, decompilation, etc.
 ;;
 ;;
-;; The type-checking performed during conversion is
-;; aggressive and fine-grained. It is intended to
-;; find bugs in compiler front ends like LPython and
-;; LFortran.
+;; MASR type-checking is aggressive and
+;; fine-grained. It is intended to find bugs in
+;; compiler front ends like LPython and LFortran.
+;;
+;; https://github.com/lcompilers
+;;
+;; In the future, MASR will generate tests for
+;; compiler back ends that process ASR.
+;;
+
+
+;;
+;;
+;; # MASR OVERVIEW & BACKGROUND
+;;
+;;
+
+
+;;
+;; MASR specifications are boolean functions that
+;; check whether an entity hash-map like that above
+;; inhabits mathematical sets described by the spec.
+;; An entity hash-map is a concrete instance.
 ;;
 
 ;;
-;; ## Maintaining the Code and Markdown
+;; See
 ;;
+;; 1. [About Clojure Specs](https://clojure.org/about/spec)
+;;
+;; 2. [Clojure Spec Programmers' Guide](https://clojure.org/guides/spec)
+;;
+;; 3. [Differnces Between Set Theory and Type Theory](https://math.stackexchange.com/questions/489369)
+;;
+;; 4. [Formal Type Theory](https://softwarefoundations.cis.upenn.edu/plf-current/index.html)
+;;
+;; for background on clojure.spec and type theory
+;; in general.
+;;
+
+;;
+;; MASR augments [libasr](https://github.com/lcompilers/libasr).
+;;
+;; with the following facilities:
+;;
+;; * MASR is more precise than ASDL; For example,
+;;   MASR distinguishes names of programs from names
+;;   of functions.
+;;
+;; * MASR is more explicit than ASDL. For example,
+;;   we can say a MASR argument list has no more
+;;   than a certain number of arguments.
+;;
+;; * MASR is less overloaded than ASDL. For example,
+;;   `symbol` is separate from `symbol_table`,
+;;   `symbol-ref` in MASR, but they are all the same
+;;   in ASDL.
+;;
+;; * MASR exposes secret semantics that ASDL cannot
+;;   express. TODO: example.
+;;
+
+;; ----------------------------------------------------------------
+;; ## Checking Entities
+;;
+
+;;
+;; An entity hash-map may inhabit multiple sets.
+;; For example, any `LogicalConstant` is an `expr`,
+;; and any `expr` is an `asr-term`. These sets stand
+;; in _subset_ relations. We can also check that
+;; `LogicalConstant` is _not_ a `ttype`. Many
+;; examples of tests like this are in
+;; `core_test.clj`. Reading the tests and stepping
+;; through them in the debugger is the best way to
+;; learn MASR.
+;;
+;;
+;; MASR types are recursive. Bigger types are
+;; defined in terms of smaller types, all the way to
+;; a handful of primitive _atomic_ types. All fields
+;; of big entities are checked against specs, all
+;; the way down to the atoms.
+;;
+
+
+;;
+;;
+;; # SNAPSHOT  SUMMARY <a id="snapshot"/>
+;;
+;;
+
+
+;;
+;; We begin with a summary of a snapshot of the full
+;; ASDL specification:
+;; https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
+;;
+
+;;
+;; ## Terms (Nodes) in the ASDL Grammar
+;;
+;;
+;; `Terms` appear to the left of equals signs. Terms
+;; may also be called `nodes`.
+;;
+;;
+;; ```c
+;;  1 unit            = TranslationUnit(symbol_table, node*)
+;;  2 symbol          = ... many heads ...
+;;  3 storage_type    = Default | Save | Parameter | Allocatable
+;;  4 access          = Public | Private
+;;  5 intent          = Local | In | Out | ... | Unspecified
+;;  6 deftype         = Implementation | Interface
+;;  7 presence        = Required | Optional
+;;  8 abi             = Source | LFortranModule | ... | Intrinsic
+;;  9 stmt            = ... many heads ...
+;; 10 expr            = ... many heads ...
+;; 11 ttype           = Integer(int, dim*) | ... | FunctionType( ... )
+;; 12 restriction_arg = RestrictionArg(identifier, symbol)
+;; 13 binop           = Add | Sub | ... | BitRShift
+;; 14 logicalbinop    = And | Or | Xor | NEqv | Eqv
+;; 15 cmpop           = Eq | NotEq | Lt | LtE | Gt | GtE
+;; 16 integerboz      = Binary | Hex | Octal
+;; 17 arraybound      = LBound | UBound
+;; 18 arraystorage    = RowMajor | ColMajor
+;; 19 cast_kind       = RealToInteger | IntegerToReal | ... |
+;; 20 dimension       = (expr? start, expr? length)
+;; 21 alloc_arg       = (expr a, dimension* dims)
+;; 22 attribute       = Attribute(ident name, attr_arg *args)
+;; 23 attribute_arg   = (identifier arg)
+;; 24 call_arg        = (expr? value)
+;; 25 tbind           = Bind(string lang, string name)
+;; 26 array_index     = (expr? left, expr? right, expr? step)
+;; 27 do_loop_head    = (expr? v, expr? start, expr? end, expr? incr)
+;; 28 case_stmt       = CaseStmt(expr*, stmt*) | CaseStmt_Range( ... )
+;; 29 type_stmt       = TypeStmtName(symbol, stmt*) | ...
+;; 30 enumtype        = IntegerConsecutiveFromZero | ... | NonInteger
+;; ```
+;;
+;; ## Terms Used but not Defined in ASDL
+;;
+;; ```c
+;; 31 symbol_table    = a clojure hash-map
+;; 32 dimension*      = see below
+;; ```
+;;
+;; ## Term-Like Items
+;;
+;; ```c
+;;  0 atoms           = int, float, bool, string, nat, bignat
+;;  0 identifier      = specified below
+;; ```
+;;
+;; ## Mappings from ASDL to MASR
+;;
+;; * ASDL tuples like `(1 2)` are Clojure lists or
+;;   vectors.
+;;
+;; * ASDL lists are Clojure lists.
+;;
+;; * ASDL vectors like `[expr? stmt*]` are Clojure vectors.
+;;
+;; * ASDL symbol_tables are Clojure maps.
+
+
+;;
+;;
+;; # MAINTAINING THE CODE AND MARKDOWN
+;;
+;;
+
 
 ;;
 ;; This file is semi-literate programming. Blocks of
@@ -97,34 +255,47 @@
 ;; the code.
 ;;
 ;;
-;; To contribute, write code in the source files,
-;; mostly in `specs.clj`. Write accurate comments
-;; and format them in Markdown. Precede a code block
-;; with `#+_begin_src clojure` (or some other
-;; language like `bash` or `c`) in a
-;; double-semicolon-space comment beginning in
-;; column 1, by itself, plus a blank line. Terminate
-;; code blocks with `#+end_src` in a
-;; double-semicolon-space comment beginning in
-;; column 1. You'll see many examples below.
+;; To contribute,
 ;;
+;; 1. Identify candidate S-expressions to check and
+;;    convert.
 ;;
-;; This file is in order of definitions before
-;; usages, not in top-down narrative order. Skim
-;; over the definitions until you get to use cases,
-;; then backtrack for details. Alternatively, read
-;; the documentation _backwards_ for an
-;; approximation of narrative order.
+;;    a. Browse the examples in `resources/reference`.
 ;;
+;;    b. Generate new examples via `--show-asr` in
+;;       LFortran or LPython.
 ;;
-;; When narrative really MUST talk about use-cases
-;; that are not defined yet, comment out the code or
-;; escape S-expressions with `#_`. You will see
-;; examples below.
+;;    c. Write examples by hand using [light sugar
+;;       or heavy sugar](#sugar).
 ;;
+;; 2. Write tests in `core_test.clj` and
+;;    `big_test.clj` following the patterns evident
+;;    in those two files.
 ;;
-;; Just before checking in new code, extract
-;; `specs.md` from `specs.clj` as follows:
+;; 3. If the tests fail, write
+;;    new [_term processers_](#term) in this file,
+;;    `specs.clj`.
+;;
+;; 4. Double check for regressions by running all
+;;    tests with your new code: `time lein test`
+;;
+;;    a. Optionally, write negative tests to
+;;       prevent false positives. See `big_test.clj`
+;;       and `resources/negatives` for examples to
+;;       follow.
+;;
+;; 5. Format accurate comments in your code in
+;;    Markdown. Precede a code block with
+;;    `#+_begin_src clojure` (or some other language
+;;    like `bash` or `c`) in a
+;;    double-semicolon-space comment beginning in
+;;    column 1, by itself, plus a blank line.
+;;    Terminate code blocks with `#+end_src` in a
+;;    double-semicolon-space comment beginning in
+;;    column 1. You'll see many examples below.
+;;
+;; 6. Extract `specs.md` from `specs.clj` as
+;;    follows:
 ;;
 ;;
 ;; ```bash
@@ -132,28 +303,28 @@
 ;; ```
 ;;
 ;;
-;; Visual Studio Code can maintain Table of Contents
-;; and section numbers via an extension called
-;; `MarkdownForAll.` Install it. To rebuild the
-;; Table of Contents and section numbers in
-;; `specs.md`:
+;; 7. Visual Studio Code can maintain Table of
+;;    Contents and section numbers via an extension
+;;    called `MarkdownForAll.` Install both.
+;;    Rebuild the Table of Contents and section
+;;    numbers in `specs.md`:
 ;;
-;; 1. Run `md4code.awk` as shown above.
+;;    a. Run `md4code.awk` as shown above.
 ;;
-;; 2. Open or revert `specs.md` in Visual Studio
-;;    Code.
+;;    b. Open or revert `specs.md` in Visual Studio
+;;       Code.
 ;;
-;; 3. Position the cursor at the top of `specs.md`,
-;;    then `Cmd-Shift-P`, "Add or Update Section
-;;    Numbers."
+;;    c. Position the cursor at the top of
+;;       `specs.md`, then `Cmd-Shift-P`, "Add or
+;;       Update Section Numbers."
 ;;
-;; 4. Position the cursor at the top of `specs.md`,
-;;    then `Cmd-Shift-P`, "Create Table of
-;;    Contents."
+;;    d. Position the cursor at the top of
+;;       `specs.md`, then `Cmd-Shift-P`, "Create
+;;       Table of Contents."
 ;;
-;; 5. Save `specs.md` from Visual Studio Code.
+;;    e. Save `specs.md` from Visual Studio Code.
 ;;
-;; 6. `git commit` `specs.mf` and `git push` it.
+;; 8. `git commit`, `git push`, open a pull request.
 ;;
 
 ;;
@@ -169,10 +340,14 @@
 ;; tried them.
 ;;
 
+
+;;
 ;;
 ;; # NAMESPACE DECLARATION
 ;;
 ;;
+
+
 ;; Declare Clojure dependencies for the rest of the
 ;; code in this file.
 ;;
@@ -240,193 +415,6 @@
 
 ;;
 ;;
-;; # MASR OVERVIEW & BACKGROUND
-;;
-;;
-
-
-;; ----------------------------------------------------------------
-;; ## Masr is a Type System
-;;
-;;
-;; MASR is "Meta Abstract Semantics Representation,"
-;; and also a physics pun, "Microwave Amplification
-;; by Stimulated emission of Radiation." It is a
-;; work-in-progress, intended eventually to replace
-;; the aging ASDL with by a more precise and
-;; discriminating type system.
-;;
-;; * MASR is more precise than ASDL; For example,
-;;   MASR distinguishes names of programs from names
-;;   of functions.
-;;
-;; * MASR is more explicit than ASDL. For example,
-;;   we can say a MASR argument list has no more
-;;   than a certain number of arguments.
-;;
-;; * MASR is less overloaded than ASDL. For example,
-;;   `symbol` is separate from `symbol_table`,
-;;   `symbol-ref` in MASR, but they are all the same
-;;   in ASDL.
-;;
-;; * MASR exposes secret semantics that ASDL cannot
-;;   express. TODO: example.
-;;
-;;
-;; Until MASR is integrated, it will have a legacy
-;; back-channel. The legacy back-channel writes
-;; types in ASDL format from MASR entity hash-maps.
-;;
-
-;; ----------------------------------------------------------------
-;; ## Snapshot Summary
-;;
-
-;;
-;; We begin with a summary of a snapshot of the full
-;; ASDL specification:
-;; https://github.com/rebcabin/masr/blob/main/ASR_2023_APR_06_snapshot.asdl
-;;
-
-;;
-;; ### Terms (Nodes) in the ASDL Grammar
-;;
-;;
-;; `Terms` appear to the left of equals signs. Terms
-;; may also be called `nodes`.
-;;
-;;
-;; ```c
-;;  1 unit            = TranslationUnit(symbol_table, node*)
-;;  2 symbol          = ... many heads ...
-;;  3 storage_type    = Default | Save | Parameter | Allocatable
-;;  4 access          = Public | Private
-;;  5 intent          = Local | In | Out | ... | Unspecified
-;;  6 deftype         = Implementation | Interface
-;;  7 presence        = Required | Optional
-;;  8 abi             = Source | LFortranModule | ... | Intrinsic
-;;  9 stmt            = ... many heads ...
-;; 10 expr            = ... many heads ...
-;; 11 ttype           = Integer(int, dim*) | ... | FunctionType( ... )
-;; 12 restriction_arg = RestrictionArg(identifier, symbol)
-;; 13 binop           = Add | Sub | ... | BitRShift
-;; 14 logicalbinop    = And | Or | Xor | NEqv | Eqv
-;; 15 cmpop           = Eq | NotEq | Lt | LtE | Gt | GtE
-;; 16 integerboz      = Binary | Hex | Octal
-;; 17 arraybound      = LBound | UBound
-;; 18 arraystorage    = RowMajor | ColMajor
-;; 19 cast_kind       = RealToInteger | IntegerToReal | ... |
-;; 20 dimension       = (expr? start, expr? length)
-;; 21 alloc_arg       = (expr a, dimension* dims)
-;; 22 attribute       = Attribute(ident name, attr_arg *args)
-;; 23 attribute_arg   = (identifier arg)
-;; 24 call_arg        = (expr? value)
-;; 25 tbind           = Bind(string lang, string name)
-;; 26 array_index     = (expr? left, expr? right, expr? step)
-;; 27 do_loop_head    = (expr? v, expr? start, expr? end, expr? incr)
-;; 28 case_stmt       = CaseStmt(expr*, stmt*) | CaseStmt_Range( ... )
-;; 29 type_stmt       = TypeStmtName(symbol, stmt*) | ...
-;; 30 enumtype        = IntegerConsecutiveFromZero | ... | NonInteger
-;; ```
-;;
-;; ### Terms Used but not Defined in ASDL
-;;
-;; ```c
-;; 31 symbol_table    = a clojure hash-map
-;; 32 dimension*      = see below
-;; ```
-;;
-;; ### Term-Like Items
-;;
-;; ```c
-;;  0 atoms           = int, float, bool, string, nat, bignat
-;;  0 identifier      = specified below
-;; ```
-;;
-;; ### Mappings from ASDL to MASR
-;;
-;; * ASDL tuples like `(1 2)` are Clojure lists or
-;;   vectors.
-;;
-;; * ASDL lists are Clojure lists.
-;;
-;; * ASDL vectors like `[expr? stmt*]` are Clojure vectors.
-;;
-;; * ASDL symbol_tables are Clojure maps.
-
-
-;;
-;;
-;; # WHAT IS A _SPECIFICATION_?
-;;
-;;
-
-
-;;
-;; The noun "Specification" derives from the
-;; verb "to specify." "To specify" means "to
-;; describe specifically, clearly, explicitly,
-;; precisely, unambiguously." Also, "to specify"
-;; means "to distinguish objects from others that
-;; seem similar, say to distinguish ships from
-;; boats."
-;;
-;;
-;; The main use-case for specifications is checking
-;; entity hash-maps against specs: "does this entity
-;; hash-map meet the general specification for
-;; entity hash-maps of this type?" For
-;; example, "does `(Integer 4 [])`, syntax sugar for
-;; an entity hash-map, meet the general
-;; specification of an ASR `ttype`, which describes
-;; a whole class of entity hash-maps?"
-;;
-;;
-;; In MASR, specs describe decidable _sets_ of valid
-;; or conforming values. MASR type checking is often
-;; just checking whether an instance inhabits a
-;; certain set. A "decidable set" is one for which
-;; the question of set membership is decidable. See
-;; this Stack-Exchange question for theoretical fine
-;; points:
-;;
-;;
-;;   https://math.stackexchange.com/questions/489369
-;;
-;;
-;; Clojure specs are arbitrary boolean-valued
-;; functions. We can build any type-theory that
-;; needs only first-order predicate calculus.
-;; Clojure specs suffice for advanced types like
-;; dependency types and concurrency types.
-;;
-
-;; ----------------------------------------------------------------
-;; ## Checking Instances
-;;
-
-;;
-;; An instance hash-map may inhabit multiple sets.
-;; For example, any `LogicalConstant` is an `expr`,
-;; and any `expr` is an `asr-term`. These sets stand
-;; in _subset_ relations. We can also check that
-;; `LogicalConstant` is _not_ a `ttype`. Many
-;; examples of tests like this are in
-;; `core_test.clj`. Reading the tests and stepping
-;; through them in the debugger is a great way to
-;; learn MASR.
-;;
-;;
-;; MASR types are recursive. Bigger types are
-;; defined in terms of smaller types, all the way to
-;; a handful of primitive _atomic_ types. All fields
-;; of big entities are checked against specs, all
-;; the way down to the atoms.
-;;
-
-
-;;
-;;
 ;; # FULL-FORM ENTITY HASH-MAPS
 ;;
 ;;
@@ -435,9 +423,9 @@
 ;;
 ;; Every MASR `asr-term` entity has a _full-form_. A
 ;; MASR full-form is a Clojure _hash-map_ that
-;; contains the key `::term` at top level. Hash-maps
+;; contains the key `::term` at top level. [Hash-maps
 ;; are collections of key-value pairs like Python
-;; dictionaries.[https://clojuredocs.org/clojure.core/hash-map]
+;; dictionaries](https://clojuredocs.org/clojure.core/hash-map).
 ;;
 ;;
 ;; MASR checks full-form against Clojure specs.
@@ -464,7 +452,18 @@
 ;; All hash-map keys in MASR are _fully qualified
 ;; keywords_ (FQKWs) in the namespace `masr.specs`,
 ;; denoted with double-colons when _in_ that
-;; namespace.
+;; namespace. See
+;; https://clojure.org/reference/reader for more
+;; about they syntax of Clojure keywords.
+;;
+;;
+;; FKQWs serve three purposes:
+;;
+;; 1. names of registers specs
+;;
+;; 2. keys in entities
+;;
+;; 3. [tag-fetching functions](#tag-fetching) for `defmulti`
 ;;
 ;;
 ;; This file, `specs.clj`, is automatically _in_
@@ -488,15 +487,6 @@
              :hash-map   {}}
 ;; #+end_src
 
-;;
-;; FQKWs may have specs registered for them. When a
-;; spec is registered for an FQKW, automatically
-;; checks types of entities recursively. For
-;; example, an entity that conforms to
-;; `::SymbolTable` will have a `::term`,
-;; `::symtab-id`, and a `::hash-map` that conform to
-;; specs registered to those FQKWs.
-;;
 ;;
 ;; EXAMPLES -- all the following full-forms mean the
 ;; same:
@@ -543,6 +533,20 @@
 ;; #+end_src
 
 ;;
+;; ## Keywords and Specs <a id="registry"/>
+;;
+
+;;
+;; FQKWs may have specs registered for them via
+;; `s/def`. When a spec is registered for an FQKW,
+;; Clojure automatically checks types of entities
+;; recursively. For example, an entity that conforms
+;; to `::SymbolTable` will have a `::term`,
+;; `::symtab-id`, and a `::hash-map` that conform to
+;; specs registered to those FQKWs.
+;;
+
+;;
 ;; *PITFALL WARNING* -- If you do not register a
 ;; spec for a qualified keyword, `k`, Clojure will
 ;; _always pass_ an item in a hash-map with key `k`.
@@ -559,40 +563,39 @@
 
 
 ;;
-;; Large ASR expressions overflow the Java
-;; method-size limit of 64KB when Clojure evaluates
-;; them recursively. The solution is to evaluate
-;; bottom-up: explode sub-entities into files or a
-;; database, then implode them back into a top-level
-;; entity. The file `big_test.clj` shows how to do
-;; this.
+;; `slurp-test` in `core_test.clj` attempts
+;; recursive checking of snapshot examples from
+;; LFortran and LPython. Recursive checks sometimes
+;; overflow the Java method-size limit of 64KB. The
+;; solution is to check bottom-up: explode
+;; sub-entities into files or a database, then
+;; implode them back into a top-level entity. The
+;; file `big_test.clj` shows how to do this.
 ;;
 ;;
-;; Bottom-up evaluation also requires idempotency:
+;; Bottom-up evaluation requires idempotency: that
 ;; evaluating a sub-entity full-form produces the
 ;; same full-form. This is easy only if we replace
-;; symbols with strings because the mechanics of
-;; quoting symbols idempotently is difficult and
-;; subtle.
+;; Clojure symbols with strings because Clojure
+;; symbols are not self-evaluating.
 ;;
 ;;
-;; For an example, consider the following hash-map,
-;; and notice the external quote, preventing
-;; evaluation. Without this quote, Clojure would
-;; error when evaluating this expression a second
-;; time because it would attempt to evaluate the
-;; unbound symbol `main0`:
+;; For an example, notice the external quote on the
+;; following entity, preventing evaluation. Without
+;; this quote, Clojure would error when evaluating
+;; this entity a second time because it would
+;; attempt to evaluate the unbound symbol `main0`:
 ;;
 ;; #+begin_src clojure
 
-'#:masr.specs{:stmt-head  ;; <~~~ external quote
-             :masr.specs/SubroutineCall,
-             :symbol-ref
-             #:masr.specs{:identifier  main0,
-                          :symtab-id   114},
-             :orig-symref  (),
-             :call-args    (),
-             :dt?          ()}
+'#:masr.specs{:stmt-head ;; <~~~ external quote
+              :masr.specs/SubroutineCall,
+              :symbol-ref
+              #:masr.specs{:identifier  main0,
+                           :symtab-id   114},
+              :orig-symref  (),
+              :call-args    (),
+              :dt?          ()}
 ;; #+end_src
 
 ;;
@@ -600,8 +603,9 @@
 ;; old, non-idempotent heavy-sugar function,
 ;; `SubroutineCall`. The naked symbol `main0` is
 ;; unbound and won't survive another round of
-;; evaluation. The sugar function now produces
-;; to the following:
+;; evaluation. The sugar function now converts the
+;; symbol to a string, producing the following
+;; idempotent form:
 ;;
 ;; #+begin_src clojure
 
@@ -628,7 +632,7 @@
 
 ;;
 ;;
-;; # SUGAR
+;; # SUGAR <a id="sugar"/>
 ;;
 ;;
 
@@ -643,36 +647,36 @@
 ;;
 ;;
 ;; Sugared forms are function-calls at
-;; bottom (examples below). Some sugared forms
-;; employ macros to replace symbols with strings and
-;; for other utilitarian transformations on the way
-;; to bottoming out at a function call.
+;; bottom (examples below). The function calls
+;; produce full-form entities. Some sugared forms
+;; employ macros at top to replace symbols with
+;; strings and for other utilitarian transformations
+;; on the way to bottoming out at a function call.
 ;;
 ;;
 ;; Sugar comes in three flavors: _light_, _heavy_,
 ;; and _legacy_.
 ;;
 ;;
-;; 1. Light sugar employs functions with
-;;    single-colon, non-qualified keyword (NQKW)
-;;    arguments with default values. Light sugar is
-;;    unambiguous but more verbose than heavy sugar.
+;; 1. Light sugar is for human writers. It employs
+;;    functions with single-colon, non-qualified
+;;    keyword (NQKW) arguments with default values.
+;;    Light sugar is unambiguous but more verbose
+;;    than heavy sugar.
 ;;
 ;;
 ;; 2. Heavy sugar employs functions with positional
 ;;    arguments, with possible default values for
-;;    tail arguments. Heavy sugar is short and
-;;    often compatible with ASDL output from
-;;    `--show-asr`. Heavy sugar is more risky to
-;;    write and much harder to read than light
-;;    sugar, especially for long argument lists as
-;;    with, say, `Variable` and `FunctionType`.
+;;    tail arguments. Heavy sugar is short and often
+;;    compatible with ASDL output from `--show-asr`.
+;;    Heavy sugar is more risky for humans to write
+;;    and much harder to read than light sugar,
+;;    especially for long argument lists as with,
+;;    say, `Variable` and `FunctionType`.
 ;;
 ;;
-;; 3. Legacy sugar is like heavy sugar, just, say,
-;;    requiring fewer tick marks on symbols. Legacy
-;;    sugar is compatible with ASDL output from
-;;    `--show-asr`.
+;; 3. Legacy sugar is compatible with ASDL output
+;;    from `--show-asr`.
 ;;
 ;;
 ;; All sugared forms produce identical full-forms.
@@ -694,9 +698,7 @@
 ;; lists of light-sugar functions do not depend on
 ;; order. The following two examples of light sugar
 ;; both conform to specs registered for `::asr-term`
-;; and to `::ttype` (the following is an example of
-;; escaped code that can't run yet because of
-;; narrative order):
+;; and to `::ttype`:
 ;;
 ;;
 ;; #+begin_src clojure
@@ -711,13 +713,9 @@
 ;;
 ;; The names of heavy-sugar functions, like
 ;; `Integer` or `Variable--`, have either zero or
-;; two trailing hyphens. The difference concerns
-;; legacy. If legacy sugar exists for a term, the
-;; legacy sugar has the name with no hyphens, like
-;; `Variable`, and the heavy sugar has the name with
-;; two hyphens, like `Variable--`. For example:
+;; two trailing hyphens. For example:
 ;;
-
+;;
 ;; #+begin_src clojure
 
 #_(Variable-- 2 "x" (Integer 4)
@@ -727,6 +725,16 @@
             false)
 ;; #+end_src
 
+;;
+;; If legacy sugar exists for a term, the legacy
+;; sugar has the name with no hyphens, like
+;; `Variable`, and the heavy sugar has the name with
+;; two hyphens, like `Variable--`.
+;;
+;;
+;; For specs like `Integer`, where heavy sugar and
+;; legacy are identical, there is no function with
+;; two trailing hyphens in its name.
 ;;
 ;;
 ;; Heavy sugar and legacy sugar employ positional
@@ -748,13 +756,17 @@
 ;; ### Legacy Sugar
 ;;
 ;;
-;; The purpose of legacy sugar is to convert symbols
-;; to idempotent strings and to accommodate certain
-;; defects in the original design of ASDL, such as
-;; (1) nested lists' denoting improper function
-;; calls and (2) ambiguity in `symbol-ref`,
-;; sometimes a list and sometimes a naked pair.
+;; Legacy sugar
 ;;
+;; 1. Converts symbols to idempotent strings.
+;;
+;; 2. Converts nests like `((..)...)` to `[(...)...]`
+;;    lest they denote function calls.
+;;
+;; 3. Resolves `symbol-ref`: sometimes a list and
+;;    sometimes a naked pair.
+;;
+;; 4. Corrects other syntactic defects.
 ;;
 ;; Here is a legacy version of the `Variable` above:
 ;;
@@ -772,16 +784,11 @@
 ;; Notice NO QUOTES on the name of the variable.
 ;; That's the way `--show-asr` prints it.
 ;;
-;;
-;; For specs like `Integer`, where heavy sugar and
-;; legacy are identical, there is no function with
-;; two trailing hyphens in its name.
-;;
 
 
 ;;
 ;;
-;; # WHAT ARE TERMS AND HEADS?
+;; # TERMS AND HEADS <a id="term"/>
 ;;
 ;;
 
@@ -811,14 +818,14 @@
 
 ;;
 ;;
-;; # QUALIFIED KEYWORDS ARE FUNCTIONS
+;; # QUALIFIED KEYWORDS ARE FUNCTIONS <a id="tag-fetching"/>
 ;;
 ;;
 
 
 ;;
-;; `::term` is both a FQKW _and_ a tag-fetching
-;; function. A tag-fetching function picks the value
+;; `::term` is both a FQKW _and_ a _tag-fetching
+;; function+. A tag-fetching function picks the value
 ;; of the key `::term` from any hash-map. For
 ;; example,
 ;;
@@ -830,10 +837,10 @@
 ;; `{::term ::intent ...}` and produces `::intent`.
 ;;
 ;;
-;; As a FQKW, `::term`, in addition to
-;; being a tag-fetching function, can name a Clojure
-;; spec registered to it via `s/def`. The following
-;; spec will check whether `::intent` is a `::term`:
+;; As a FQKW, `::term`, can also [name a Clojure
+;; spec registered to it via `s/def`](#registry).
+;; The following spec will check whether `::intent`
+;; is a `::term`:
 ;;
 ;;
 ;; #+begin_src clojure
@@ -861,17 +868,19 @@
 
 
 ;;
-;; `defmulti/defmethod` is one Clojure idiom for
-;; _polymorphism_:, a single `defmulti` interface
-;; with many `defmethod` implementations.
+;; `defmulti/defmethod` is one [Clojure idiom for
+;; _polymorphism_](https://clojure.org/about/runtime_polymorphism):,
+;; a single `defmulti` interface with many
+;; `defmethod` implementations.
 ;;
 ;;
 ;; `(defmulti term ::term)` links the name
-;; `term` (no colons) to the tag-fetcher function
-;; `::term` (with colons). Each `defmethod` of
-;; `term` is tagged by the value fetched via
-;; `::term`. For example, there is one `defmethod`
-;; for `::symbol` and another for `::expr`.
+;; `term` (no colons) to the [tag-fetcher
+;; function](#tag-fetching) `::term` (with colons).
+;; Each `defmethod` of `term` is tagged by the value
+;; fetched via `::term`. For example, there is one
+;; `defmethod` for `::symbol` and another for
+;; `::expr`.
 ;;
 ;; #+begin_src clojure
 
@@ -887,15 +896,11 @@
 ;; _multi-specs_. By analogy, multi-specs are to
 ;; specs as `defmethods` are to functions -- one
 ;; spec interface to many implementations.
-;; Multi-specs are thus another Clojure idiom for
-;; polymorphism.
 ;;
 ;;
 ;; The name of the _one_ multi-spec for all terms is
 ;; `::asr-term`, an FQKW, as are all names of specs.
-;; Multi-specs act like tagged unions in C -- MASR's
-;; polymorphic entities are like polymorphic structs
-;; in C.
+;; Multi-specs act like tagged unions in C.
 ;;
 
 
@@ -908,22 +913,21 @@
 
 ;;
 ;; At the top level, `::term` multi-specs dispatch
-;; on values of the `::term` key in entities, values
-;; like `::intent`, `::symbol`, `::unit`, etc.
-;; `Defmethods` for those values specify the
-;; remaining required keys for the particular
-;; entities conforming to the particular spec named
-;; by `::intent`, `::symbol`, `::unit`, etc.
+;; on values of the `::term` key, values like
+;; `::intent`, `::symbol`, `::unit`, etc. Nested
+;; multi-specs for those values specify the
+;; remaining required keys for nested entities
+;; conforming to the sub-specs `::intent`,
+;; `::symbol`, `::unit`, etc.
 ;;
 ;;
 ;; Some `defmethods` like `::intent` are simple,
-;; just checking that an instance like `"Local"` or
-;; `"ReturnVar"` inhabits a literal Clojure `set` of
-;; allowed intents. Other `defmethods`, like
-;; `::symbol`, have _nested multi-specs_ that
-;; dispatch on _heads_, like `Variable` or
-;; `Program`. MASR handles nested multi-specs via
-;; techniques shown below.
+;; just checking that a value like `"Local"` or
+;; `"ReturnVar"` inhabits a `set` of strings Other
+;; `defmethods`, like `::symbol`, have _nested
+;; multi-specs_ that dispatch on _heads_, like
+;; `Variable` or `Program`. MASR handles nested
+;; multi-specs via techniques shown below.
 ;;
 
 
@@ -1189,7 +1193,7 @@
 ;; `Defmasrtype` creates both (1) the specs for
 ;; particular heads like `Variable` and `Assignment`,
 ;; and (2) a function, `->asdl-type`, that extracts
-;; the ASDL type from any instance hash-map. We
+;; the ASDL type from any entity hash-map. We
 ;; present the extraction code first ("define" before
 ;; "use"):
 ;;
@@ -3093,17 +3097,17 @@
 ;; ```c
 ;; >>> Integer, Real, Complex, Logical are already done ...
 ;; >>> FunctionType is done.
-;; >>> Here are the rest of the ttypes.
-;; | Character(int kind, int len, expr? len_expr, dimension* dims)
+;; >>> Character(int kind, int len, expr? len_expr, dimension* dims)
 ;; >>> Set(ttype type)
 ;; >>> List(ttype type)
 ;; >>> Tuple(ttype* type)
+;; >>> Pointer(ttype type)
+;; --- Here are the rest of the ttypes.
 ;; | Struct(symbol derived_type, dimension* dims)
 ;; | Enum(symbol enum_type, dimension *dims)
 ;; | Union(symbol union_type, dimension *dims)
 ;; | Class(symbol class_type, dimension* dims)
 ;; | Dict(ttype key_type, ttype value_type)
-;; | Pointer(ttype type)
 ;; | Const(ttype type)
 ;; | CPtr()
 ;; | TypeParameter(identifier param, dimension* dims)
@@ -4210,8 +4214,9 @@
 ;; Var(symbol v)
 ;; ```
 ;;
-;; from `ASR.asdl` doesn't match the instance. Instead,
-;; we probably need something like:
+;; from `ASR.asdl` doesn't match the entity
+;; instance. Instead, we probably need something
+;; like:
 ;;
 ;; ```c
 ;; Var(symtab_id stid, identifier it)
@@ -6231,11 +6236,13 @@
       ::nodes        node-cnd}}))
 ;; #+end_src
 
+
 ;;
 ;;
-;; REGISTRY
+;; # REGISTRY
 ;;
 ;;
+
 
 ;;
 ;; Here is a list of all 287 specs defined in this
