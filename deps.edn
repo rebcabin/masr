@@ -1,0 +1,2 @@
+; stable
+{:deps {com.hyperfiddle/rcf {:mvn/version "20220926-202227"}}}

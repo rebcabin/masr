@@ -1,0 +1,25 @@
+(ns masr.resources._pass_loop_vectorise-vec_01-fdf30b1.Function.Function_90465)
+
+
+#:masr.specs{:term :masr.specs/symbol,
+             :asr-symbol-head
+             #:masr.specs{:symbol-head :masr.specs/Function,
+                          :body [],
+                          :dependencies [],
+                          :deterministic false,
+                          :function-signature "FunctionType_90033",
+                          :side-effect-free false,
+                          :access
+                          #:masr.specs{:term :masr.specs/access,
+                                       :access-enum "Public"},
+                          :return-var? "Var_88950",
+                          :param* ["Var_88947"],
+                          :SymbolTable
+                          #:masr.specs{:term :masr.specs/SymbolTable,
+                                       :symtab-id 68,
+                                       :hash-map
+                                       {:_lpython_return_variable
+                                        "Variable_89661",
+                                        :x "Variable_89664"}},
+                          :function-name "_lfortran_datanh"}}
+
